@@ -331,7 +331,7 @@ These rows are partly in subset 0 because the first slice needs them; their clau
 
 - **SPEC-TCB:** every runtime primitive used by subset 0 (task creation, park/unpark, timers, stdout write, process exit) gets an individual contract and an audited caller list (plan §8.1). No package-name privilege.
 - **SPEC-BUILD:** host-built compiler, stage map, and target identity per plan §10.2. Targets per D22: darwin/arm64 first; linux/amd64 (real target) and linux/arm64 first-class. No clause may assume a darwin-only mechanism.
-- **SPEC-TOOL:** an S-Go driver (working name `sgo`, with `sgo build` and `sgo run`) **[OPEN]**. It accepts only subset-0 source and has no flag that widens admission.
+- **SPEC-TOOL:** the S-Go driver is named **`sgo`** (user decision 2026-10-30), with `sgo build` and `sgo run`; subcommand set is drafted in W01. It accepts only subset-0 source and has no flag that widens admission.
 - **SPEC-STACK:** inherited growable stacks, with GC-1/GC-2 obligations (plan §5.3). Fixed stacks are W11.
 - **SPEC-TEST — SGO-TEST-001:** a conformance case is a directory with source files and a golden expectation: exit status, exact stdout bytes, and, for rejection cases, the diagnostic code and position. A host-side runner (external tooling) executes cases with a watchdog (D10).
 
@@ -351,4 +351,4 @@ To be resolved during W01; none changes an approved decision:
 6. `ChildError` → exit status 1 (SGO-NUR-004, refines D08).
 7. Drain budget configuration surface (SGO-DRAIN-002).
 8. Negative `Sleep` argument (SGO-WAIT-001).
-9. Diagnostic record format (SGO-ERR-002) and driver name (SPEC-TOOL).
+9. Diagnostic record format (SGO-ERR-002). (Driver name resolved: `sgo`.)
