@@ -7,6 +7,11 @@
   {
    "code": "SGO_E_UNADMITTED",
    "at": "//go:linkname"
+  },
+  {
+   "code": "SGO_E_UNADMITTED",
+   "at": "func nanotime"
   }
- ]
+ ],
+ "note": "Two outermost denied constructs, so two diagnostics (SGO-ERR-001): the compiler directive and the function declaration without a body."
 }

@@ -159,21 +159,21 @@ func (check *Checker) multipleSelectDefaults(list []*syntax.CommClause) {
 func (check *Checker) nurseryStmt(ctxt stmtContext, s *syntax.NurseryStmt) {
 	// Resolve through this file's own import of "sgo" (not the package-wide import list), and count
 	// the nursery statement as a use of that import.
-	var nursery Type
+	var nurseryType Type
 	if pname, _ := check.lookup("sgo").(*PkgName); pname != nil && pname.imported.path == "sgo" {
 		check.usedPkgNames[pname] = true
 		if obj, _ := pname.imported.scope.Lookup("Nursery").(*TypeName); obj != nil {
-			nursery = NewPointer(obj.typ)
+			nurseryType = NewPointer(obj.typ)
 		}
 	}
 	check.openScope(s, "nursery")
 	defer check.closeScope()
 	if s.Name != nil {
-		if nursery == nil {
+		if nurseryType == nil {
 			check.error(s, UnsupportedFeature, `nursery statement requires import "sgo" (SGO-NUR-001)`)
-			nursery = Typ[Invalid]
+			nurseryType = Typ[Invalid]
 		}
-		v := NewVar(s.Name.Pos(), check.pkg, s.Name.Value, nursery)
+		v := NewVar(s.Name.Pos(), check.pkg, s.Name.Value, nurseryType)
 		check.declare(check.scope, s.Name, v, s.Body.Pos())
 	}
 	check.stmt(ctxt, s.Body)

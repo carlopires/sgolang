@@ -47,6 +47,9 @@ jobs:
       - name: B04 stage-0 host-built toolchain
         run: sgo/scripts/build-stage0.sh
 
+      - name: Compile-level conformance (W03 progress; reject cases against the stage-0 compiler)
+        run: sgo/scripts/conformance-compile.py
+
       - name: Host test lane (compiler syntax package, incl. keyword table)
         run: sgo/scripts/test-host-pkg.sh cmd/compile/internal/syntax -count=1
 

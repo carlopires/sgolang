@@ -18,6 +18,7 @@ import (
 
 	"cmd/compile/internal/base"
 	"cmd/compile/internal/ir"
+	"cmd/compile/internal/sgoadmit"
 	"cmd/compile/internal/syntax"
 	"cmd/compile/internal/typecheck"
 	"cmd/compile/internal/types"
@@ -73,6 +74,22 @@ func LoadPackage(filenames []string) {
 	}
 	base.Timer.AddEvent(int64(lines), "lines")
 
+	// S-Go admission (SGO-ERR-001): every package except digest-pinned trusted target code
+	// (SGO-TCB-002). It runs before type checking and stops the package on any denial.
+	base.ExitIfErrors() // admission runs only on files that parsed
+	if !sgoadmit.Trusted(filenames) {
+		files := make([]*syntax.File, len(noders))
+		var directives []syntax.Pos
+		for i, p := range noders {
+			files[i] = p.file
+			directives = append(directives, p.sgoDirectives...)
+		}
+		for _, d := range sgoadmit.Check(files, filenames, directives) {
+			base.ErrorfAt(m.makeXPos(d.Pos), 0, "%s: %s", d.Code, d.Msg)
+		}
+		base.ExitIfErrors()
+	}
+
 	unified(m, noders)
 }
 
@@ -97,10 +114,11 @@ func trimFilename(b *syntax.PosBase) string {
 
 // noder transforms package syntax's AST into a Node tree.
 type noder struct {
-	file       *syntax.File
-	linknames  []linkname
-	pragcgobuf [][]string
-	err        chan syntax.Error
+	file          *syntax.File
+	sgoDirectives []syntax.Pos // positions of //go: directives, for S-Go admission
+	linknames     []linkname
+	pragcgobuf    [][]string
+	err           chan syntax.Error
 }
 
 // linkname records a //go:linkname or //go:linknamestd directive.
@@ -237,6 +255,10 @@ func (p *noder) pragma(pos syntax.Pos, blankLine bool, text string, old syntax.P
 	if strings.HasPrefix(text, "line ") {
 		// line directives are handled by syntax package
 		panic("unreachable")
+	}
+
+	if strings.HasPrefix(text, "go:") {
+		p.sgoDirectives = append(p.sgoDirectives, pos)
 	}
 
 	if !blankLine {

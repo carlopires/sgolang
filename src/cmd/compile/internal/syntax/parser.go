@@ -2344,6 +2344,14 @@ func (p *parser) nurseryStmt() Stmt {
 	s := new(NurseryStmt)
 	s.pos = p.pos()
 	p.next() // consume 'nursery'
+	if p.tok != _Lparen && p.tok != _Lbrace {
+		// nursery used as a name, e.g. nursery := 1 (SGO-LEX-003)
+		p.errorAt(s.pos, "SGO_E_RESERVED_WORD: nursery is a reserved word (SGO-LEX-003)")
+		p.advance(_Semi, _Rbrace)
+		s.Body = new(BlockStmt)
+		s.Body.pos = s.pos
+		return s
+	}
 	if p.got(_Lparen) {
 		s.Name = p.name()
 		p.want(_Rparen)
@@ -2787,6 +2795,12 @@ func (p *parser) name() *Name {
 	}
 
 	n := NewName(p.pos(), "_")
+	if p.tok == _Nursery {
+		// SGO-LEX-003: a reserved word is never a name.
+		p.errorAt(p.pos(), "SGO_E_RESERVED_WORD: nursery is a reserved word (SGO-LEX-003)")
+		p.next()
+		return n
+	}
 	p.syntaxError("expected name")
 	p.advance()
 	return n
