@@ -1,0 +1,23 @@
+{
+  "bootstrap_archive_sha256": "0b5183492292ada170f9b561a834863808dd02edba599e4ad0e89899330020b3",
+  "bootstrap_goroot": "/Users/carlopires/.cache/sgolang/bootstrap/go1.26.10-darwin-arm64/go",
+  "bootstrap_version": "go version go1.26.10 darwin/arm64",
+  "compile_binary_sha256": "cd53f408fd8281f46e154351e11d66b29110a1cef1e7dcfd4803272ebe27eb9c",
+  "compile_version": "compile version go1.27.3",
+  "finished_at": "2026-10-30T15:15:49Z",
+  "go_binary_sha256": "321d3c71ff0eac2a54af5d43aabc327652b13abe3f0e6f5da531133b6b307d5c",
+  "go_version": "go version go1.27.3 darwin/arm64",
+  "goroot": "/Users/carlopires/.cache/sgolang/reference/go1.27.3-b02",
+  "gotooldir": "/Users/carlopires/.cache/sgolang/reference/go1.27.3-b02/pkg/tool/darwin_arm64",
+  "label": "b02",
+  "link_binary_sha256": "4c0339f533439dc3152d7e239f965410fe43cb718937b4a38eea629bb409070d",
+  "log": "sgo/evidence/w00/logs/reference-build-darwin-arm64-b02.log",
+  "platform": "darwin-arm64",
+  "started_at": "2026-10-30T15:14:59Z",
+  "status": "passed",
+  "test_case": "B02",
+  "upstream_commit": "2aae1000ea1d4b28923b96db28acf4e3b99d6aff",
+  "upstream_tag": "go1.27.3",
+  "worktree": "/Users/carlopires/.cache/sgolang/reference/go1.27.3-b02",
+  "worktree_head": "2aae1000ea1d4b28923b96db28acf4e3b99d6aff"
+}

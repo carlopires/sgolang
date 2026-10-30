@@ -1,0 +1,19 @@
+{
+  "bootstrap_goroot": "/Users/carlopires/.cache/sgolang/bootstrap/go1.26.10-darwin-arm64/go",
+  "bootstrap_version": "go version go1.26.10 darwin/arm64",
+  "compile_binary_sha256": "f5f4ec56345a5d60eafeeaa8b0d573c5e68aa18d742b0df0e3de6e016122d6fe",
+  "compile_version": "compile version go1.27.3",
+  "finished_at": "2026-10-30T15:16:19Z",
+  "fork_bin_go_present": "no",
+  "fork_commit": "bd5889a4c87f6aa9d209bd181bd5efc8a3fe3173",
+  "fork_dirty": "no",
+  "link_binary_sha256": "4442ed064665e5c281047cd83391712e7bbe130c85fc777f2bf2f27039c78759",
+  "log": "sgo/evidence/w00/logs/stage0-build-darwin-arm64.log",
+  "note": "toolchain1 still identifies as upstream (compile -V). S-Go identity/ABI metadata is W03 work; this compiler is not an S-Go target entry point (sgo/scripts/sgo-target is).",
+  "platform": "darwin-arm64",
+  "self_hosted_stages_run": "no",
+  "started_at": "2026-10-30T15:16:10Z",
+  "status": "passed",
+  "test_case": "B04",
+  "tooldir": "/Users/carlopires/ycode/sgolang/pkg/tool/darwin_arm64"
+}

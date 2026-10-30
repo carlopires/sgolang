@@ -1,0 +1,14 @@
+{
+  "bench_regex": "^Benchmark(CreateGoroutines|CreateGoroutinesParallel|ChanSync|ChanProdCons(0|10|100)|ChanUncontended|ChanContended|SelectUncontended|SelectSyncContended|SelectProdCons|StackGrowth|StackGrowthDeep|PingPongHog|WakeupParallelSpinning|Defer|DeferMany|PanicRecover)$",
+  "command": "go test -run ^$ -bench <set> -count 5 -benchmem runtime",
+  "count": "5",
+  "cpu": "Apple M3 Pro",
+  "finished_at": "2026-10-30T15:10:10Z",
+  "ncpu": "12",
+  "note": "Host-load-sensitive; compare only with benchstat on the same machine and configuration.",
+  "platform": "darwin-arm64",
+  "results": "sgo/evidence/w00/bench-reference-darwin-arm64.txt",
+  "started_at": "2026-10-30T15:07:09Z",
+  "upstream_commit": "2aae1000ea1d4b28923b96db28acf4e3b99d6aff",
+  "worktree": "/Users/carlopires/.cache/sgolang/reference/go1.27.3-b01"
+}

@@ -1,0 +1,3 @@
+Building Go toolchain1 using /Users/carlopires/.cache/sgolang/bootstrap/go1.26.10-darwin-arm64/go.
+S-Go stage 0: host-built toolchain installed in /Users/carlopires/ycode/sgolang/pkg/tool/darwin_arm64
+S-Go stage 0: self-hosted stages (go_bootstrap, toolchain2, toolchain3, std) skipped.
