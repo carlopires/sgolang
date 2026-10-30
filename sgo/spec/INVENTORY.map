@@ -1,0 +1,122 @@
+# S-Go surface inventory map (W01 step 3). Checked by sgo/scripts/inventory-check.py.
+#
+# Every surface extracted from the fork's sources (sgo/scripts/inventory/extract.go) must match
+# exactly one rule; the first matching rule wins. A rule that matches nothing is an error, so the
+# map cannot silently drift from the compiler.
+#
+# Format:  <kind>  <regex, full match>  <verdict>  <clause>  [# note]
+# Verdicts:
+#   admit     reachable from subset-0 source, under the clause's restrictions
+#   deny      rejected by the clause (SGO_E_UNADMITTED or the clause's own code)
+#   internal  compiler/runtime machinery implementing the clause; not writable in source
+
+# ---- tokens (syntax/tokens.go) -------------------------------------------------------------
+token  _EOF|_Name|_Literal|_Operator|_AssignOp|_IncOp|_Assign|_Define|_Star  admit  SGO-LEX-002  # _Star: multiplication and *sgo.T only
+token  _Lparen|_Rparen|_Lbrace|_Rbrace|_Comma|_Semi|_Colon|_Dot  admit  SGO-LEX-002
+token  _Break|_Case|_Const|_Continue|_Default|_Defer|_Else|_For|_Func|_If|_Import|_Package|_Return|_Switch|_Var  admit  SGO-LEX-003
+token  _Arrow|_Chan|_Select  deny  SGO-CHAN-001
+token  _Lbrack|_Rbrack|_Map|_Struct|_Range  deny  SGO-COMP-001
+token  _DotDotDot  deny  SGO-TYPE-003
+token  _Fallthrough  deny  SGO-CTL-002
+token  _Go  deny  SGO-SPAWN-005
+token  _Goto  deny  SGO-CTL-001
+token  _Interface  deny  SGO-IFACE-001
+token  _Type  deny  SGO-UTYPE-001
+token  tokenCount  internal  SGO-LEX-002  # sentinel, not a token
+
+# ---- operators (syntax/tokens.go) ----------------------------------------------------------
+operator  Def|Add|Sub|Mul|Div|Rem|And|Or|Xor|AndNot|Shl|Shr|Eql|Neq|Lss|Leq|Gtr|Geq  admit  SGO-VAL-001  # also string/bool comparisons
+operator  Not|AndAnd|OrOr  admit  SGO-VAL-003
+operator  Recv  deny  SGO-CHAN-001
+operator  Tilde  deny  SGO-GEN-001
+
+# ---- syntax nodes (syntax/nodes.go) --------------------------------------------------------
+syntax-node  File|ImportDecl  admit  SGO-BIND-002
+syntax-node  ConstDecl|VarDecl  admit  SGO-BIND-003  # VarDecl: function level only
+syntax-node  FuncDecl|FuncLit|FuncType|Field|CallExpr  admit  SGO-TYPE-003
+syntax-node  Name|SelectorExpr  admit  SGO-BIND-004  # selectors: pkg.Name and capability methods
+syntax-node  BasicLit  admit  SGO-LEX-004
+syntax-node  Operation|ParenExpr|ListExpr  admit  SGO-VAL-005
+syntax-node  BlockStmt|ExprStmt|DeclStmt|AssignStmt|BranchStmt|ReturnStmt|IfStmt|ForStmt|LabeledStmt  admit  SGO-CTL-001
+syntax-node  SwitchStmt|CaseClause  admit  SGO-CTL-002
+syntax-node  CallStmt  admit  SGO-DEF-001  # defer; the go form is denied by SGO-SPAWN-005
+syntax-node  EmptyStmt  deny  SGO-CTL-001
+syntax-node  BadExpr  internal  SGO-ERR-001  # parser error recovery node
+syntax-node  TypeDecl  deny  SGO-UTYPE-001
+syntax-node  CompositeLit|KeyValueExpr|IndexExpr|SliceExpr|ArrayType|SliceType|StructType|MapType|RangeClause  deny  SGO-COMP-001
+syntax-node  AssertExpr|TypeSwitchGuard|InterfaceType  deny  SGO-IFACE-001
+syntax-node  DotsType  deny  SGO-TYPE-003
+syntax-node  ChanType|SendStmt|SelectStmt|CommClause  deny  SGO-CHAN-001
+
+# ---- predeclared identifiers (types2/universe.go) ------------------------------------------
+universe  bool|int|string  admit  SGO-TYPE-001
+universe  error|nil  admit  SGO-TYPE-006
+universe  true|false  admit  SGO-VAL-003
+universe  len  admit  SGO-VAL-002
+universe  panic  admit  SGO-DEF-002
+universe  int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|uintptr|byte|rune  deny  SGO-TYPE-001
+universe  float32|float64|complex64|complex128|real|imag|complex  deny  SGO-FLOAT-001
+universe  any  deny  SGO-IFACE-001
+universe  comparable  deny  SGO-GEN-001
+universe  iota  deny  SGO-VAL-004
+universe  append|cap|clear|copy|delete|make|new  deny  SGO-COMP-001
+universe  close  deny  SGO-CHAN-001
+universe  max|min  deny  SGO-VAL-001
+universe  print|println  deny  SGO-PROC-003
+universe  recover  deny  SGO-DEF-002
+universe  Pointer|Add|Alignof|Offsetof|Sizeof|Slice|SliceData|String|StringData  deny  SGO-NATIVE-001  # package unsafe
+universe  assert|trace  internal  SGO-TOOL-001  # types2 test-only builtins, never enabled by the compiler
+
+# ---- runtime functions the compiler can call (typecheck/_builtin/*.go) ------------------------
+runtime-builtin  newobject|mallocgc|typedmemmove|typedmemclr|memmove|memclrNoHeapPointers|memclrHasPointers|goschedguarded|throwinit  internal  SGO-TCB-001
+runtime-builtin  panicdivide|panicshift|int64div|uint64div|int64mod|uint64mod  internal  SGO-VAL-001
+runtime-builtin  concatstring[2-5]|concatstrings|cmpstring|strequal|memequal(0|8|16|32|64|128)?  internal  SGO-VAL-002
+runtime-builtin  gopanic  internal  SGO-DEF-002
+runtime-builtin  gorecover  deny  SGO-DEF-002
+runtime-builtin  panicwrap  deny  SGO-UTYPE-001
+runtime-builtin  print(bool|float64|float32|int|hex|uint|complex128|complex64|string|quoted|pointer|uintptr|iface|eface|slice|nl|sp|lock|unlock)  deny  SGO-PROC-003
+runtime-builtin  panicmakeslice(len|cap)|goPanic(Index|Slice)\w*|concatbyte[2-5]|concatbytes|slicebytetostring(tmp)?|slicerunetostring|stringtoslice(byte|rune)|slicecopy|typedslicecopy|decoderune|countrunes|panicrangestate|deferrangefunc  deny  SGO-COMP-001
+runtime-builtin  intstring  deny  SGO-TYPE-002
+runtime-builtin  makemap(64|_small)?|mapaccess[12](_fast32|_fast64|_faststr|_fat)?|mapassign(_fast32|_fast32ptr|_fast64|_fast64ptr|_faststr)?|mapIterStart|mapIterNext|mapdelete(_fast32|_fast64|_faststr)?|mapclear  deny  SGO-COMP-001
+runtime-builtin  makeslice(64|copy)?|growslice(Buf|BufNoAlias|NoAlias)?|moveSlice(NoScan|NoCap|NoCapNoScan)?|(mem|str|f32|f64|c64|c128|inter|nilinter)hash(0|8|16|32|64|128)?  deny  SGO-COMP-001
+runtime-builtin  convT(noptr|16|32|64|string|slice)?|assertE2I2?|panicdottype[EI]|panicnildottype|typeAssert|interfaceSwitch|ifaceeq|efaceeq|interequal|nilinterequal  deny  SGO-IFACE-001
+runtime-builtin  makechan(64)?|chanrecv[12]|chansend1|closechan|chanlen|chancap|selectnbsend|selectnbrecv|selectsetpc|selectgo|block  deny  SGO-CHAN-001
+runtime-builtin  rand|rand32  deny  SGO-RANDOM-001
+runtime-builtin  f32equal|f64equal|c64equal|c128equal|float64to(int64|uint64|uint32)|(int64|uint64|uint32)tofloat(64|32)|complex128div  deny  SGO-FLOAT-001
+runtime-builtin  unsafeslicecheckptr|panicunsafeslice(len|nilptr)|unsafestringcheckptr|panicunsafestring(len|nilptr)|checkptrAlignment|checkptrArithmetic|KeepAlive  deny  SGO-NATIVE-001
+runtime-builtin  race(funcenter|funcexit|read|write|readrange|writerange)|msan(read|write|move)|asan(read|write|registerglobals)|libfuzzer\w+|addCovMeta|initHook  deny  SGO-TOOL-001  # race/msan/asan/fuzz/coverage instrumentation: no such sgo build mode in subset 0
+
+# ---- IR operations (ir/node.go) ------------------------------------------------------------
+ir-op  OXXX  internal  SGO-ERR-001  # invalid-op sentinel
+ir-op  ONAME|ONONAME  internal  SGO-BIND-004
+ir-op  OTYPE  internal  SGO-TYPE-001
+ir-op  OLITERAL  internal  SGO-VAL-004
+ir-op  ONIL  internal  SGO-TYPE-006
+ir-op  OADD|OSUB|OMUL|ODIV|OMOD|OLSH|ORSH|OAND|OOR|OXOR|OANDNOT|ONEG|OPLUS|OBITNOT|OEQ|ONE|OLT|OLE|OGT|OGE|OASOP  internal  SGO-VAL-001
+ir-op  OADDSTR|OLEN  internal  SGO-VAL-002
+ir-op  OANDAND|OOROR|ONOT  internal  SGO-VAL-003
+ir-op  OPAREN  internal  SGO-VAL-005
+ir-op  OAS|OAS2|OAS2FUNC|ODCL|ODCLFUNC  internal  SGO-BIND-003
+ir-op  OCALL|OCALLFUNC|OCLOSURE|ORESULT|OINLCALL|OINLMARK|OTAILCALL  internal  SGO-TYPE-003
+ir-op  OXDOT|ODOTMETH|OCALLMETH  internal  SGO-CAP-001  # method calls on sgo capability handles
+ir-op  OCONVNOP  internal  SGO-TYPE-002
+ir-op  OBLOCK|OBREAK|OCONTINUE|OFOR|OIF|OLABEL|ORETURN  internal  SGO-CTL-001
+ir-op  OCASE|OSWITCH|OJUMPTABLE  internal  SGO-CTL-002
+ir-op  ODEFER  internal  SGO-DEF-001
+ir-op  OPANIC  internal  SGO-DEF-002
+ir-op  OSPTR|OCFUNC|OCHECKNIL|OLINKSYMOFFSET|OMOVE2HEAP|OGETG|OGETCALLERSP  internal  SGO-TCB-001
+ir-op  OCONV  deny  SGO-TYPE-002
+ir-op  OMETHEXPR|OMETHVALUE  deny  SGO-UTYPE-001
+ir-op  ORECOVER  deny  SGO-DEF-002
+ir-op  OPRINT|OPRINTLN  deny  SGO-PROC-003
+ir-op  OFALL  deny  SGO-CTL-002
+ir-op  OGOTO  deny  SGO-CTL-001
+ir-op  OGO  deny  SGO-SPAWN-005
+ir-op  OMIN|OMAX  deny  SGO-VAL-001
+ir-op  OREAL|OIMAG|OCOMPLEX  deny  SGO-FLOAT-001
+ir-op  OUNSAFE(ADD|SLICE|SLICEDATA|STRING|STRINGDATA)  deny  SGO-NATIVE-001
+ir-op  OADDR|ODEREF|ODOT|ODOTPTR|OPTRLIT|ONEW|OAPPEND|OCAP|OCLEAR|OCOPY|ODELETE|OINDEX|OINDEXMAP|OKEY|OSTRUCTKEY|OAS2MAPR|ORANGE|ORUNESTR  deny  SGO-COMP-001
+ir-op  OCOMPLIT|OMAPLIT|OSTRUCTLIT|OARRAYLIT|OSLICELIT|OMAKE|OMAKEMAP|OMAKESLICE|OMAKESLICECOPY|OSLICE|OSLICEARR|OSLICESTR|OSLICE3|OSLICE3ARR|OSLICEHEADER|OSTRINGHEADER  deny  SGO-COMP-001
+ir-op  OBYTES2STR|OBYTES2STRTMP|ORUNES2STR|OSTR2BYTES|OSTR2BYTESTMP|OSTR2RUNES|OSLICE2ARR|OSLICE2ARRPTR  deny  SGO-COMP-001
+ir-op  OAS2DOTTYPE|ODOTTYPE|ODOTTYPE2|OCONVIFACE|ODOTINTER|OCALLINTER|OTYPESW|OMAKEFACE|OITAB|OIDATA|OINTERFACESWITCH|ODYNAMICDOTTYPE|ODYNAMICDOTTYPE2|ODYNAMICTYPE  deny  SGO-IFACE-001
+ir-op  OAS2RECV|ORECV|OSEND|OSELRECV2|OCLOSE|OMAKECHAN|OSELECT  deny  SGO-CHAN-001

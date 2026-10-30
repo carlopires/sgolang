@@ -12,8 +12,10 @@ permissions:
 jobs:
   spec:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - name: Validate clauses and registry
         run: sgo/scripts/spec-tool.py check
+      - name: Surface inventory (every compiler/runtime surface maps to a clause)
+        run: sgo/scripts/inventory-check.py
