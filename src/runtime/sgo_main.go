@@ -8,7 +8,7 @@
 // main.main as sgoExitMain(main·sgo(sgoEnterMain())) (cmd/compile/internal/noder/sgo_main.go).
 // A failure that unwinds out of main·sgo reaches gopanic's end after the frame walk has completed
 // every open nursery (SGO-DEF-005); sgoUnwoundOut then writes the record and exits, before the Go
-// panic printer runs.
+// panic printer runs. Runtime throws in an S-Go program end with status 4 (sgoThrowExit).
 
 package runtime
 
@@ -19,6 +19,9 @@ var sgoProgram bool
 
 // sgoContext mirrors sgo.Context (struct{ t unsafe.Pointer }); the root context is made here.
 type sgoContext struct{ t unsafe.Pointer }
+
+// sgoFailureInfo is one entry of a diagnostic record: the primary failure or a chain entry.
+type sgoFailureInfo struct{ kind, msg string }
 
 // sgoEnterMain starts the root task (creation ID 0) on the main goroutine, turns on go-statement
 // enforcement (sgo_service.go), and returns the root *sgo.Context.
@@ -43,8 +46,27 @@ func sgoExitMain(v any) {
 	if !ok {
 		sgoDefect("main returned a non-error value")
 	}
-	sgoWriteRecord("MainError", err.Error(), 0)
+	sgoWriteRecord(sgoFailureInfo{"MainError", err.Error()}, nil, 0)
 	exit(1)
+}
+
+// sgoUnwound returns the primary failure of the unwinding that p is part of and the later failures
+// in occurrence order (SGO-DEF-004): a failure raised by a deferred call while the task is already
+// unwinding does not replace the one in progress. Go keeps the earlier panics on p.link.
+func sgoUnwound(p *_panic) (primary any, later []any) {
+	for q := p; q != nil; q = q.link {
+		if q.goexit {
+			break
+		}
+		later = append(later, q.arg)
+	}
+	n := len(later)
+	primary = later[n-1]
+	later = later[:n-1]
+	for i, j := 0, len(later)-1; i < j; i, j = i+1, j-1 {
+		later[i], later[j] = later[j], later[i]
+	}
+	return primary, later
 }
 
 // sgoUnwoundOut is called by gopanic when a failure has unwound every frame of the root task of an
@@ -55,9 +77,14 @@ func sgoUnwoundOut(p *_panic) {
 	if !sgoProgram || p.goexit || t == nil || t.id != 0 {
 		return
 	}
-	kind, msg := sgoFailureOf(p.arg)
-	sgoWriteRecord(kind, msg, 0)
-	switch kind {
+	primary, later := sgoUnwound(p)
+	f := sgoFailureOf(primary)
+	chain := make([]sgoFailureInfo, len(later))
+	for i, v := range later {
+		chain[i] = sgoFailureOf(v)
+	}
+	sgoWriteRecord(f, chain, 0)
+	switch f.kind {
 	case "ChildError":
 		exit(1)
 	case "RuntimeDefect":
@@ -67,86 +94,145 @@ func sgoUnwoundOut(p *_panic) {
 }
 
 // sgoFailureOf classifies an unwinding payload into a failure kind of SGO-DEF-003.
-func sgoFailureOf(v any) (kind, msg string) {
+func sgoFailureOf(v any) sgoFailureInfo {
 	switch e := v.(type) {
 	case string:
-		return "Panic", e // panic(msg) (SGO-DEF-002)
+		return sgoFailureInfo{"Panic", e} // panic(msg) (SGO-DEF-002)
 	case *sgoFailure:
-		return e.kind, e.msg
+		return sgoFailureInfo{e.kind, e.msg}
 	case *sgoViolation:
-		return "SpawnContractViolation", e.msg
+		return sgoFailureInfo{"SpawnContractViolation", e.msg}
 	case Error:
 		switch e.Error() {
 		case "runtime error: integer divide by zero":
-			return "DivideByZero", "integer divide by zero"
+			return sgoFailureInfo{"DivideByZero", "integer divide by zero"}
 		case "runtime error: invalid memory address or nil pointer dereference":
-			return "NilError", "method call on a nil error" // SGO-TYPE-006
+			return sgoFailureInfo{"NilError", "method call on a nil error"} // SGO-TYPE-006
 		}
-		return "RuntimeDefect", e.Error()
+		return sgoFailureInfo{"RuntimeDefect", e.Error()}
 	}
-	return "RuntimeDefect", "unexpected failure value"
+	return sgoFailureInfo{"RuntimeDefect", "unexpected failure value"}
 }
 
 // sgoDefect ends an S-Go program with a RuntimeDefect record and status 4 (SGO-ERR-003).
 func sgoDefect(msg string) {
-	sgoWriteRecord("RuntimeDefect", msg, 0)
+	sgoWriteRecord(sgoFailureInfo{"RuntimeDefect", msg}, nil, 0)
 	exit(4)
 }
 
-// sgoWriteRecord writes the single-line diagnostic record of SGO-ERR-002 to stderr. Source positions
-// and the chain are W03 diagnostics work; until then position is null and the chain is empty.
-func sgoWriteRecord(kind, msg string, task uint64) {
-	b := make([]byte, 0, 96+len(kind)+len(msg))
-	b = append(b, `{"sgo_diagnostic":1,"kind":`...)
-	b = sgoAppendJSON(b, kind)
-	b = append(b, `,"message":`...)
-	b = sgoAppendJSON(b, msg)
-	b = append(b, `,"position":null,"task_id":`...)
-	b = sgoAppendUint(b, task)
-	b = append(b, `,"scope_id":null,"chain":[]}`+"\n"...)
-	for done := 0; done < len(b); {
-		n := write(2, unsafe.Pointer(&b[done]), int32(len(b)-done))
+// sgoThrowExit ends an S-Go program on a runtime throw (SGO-ERR-003): exhausted resources are
+// ResourceExhausted, every other throw is a violated invariant, RuntimeDefect. Status 4; deferred
+// calls do not run. It runs on the system stack and does not allocate.
+func sgoThrowExit(s string) {
+	kind := "RuntimeDefect"
+	switch s {
+	case "stack overflow", "out of memory":
+		kind = "ResourceExhausted"
+	}
+	var task uint64
+	if gp := getg().m.curg; gp != nil && gp.sgo != nil {
+		task = gp.sgo.id
+	}
+	sgoWriteRecord(sgoFailureInfo{kind, s}, nil, task)
+	exit(4)
+}
+
+// sgoWriteRecord writes the single-line diagnostic record of SGO-ERR-002 to stderr. It does not
+// allocate, so it can run on the system stack. Source positions are W03 diagnostics work; until
+// then every position is null.
+func sgoWriteRecord(f sgoFailureInfo, chain []sgoFailureInfo, task uint64) {
+	var w sgoRecordWriter
+	w.str(`{"sgo_diagnostic":1,"kind":`)
+	w.json(f.kind)
+	w.str(`,"message":`)
+	w.json(f.msg)
+	w.str(`,"position":null,"task_id":`)
+	w.uint(task)
+	w.str(`,"scope_id":null,"chain":[`)
+	for i, c := range chain {
+		if i > 0 {
+			w.byte(',')
+		}
+		w.str(`{"kind":`)
+		w.json(c.kind)
+		w.str(`,"message":`)
+		w.json(c.msg)
+		w.str(`,"position":null}`)
+	}
+	w.str("]}\n")
+	w.flush()
+}
+
+// sgoRecordWriter buffers record bytes in a fixed array and writes them to fd 2.
+type sgoRecordWriter struct {
+	buf [256]byte
+	n   int
+}
+
+func (w *sgoRecordWriter) flush() {
+	for done := 0; done < w.n; {
+		n := write(2, unsafe.Pointer(&w.buf[done]), int32(w.n-done))
 		if n == -_EINTR {
 			continue
 		}
 		if n <= 0 {
-			return // SGO-ERR-002: the exit status is still produced
+			break // SGO-ERR-002: the exit status is still produced
 		}
 		done += int(n)
 	}
+	w.n = 0
 }
 
-// sgoAppendJSON appends s as a JSON string: valid UTF-8, with ", \, and control characters escaped
-// and invalid bytes replaced by U+FFFD.
-func sgoAppendJSON(b []byte, s string) []byte {
+func (w *sgoRecordWriter) byte(c byte) {
+	if w.n == len(w.buf) {
+		w.flush()
+	}
+	w.buf[w.n] = c
+	w.n++
+}
+
+func (w *sgoRecordWriter) str(s string) {
+	for i := 0; i < len(s); i++ {
+		w.byte(s[i])
+	}
+}
+
+// json writes s as a JSON string: valid UTF-8, with ", \, and control characters escaped and
+// invalid bytes replaced by U+FFFD.
+func (w *sgoRecordWriter) json(s string) {
 	const hex = "0123456789abcdef"
-	b = append(b, '"')
+	w.byte('"')
 	for i := 0; i < len(s); {
 		c := s[i]
 		if c < 0x80 {
 			switch {
 			case c == '"' || c == '\\':
-				b = append(b, '\\', c)
+				w.byte('\\')
+				w.byte(c)
 			case c < 0x20:
-				b = append(b, '\\', 'u', '0', '0', hex[c>>4], hex[c&15])
+				w.str(`\u00`)
+				w.byte(hex[c>>4])
+				w.byte(hex[c&15])
 			default:
-				b = append(b, c)
+				w.byte(c)
 			}
 			i++
 			continue
 		}
 		r, next := decoderune(s, uint(i))
 		if r == runeError && next == uint(i)+1 {
-			b = append(b, "\ufffd"...)
+			w.str("\ufffd")
 		} else {
-			b = append(b, s[i:next]...)
+			for k := uint(i); k < next; k++ {
+				w.byte(s[k])
+			}
 		}
 		i = int(next)
 	}
-	return append(b, '"')
+	w.byte('"')
 }
 
-func sgoAppendUint(b []byte, v uint64) []byte {
+func (w *sgoRecordWriter) uint(v uint64) {
 	var buf [20]byte
 	i := len(buf)
 	for {
@@ -157,5 +243,7 @@ func sgoAppendUint(b []byte, v uint64) []byte {
 			break
 		}
 	}
-	return append(b, buf[i:]...)
+	for ; i < len(buf); i++ {
+		w.byte(buf[i])
+	}
 }

@@ -1248,6 +1248,10 @@ func cgroup_throw(s string) {
 func throw(s string) {
 	// Everything throw does should be recursively nosplit so it
 	// can be called even when it's unsafe to grow the stack.
+	if sgoProgram {
+		// S-Go: one diagnostic record and exit status 4 (SGO-ERR-003); sgo_main.go.
+		systemstack(func() { sgoThrowExit(s) })
+	}
 	systemstack(func() {
 		print("fatal error: ")
 		printindented(s) // logically printpanicval(s), but avoids convTstring write barrier

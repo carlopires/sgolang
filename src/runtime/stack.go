@@ -1198,6 +1198,10 @@ func newstack() {
 	}
 
 	if newsize > maxstacksize || newsize > maxstackceiling {
+		if sgoProgram {
+			// S-Go: the record written by throw is the only stderr output (SGO-ERR-002/003).
+			throw("stack overflow")
+		}
 		if maxstacksize < maxstackceiling {
 			print("runtime: goroutine stack exceeds ", maxstacksize, "-byte limit\n")
 		} else {

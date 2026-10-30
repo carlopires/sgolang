@@ -220,7 +220,17 @@ func sgoTaskMain(c *sgoTask, fn func(*sgoTask) error) {
 	normal := false
 	defer func() {
 		if !normal {
-			c.outcome, c.panic = sgoFailed, recover()
+			// The child's failure is the first one of its unwinding (SGO-DEF-004), not a later
+			// failure raised by a deferred call, which is what recover would return.
+			var primary any
+			if p := getg()._panic; p != nil {
+				primary, _ = sgoUnwound(p)
+			}
+			v := recover()
+			if primary == nil {
+				primary = v
+			}
+			c.outcome, c.panic = sgoFailed, primary
 		}
 		sgoTaskExit(c)
 	}()
