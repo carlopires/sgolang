@@ -1,6 +1,6 @@
 # S-Go subset 0 — draft specification
 
-**Version:** 0.1-draft · **Date:** 2026-10-30 · **Status:** DRAFT. No clause is frozen or admitted. W01 completes, freezes, and digests these clauses (plan §11 W01, decision D18).
+**Version:** 0.1-draft · **Date:** 2026-10-30 · **Status:** OVERVIEW. The normative clauses now live in `sgo/spec/SPEC-*.md` (84 clauses, validated by `sgo/scripts/spec-tool.py`); where this overview and a clause differ, the clause wins. No clause is frozen or admitted yet.
 
 ## 0. Status and scope
 

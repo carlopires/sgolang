@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": null,
-  "admission_digest": null,
+  "spec_version": "0.1.0-draft",
+  "admission_digest": "bf59cd59276e775652c9f60102077976251c53f5dabdbd9a9974e01d91b6b5f5",
   "status": "inventory_seed_not_an_admission_allowlist",
   "warning": "This is not a completed language specification. Every family must be expanded into concrete clauses and checked against real compiler/API/IR surfaces. No feature is claimed implemented or admitted by this handoff.",
   "default_decision": "reject",
@@ -58,8 +58,13 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-LEX-001",
+        "SGO-LEX-002",
+        "SGO-LEX-003",
+        "SGO-LEX-004"
+      ],
+      "normative_text_digest": "16c867fb01b1cb763e9ece249450ed6c391ae2bd59a467d4205e12b312f195c8",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X01",
@@ -69,7 +74,19 @@
         "S19"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-LEX-001": "2cfbeab442e1f80ccc4a361c983d63fb95acfa425f024db18d9022b42cf8f0ad",
+        "SGO-LEX-002": "f9d765fc78e7bda8d128f525e2ef83e89ce52cacf09b8c7a3490fd6746c07afe",
+        "SGO-LEX-003": "71866962f86eeb7fd34be2979b3ca09e78735fe5c5873b19a5b91d4823b40f11",
+        "SGO-LEX-004": "59c5ae5f5b980d8b8a9372e270b575c6c9266267ef1e30c3a69d7f3d9c155915"
+      },
+      "clause_status": {
+        "SGO-LEX-001": "draft",
+        "SGO-LEX-002": "draft",
+        "SGO-LEX-003": "draft",
+        "SGO-LEX-004": "draft"
+      }
     },
     {
       "id": "SPEC-BIND",
@@ -77,8 +94,14 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-BIND-001",
+        "SGO-BIND-002",
+        "SGO-BIND-003",
+        "SGO-BIND-004",
+        "SGO-BIND-005"
+      ],
+      "normative_text_digest": "02efb3ea6deeba8613ec067f3cb6378ac539b3d9638dc993f9c30cf5707fac45",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X02",
@@ -86,7 +109,21 @@
         "S09"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-BIND-001": "206a3204b829a241fd73cf85e6d6a7998c8c72eedb9a4c4f3d99f889a35f155b",
+        "SGO-BIND-002": "cb871c24e1f8c4fb9bebef05702b796f3e4ca6384bd7be62b26361f97949c8ba",
+        "SGO-BIND-003": "73a3133e7b3ea93bc2f117d121f011e344a09c8ea304b62d6d10a406f552ae80",
+        "SGO-BIND-004": "8d68e95c75299d3d5be010425f4bf3fd9fe780c07754a8d6859415e94e7c2504",
+        "SGO-BIND-005": "8f10357b4e4dfc0a00115743596b4b05ad1c1b806dff3ba7acafa7b69be6f11b"
+      },
+      "clause_status": {
+        "SGO-BIND-001": "draft",
+        "SGO-BIND-002": "draft",
+        "SGO-BIND-003": "draft",
+        "SGO-BIND-004": "draft",
+        "SGO-BIND-005": "draft"
+      }
     },
     {
       "id": "SPEC-TYPE",
@@ -94,8 +131,15 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-TYPE-001",
+        "SGO-TYPE-002",
+        "SGO-TYPE-003",
+        "SGO-TYPE-004",
+        "SGO-TYPE-005",
+        "SGO-TYPE-006"
+      ],
+      "normative_text_digest": "d15b3c561c84cb1834216049fcd44c163a68ed65e3f2ea1a7693a0543cbc543a",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X10",
@@ -103,7 +147,23 @@
         "S10"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-TYPE-001": "6083da406ced4ce2790911a70ed475caa4c14f78edf1382eb0157a9352fb20d2",
+        "SGO-TYPE-002": "a8add95831751c40569a3b95301af45f747fc0a1142428ddef42f8abf585a510",
+        "SGO-TYPE-003": "26476d37ca42c8ce0c74e92e79ce3fb15baea8b0814de79c9d1ddcb520d536b1",
+        "SGO-TYPE-004": "18e1d299ad16d3db84871fa2963f3f491bb485d6461ab37ce2d01edb8030593c",
+        "SGO-TYPE-005": "523a384ee1289ce5608ee8e987622050c99e22ca6ce6291b9ce6aabbf664b4e9",
+        "SGO-TYPE-006": "b211dd34ab3f0e87904024d41f83e869d349c6b27127eeac5f6357f29ceb1f68"
+      },
+      "clause_status": {
+        "SGO-TYPE-001": "draft",
+        "SGO-TYPE-002": "draft",
+        "SGO-TYPE-003": "draft",
+        "SGO-TYPE-004": "draft",
+        "SGO-TYPE-005": "draft",
+        "SGO-TYPE-006": "draft"
+      }
     },
     {
       "id": "SPEC-VALUE",
@@ -111,15 +171,35 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-VAL-001",
+        "SGO-VAL-002",
+        "SGO-VAL-003",
+        "SGO-VAL-004",
+        "SGO-VAL-005"
+      ],
+      "normative_text_digest": "e75549addd83377f5d0223d91efaa4af0036b14e1f33baaae54f663ad9c46d39",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X05",
         "S16"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-VAL-001": "f0fe13f69f281f9a1dd29fa629cd12abf4799ac7ac4907998a2cc331dfd712c6",
+        "SGO-VAL-002": "8a028d01ba9be689e252ccb8cd82d0b72361b1bb9216e295b928cc3176a18004",
+        "SGO-VAL-003": "fdf53a4b90b3cb37d657412925aea61c3a75c2ce1cbe5ca3ad0ea9e1d6e4b4fa",
+        "SGO-VAL-004": "76377e3af619be6851cfd512c150b40a5b29395357d1f40306fe15df9cfa0a97",
+        "SGO-VAL-005": "8565775a7539042b78561964be77935df801dd3f13f8e449255345563ddb320b"
+      },
+      "clause_status": {
+        "SGO-VAL-001": "draft",
+        "SGO-VAL-002": "draft",
+        "SGO-VAL-003": "draft",
+        "SGO-VAL-004": "draft",
+        "SGO-VAL-005": "draft"
+      }
     },
     {
       "id": "SPEC-MEM",
@@ -127,15 +207,32 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W07",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-MEM-001",
+        "SGO-MEM-002",
+        "SGO-MEM-003",
+        "SGO-MEM-004"
+      ],
+      "normative_text_digest": "e6a8c39153e10be446fd58bc6c2a0984c40ed52ec869698512c1ccd267a06797",
       "admitted_in": [],
       "acceptance_case_ids": [
         "O09",
         "S16"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-MEM-001": "d83409541674016733b8a84506a8a5ae508c6cc930ccb64aea340dd21495463f",
+        "SGO-MEM-002": "e81c3f75d61ab6094c5de16561cdcc264aec1d176d6411bc57df318a79fbef1f",
+        "SGO-MEM-003": "7cf39bd837d99ebb050ed2fe5445b77113fc76414477316305e7c1fe158907b9",
+        "SGO-MEM-004": "7644f8b9d76f3a610e6c95b8f9f5b86dbe7cace6609445b94723abb9cee46c1e"
+      },
+      "clause_status": {
+        "SGO-MEM-001": "draft",
+        "SGO-MEM-002": "draft",
+        "SGO-MEM-003": "draft",
+        "SGO-MEM-004": "draft"
+      }
     },
     {
       "id": "SPEC-CONTROL",
@@ -143,8 +240,13 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-CTL-001",
+        "SGO-CTL-002",
+        "SGO-CTL-003",
+        "SGO-CTL-004"
+      ],
+      "normative_text_digest": "c0f3a2a24b49e146740263f76c60f60a8a6752cb3be648b5e1a6343db39cd756",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X04",
@@ -155,7 +257,19 @@
         "X11"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-CTL-001": "05cc294f93cb2413e2a2b9ca5742a29584cd79ecf61a9234ea297800032053b5",
+        "SGO-CTL-002": "b9486382021af5e5a5643b0063d45ec05944db9993cdeeced8b0ad2415097748",
+        "SGO-CTL-003": "3d2447edd9d501468a062778dc687245e5fce3a645dc2b50737e559f384a847b",
+        "SGO-CTL-004": "55500bf4ea97261b3d48aa7617704ebade7cbcfd0900509e0c7178778ca51b78"
+      },
+      "clause_status": {
+        "SGO-CTL-001": "draft",
+        "SGO-CTL-002": "draft",
+        "SGO-CTL-003": "draft",
+        "SGO-CTL-004": "draft"
+      }
     },
     {
       "id": "SPEC-DEFER",
@@ -163,8 +277,14 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W04",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-DEF-001",
+        "SGO-DEF-002",
+        "SGO-DEF-003",
+        "SGO-DEF-004",
+        "SGO-DEF-005"
+      ],
+      "normative_text_digest": "79cb4ae7695e0299603fc40f76e9f4b33c493a517f527542250539664735fafc",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X09",
@@ -176,7 +296,21 @@
         "P08"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-DEF-001": "ada7cd8d3aa5b4a0305044fba0106cc64318cc377a1457a70e6b75c125d4864d",
+        "SGO-DEF-002": "d91d278bf1727e126b2af992d7e9f580f3deb8c4644e210ebf660c1fb2e4166a",
+        "SGO-DEF-003": "71b0f0b237095a7451e011c385dfeacfe5404eafa5f30de571dcfc3402d7537a",
+        "SGO-DEF-004": "5b0f4fd3aa7b93f6ee447374cf9f07121098c1efca47895354f323d591aa4518",
+        "SGO-DEF-005": "cfa32e603fc99a48788af8b4fb217eddaa63a8e0bdb061bb733d761034a7d349"
+      },
+      "clause_status": {
+        "SGO-DEF-001": "draft",
+        "SGO-DEF-002": "draft",
+        "SGO-DEF-003": "draft",
+        "SGO-DEF-004": "draft",
+        "SGO-DEF-005": "draft"
+      }
     },
     {
       "id": "SPEC-NURSERY",
@@ -184,8 +318,14 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-NUR-001",
+        "SGO-NUR-002",
+        "SGO-NUR-003",
+        "SGO-NUR-004",
+        "SGO-NUR-005"
+      ],
+      "normative_text_digest": "0b644efe0569407cdf8d1e22e4099f195c020d295701fbd593ff7be67cd5a68c",
       "admitted_in": [],
       "acceptance_case_ids": [
         "O01",
@@ -194,7 +334,21 @@
         "X04"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-NUR-001": "2ff6a7a7ca23b49f66f19cf10a1b3c1ed3eaaaf2eab3d991abb8dde266d2618f",
+        "SGO-NUR-002": "4a75ec870d15a55c30fb0618819374693f8561bc2a97326e6366eda56523ec15",
+        "SGO-NUR-003": "c285bd1d28b9c54d59ba61cffea0cdedfa6eaad7f2ba5aea698dc67aa478d798",
+        "SGO-NUR-004": "1128474df2190e953aab3767db9960e4dc63b2f4e0ae8c87ae9c2888ad97bb5a",
+        "SGO-NUR-005": "e7ed783a04d332b39f9ece2021e3a6f827f3c435540403ad29fdd01750c3afb9"
+      },
+      "clause_status": {
+        "SGO-NUR-001": "draft",
+        "SGO-NUR-002": "draft",
+        "SGO-NUR-003": "draft",
+        "SGO-NUR-004": "draft",
+        "SGO-NUR-005": "draft"
+      }
     },
     {
       "id": "SPEC-SPAWN",
@@ -202,8 +356,14 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-SPAWN-001",
+        "SGO-SPAWN-002",
+        "SGO-SPAWN-003",
+        "SGO-SPAWN-004",
+        "SGO-SPAWN-005"
+      ],
+      "normative_text_digest": "1d658834c994e2d8c917f8e22730234557b42ec55cc2a9a010c7a4bf8de1bab2",
       "admitted_in": [],
       "acceptance_case_ids": [
         "O03",
@@ -214,7 +374,21 @@
         "S08"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-SPAWN-001": "288d426046a0eb11fa64a22e7d4b9f261c84e4c211dfbe6e3b8912eb05d23f02",
+        "SGO-SPAWN-002": "9879906467c52229374d385f33745c41f48557c15cd5100e6391364cde8c5f31",
+        "SGO-SPAWN-003": "8f79d7382397fe0edc32353b4ca7007b86d13b4c34d8e39e81455d17355330bb",
+        "SGO-SPAWN-004": "7165b0a227fa080dabf0c426a611d9f68f6a9e7b951ea4ff9c951319cfa023eb",
+        "SGO-SPAWN-005": "b9587becd0451fbcb3bbc8f72377d0efe8df034af3828f54c5bc4e18b7d0c4cc"
+      },
+      "clause_status": {
+        "SGO-SPAWN-001": "draft",
+        "SGO-SPAWN-002": "draft",
+        "SGO-SPAWN-003": "draft",
+        "SGO-SPAWN-004": "draft",
+        "SGO-SPAWN-005": "draft"
+      }
     },
     {
       "id": "SPEC-CANCEL",
@@ -222,8 +396,13 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W04",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-CANCEL-001",
+        "SGO-CANCEL-002",
+        "SGO-CANCEL-003",
+        "SGO-CANCEL-004"
+      ],
+      "normative_text_digest": "54dd7d01c94de763f6224f09aff74a1ba966944497270a64f1053c20d69f6857",
       "admitted_in": [],
       "acceptance_case_ids": [
         "C01",
@@ -233,7 +412,19 @@
         "P07"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-CANCEL-001": "4dc59d03c070d845d8c026dece15e1871727f58a6d2d16b2b77b3516d3bba7ca",
+        "SGO-CANCEL-002": "363e05ca262c7dce0dc510c40ac86214f38c4365de357c192fbcb360685fd1ac",
+        "SGO-CANCEL-003": "1cd1394055b1be20d28766ca66ba9d1f1bcf67f7d767b5106c30664649123503",
+        "SGO-CANCEL-004": "97941460ef7c25deda8e0a3c2a62bca4ce077d427d432ff9cd98c7338a8ef6d7"
+      },
+      "clause_status": {
+        "SGO-CANCEL-001": "draft",
+        "SGO-CANCEL-002": "draft",
+        "SGO-CANCEL-003": "draft",
+        "SGO-CANCEL-004": "draft"
+      }
     },
     {
       "id": "SPEC-DRAIN",
@@ -241,8 +432,12 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W04",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-DRAIN-001",
+        "SGO-DRAIN-002",
+        "SGO-DRAIN-003"
+      ],
+      "normative_text_digest": "b723972f9c66f50376399f465f16bd1cb16d1262f8c8bfd4ad3e8d18ab202a39",
       "admitted_in": [],
       "acceptance_case_ids": [
         "C07",
@@ -250,7 +445,17 @@
         "S17"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-DRAIN-001": "178801311e8a840ccaae43083f9b4e3d9a015f3d3975eb54f556add33fb32049",
+        "SGO-DRAIN-002": "d0a1a1a9a5823a7354b2446058f29fc22e73666de978f38e108bbb62b7648571",
+        "SGO-DRAIN-003": "84c623ed2a424873aa3c6be3f340b4f07e66a11a2b5e76ce61c1622274a8f878"
+      },
+      "clause_status": {
+        "SGO-DRAIN-001": "draft",
+        "SGO-DRAIN-002": "draft",
+        "SGO-DRAIN-003": "draft"
+      }
     },
     {
       "id": "SPEC-WAIT",
@@ -258,8 +463,11 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W04",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-WAIT-001",
+        "SGO-WAIT-002"
+      ],
+      "normative_text_digest": "3534d072e3cc96a9dc4f91f39fd5a276d67ae9a5e9530ea0bd547c00ef86aca9",
       "admitted_in": [],
       "acceptance_case_ids": [
         "C02",
@@ -267,7 +475,15 @@
         "C04"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-WAIT-001": "d21f21065c365c05c834fc78bb059b1edb94f81e9f7e16fa956d44b808e07086",
+        "SGO-WAIT-002": "076e0484c79463cb3e15ec0d013157b412379d6be83f8e8cbed95466435e0f66"
+      },
+      "clause_status": {
+        "SGO-WAIT-001": "draft",
+        "SGO-WAIT-002": "draft"
+      }
     },
     {
       "id": "SPEC-CHAN",
@@ -275,8 +491,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W07",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-CHAN-001"
+      ],
+      "normative_text_digest": "1fb06d89a48a6e7d6293cab308a8da566ca38fe30394db73199c8b5954e89550",
       "admitted_in": [],
       "acceptance_case_ids": [
         "H01",
@@ -286,7 +504,13 @@
         "S12"
       ],
       "evidence": [],
-      "subset0": "denied"
+      "subset0": "denied",
+      "clause_digests": {
+        "SGO-CHAN-001": "845ac588d1274e34f4227327ec2d315db663c3e54ed23a47b5fd12063eca303d"
+      },
+      "clause_status": {
+        "SGO-CHAN-001": "draft"
+      }
     },
     {
       "id": "SPEC-PERMIT",
@@ -294,8 +518,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W06",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-PERMIT-001"
+      ],
+      "normative_text_digest": "f1b8d08932b9d9d537e6fb714540a1bf0ffa2f2d1d2db13ff5429ddc8d2437b4",
       "admitted_in": [],
       "acceptance_case_ids": [
         "H03",
@@ -304,7 +530,13 @@
         "H06"
       ],
       "evidence": [],
-      "subset0": "denied"
+      "subset0": "denied",
+      "clause_digests": {
+        "SGO-PERMIT-001": "7f8c74c1ee54a3eb79f1f67d3800f6683969f0a7d02306635f90c0f0e43b4361"
+      },
+      "clause_status": {
+        "SGO-PERMIT-001": "draft"
+      }
     },
     {
       "id": "SPEC-READY",
@@ -312,8 +544,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W05",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-READY-001"
+      ],
+      "normative_text_digest": "62226e7be883cdbc48a48ab319d7182cd394d915c0332293f227cd03760e5d00",
       "admitted_in": [],
       "acceptance_case_ids": [
         "R01",
@@ -322,7 +556,13 @@
         "R04"
       ],
       "evidence": [],
-      "subset0": "denied"
+      "subset0": "denied",
+      "clause_digests": {
+        "SGO-READY-001": "483dd1b1d92b1f64b395b0dc302fc29f72bc03888df88ded7b6e08e6603b882c"
+      },
+      "clause_status": {
+        "SGO-READY-001": "draft"
+      }
     },
     {
       "id": "SPEC-CAP",
@@ -330,8 +570,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W05",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-CAP-001"
+      ],
+      "normative_text_digest": "260ba606b97f171988c90fb096c6cf1d5ff92468292c14ace253752108946d3c",
       "admitted_in": [],
       "acceptance_case_ids": [
         "A01",
@@ -341,7 +583,13 @@
         "S06"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-CAP-001": "5ad75f98db3997892a82256a619c70d3eb137a898765b1ab4caf8a4f9e84e719"
+      },
+      "clause_status": {
+        "SGO-CAP-001": "draft"
+      }
     },
     {
       "id": "SPEC-IMPORT",
@@ -349,8 +597,11 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-IMP-001",
+        "SGO-IMP-002"
+      ],
+      "normative_text_digest": "88e9e6104d5cfdfbea5811884d82da5a8fa7ebd1152984467ad413636a8f92f6",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S09",
@@ -359,7 +610,15 @@
         "T01"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-IMP-001": "57c64ab603622ede324e93d1149418fedee67f0ab5420958177a41c7758b54d4",
+        "SGO-IMP-002": "1bd79fd3ae2b25314bb7c9a161ecfe1cb7ff6e030c74cd8787f0bf59c1b8c183"
+      },
+      "clause_status": {
+        "SGO-IMP-001": "draft",
+        "SGO-IMP-002": "draft"
+      }
     },
     {
       "id": "SPEC-TCB",
@@ -367,8 +626,11 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W02",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-TCB-001",
+        "SGO-TCB-002"
+      ],
+      "normative_text_digest": "95dfd529f97d185a4ca027d51fa3b46042c4a9f0b06982e84fb8f674e5b808c8",
       "admitted_in": [],
       "acceptance_case_ids": [
         "O07",
@@ -377,7 +639,15 @@
         "S15"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-TCB-001": "00212c2b036245d587c8d91fdd8a62b1f0c5e2ba4e99867e92ee491c14ddc4b6",
+        "SGO-TCB-002": "d4b04b1f52df064a4639e8262bcb5f60bcb33b454cfac958b3af04c6ab68b0a0"
+      },
+      "clause_status": {
+        "SGO-TCB-001": "draft",
+        "SGO-TCB-002": "draft"
+      }
     },
     {
       "id": "SPEC-TIMER",
@@ -385,15 +655,23 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W04",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-TIMER-001"
+      ],
+      "normative_text_digest": "4fe3c54ec72778fd66cadff9302ba8b48f4a8e36efa3306c4afbe576928b08b1",
       "admitted_in": [],
       "acceptance_case_ids": [
         "C01",
         "D06"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-TIMER-001": "407974eb2c123a95ffa7e0a62cce87c6174af4b8b90ec27f1b4c4f92fbdde3b3"
+      },
+      "clause_status": {
+        "SGO-TIMER-001": "draft"
+      }
     },
     {
       "id": "SPEC-RANDOM",
@@ -401,15 +679,23 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W05",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-RANDOM-001"
+      ],
+      "normative_text_digest": "d81e5c556cba0b37328983422735e26d1c4da1e51f1670b0ee91de845f9b6c8e",
       "admitted_in": [],
       "acceptance_case_ids": [
         "D01",
         "A01"
       ],
       "evidence": [],
-      "subset0": "denied"
+      "subset0": "denied",
+      "clause_digests": {
+        "SGO-RANDOM-001": "25e229295e53638b88360b8adfc87201fb0f5336e9c98acb0d46a8a6c018a667"
+      },
+      "clause_status": {
+        "SGO-RANDOM-001": "draft"
+      }
     },
     {
       "id": "SPEC-FILE",
@@ -417,8 +703,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W09",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-FILE-001"
+      ],
+      "normative_text_digest": "a29eebd69574d07ed5c33ddf56bd320755b58cad9b2a32145a822a4b16e5639f",
       "admitted_in": [],
       "acceptance_case_ids": [
         "I01",
@@ -427,7 +715,13 @@
         "I05"
       ],
       "evidence": [],
-      "subset0": "denied"
+      "subset0": "denied",
+      "clause_digests": {
+        "SGO-FILE-001": "a8e62f3eb08029f38ed8d6dc78d68401b4670fcba3f24509e2c2698ba63bbfad"
+      },
+      "clause_status": {
+        "SGO-FILE-001": "draft"
+      }
     },
     {
       "id": "SPEC-NET",
@@ -435,8 +729,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W09",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-NET-001"
+      ],
+      "normative_text_digest": "873892ba286b5bd31d3e3fe9b5b4aaee691f6fc4873f0636636a98f4a1f80759",
       "admitted_in": [],
       "acceptance_case_ids": [
         "I02",
@@ -445,7 +741,13 @@
         "I05"
       ],
       "evidence": [],
-      "subset0": "denied"
+      "subset0": "denied",
+      "clause_digests": {
+        "SGO-NET-001": "2ca51a85ae6b997f2c1423710a306ce882a4e79eee0fe5868fbbf474896a1ec7"
+      },
+      "clause_status": {
+        "SGO-NET-001": "draft"
+      }
     },
     {
       "id": "SPEC-LAB",
@@ -453,8 +755,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W08",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-LAB-001"
+      ],
+      "normative_text_digest": "b348d38181d1f5494e74ac880d84149b58b3ef7b1a871c5f41a9b6ec12a89507",
       "admitted_in": [],
       "acceptance_case_ids": [
         "D02",
@@ -465,7 +769,13 @@
         "S14"
       ],
       "evidence": [],
-      "subset0": "denied"
+      "subset0": "denied",
+      "clause_digests": {
+        "SGO-LAB-001": "ea7af09986bae2bd8850e2230b16912c2032a8a0f4398d00235c95df067223bc"
+      },
+      "clause_status": {
+        "SGO-LAB-001": "draft"
+      }
     },
     {
       "id": "SPEC-TOOL",
@@ -473,8 +783,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W10",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-TOOL-001"
+      ],
+      "normative_text_digest": "55535576f24130a64089445880db29ded1277301b72f9cc70c2766ee34bdf35e",
       "admitted_in": [],
       "acceptance_case_ids": [
         "T01",
@@ -485,7 +797,13 @@
         "S19"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-TOOL-001": "60b08738293d7ef546ae72c6f05673243580fc158568791a975732b27ad4ad5c"
+      },
+      "clause_status": {
+        "SGO-TOOL-001": "draft"
+      }
     },
     {
       "id": "SPEC-BUILD",
@@ -493,8 +811,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W00",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-BUILD-001"
+      ],
+      "normative_text_digest": "64d88878a5266301cb725402c2d5c9dd3a832ad0ed032784171d37d45665fb8b",
       "admitted_in": [],
       "acceptance_case_ids": [
         "B04",
@@ -503,7 +823,13 @@
         "S15"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-BUILD-001": "1183132b31077cf48c3aa825c4c0fff1823008a6c03dcb21696bfff297672ba0"
+      },
+      "clause_status": {
+        "SGO-BUILD-001": "draft"
+      }
     },
     {
       "id": "SPEC-STACK",
@@ -511,8 +837,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W02",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-STACK-001"
+      ],
+      "normative_text_digest": "d6972b6e4a5c50a8c51a1e5bab738580f928ff75de03cb98322b43d1e3209dd7",
       "admitted_in": [],
       "acceptance_case_ids": [
         "O07",
@@ -522,7 +850,13 @@
         "F04"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-STACK-001": "28617472e363f296cfd2c8af5d34166941b67706acbb064a82bda7b8abb07f45"
+      },
+      "clause_status": {
+        "SGO-STACK-001": "draft"
+      }
     },
     {
       "id": "SPEC-ERRORS",
@@ -530,8 +864,12 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-ERR-001",
+        "SGO-ERR-002",
+        "SGO-ERR-003"
+      ],
+      "normative_text_digest": "f8deadbe466b467e9e0348a256a7ea0948b96ae0bdcde456a07cc73c2e9ee794",
       "admitted_in": [],
       "acceptance_case_ids": [
         "O04",
@@ -540,7 +878,17 @@
         "S20"
       ],
       "evidence": [],
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-ERR-001": "8e30ec4982877f4b4cb043cd13c31bf3a5eff160c3856e0cebd8818af3b59e2a",
+        "SGO-ERR-002": "8ed490232f477eb6346367b16d73b73054442d4988ec65ec6c4eaee5f2ee3665",
+        "SGO-ERR-003": "c8b897dc3e7b60b1d5167e7bf7cdce342f7d104c2c11cacb4866efb417c0df5b"
+      },
+      "clause_status": {
+        "SGO-ERR-001": "draft",
+        "SGO-ERR-002": "draft",
+        "SGO-ERR-003": "draft"
+      }
     },
     {
       "id": "SPEC-FLOAT",
@@ -548,8 +896,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-FLOAT-001"
+      ],
+      "normative_text_digest": "59561603e92d91e2b9252310cbccb65f5ad8f2bf1219d9dc81fce7c4816f78a3",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S16",
@@ -557,7 +907,13 @@
       ],
       "evidence": [],
       "decision_refs": "D03",
-      "subset0": "denied"
+      "subset0": "denied",
+      "clause_digests": {
+        "SGO-FLOAT-001": "04aca0677ab72f6587d719a2980bc286260da8e533efe38b41975b9a1382314c"
+      },
+      "clause_status": {
+        "SGO-FLOAT-001": "draft"
+      }
     },
     {
       "id": "SPEC-COMPOSITE",
@@ -565,8 +921,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-COMP-001"
+      ],
+      "normative_text_digest": "cd9040129624cc581d46746326fac15ee5bc7da0cdee2200311d539263feb605",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S16",
@@ -574,7 +932,13 @@
       ],
       "evidence": [],
       "decision_refs": "D06,D20",
-      "subset0": "denied"
+      "subset0": "denied",
+      "clause_digests": {
+        "SGO-COMP-001": "fa2c93b65165d98a5c2f781d10c50d071f75ca05be6a105ddae36b1bbfd9e8c9"
+      },
+      "clause_status": {
+        "SGO-COMP-001": "draft"
+      }
     },
     {
       "id": "SPEC-USERTYPE",
@@ -582,8 +946,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-UTYPE-001"
+      ],
+      "normative_text_digest": "dfe940ad50a8250d5f68c6eb73f90996653b670a3ad2e7fa90852c7abb0e171c",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S16",
@@ -591,7 +957,13 @@
       ],
       "evidence": [],
       "decision_refs": "D05",
-      "subset0": "denied"
+      "subset0": "denied",
+      "clause_digests": {
+        "SGO-UTYPE-001": "4251abad6a180616774f2a7690328c03ea1d17e3a86f191fa4a58280a7288ad3"
+      },
+      "clause_status": {
+        "SGO-UTYPE-001": "draft"
+      }
     },
     {
       "id": "SPEC-IFACE",
@@ -599,8 +971,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-IFACE-001"
+      ],
+      "normative_text_digest": "887398a8e69b119633d49bd4fa43bc3c2a1e440b5c200cdc4c63872244226659",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S10",
@@ -608,7 +982,13 @@
       ],
       "evidence": [],
       "decision_refs": "D05",
-      "subset0": "denied"
+      "subset0": "denied",
+      "clause_digests": {
+        "SGO-IFACE-001": "b3c498670dea262d9dae1dd0eda0165545f73f20b7666bbe4039e5eb10e9c3b1"
+      },
+      "clause_status": {
+        "SGO-IFACE-001": "draft"
+      }
     },
     {
       "id": "SPEC-GENERIC",
@@ -616,8 +996,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-GEN-001"
+      ],
+      "normative_text_digest": "29df127417fec11adc05a7d96ff730b7f3edefd87847c9a43c3555717593cec8",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X10",
@@ -626,7 +1008,13 @@
       ],
       "evidence": [],
       "decision_refs": "D05",
-      "subset0": "denied"
+      "subset0": "denied",
+      "clause_digests": {
+        "SGO-GEN-001": "a40d475c6202e9d9906c56d831da95b5654a505dfb84f264ab916e15b4591fda"
+      },
+      "clause_status": {
+        "SGO-GEN-001": "draft"
+      }
     },
     {
       "id": "SPEC-REFLECT",
@@ -634,8 +1022,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-REFLECT-001"
+      ],
+      "normative_text_digest": "302a76b86d55d4919f89f02d3aa9e039eab87740ad51e846c39a0efef3729e64",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S10",
@@ -644,7 +1034,13 @@
       ],
       "evidence": [],
       "decision_refs": "D05",
-      "subset0": "denied"
+      "subset0": "denied",
+      "clause_digests": {
+        "SGO-REFLECT-001": "2509c4b06f0ce76527cc362941ffbafcf2026a7bd4d74983f782516d2d660799"
+      },
+      "clause_status": {
+        "SGO-REFLECT-001": "draft"
+      }
     },
     {
       "id": "SPEC-NATIVE",
@@ -652,8 +1048,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-NATIVE-001"
+      ],
+      "normative_text_digest": "e3c8313e791b0f8961114f1865b08959238fda14034b993121e4162f63c7581e",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S11",
@@ -662,7 +1060,13 @@
       ],
       "evidence": [],
       "decision_refs": "D05; plan §8.1",
-      "subset0": "denied"
+      "subset0": "denied",
+      "clause_digests": {
+        "SGO-NATIVE-001": "14ea1ba0200b218cb396e68097f404068fa6ce4e549f8d3c5e1f73457dc08c67"
+      },
+      "clause_status": {
+        "SGO-NATIVE-001": "draft"
+      }
     },
     {
       "id": "SPEC-SYNC",
@@ -670,8 +1074,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-SYNC-001"
+      ],
+      "normative_text_digest": "8c182fcf3311ac4a25b0c71836ec7db5e74a2a2ac1030382f5bdaf2e8e0d0cc8",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S16",
@@ -679,7 +1085,13 @@
       ],
       "evidence": [],
       "decision_refs": "D01",
-      "subset0": "denied"
+      "subset0": "denied",
+      "clause_digests": {
+        "SGO-SYNC-001": "af0b3c5d567b39c72f3fded44209d91183bb619efa0ce0dab726a49c773a9203"
+      },
+      "clause_status": {
+        "SGO-SYNC-001": "draft"
+      }
     },
     {
       "id": "SPEC-PROC",
@@ -687,8 +1099,13 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-PROC-001",
+        "SGO-PROC-002",
+        "SGO-PROC-003",
+        "SGO-PROC-004"
+      ],
+      "normative_text_digest": "10d8b38e7412856ac6c45a3deac88192e3e45d2827aaddc4361d0340176b8373",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S06",
@@ -696,7 +1113,19 @@
       ],
       "evidence": [],
       "decision_refs": "D08,D09",
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-PROC-001": "c73bfa51abd02b72f64c1e4a06e9648a92c68a5717391b7650b77bcc095fc5b7",
+        "SGO-PROC-002": "272adae160543a0672c328074f34987d26a127b68f0472d2248608c26091c6fd",
+        "SGO-PROC-003": "504380ed72ca0fe57c23670d4fb14c869f25f44901d4e051b41a14d0c0f32890",
+        "SGO-PROC-004": "aea4d308e71e58476e1596ac10d37e559056899b872196dcdb677df03b58c445"
+      },
+      "clause_status": {
+        "SGO-PROC-001": "draft",
+        "SGO-PROC-002": "draft",
+        "SGO-PROC-003": "draft",
+        "SGO-PROC-004": "draft"
+      }
     },
     {
       "id": "SPEC-TEST",
@@ -704,8 +1133,10 @@
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
       "status": "required_not_admitted",
-      "clause_ids": [],
-      "normative_text_digest": null,
+      "clause_ids": [
+        "SGO-TEST-001"
+      ],
+      "normative_text_digest": "6dd9db72ba90e5acf940f8934b612afc9f7c66c8fdbbcf394d7effb31e938dcd",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S01",
@@ -713,7 +1144,13 @@
       ],
       "evidence": [],
       "decision_refs": "D10",
-      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-TEST-001": "28205c311ff5cb0a202bb36602a545fef00ca55619f5097f30ea8d14207abb7a"
+      },
+      "clause_status": {
+        "SGO-TEST-001": "draft"
+      }
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. No row is admitted until its clauses are frozen."

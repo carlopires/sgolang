@@ -1,0 +1,19 @@
+# S-Go specification check: clause format, references, and registry consistency (D18).
+name: sgo-spec
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  spec:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate clauses and registry
+        run: sgo/scripts/spec-tool.py check
