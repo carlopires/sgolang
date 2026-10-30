@@ -1,0 +1,317 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// S-Go structured-concurrency core (W02): scope and task records, explicit-handle admission,
+// registration before publication, join, and outcomes. Trusted primitives TCB-P01 (task creation),
+// TCB-P02 (park/unpark), TCB-P03 (scope state and join) of SGO-TCB-001. Design: sgo/docs/runtime-design.md.
+//
+// Lock order: a scope lock is a leaf. It is never held while calling user code, allocating, parking
+// (except through goparkunlock, which releases it), or acquiring another scope lock.
+
+package runtime
+
+import (
+	"internal/runtime/atomic"
+	"internal/runtime/sys"
+	"unsafe"
+)
+
+// sgoScopeState is the scope state of SGO-NUR-002.
+type sgoScopeState uint32
+
+const (
+	sgoOpen sgoScopeState = iota
+	sgoJoining
+	sgoCancelling
+	sgoFinalizing
+	sgoClosed
+)
+
+func (s sgoScopeState) String() string {
+	switch s {
+	case sgoOpen:
+		return "OPEN"
+	case sgoJoining:
+		return "JOINING"
+	case sgoCancelling:
+		return "CANCELLING"
+	case sgoFinalizing:
+		return "FINALIZING"
+	case sgoClosed:
+		return "CLOSED"
+	}
+	return "INVALID"
+}
+
+// sgoOutcome is a child outcome of SGO-SPAWN-004.
+type sgoOutcome uint8
+
+const (
+	sgoRunning sgoOutcome = iota
+	sgoSucceeded
+	sgoCancelled
+	sgoErrored
+	sgoFailed
+)
+
+// sgoScope is one execution of a nursery statement. It is a heap object reachable from its owner's
+// task record (while open) and from its children's records; it holds no pointer into any stack.
+type sgoScope struct {
+	lock     mutex
+	id       uint64
+	state    sgoScopeState
+	owner    *sgoTask
+	parent   *sgoScope // the owner's current scope when this scope was opened (nil at top level)
+	live     int64     // registered children that have not published an outcome
+	first    *sgoTask  // registered children in creation order (intrusive list via sibling)
+	last     *sgoTask
+	joiner   *g // owner parked in join, or nil
+	nchild   int64
+	snapshot sgoScopeResult // filled at CLOSED (immutable afterwards)
+}
+
+// sgoTask is the record of an S-Go task: the root task or a child admitted by sgoSpawn.
+type sgoTask struct {
+	id      uint64
+	scope   *sgoScope   // scope the task was spawned into (owner scope); nil for the root task
+	nest    []*sgoScope // nurseries this task is executing inside, innermost last
+	sibling *sgoTask
+	fn      func(*sgoTask) error // callback; cleared once it has run
+	outcome sgoOutcome
+	err     error // Errored: the returned error
+	panic   any   // Failed: the panic value
+}
+
+// sgoScopeResult is the immutable outcome of a closed scope (SGO-NUR-004 rules 2-4; rule 1, the
+// owner's own unwinding, is applied by compiler-generated code in W03).
+type sgoScopeResult struct {
+	Outcome   sgoOutcome // sgoSucceeded, sgoErrored, or sgoFailed
+	Primary   uint64     // creation ID of the primary failed/errored child (0 if none)
+	Err       error
+	Panic     any
+	Children  int64
+	Failures  int64 // children that ended Failed or Errored
+	Cancelled int64
+}
+
+var (
+	sgoNextTaskID  atomic.Uint64 // creation IDs; root task is 0, children start at 1
+	sgoNextScopeID atomic.Uint64
+)
+
+// sgoViolation is the SpawnContractViolation of SGO-SPAWN-002 / SGO-CANCEL-001.
+type sgoViolation struct{ msg string }
+
+func (e *sgoViolation) Error() string { return "SpawnContractViolation: " + e.msg }
+
+// sgoCurrent returns the calling goroutine's task record, or nil if it is not an S-Go task.
+func sgoCurrent() *sgoTask { return getg().sgo }
+
+// currentScope is the task's innermost open nursery, else its spawn scope (SGO-NUR-005).
+func (t *sgoTask) currentScope() *sgoScope {
+	if n := len(t.nest); n > 0 {
+		return t.nest[n-1]
+	}
+	return t.scope
+}
+
+// sgoEnterRoot makes the calling goroutine the root task (creation ID 0). In production this is done
+// once by runtime start-up before main (W03); W02 conformance hooks call it explicitly.
+func sgoEnterRoot() *sgoTask {
+	gp := getg()
+	if gp.sgo != nil {
+		throw("sgo: goroutine is already an S-Go task")
+	}
+	gp.sgo = &sgoTask{id: 0}
+	return gp.sgo
+}
+
+// sgoLeaveRoot detaches the root record (test hooks only); every nursery must be closed.
+func sgoLeaveRoot() {
+	gp := getg()
+	if gp.sgo == nil || len(gp.sgo.nest) != 0 {
+		throw("sgo: leaving root with open nurseries")
+	}
+	gp.sgo = nil
+}
+
+// sgoNurseryOpen starts a nursery statement owned by the calling task (SGO-NUR-001).
+func sgoNurseryOpen() (*sgoScope, error) {
+	t := sgoCurrent()
+	if t == nil {
+		return nil, &sgoViolation{"nursery opened by a goroutine that is not an S-Go task"}
+	}
+	s := &sgoScope{id: sgoNextScopeID.Add(1), owner: t, parent: t.currentScope()}
+	t.nest = append(t.nest, s)
+	return s, nil
+}
+
+// sgoSpawn admits fn as a child of s (SGO-SPAWN-002/003). It returns a *sgoViolation if admission
+// is refused, and nil if the child was admitted or silently not created because s is CANCELLING (R5).
+func sgoSpawn(s *sgoScope, fn func(*sgoTask) error) error {
+	t := sgoCurrent()
+	switch {
+	case s == nil:
+		return &sgoViolation{"spawn with a nil nursery handle"}
+	case fn == nil:
+		return &sgoViolation{"spawn with a nil callback"}
+	case t == nil:
+		return &sgoViolation{"spawn from a goroutine that is not an S-Go task"}
+	case t.currentScope() != s:
+		return &sgoViolation{"spawn into a nursery that is not the caller's current scope"}
+	}
+	// Allocate before taking the scope lock (no allocation under runtime locks).
+	c := &sgoTask{scope: s, fn: fn}
+	lock(&s.lock)
+	switch s.state {
+	case sgoOpen, sgoJoining:
+	case sgoCancelling:
+		unlock(&s.lock)
+		return nil // R5: no child; cancellation is observed at the caller's next cancellation point
+	default:
+		st := s.state
+		unlock(&s.lock)
+		return &sgoViolation{"spawn into a nursery in state " + st.String()}
+	}
+	// Register before the child can run (OWN-2).
+	c.id = sgoNextTaskID.Add(1)
+	s.live++
+	s.nchild++
+	if s.last == nil {
+		s.first = c
+	} else {
+		s.last.sibling = c
+	}
+	s.last = c
+	unlock(&s.lock)
+
+	gp := getg()
+	pc := sys.GetCallerPC()
+	start := sgoTaskStart // static funcval: no closure is allocated in the runtime
+	fv := *(**funcval)(unsafe.Pointer(&start))
+	systemstack(func() {
+		newg := newproc1(fv, gp, pc, false, waitReasonZero)
+		newg.sgo = c // before the goroutine is runnable
+		pp := getg().m.p.ptr()
+		runqput(pp, newg, true)
+		if mainStarted {
+			wakep()
+		}
+	})
+	return nil
+}
+
+// sgoTaskStart is the entry point of every child goroutine. Its task record was attached to the g
+// before the g became runnable.
+func sgoTaskStart() {
+	c := getg().sgo
+	fn := c.fn
+	c.fn = nil
+	sgoTaskMain(c, fn)
+}
+
+// sgoTaskMain runs a child callback and publishes its outcome exactly once.
+func sgoTaskMain(c *sgoTask, fn func(*sgoTask) error) {
+	normal := false
+	defer func() {
+		if !normal {
+			c.outcome, c.panic = sgoFailed, recover()
+		}
+		sgoTaskExit(c)
+	}()
+	err := fn(c)
+	normal = true
+	switch {
+	case err == nil:
+		c.outcome = sgoSucceeded
+	case sgoIsCancelled(err):
+		c.outcome = sgoCancelled
+	default:
+		c.outcome, c.err = sgoErrored, err
+	}
+}
+
+// sgoIsCancelled reports whether err is a cancellation error (SGO-CANCEL-003). Cancellation errors
+// are produced by W04; until then none exist.
+func sgoIsCancelled(err error) bool { return false }
+
+// sgoTaskExit publishes the child's outcome and wakes the joining owner if it was the last child.
+func sgoTaskExit(c *sgoTask) {
+	if len(c.nest) != 0 {
+		throw("sgo: task finished with an open nursery") // RuntimeDefect (SGO-ERR-003)
+	}
+	s := c.scope
+	if raceenabled {
+		racereleasemerge(unsafe.Pointer(s))
+	}
+	var wake *g
+	lock(&s.lock)
+	if c.outcome == sgoRunning {
+		unlock(&s.lock)
+		throw("sgo: outcome not set at task exit")
+	}
+	s.live--
+	if s.live < 0 {
+		unlock(&s.lock)
+		throw("sgo: negative live-child count") // M04: completion published twice
+	}
+	if s.live == 0 && s.joiner != nil {
+		wake, s.joiner = s.joiner, nil
+	}
+	unlock(&s.lock)
+	getg().sgo = nil
+	if wake != nil {
+		goready(wake, 0)
+	}
+}
+
+// sgoNurseryJoin completes the calling task's innermost nursery s: it waits until no registered child
+// is live, closes s, and returns its outcome (SGO-NUR-003, SGO-NUR-004).
+func sgoNurseryJoin(s *sgoScope) (sgoScopeResult, error) {
+	t := sgoCurrent()
+	if t == nil || s == nil || s.owner != t || t.currentScope() != s {
+		return sgoScopeResult{}, &sgoViolation{"join of a nursery that is not the caller's innermost nursery"}
+	}
+	lock(&s.lock)
+	if s.state == sgoOpen {
+		s.state = sgoJoining
+	}
+	for s.live > 0 {
+		s.joiner = getg()
+		goparkunlock(&s.lock, waitReasonSGoJoin, traceBlockSync, 1)
+		lock(&s.lock)
+	}
+	if raceenabled {
+		raceacquire(unsafe.Pointer(s))
+	}
+	s.state = sgoFinalizing
+	r := sgoScopeResult{Outcome: sgoSucceeded, Children: s.nchild}
+	for c := s.first; c != nil; c = c.sibling {
+		switch c.outcome {
+		case sgoFailed:
+			r.Failures++
+			if r.Outcome != sgoFailed {
+				r.Outcome, r.Primary, r.Panic, r.Err = sgoFailed, c.id, c.panic, nil
+			}
+		case sgoErrored:
+			r.Failures++
+			if r.Outcome == sgoSucceeded {
+				r.Outcome, r.Primary, r.Err = sgoErrored, c.id, c.err
+			}
+		case sgoCancelled:
+			r.Cancelled++
+		case sgoRunning:
+			unlock(&s.lock)
+			throw("sgo: closed scope has a running child") // OWN-3 defect
+		}
+	}
+	s.snapshot = r
+	s.state = sgoClosed
+	// Drop child records so a retained handle keeps only the snapshot alive (plan §5.2).
+	s.first, s.last = nil, nil
+	unlock(&s.lock)
+	t.nest[len(t.nest)-1] = nil
+	t.nest = t.nest[:len(t.nest)-1]
+	return r, nil
+}

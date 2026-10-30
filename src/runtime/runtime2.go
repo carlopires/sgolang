@@ -571,6 +571,7 @@ type g struct {
 
 	coroarg *coro // argument during coroutine transfers
 	bubble  *synctestBubble
+	sgo     *sgoTask // S-Go task record (sgo_scope.go); nil for runtime goroutines
 
 	// xRegs stores the extended register state if this G has been
 	// asynchronously preempted.
@@ -1268,6 +1269,7 @@ const (
 	waitReasonSynctestSelect                          // "select (durable)"
 	waitReasonSynctestWaitGroupWait                   // "sync.WaitGroup.Wait (durable)"
 	waitReasonCleanupWait                             // "cleanup wait"
+	waitReasonSGoJoin                                 // "sgo nursery join"
 )
 
 var waitReasonStrings = [...]string{
@@ -1318,6 +1320,7 @@ var waitReasonStrings = [...]string{
 	waitReasonSynctestSelect:        "select (durable)",
 	waitReasonSynctestWaitGroupWait: "sync.WaitGroup.Wait (durable)",
 	waitReasonCleanupWait:           "cleanup wait",
+	waitReasonSGoJoin:               "sgo nursery join",
 }
 
 func (w waitReason) String() string {

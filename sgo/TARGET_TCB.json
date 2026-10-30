@@ -291,7 +291,7 @@
   {
    "callee": "updateMaxProcsGoroutine",
    "file": "src/runtime/proc.go",
-   "line": 7134,
+   "line": 7135,
    "status": "active",
    "purpose": "scheduler: GOMAXPROCS updates from CPU limits"
   },
@@ -319,8 +319,8 @@
  ],
  "summary": {
   "packages": 30,
-  "files": 1020,
-  "files_changed_from_upstream": 0,
+  "files": 1021,
+  "files_changed_from_upstream": 3,
   "services": {
    "active": 5,
    "dormant": 5,
@@ -3915,8 +3915,8 @@
   },
   {
    "path": "src/runtime/proc.go",
-   "sha256": "40d15ce858cf058cff92606001a29ee1689db88c121a2f0c283163a0d64a7375",
-   "upstream_identical": true
+   "sha256": "6702748227ec610747cc990732b81c32e7f4d940520956f73e303a783878836b",
+   "upstream_identical": false
   },
   {
    "path": "src/runtime/profbuf.go",
@@ -4220,8 +4220,8 @@
   },
   {
    "path": "src/runtime/runtime2.go",
-   "sha256": "7d66ed912f68b1259947807ca1bdf79ee7e54c6a61a716d88db663d570af66da",
-   "upstream_identical": true
+   "sha256": "c62a834b25c25197c47f07cb4dfd9a7cd7414d5fb442b88c71dd12d175d245f5",
+   "upstream_identical": false
   },
   {
    "path": "src/runtime/runtime_boring.go",
@@ -4317,6 +4317,11 @@
    "path": "src/runtime/set_vma_name_stub.go",
    "sha256": "f06348abd310c60f1e7ee26063bfa46654b129277b2b41bbfae2dad46af0948f",
    "upstream_identical": true
+  },
+  {
+   "path": "src/runtime/sgo_scope.go",
+   "sha256": "4b0cabb68b788ffe95de2f4a149739e191361b75217b66d83ade9908ffef34bf",
+   "upstream_identical": false
   },
   {
    "path": "src/runtime/sigaction.go",

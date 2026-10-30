@@ -4538,6 +4538,7 @@ func gdestroy(gp *g) {
 	gp.labels = nil
 	gp.timer = nil
 	gp.bubble = nil
+	gp.sgo = nil // never let a reused goroutine inherit an S-Go task (SGO-SPAWN-003, O06)
 	gp.fipsOnlyBypass = false
 	gp.secret = 0
 
