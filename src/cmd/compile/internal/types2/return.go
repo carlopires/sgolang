@@ -42,6 +42,10 @@ func (check *Checker) isTerminating(s syntax.Stmt, label string) bool {
 	case *syntax.BlockStmt:
 		return check.isTerminatingList(s.List, "")
 
+	case *syntax.NurseryStmt:
+		// S-Go: a nursery statement is terminating if its block is (SGO-CTL-003).
+		return check.isTerminatingList(s.Body.List, "")
+
 	case *syntax.IfStmt:
 		if s.Else != nil &&
 			check.isTerminating(s.Then, "") &&
@@ -130,6 +134,9 @@ func hasBreak(s syntax.Stmt, label string, implicit bool) bool {
 
 	case *syntax.BlockStmt:
 		return hasBreakList(s.List, label, implicit)
+
+	case *syntax.NurseryStmt:
+		return hasBreakList(s.Body.List, label, implicit)
 
 	case *syntax.IfStmt:
 		if hasBreak(s.Then, label, implicit) ||

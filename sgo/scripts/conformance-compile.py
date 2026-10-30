@@ -4,8 +4,13 @@ stage-0 compiler (no sgo driver yet). Eligible cases: kind "reject", all sources
 no build_args/procedure/build_env. Each case's files are compiled as package main with an importcfg
 for the compiled sgo package; diagnostics are compared in order (code and exact position).
 
+It also guards against false positives: every flat *run* case must compile with no diagnostic other
+than the not-yet-lowered gates of later W03 layers (LATER_LAYERS). Any other diagnostic on a run
+case is a failure and makes the exit status nonzero.
+
     conformance-compile.py [-v] [case ...]
 """
+
 import json
 import os
 import re
@@ -24,12 +29,18 @@ spec.loader.exec_module(conf)
 PLAT = {"Darwin": "darwin", "Linux": "linux"}[os.uname().sysname] + "_" + {"arm64": "arm64", "aarch64": "arm64", "x86_64": "amd64"}[os.uname().machine]
 COMPILE = os.path.join(ROOT, "pkg", "tool", PLAT, "compile")
 DIAG = re.compile(r"^(\S+:\d+:\d+): (SGO_E_[A-Z_]+|[^:]*?):", re.M)
+LINE = re.compile(r"^\S+:\d+:\d+: .*$", re.M)
+# Diagnostics of features a later W03 layer implements (lowering, layer 3/4; multi-package builds, layer 5).
+LATER_LAYERS = ("lowering not yet supported", "could not import")
 
 
-def eligible(d, e):
-    if e.get("kind") != "reject" or e.get("build_args") or e.get("procedure") or e.get("build_env"):
+def eligible(d, e, kind="reject"):
+    if e.get("kind") != kind or e.get("build_args") or e.get("procedure") or e.get("build_env"):
         return False
     if any(os.path.isdir(os.path.join(d, x)) for x in os.listdir(d)):
+        return False
+    # Diagnostics in non-source files (sgo.mod, .s files) come from the sgo driver (W03 layer 5).
+    if any(not conf.position(d, dg).split(":")[0].endswith(".sgo") for dg in e.get("diagnostics", [])):
         return False
     return any(f.endswith(".sgo") for f in os.listdir(d))
 
@@ -41,6 +52,7 @@ def main():
         sys.exit(f"no stage-0 compiler at {COMPILE}; run sgo/scripts/build-stage0.sh")
     cases = conf.load_cases()
     passed, failed, skipped = [], [], []
+    clean, spurious = [], []
     with tempfile.TemporaryDirectory() as tmp:
         sgo_o = os.path.join(tmp, "sgo.o")
         subprocess.check_call([COMPILE, "-p", "sgo", "-std", "-o", sgo_o, os.path.join(ROOT, "src", "sgo", "sgo.go")])
@@ -50,10 +62,16 @@ def main():
             if only and name not in only:
                 continue
             e = json.load(open(os.path.join(d, "expect.json")))
+            files = sorted(f for f in os.listdir(d) if f.endswith(".sgo")) if os.path.isdir(d) else []
+            if eligible(d, e, "run"):
+                r = subprocess.run([COMPILE, "-p", "main", "-importcfg", cfg, "-o", os.path.join(tmp, "out.o")] + files,
+                                   cwd=d, capture_output=True, text=True)
+                bad = [l for l in LINE.findall(r.stdout + r.stderr) if not any(g in l for g in LATER_LAYERS)]
+                (spurious.append((name, bad[:2])) if bad else clean.append(name))
+                continue
             if not eligible(d, e):
                 skipped.append(name)
                 continue
-            files = sorted(f for f in os.listdir(d) if f.endswith(".sgo"))
             r = subprocess.run([COMPILE, "-p", "main", "-importcfg", cfg, "-o", os.path.join(tmp, "out.o")] + files,
                                cwd=d, capture_output=True, text=True)
             got = [(m.group(1), m.group(2)) for m in DIAG.finditer(r.stdout + r.stderr)]  # the compiler reports on stdout
@@ -65,9 +83,12 @@ def main():
     for name, got, want in failed:
         if verbose:
             print(f"FAIL {name}: got {got} want {want}")
+    for name, bad in spurious:
+        print(f"SPURIOUS {name}: {bad}")
     print(f"conformance-compile: {len(passed)} passed, {len(failed)} failed, {len(skipped)} not eligible "
-          f"(of {len(cases)} cases; eligible = flat reject cases without driver flags)")
-    return 0
+          f"(of {len(cases)} cases; eligible = flat reject cases without driver flags or driver-level diagnostics)")
+    print(f"conformance-compile: run cases: {len(clean)} clean, {len(spurious)} with spurious diagnostics")
+    return 1 if spurious else 0
 
 
 if __name__ == "__main__":

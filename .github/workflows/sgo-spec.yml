@@ -15,12 +15,16 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # generated-twin-check compares against the locked upstream commit
       - name: Validate clauses and registry
         run: sgo/scripts/spec-tool.py check
       - name: Surface inventory (every compiler/runtime surface maps to a clause)
         run: sgo/scripts/inventory-check.py
       - name: Runtime TCB manifest (SGO-TCB-002)
         run: sgo/scripts/tcb-manifest.py
+      - name: go/types generator inputs untouched (upstream TestGenerate stays green)
+        run: sgo/scripts/generated-twin-check.py
       - name: Clause adoption ledger (S04)
         run: sgo/scripts/adoption-check.py
       - name: Conformance cases (validate + runner self-test)

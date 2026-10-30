@@ -416,6 +416,12 @@ func (check *Checker) implicitTypeAndValue(x *operand, target Type) (Type, const
 	}
 	// x is untyped
 
+	if check.conf.SGo && x.isNil() && !check.sgoNilOK(x, target) {
+		// S-Go nil rules (sgo.go). x is invalidated so the caller's follow-on error is suppressed.
+		x.invalidate()
+		return nil, nil, InvalidUntypedConversion
+	}
+
 	if isUntyped(target) {
 		// both x and target are untyped
 		if m := maxType(x.typ(), target); m != nil {

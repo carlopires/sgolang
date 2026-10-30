@@ -61,11 +61,15 @@ func LoadPackage(filenames []string) {
 		}
 	}()
 
+	// The admission decision depends only on the file digests (SGO-TCB-002), so it is known before
+	// syntax errors are reported and they can carry S-Go codes.
+	sgoMode = !sgoadmit.Trusted(filenames)
+
 	var lines uint
 	var m posMap
 	for _, p := range noders {
 		for e := range p.err {
-			base.ErrorfAt(m.makeXPos(e.Pos), 0, "%s", e.Msg)
+			base.ErrorfAt(m.makeXPos(e.Pos), 0, "%s", sgoSyntaxMsg(e.Msg))
 		}
 		if p.file == nil {
 			base.ErrorExit()
@@ -77,7 +81,6 @@ func LoadPackage(filenames []string) {
 	// S-Go admission (SGO-ERR-001): every package except digest-pinned trusted target code
 	// (SGO-TCB-002). It runs before type checking and stops the package on any denial.
 	base.ExitIfErrors() // admission runs only on files that parsed
-	sgoMode = !sgoadmit.Trusted(filenames)
 	if sgoMode {
 		files := make([]*syntax.File, len(noders))
 		var directives []syntax.Pos
@@ -114,6 +117,19 @@ func trimFilename(b *syntax.PosBase) string {
 }
 
 // noder transforms package syntax's AST into a Node tree.
+// sgoSyntaxMsg gives a scanner or parser error its S-Go code (SGO-ERR-001) when the package is
+// under S-Go admission: source-encoding errors are SGO_E_SOURCE_ENCODING (SGO-LEX-001), all other
+// syntax errors SGO_E_SYNTAX. Messages that already carry a code are unchanged.
+func sgoSyntaxMsg(msg string) string {
+	switch {
+	case !sgoMode || strings.HasPrefix(msg, "SGO_E_"):
+		return msg
+	case msg == "invalid UTF-8 encoding" || msg == "invalid NUL character" || msg == "invalid BOM in the middle of the file":
+		return "SGO_E_SOURCE_ENCODING: " + msg + " (SGO-LEX-001)"
+	}
+	return "SGO_E_SYNTAX: " + msg
+}
+
 // sgoMode is true when the package being compiled is under S-Go admission, i.e. it is not
 // digest-pinned trusted target code (SGO-TCB-002). Set once by LoadPackage.
 var sgoMode bool

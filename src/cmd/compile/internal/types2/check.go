@@ -427,6 +427,10 @@ func (check *Checker) checkFiles(files []*syntax.File) {
 		}
 	}
 
+	if check.conf.SGo {
+		check.sgoEnsureInfo() // the flow rules read Types, Defs, and Uses (sgo_flow.go)
+	}
+
 	print("== initFiles ==")
 	check.initFiles(files)
 
@@ -448,6 +452,10 @@ func (check *Checker) checkFiles(files []*syntax.File) {
 
 	print("== processDelayed ==")
 	check.processDelayed(0) // incl. all functions
+
+	if check.conf.SGo {
+		check.sgoFlowChecks(files) // S-Go flow rules over checked bodies (sgo_flow.go)
+	}
 
 	print("== cleanup ==")
 	check.cleanup()
