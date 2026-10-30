@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CTL-003"
+ ],
+ "exit": 0,
+ "stdout": "-+loopzeroother\n"
+}

@@ -1,0 +1,9 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	var x interface{} = 1
+	_ = x
+	return nil
+}

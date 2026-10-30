@@ -21,6 +21,10 @@ jobs:
         run: sgo/scripts/inventory-check.py
       - name: Runtime TCB manifest (SGO-TCB-002)
         run: sgo/scripts/tcb-manifest.py
+      - name: Conformance cases (validate + runner self-test)
+        run: |
+          sgo/scripts/conformance.py validate
+          sgo/scripts/conformance.py selftest
 
   model:
     strategy:

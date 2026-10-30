@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PROC-003",
+  "SGO-SPAWN-003",
+  "SGO-CAP-001"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "MissingCapability"
+}

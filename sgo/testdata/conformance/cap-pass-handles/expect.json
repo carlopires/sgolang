@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CAP-001",
+  "SGO-TYPE-005"
+ ],
+ "exit": 0,
+ "stdout": "worked\ndone\n"
+}

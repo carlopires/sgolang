@@ -1,0 +1,12 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-BIND-004"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_SHADOW",
+   "at": "len :="
+  }
+ ]
+}

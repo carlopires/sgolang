@@ -2,7 +2,7 @@
   "schema_version": 1,
   "plan_version": "2.0",
   "spec_version": "0.1.0-draft",
-  "admission_digest": "87da6db3c8c32292696ae7f9ba4be247913be4b40b9b407472c88381f4050426",
+  "admission_digest": "f8d964efde0f2439eb4199439bcec2f4cb3cc0078b89040cd3b9433939db7985",
   "status": "inventory_seed_not_an_admission_allowlist",
   "warning": "This is not a completed language specification. Every family must be expanded into concrete clauses and checked against real compiler/API/IR surfaces. No feature is claimed implemented or admitted by this handoff.",
   "default_decision": "reject",
@@ -101,7 +101,7 @@
         "SGO-BIND-004",
         "SGO-BIND-005"
       ],
-      "normative_text_digest": "02efb3ea6deeba8613ec067f3cb6378ac539b3d9638dc993f9c30cf5707fac45",
+      "normative_text_digest": "1184f74d6d6994d691aa42ca50b824af0d769ce7e1e37f271b329c35953d3dfc",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X02",
@@ -112,9 +112,9 @@
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-BIND-001": "206a3204b829a241fd73cf85e6d6a7998c8c72eedb9a4c4f3d99f889a35f155b",
-        "SGO-BIND-002": "cb871c24e1f8c4fb9bebef05702b796f3e4ca6384bd7be62b26361f97949c8ba",
+        "SGO-BIND-002": "f7c48d99db63dd6707a51a1ff1c52b5a5d46953b70acfecf36ee1ca142a5a286",
         "SGO-BIND-003": "73a3133e7b3ea93bc2f117d121f011e344a09c8ea304b62d6d10a406f552ae80",
-        "SGO-BIND-004": "8d68e95c75299d3d5be010425f4bf3fd9fe780c07754a8d6859415e94e7c2504",
+        "SGO-BIND-004": "1aaa3ec9fbcdce530e457474f77cdc0e6e56078acd4e3132c1168b49b9012c74",
         "SGO-BIND-005": "8f10357b4e4dfc0a00115743596b4b05ad1c1b806dff3ba7acafa7b69be6f11b"
       },
       "clause_status": {
@@ -601,7 +601,7 @@
         "SGO-IMP-001",
         "SGO-IMP-002"
       ],
-      "normative_text_digest": "88e9e6104d5cfdfbea5811884d82da5a8fa7ebd1152984467ad413636a8f92f6",
+      "normative_text_digest": "52ec7bb054b32fb1eb4cc640079fa66a7e870969e554ae9bdb7b76bc2af0cf25",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S09",
@@ -612,8 +612,8 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-IMP-001": "57c64ab603622ede324e93d1149418fedee67f0ab5420958177a41c7758b54d4",
-        "SGO-IMP-002": "1bd79fd3ae2b25314bb7c9a161ecfe1cb7ff6e030c74cd8787f0bf59c1b8c183"
+        "SGO-IMP-001": "326a185c896b4f684134da0c59192e4b45bdc1c867174dcd6f60146578732a5d",
+        "SGO-IMP-002": "e4883b1da8931dea3da6a87a1e4b6f20af235a190d9ee30e88d865ed8f706a79"
       },
       "clause_status": {
         "SGO-IMP-001": "draft",
@@ -786,7 +786,7 @@
       "clause_ids": [
         "SGO-TOOL-001"
       ],
-      "normative_text_digest": "55535576f24130a64089445880db29ded1277301b72f9cc70c2766ee34bdf35e",
+      "normative_text_digest": "b6e17f1e321099d30b0fb6c4be98fe33f1581978897ed384b7ad5210556dad8d",
       "admitted_in": [],
       "acceptance_case_ids": [
         "T01",
@@ -799,7 +799,7 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-TOOL-001": "60b08738293d7ef546ae72c6f05673243580fc158568791a975732b27ad4ad5c"
+        "SGO-TOOL-001": "b0dcdc0b8bee6e3e8792cb9b68668cd551c02857382ce5d9307b2744f3b4cf13"
       },
       "clause_status": {
         "SGO-TOOL-001": "draft"
@@ -869,7 +869,7 @@
         "SGO-ERR-002",
         "SGO-ERR-003"
       ],
-      "normative_text_digest": "f8deadbe466b467e9e0348a256a7ea0948b96ae0bdcde456a07cc73c2e9ee794",
+      "normative_text_digest": "d598ff50dfb99bbea21aca3a60c7a7d5ee7b83d24540d0680eb7cbb9c35daca9",
       "admitted_in": [],
       "acceptance_case_ids": [
         "O04",
@@ -880,7 +880,7 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-ERR-001": "8e30ec4982877f4b4cb043cd13c31bf3a5eff160c3856e0cebd8818af3b59e2a",
+        "SGO-ERR-001": "20db72d0dcf9753b0958ef2f8d34d0bb80bc718e1a98fd926d3b2f2435949328",
         "SGO-ERR-002": "8ed490232f477eb6346367b16d73b73054442d4988ec65ec6c4eaee5f2ee3665",
         "SGO-ERR-003": "c8b897dc3e7b60b1d5167e7bf7cdce342f7d104c2c11cacb4866efb417c0df5b"
       },

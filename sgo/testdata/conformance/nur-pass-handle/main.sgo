@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+func helper(n *sgo.Nursery, out *sgo.Writer) {
+	n.Spawn(func(task *sgo.Context) error { return out.WriteString("helper child\n") })
+}
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		helper(n, out)
+	}
+	return out.WriteString("after\n")
+}

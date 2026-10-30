@@ -1,0 +1,8 @@
+package main
+
+import "sgo"
+
+// bad byte: ÿ
+func main(root *sgo.Context) error {
+	return nil
+}

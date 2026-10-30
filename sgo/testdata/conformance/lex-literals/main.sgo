@@ -1,0 +1,11 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	if 0x1F+0o17+0b101+1_000 == 31+15+5+1000 && `raw\n` == "raw\\n" && "\x41" == "A" {
+		return out.WriteString("ok\n")
+	}
+	return out.WriteString("bad\n")
+}

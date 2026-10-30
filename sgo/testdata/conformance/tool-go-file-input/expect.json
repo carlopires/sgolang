@@ -1,0 +1,17 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-TOOL-001",
+  "SGO-LEX-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNADMITTED",
+   "file": "extra.go",
+   "position": "extra.go:1:1"
+  }
+ ],
+ "build_args": [
+  "extra.go"
+ ]
+}

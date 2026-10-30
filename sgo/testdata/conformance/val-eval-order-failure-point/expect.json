@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-VAL-005",
+  "SGO-VAL-001"
+ ],
+ "exit": 2,
+ "stdout": "a",
+ "stderr_kind": "DivideByZero"
+}

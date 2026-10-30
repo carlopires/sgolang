@@ -1,0 +1,25 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	n := 0
+	for n < 3 {
+		n++
+	}
+	for {
+		n += 10
+		if n > 20 {
+			break
+		}
+	}
+	if n == 23 {
+		_ = out.WriteString("a")
+	} else if n == 0 {
+		_ = out.WriteString("b")
+	} else {
+		_ = out.WriteString("c")
+	}
+	return out.WriteString("\n")
+}

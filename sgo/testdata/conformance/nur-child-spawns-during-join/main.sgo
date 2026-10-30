@@ -1,0 +1,17 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			if err := task.Sleep(5); err != nil {
+				return err
+			}
+			n.Spawn(func(t2 *sgo.Context) error { return out.WriteString("grandchild\n") })
+			return nil
+		})
+	}
+	return out.WriteString("joined\n")
+}

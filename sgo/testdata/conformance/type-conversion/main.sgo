@@ -1,0 +1,9 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	x := int(3)
+	_ = x
+	return nil
+}

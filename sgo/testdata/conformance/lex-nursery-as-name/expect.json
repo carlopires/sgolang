@@ -1,0 +1,12 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-LEX-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_RESERVED_WORD",
+   "at": "nursery :="
+  }
+ ]
+}

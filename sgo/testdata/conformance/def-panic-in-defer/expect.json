@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-DEF-004"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "Panic",
+ "stderr_message": "first",
+ "note": "The record's chain must contain the Panic \"second\"; err-record-panic checks the full record format."
+}

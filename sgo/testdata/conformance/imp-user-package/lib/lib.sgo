@@ -1,0 +1,5 @@
+package lib
+
+const Name = "lib"
+
+func Greeting() string { return "hello" }

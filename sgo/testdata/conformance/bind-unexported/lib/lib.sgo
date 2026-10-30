@@ -1,0 +1,5 @@
+package lib
+
+func helper() string { return "hidden" }
+
+func Public() string { return helper() }

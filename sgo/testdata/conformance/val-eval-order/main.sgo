@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+func mark(out *sgo.Writer, s string) int {
+	_ = out.WriteString(s)
+	return 1
+}
+
+func two(a int, b int) int { return a + b }
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	x, y := mark(out, "1"), mark(out, "2")
+	z := two(mark(out, "3"), mark(out, "4")) + mark(out, "5")
+	if x+y+z == 5 {
+		return out.WriteString("\n")
+	}
+	return nil
+}

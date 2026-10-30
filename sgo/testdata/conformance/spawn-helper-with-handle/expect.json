@@ -1,0 +1,12 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-001",
+  "SGO-CAP-001"
+ ],
+ "exit": 0,
+ "stdout_any_of": [
+  "one\ntwo\nafter\n",
+  "two\none\nafter\n"
+ ]
+}

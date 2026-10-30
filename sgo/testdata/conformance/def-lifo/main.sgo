@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+func w(out *sgo.Writer, s string) {
+	_ = out.WriteString(s)
+}
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	defer w(out, "1")
+	defer w(out, "2")
+	defer w(out, "3")
+	return out.WriteString("body ")
+}

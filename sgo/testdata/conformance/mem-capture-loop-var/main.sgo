@@ -1,0 +1,11 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	for i := 0; i < 3; i++ {
+		f := func() int { return i }
+		_ = f
+	}
+	return nil
+}

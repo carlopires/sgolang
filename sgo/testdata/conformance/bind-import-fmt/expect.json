@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-BIND-002",
+  "SGO-PROC-004"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNADMITTED",
+   "at": "\"fmt\""
+  }
+ ]
+}

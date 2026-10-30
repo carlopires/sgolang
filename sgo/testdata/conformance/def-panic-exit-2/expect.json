@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-DEF-002",
+  "SGO-PROC-002"
+ ],
+ "exit": 2,
+ "stdout": "before\n",
+ "stderr_kind": "Panic",
+ "stderr_message": "boom"
+}

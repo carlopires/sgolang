@@ -1,0 +1,13 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	base := 3
+	f := func(x int) int { return x + base }
+	if f(1) == 4 && f(2) == 5 {
+		return out.WriteString("ok\n")
+	}
+	return out.WriteString("bad\n")
+}

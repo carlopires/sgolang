@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	a := -7
+	b := 2
+	one := 1
+	d := 62
+	c := 1
+	c++
+	c--
+	if a/b == -3 && a%b == -1 && one<<d == 4611686018427387904 && -8>>one == -4 && 6&3 == 2 && 6|3 == 7 && 6^3 == 5 && 6&^3 == 4 && ^0 == -1 && c == 1 {
+		return out.WriteString("ok\n")
+	}
+	return out.WriteString("bad\n")
+}

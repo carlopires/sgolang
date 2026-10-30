@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		n.Cancel()
+		n.Spawn(func(task *sgo.Context) error { panic("must not run") })
+	}
+	return out.WriteString("no child\n")
+}

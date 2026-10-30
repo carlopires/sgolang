@@ -1,0 +1,22 @@
+package main
+
+import "sgo"
+
+func start(n *sgo.Nursery, out *sgo.Writer) {
+	n.Spawn(func(task *sgo.Context) error { return work(task, out) })
+}
+
+func work(task *sgo.Context, out *sgo.Writer) error {
+	if err := task.Checkpoint(); err != nil {
+		return err
+	}
+	return out.WriteString("worked\n")
+}
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		start(n, out)
+	}
+	return out.WriteString("done\n")
+}

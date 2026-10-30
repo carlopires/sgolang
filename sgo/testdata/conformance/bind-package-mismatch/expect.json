@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-BIND-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_PACKAGE_CLAUSE",
+   "file": "util.sgo",
+   "at": "package other"
+  }
+ ]
+}

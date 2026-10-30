@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-MEM-002",
+  "SGO-TYPE-004"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_CAPTURE_NOT_FINAL",
+   "at": "n = 1"
+  }
+ ]
+}

@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-DRAIN-001",
+  "SGO-DRAIN-003"
+ ],
+ "exit": 0,
+ "expect_watchdog": true,
+ "timeout_ms": 2000
+}

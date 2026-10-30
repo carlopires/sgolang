@@ -35,7 +35,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §2, decisions D07, D15, and resolu
 - **effect_and_capability_requirements:** Importing grants no capability. Capabilities come only from values (SGO-CAP-001).
 - **concurrency_and_memory_order:** n/a — compile-time only.
 - **allowed_nondeterminism:** None.
-- **failure_and_partial_progress:** A denied, unknown, duplicate, or unused import is a compile error.
+- **failure_and_partial_progress:** A denied, unknown, duplicate, or unused import is a compile error. Import admission is checked before type checking: if any import of a package is denied, only the import diagnostics are reported for that package.
 - **cancellation_and_cleanup:** n/a — compile-time only.
 - **compile_link_checks:** `SGO_E_UNADMITTED` (standard-library or other non-module path, import forms); `SGO_E_UNUSED` (unused import); `SGO_E_STALE_CONTRACT` (SGO-IMP-002).
 - **runtime_guards:** n/a — no run-time behavior.
@@ -72,7 +72,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §2, decisions D07, D15, and resolu
 - **version:** 1
 - **status:** draft
 - **reference_closure:** SGO-BIND-003, SGO-NUR-001; R3.
-- **grammar_and_types:** Scopes: the universe (predeclared identifiers `bool int string error true false nil len panic`), the package, each file (for imported package names), each function (parameters and results), and each block, including the implicit blocks of `if`, `for`, `switch`, and each `case`. A local name is in scope from the end of its declaration to the end of its block. Within one function, declaring a name already declared in an enclosing block of that function (including parameters and results) is a compile error. Declaring a name that equals a predeclared identifier, an imported package name, or a package-level declaration of the same package is a compile error. Every local variable must be used; assigning to it does not count as a use. The blank identifier `_` declares nothing.
+- **grammar_and_types:** Scopes: the universe (predeclared identifiers `bool int string error true false nil len panic`), the package, each file (for imported package names), each function (parameters and results), and each block, including the implicit blocks of `if`, `for`, `switch`, and each `case`. A local name is in scope from the end of its declaration to the end of its block. Within one function, declaring a name already declared in an enclosing block of that function (including parameters and results) is a compile error. Declaring a name that equals a predeclared identifier, an imported package name, or a package-level declaration of the same package is a compile error. Every local variable declared in a function body must be used; assigning to it does not count as a use. Parameters and named results need not be used. The blank identifier `_` declares nothing.
 - **preconditions:** n/a — static rule.
 - **evaluation_and_value_semantics:** n/a — static rule.
 - **ownership_and_lifecycle:** n/a — static rule.

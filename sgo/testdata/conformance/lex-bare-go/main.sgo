@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+func f() {}
+
+func main(root *sgo.Context) error {
+	go f()
+	return nil
+}

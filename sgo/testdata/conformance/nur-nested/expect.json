@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-NUR-005"
+ ],
+ "exit": 0,
+ "stdout": "inner\nouter\nend\n"
+}

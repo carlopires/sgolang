@@ -1,0 +1,11 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	if err := root.Sleep(20); err != nil {
+		return err
+	}
+	return out.WriteString("slept\n")
+}

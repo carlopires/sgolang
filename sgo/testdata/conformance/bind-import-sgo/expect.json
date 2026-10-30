@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-BIND-002"
+ ],
+ "exit": 0,
+ "stdout": "hello\n"
+}

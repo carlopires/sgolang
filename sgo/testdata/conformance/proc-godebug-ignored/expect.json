@@ -1,0 +1,15 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PROC-004",
+  "SGO-ERR-002"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"Panic\",\"message\":\"boom\",\"position\":\"main.sgo:6:2\",\"task_id\":0,\"scope_id\":null,\"chain\":[]}\n",
+ "run_env": {
+  "GODEBUG": "panicnil=1",
+  "GOTRACEBACK": "all",
+  "GOMAXPROCS": "1"
+ }
+}

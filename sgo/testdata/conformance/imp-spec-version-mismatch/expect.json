@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IMP-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_SPEC_VERSION",
+   "file": "sgo.mod",
+   "at": "sgo 9.9.9"
+  }
+ ]
+}

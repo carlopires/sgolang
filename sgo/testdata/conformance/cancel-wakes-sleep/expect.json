@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-WAIT-001",
+  "SGO-CANCEL-001"
+ ],
+ "exit": 0,
+ "stdout": "woken\n",
+ "timeout_ms": 10000
+}

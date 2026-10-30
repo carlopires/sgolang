@@ -1,0 +1,13 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	x := 1 +
+		2
+	if x == 3 {
+		return out.WriteString("ok\n")
+	}
+	return out.WriteString("bad\n")
+}

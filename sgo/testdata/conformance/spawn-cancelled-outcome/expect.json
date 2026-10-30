@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-004",
+  "SGO-CANCEL-003"
+ ],
+ "exit": 0,
+ "stdout": "completed normally\n"
+}

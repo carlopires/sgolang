@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IMP-002"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_TYPE_MISMATCH",
+   "at": "lib.Value() == 1"
+  }
+ ],
+ "procedure": "rebuild-after-edit"
+}

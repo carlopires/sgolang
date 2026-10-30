@@ -1,0 +1,13 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	err := out.WriteString("a\n")
+	if err == nil {
+		err := out.WriteString("b\n")
+		_ = err
+	}
+	return err
+}

@@ -1,0 +1,17 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-DRAIN-002",
+  "SGO-TOOL-001"
+ ],
+ "exit": 0,
+ "expect_watchdog": true,
+ "timeout_ms": 2000,
+ "run_env": {
+  "SGO_DRAIN_BUDGET": "100",
+  "SGO_DRAIN_BUDGET_MS": "100"
+ },
+ "build_env": {
+  "SGO_DRAIN_BUDGET": "100"
+ }
+}

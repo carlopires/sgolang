@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	for i := range "ab" {
+		_ = i
+	}
+	return nil
+}

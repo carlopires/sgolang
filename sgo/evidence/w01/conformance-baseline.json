@@ -1,0 +1,10 @@
+{
+  "recorded_at": "2026-10-30",
+  "platform": "darwin-arm64",
+  "driver": "sgo/scripts/sgo-target (W00 deny-by-default gate)",
+  "result": "conformance: 0 passed, 170 failed of 170",
+  "cases": 170,
+  "run_cases": 82,
+  "reject_cases": 88,
+  "meaning": "Baseline: the W00 gate denies every program without construct-specific diagnostics, so every case fails as required. W03 must make all 170 pass with the real sgo driver."
+}

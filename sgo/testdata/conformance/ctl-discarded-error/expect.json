@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-CTL-001",
+  "SGO-PROC-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_DISCARDED_ERROR",
+   "at": "out.WriteString(\"x\")"
+  }
+ ]
+}

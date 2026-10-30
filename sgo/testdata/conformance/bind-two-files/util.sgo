@@ -1,0 +1,3 @@
+package main
+
+func helper() string { return "from util\n" }

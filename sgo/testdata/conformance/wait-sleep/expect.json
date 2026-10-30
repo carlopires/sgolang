@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-WAIT-001",
+  "SGO-TIMER-001"
+ ],
+ "exit": 0,
+ "stdout": "slept\n"
+}

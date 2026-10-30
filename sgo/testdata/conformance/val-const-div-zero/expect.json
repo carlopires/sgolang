@@ -1,0 +1,12 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-VAL-004"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_CONST_DIV_ZERO",
+   "at": "1 / 0"
+  }
+ ]
+}

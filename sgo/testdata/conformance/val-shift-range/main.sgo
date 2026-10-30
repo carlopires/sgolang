@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	one := 1
+	s := 64
+	_ = out.WriteString("before\n")
+	_ = one << s
+	return out.WriteString("after\n")
+}

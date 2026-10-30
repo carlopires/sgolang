@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-LEX-002"
+ ],
+ "exit": 0,
+ "stdout": "ok\n"
+}

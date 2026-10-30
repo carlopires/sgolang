@@ -1,0 +1,14 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	for i := 0; i < 3; i++ {
+		nursery (n) {
+			n.Spawn(func(task *sgo.Context) error { return out.WriteString("tick\n") })
+		}
+		_ = out.WriteString("joined\n")
+	}
+	return nil
+}

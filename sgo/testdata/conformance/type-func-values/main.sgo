@@ -1,0 +1,17 @@
+package main
+
+import "sgo"
+
+func apply(f func(int) int, x int) int { return f(x) }
+
+func double(x int) int { return x * 2 }
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	base := 10
+	add := func(x int) int { return x + base }
+	if apply(double, 3) == 6 && apply(add, 1) == 11 {
+		return out.WriteString("ok\n")
+	}
+	return out.WriteString("bad\n")
+}

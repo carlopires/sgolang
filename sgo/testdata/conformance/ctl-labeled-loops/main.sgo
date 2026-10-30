@@ -1,0 +1,24 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	count := 0
+outer:
+	for i := 0; i < 3; i++ {
+		for j := 0; j < 3; j++ {
+			if j == 1 {
+				continue outer
+			}
+			if i == 2 {
+				break outer
+			}
+			count++
+		}
+	}
+	if count == 2 {
+		return out.WriteString("ok\n")
+	}
+	return out.WriteString("bad\n")
+}

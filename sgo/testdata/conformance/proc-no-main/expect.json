@@ -1,0 +1,12 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-PROC-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_MAIN_SIGNATURE",
+   "at": "package main"
+  }
+ ]
+}

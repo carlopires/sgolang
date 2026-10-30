@@ -1,0 +1,11 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	n := 0
+	f := func() { n = 5 }
+	_ = f
+	_ = n
+	return nil
+}

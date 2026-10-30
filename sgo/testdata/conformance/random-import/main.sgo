@@ -1,0 +1,10 @@
+package main
+
+import (
+	"math/rand"
+	"sgo"
+)
+
+func main(root *sgo.Context) error {
+	return nil
+}

@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			if err := task.Sleep(60000); err != nil {
+				_ = out.WriteString("woken\n")
+				return err
+			}
+			return out.WriteString("bad: slept a minute\n")
+		})
+		n.Cancel()
+	}
+	return nil
+}

@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-NUR-003",
+  "SGO-SPAWN-002"
+ ],
+ "exit": 0,
+ "stdout": "grandchild\njoined\n"
+}

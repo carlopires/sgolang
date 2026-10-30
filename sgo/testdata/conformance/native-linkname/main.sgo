@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+//go:linkname nanotime runtime.nanotime
+func nanotime() int
+
+func main(root *sgo.Context) error {
+	return nil
+}

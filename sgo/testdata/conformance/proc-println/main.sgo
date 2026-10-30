@@ -1,0 +1,8 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	println("x")
+	return nil
+}

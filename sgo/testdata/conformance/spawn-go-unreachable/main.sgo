@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+func f() {}
+
+func main(root *sgo.Context) error {
+	if false {
+		go f()
+	}
+	return nil
+}

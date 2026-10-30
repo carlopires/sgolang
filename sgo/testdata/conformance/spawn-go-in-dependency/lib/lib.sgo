@@ -1,0 +1,7 @@
+package lib
+
+func work() {}
+
+func Run() {
+	go work()
+}

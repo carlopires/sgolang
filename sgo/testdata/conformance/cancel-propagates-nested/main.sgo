@@ -1,0 +1,24 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (a) {
+		a.Spawn(func(task *sgo.Context) error {
+			nursery (b) {
+				b.Spawn(func(t2 *sgo.Context) error {
+					for {
+						if err := t2.Sleep(1); err != nil {
+							_ = out.WriteString("grandchild cancelled\n")
+							return err
+						}
+					}
+				})
+			}
+			return nil
+		})
+		a.Cancel()
+	}
+	return out.WriteString("after\n")
+}

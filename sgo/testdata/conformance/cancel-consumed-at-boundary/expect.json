@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CANCEL-002",
+  "SGO-CANCEL-004"
+ ],
+ "exit": 0,
+ "stdout": "inside: cancelled\nafter: not cancelled\n"
+}

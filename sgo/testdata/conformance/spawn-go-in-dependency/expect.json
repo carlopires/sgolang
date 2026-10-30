@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-SPAWN-005"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNSTRUCTURED_SPAWN",
+   "file": "lib/lib.sgo",
+   "at": "go work()"
+  }
+ ]
+}

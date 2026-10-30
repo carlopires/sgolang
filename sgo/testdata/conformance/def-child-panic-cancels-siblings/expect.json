@@ -1,0 +1,12 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-DEF-005",
+  "SGO-SPAWN-004",
+  "SGO-NUR-004"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "Panic",
+ "stderr_message": "p1"
+}

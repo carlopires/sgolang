@@ -1,0 +1,31 @@
+package main
+
+import "sgo"
+
+const limit = 3
+
+func noop() {}
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	defer noop()
+	var total = 0
+	for i := 0; i < 10; i++ {
+		if i == limit {
+			break
+		} else {
+			total += i
+		}
+		continue
+	}
+	switch total {
+	case 3:
+		_ = out.WriteString("ok\n")
+	default:
+		_ = out.WriteString("bad\n")
+	}
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error { return nil })
+	}
+	return nil
+}

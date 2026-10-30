@@ -1,0 +1,9 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	var x int = "s"
+	_ = x
+	return nil
+}

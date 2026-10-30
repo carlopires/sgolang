@@ -1,0 +1,8 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	defer func() { _ = recover() }()
+	return nil
+}

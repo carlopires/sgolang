@@ -1,0 +1,16 @@
+package main
+
+import "sgo"
+
+func w(out *sgo.Writer, s string) {
+	_ = out.WriteString(s)
+}
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	defer w(out, "deferred\n")
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error { return out.WriteString("child\n") })
+		panic("boom")
+	}
+}

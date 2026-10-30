@@ -1,0 +1,16 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	nursery (b) {
+		b.Spawn(func(task *sgo.Context) error { return nil })
+		nursery (a) {
+			a.Spawn(func(task *sgo.Context) error {
+				b.Cancel()
+				return nil
+			})
+		}
+	}
+	return nil
+}

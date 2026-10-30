@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-NATIVE-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNADMITTED",
+   "file": "stub.s",
+   "position": "stub.s:1:1"
+  }
+ ]
+}

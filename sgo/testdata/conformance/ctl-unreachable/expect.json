@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-CTL-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNREACHABLE",
+   "at": "return nil",
+   "occurrence": 2
+  }
+ ]
+}

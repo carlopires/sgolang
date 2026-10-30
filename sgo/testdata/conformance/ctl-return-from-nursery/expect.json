@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CTL-004",
+  "SGO-DEF-001",
+  "SGO-CTL-003"
+ ],
+ "exit": 0,
+ "stdout": "child\ndeferred after join\n"
+}

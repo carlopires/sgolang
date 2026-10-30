@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PROC-003",
+  "SGO-TCB-001"
+ ],
+ "exit": 0,
+ "stdout": "hello, world\n"
+}

@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-MEM-004",
+  "SGO-NUR-003"
+ ],
+ "exit": 0,
+ "stdout": "child\nafter join\n"
+}

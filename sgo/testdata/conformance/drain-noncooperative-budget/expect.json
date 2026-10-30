@@ -1,0 +1,12 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-DRAIN-002"
+ ],
+ "exit": 3,
+ "stdout": "cancelling\n",
+ "stderr_kind": "DrainBudgetExceeded",
+ "build_args": [
+  "-drain-budget=100"
+ ]
+}

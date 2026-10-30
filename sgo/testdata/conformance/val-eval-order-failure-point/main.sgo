@@ -1,0 +1,17 @@
+package main
+
+import "sgo"
+
+func mark(out *sgo.Writer, s string) int {
+	_ = out.WriteString(s)
+	return 1
+}
+
+func two(a int, b int) int { return a + b }
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	zero := 0
+	_ = two(mark(out, "a"), 1/zero) + mark(out, "never")
+	return nil
+}

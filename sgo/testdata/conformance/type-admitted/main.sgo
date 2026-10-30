@@ -1,0 +1,16 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	var ok bool = true
+	var n int = 9223372036854775807
+	var s string = "s"
+	var f func(int) int = func(x int) int { return x + 1 }
+	var e error = nil
+	if ok && n > 0 && s == "s" && f(1) == 2 && e == nil {
+		return out.WriteString("ok\n")
+	}
+	return out.WriteString("bad\n")
+}

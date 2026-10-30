@@ -1,0 +1,11 @@
+package main
+
+import "sgo"
+
+const (
+	a = iota
+)
+
+func main(root *sgo.Context) error {
+	return nil
+}

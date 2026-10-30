@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-TYPE-002",
+  "SGO-TYPE-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_TYPE_MISMATCH",
+   "at": "nil"
+  }
+ ]
+}

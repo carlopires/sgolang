@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IMP-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_IMPORT_CYCLE",
+   "file": "a/a.sgo",
+   "at": "\"example.com/imp-cycle/b\""
+  }
+ ]
+}

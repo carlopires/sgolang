@@ -1,0 +1,12 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-BIND-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNINITIALIZED",
+   "at": "var x int"
+  }
+ ]
+}

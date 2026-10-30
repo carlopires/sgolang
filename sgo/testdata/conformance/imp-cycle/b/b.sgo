@@ -1,0 +1,7 @@
+package b
+
+import "example.com/imp-cycle/a"
+
+func B() string { return "b" }
+
+func C() string { return a.A() }

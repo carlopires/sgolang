@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CANCEL-001",
+  "SGO-CANCEL-002"
+ ],
+ "exit": 0,
+ "stdout": "child saw cancel\nafter\n"
+}

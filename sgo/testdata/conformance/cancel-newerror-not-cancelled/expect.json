@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CANCEL-003",
+  "SGO-SPAWN-004"
+ ],
+ "exit": 1,
+ "stdout": "",
+ "stderr_kind": "ChildError",
+ "stderr_message": "cancelled"
+}

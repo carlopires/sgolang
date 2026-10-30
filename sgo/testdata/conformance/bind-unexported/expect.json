@@ -1,0 +1,12 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-BIND-005"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNEXPORTED",
+   "at": "lib.helper"
+  }
+ ]
+}

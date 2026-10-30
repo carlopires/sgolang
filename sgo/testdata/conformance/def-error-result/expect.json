@@ -1,0 +1,12 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-DEF-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_DISCARDED_ERROR",
+   "at": "defer"
+  }
+ ]
+}

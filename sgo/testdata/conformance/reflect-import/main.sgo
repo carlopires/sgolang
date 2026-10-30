@@ -1,0 +1,10 @@
+package main
+
+import (
+	"reflect"
+	"sgo"
+)
+
+func main(root *sgo.Context) error {
+	return nil
+}

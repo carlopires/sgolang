@@ -1,0 +1,14 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	late := func() {}
+	nursery (n) {
+		late = func() {
+			n.Spawn(func(task *sgo.Context) error { return nil })
+		}
+	}
+	late()
+	return nil
+}

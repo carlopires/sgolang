@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CTL-002"
+ ],
+ "exit": 0,
+ "stdout": "aabc!\n"
+}

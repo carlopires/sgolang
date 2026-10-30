@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+func f(n int) int {
+	return f(n+1) + 1
+}
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	if f(0) > 0 {
+		return out.WriteString("ok\n")
+	}
+	return out.WriteString("bad\n")
+}

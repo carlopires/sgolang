@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	e := sgo.NewError("boom")
+	if e != nil && e.Error() == "boom" && !sgo.IsCancelled(e) {
+		return out.WriteString("ok\n")
+	}
+	return out.WriteString("bad\n")
+}

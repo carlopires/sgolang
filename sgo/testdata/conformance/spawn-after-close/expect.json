@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-002"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "SpawnContractViolation"
+}

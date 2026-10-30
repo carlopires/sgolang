@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PROC-002"
+ ],
+ "exit": 1,
+ "stdout": "",
+ "stderr_kind": "MainError",
+ "stderr_message": "main failed"
+}

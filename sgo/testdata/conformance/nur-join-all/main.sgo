@@ -1,0 +1,28 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			if err := task.Sleep(30); err != nil {
+				return err
+			}
+			return out.WriteString("x\n")
+		})
+		n.Spawn(func(task *sgo.Context) error {
+			if err := task.Sleep(10); err != nil {
+				return err
+			}
+			return out.WriteString("x\n")
+		})
+		n.Spawn(func(task *sgo.Context) error {
+			if err := task.Sleep(20); err != nil {
+				return err
+			}
+			return out.WriteString("x\n")
+		})
+	}
+	return out.WriteString("all joined\n")
+}

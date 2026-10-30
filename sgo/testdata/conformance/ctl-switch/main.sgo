@@ -1,0 +1,23 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	s := ""
+	for i := 0; i < 4; i++ {
+		switch i {
+		case 0, 1:
+			s += "a"
+		case 2:
+			s += "b"
+		default:
+			s += "c"
+		}
+	}
+	switch x := len(s); {
+	case x == 4:
+		s += "!"
+	}
+	return out.WriteString(s + "\n")
+}

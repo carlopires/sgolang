@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-002"
+ ],
+ "exit": 0,
+ "stdout": "no child\n"
+}

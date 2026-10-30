@@ -1,0 +1,3 @@
+package other
+
+func helper() string { return "x" }

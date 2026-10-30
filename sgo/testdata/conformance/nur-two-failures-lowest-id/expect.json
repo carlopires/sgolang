@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-NUR-004",
+  "SGO-ERR-002"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "Panic",
+ "stderr_message": "first"
+}

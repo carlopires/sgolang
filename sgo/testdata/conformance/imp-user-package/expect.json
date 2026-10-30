@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-IMP-001",
+  "SGO-BIND-005",
+  "SGO-BIND-002"
+ ],
+ "exit": 0,
+ "stdout": "hello from lib\n"
+}

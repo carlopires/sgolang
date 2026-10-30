@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	x := 1
+	if x {
+	}
+	return nil
+}

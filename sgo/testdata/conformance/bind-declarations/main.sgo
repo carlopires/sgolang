@@ -1,0 +1,21 @@
+package main
+
+import "sgo"
+
+const greeting = "ok"
+const answer int = 42
+
+func pair() (int, string) { return 1, "x" }
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	var a int = 1
+	var b = 2
+	c := 3
+	d, e := 4, "e"
+	f, g := pair()
+	if a+b+c+d+f == 11 && e == "e" && g == "x" && answer == 42 {
+		return out.WriteString(greeting + "\n")
+	}
+	return out.WriteString("bad\n")
+}

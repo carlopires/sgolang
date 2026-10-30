@@ -1,0 +1,16 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	var a int = 7
+	b := a
+	var g func(x int) int = func(y int) int { return y * 2 }
+	h := g
+	var e error = nil
+	if b == 7 && h(2) == 4 && e == nil {
+		return out.WriteString("ok\n")
+	}
+	return out.WriteString("bad\n")
+}

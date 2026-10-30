@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+const big = 1 << 100
+
+const small = big >> 98
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	if small == 4 && len("abc") == 3 && -7/2 == -3 {
+		return out.WriteString("ok\n")
+	}
+	return out.WriteString("bad\n")
+}

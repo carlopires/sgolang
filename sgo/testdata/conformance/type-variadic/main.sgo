@@ -1,0 +1,9 @@
+package main
+
+import "sgo"
+
+func sum(xs ...int) int { return 0 }
+
+func main(root *sgo.Context) error {
+	return nil
+}

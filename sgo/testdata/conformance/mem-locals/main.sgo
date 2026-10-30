@@ -1,0 +1,17 @@
+package main
+
+import "sgo"
+
+func counter() int {
+	x := 0
+	x++
+	return x
+}
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	if counter() == 1 && counter() == 1 {
+		return out.WriteString("ok\n")
+	}
+	return out.WriteString("bad\n")
+}

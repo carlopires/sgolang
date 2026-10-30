@@ -1,0 +1,9 @@
+package main
+
+import "sgo"
+
+type T int
+
+func main(root *sgo.Context) error {
+	return nil
+}

@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-NUR-003",
+  "SGO-WAIT-002"
+ ],
+ "exit": 0,
+ "stdout": "x\nx\nx\nall joined\n"
+}

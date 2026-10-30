@@ -1,0 +1,21 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	x := 1
+	if y := x + 1; y == 2 {
+		_ = out.WriteString("if-init ok\n")
+	}
+	if y := x + 2; y == 3 {
+		_ = out.WriteString("sibling scope ok\n")
+	}
+	{
+		z := x * 10
+		if z == 10 {
+			_ = out.WriteString("block ok\n")
+		}
+	}
+	return nil
+}

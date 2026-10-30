@@ -1,0 +1,19 @@
+package main
+
+import "sgo"
+
+func mark(out *sgo.Writer, s string, v bool) bool {
+	_ = out.WriteString(s)
+	return v
+}
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	if mark(out, "a", false) && mark(out, "b", true) {
+		_ = out.WriteString("x")
+	}
+	if mark(out, "c", true) || mark(out, "d", true) {
+		_ = out.WriteString("y")
+	}
+	return out.WriteString("\n")
+}

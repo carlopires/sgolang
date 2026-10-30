@@ -1,0 +1,12 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-VAL-004"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_CONST_OVERFLOW",
+   "at": "9223372036854775807 + 1"
+  }
+ ]
+}

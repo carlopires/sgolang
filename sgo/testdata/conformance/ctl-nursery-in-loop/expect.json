@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CTL-004",
+  "SGO-NUR-002"
+ ],
+ "exit": 0,
+ "stdout": "tick\njoined\ntick\njoined\ntick\njoined\n"
+}

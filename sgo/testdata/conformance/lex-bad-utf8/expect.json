@@ -1,0 +1,12 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-LEX-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_SOURCE_ENCODING",
+   "position": "main.sgo:5:14"
+  }
+ ]
+}

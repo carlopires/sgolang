@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-ERR-003",
+  "SGO-STACK-001"
+ ],
+ "exit": 4,
+ "stdout": "",
+ "stderr_kind": "ResourceExhausted",
+ "timeout_ms": 60000
+}

@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-NUR-004",
+  "SGO-PROC-002"
+ ],
+ "exit": 1,
+ "stdout": "",
+ "stderr_kind": "ChildError",
+ "stderr_message": "child failed"
+}

@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PROC-003",
+  "SGO-CAP-001"
+ ],
+ "exit": 0,
+ "stdout": "from child\n"
+}

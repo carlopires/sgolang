@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-NUR-001",
+  "SGO-SPAWN-001"
+ ],
+ "exit": 0,
+ "stdout": "helper child\nafter\n"
+}

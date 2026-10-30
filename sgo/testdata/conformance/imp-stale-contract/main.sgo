@@ -1,0 +1,14 @@
+package main
+
+import (
+	"example.com/imp-stale-contract/lib"
+	"sgo"
+)
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	if lib.Value() == 1 {
+		return out.WriteString("v1\n")
+	}
+	return nil
+}

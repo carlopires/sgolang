@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CANCEL-001",
+  "SGO-NUR-001"
+ ],
+ "exit": 0,
+ "stdout": "grandchild cancelled\nafter\n"
+}

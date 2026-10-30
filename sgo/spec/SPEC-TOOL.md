@@ -6,7 +6,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §16, the user's naming decision (d
 - **version:** 1
 - **status:** draft
 - **reference_closure:** SGO-IMP-001, SGO-IMP-002, SGO-DRAIN-002, SGO-ERR-001, SGO-BUILD-001; R7.
-- **grammar_and_types:** The S-Go driver is the executable `sgo`. Subset-0 commands: `sgo build [-o out] [-drain-budget=<ms>] [packages]`, `sgo run [-drain-budget=<ms>] <main package> `, `sgo version`, `sgo fmt [files]`. Any other command or flag is rejected. In particular there is no flag, environment variable, file name, build tag, or pragma that changes the language, disables a check, selects a different compiler, or enables Go compatibility (S01).
+- **grammar_and_types:** The S-Go driver is the executable `sgo`. Subset-0 commands: `sgo build [-o out] [-drain-budget=<ms>] [-target=<os>/<arch>] [packages]`, `sgo run [-drain-budget=<ms>] <main package>`, `sgo version`, `sgo fmt [files]`. Any other command or flag is rejected. In particular there is no flag, environment variable, file name, build tag, or pragma that changes the language, disables a check, selects a different compiler, or enables Go compatibility (S01).
 - **preconditions:** The working directory is inside a module (SGO-IMP-001).
 - **evaluation_and_value_semantics:** `build` compiles every package of the requested main package's import graph under the current spec, then links a binary whose build metadata records spec version, admission digest, drain budget, target, and toolchain identity. `run` builds into a temporary location and executes the binary, propagating its exit status. `version` prints the S-Go version, spec version, admission digest, and upstream base commit. `fmt` formats `.sgo` files and refuses any file it cannot parse as S-Go.
 - **ownership_and_lifecycle:** Build caches are keyed by every identity of SGO-IMP-002 and kept separate from any Go build cache.
@@ -15,7 +15,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §16, the user's naming decision (d
 - **allowed_nondeterminism:** None in outputs: builds are reproducible for identical inputs (W00 B02 shows the base toolchain is).
 - **failure_and_partial_progress:** Any error leaves no output binary.
 - **cancellation_and_cleanup:** n/a — toolchain.
-- **compile_link_checks:** Unknown commands and flags: `SGO_E_USAGE`. Inputs that are not `.sgo` files of the module: `SGO_E_UNADMITTED`.
+- **compile_link_checks:** Unknown commands and flags: `SGO_E_USAGE`. `-target` accepts only `darwin/arm64`, `linux/amd64`, `linux/arm64` (default: the host); any other value is `SGO_E_TARGET` (SGO-BUILD-001). Inputs that are not `.sgo` files of the module: `SGO_E_UNADMITTED`.
 - **runtime_guards:** n/a — toolchain.
 - **tcb_assumptions:** The driver is a host tool built by the pinned bootstrap (stage H1).
 - **positive_tests:** S01, S15; fixture:proc-hello.

@@ -1,0 +1,17 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IMP-002",
+  "SGO-TOOL-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNADMITTED",
+   "file": "stock.a",
+   "position": "stock.a:1:1"
+  }
+ ],
+ "build_args": [
+  "stock.a"
+ ]
+}

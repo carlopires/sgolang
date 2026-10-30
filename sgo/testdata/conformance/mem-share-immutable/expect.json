@@ -1,0 +1,13 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-MEM-003",
+  "SGO-TYPE-004",
+  "SGO-PROC-003"
+ ],
+ "exit": 0,
+ "stdout_any_of": [
+  "a\nb\ndone\n",
+  "b\na\ndone\n"
+ ]
+}

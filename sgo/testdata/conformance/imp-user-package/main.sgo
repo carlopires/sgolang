@@ -1,0 +1,11 @@
+package main
+
+import (
+	"example.com/imp-user-package/lib"
+	"sgo"
+)
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	return out.WriteString(lib.Greeting() + " from " + lib.Name + "\n")
+}

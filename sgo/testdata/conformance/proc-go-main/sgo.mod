@@ -1,0 +1,3 @@
+module example.com/proc-go-main
+
+sgo 0.1.0

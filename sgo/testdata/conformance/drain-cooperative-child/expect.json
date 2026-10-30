@@ -1,0 +1,12 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-DRAIN-001",
+  "SGO-DRAIN-002"
+ ],
+ "exit": 0,
+ "stdout": "cancelling\nafter\n",
+ "build_args": [
+  "-drain-budget=1000"
+ ]
+}

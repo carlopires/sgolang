@@ -1,0 +1,13 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CANCEL-004",
+  "SGO-WAIT-001",
+  "SGO-NUR-004"
+ ],
+ "exit": 1,
+ "stdout": "owner woken\n",
+ "stderr_kind": "ChildError",
+ "stderr_message": "child failed",
+ "timeout_ms": 10000
+}

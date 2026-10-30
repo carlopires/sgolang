@@ -1,0 +1,10 @@
+package main
+
+import (
+	"example.com/bind-unused-import/lib"
+	"sgo"
+)
+
+func main(root *sgo.Context) error {
+	return nil
+}

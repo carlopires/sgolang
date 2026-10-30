@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	defer func() { _ = out.WriteString("deferred after join\n") }()
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error { return out.WriteString("child\n") })
+		return nil
+	}
+}

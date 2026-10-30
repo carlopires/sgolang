@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-001",
+  "SGO-SPAWN-003"
+ ],
+ "exit": 0,
+ "stdout": "spawned\nafter\n"
+}

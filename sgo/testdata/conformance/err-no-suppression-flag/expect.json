@@ -1,0 +1,16 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-ERR-001",
+  "SGO-TOOL-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_USAGE",
+   "position": "sgo:1:1"
+  }
+ ],
+ "build_args": [
+  "-ignore-errors"
+ ]
+}

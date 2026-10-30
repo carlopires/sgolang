@@ -1,0 +1,31 @@
+package main
+
+import "sgo"
+
+func sign(x int) string {
+	if x < 0 {
+		return "-"
+	} else {
+		return "+"
+	}
+}
+
+func first() string {
+	for {
+		return "loop"
+	}
+}
+
+func kind(x int) string {
+	switch x {
+	case 0:
+		return "zero"
+	default:
+		return "other"
+	}
+}
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	return out.WriteString(sign(-1) + sign(1) + first() + kind(0) + kind(5) + "\n")
+}

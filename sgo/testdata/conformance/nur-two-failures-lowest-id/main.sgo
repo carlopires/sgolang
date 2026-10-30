@@ -1,0 +1,11 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error { panic("first") })
+		n.Spawn(func(task *sgo.Context) error { panic("second") })
+	}
+	return nil
+}
