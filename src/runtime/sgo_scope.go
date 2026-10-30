@@ -69,6 +69,10 @@ type sgoScope struct {
 	joiner   *g // owner parked in join, or nil
 	nchild   int64
 	snapshot sgoScopeResult // filled at CLOSED (immutable afterwards)
+	// frame is stack.hi minus the SP of the frame executing the nursery statement (set by
+	// sgoNurseryEnter). It is an offset, not an address, so it survives stack copying (§2.4);
+	// unwinding uses it to complete the nurseries of the frames it leaves (SGO-DEF-005).
+	frame uintptr
 }
 
 // sgoTask is the record of an S-Go task: the root task or a child admitted by sgoSpawn.

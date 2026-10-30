@@ -38,6 +38,12 @@ Every goroutine created through `newproc` (the `go`-statement path) is classifie
 
 Violations return `SpawnContractViolation: <reason>` naming the failed check (nil handle, nil callback, non-task caller, not the caller's current scope, state). Internal invariant violations throw with a specific `sgo:` message (closed scope with a running child, negative live count, task exited with an open nursery, service created outside the enumeration with its creator), which W03 maps to the `RuntimeDefect` diagnostic record (SGO-ERR-002/003).
 
-## 8. Not in W02
+## 8. Nursery statement and unwinding barrier (W03)
+
+Code: `src/runtime/sgo_nursery.go`, one hook in `panic.go` (`(*_panic).nextFrame`); tests: `src/runtime/sgo_nursery_test.go`. The compiler lowers `nursery (n) { body }` to `s := sgoNurseryEnter(); n := &sgo.Nursery{s}; body; sgoNurseryExit(s)`, and emits `sgoNurseryExit` for every `return`/`break`/`continue` that leaves the statement, innermost first, after the return operands are held (SGO-CTL-004). `sgoNurseryExit` joins and applies SGO-NUR-004 rules 2–4 (a failed child's payload is unwound as is; an errored child unwinds as `ChildError`).
+
+Unwinding does not run that code. `sgoNurseryEnter` records `stack.hi − SP` of the executing frame in `sgoScope.frame` (an offset, so stack copying does not invalidate it, §2.4). After `nextFrame` finds the next frame with deferred calls, and only for real unwinding (not `deferreturn`), `sgoUnwindNurseries` joins the task's open nurseries whose offset is at least that frame's offset (that frame and the frames already left), innermost first; when no frame is left it joins all of them. So in every frame the active nurseries complete before the frame's deferred calls run (SGO-DEF-005), and outer frames' nurseries stay open until unwinding reaches them. The join cannot raise during unwinding (rule 1: the unwinding failure stays primary). Not yet: cancelling the scope before the unwinding join (W04), and recording non-primary child failures in the diagnostic chain (SGO-ERR-002, W03 diagnostics).
+
+## 9. Not in W02
 
 Cancellation (W04), owner-unwinding barriers and nursery syntax (W03), the public `sgo` package (W03), lab scheduling (W08). `sgoIsCancelled` returns false until W04 creates cancellation errors.

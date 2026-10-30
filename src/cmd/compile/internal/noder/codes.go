@@ -28,6 +28,10 @@ const (
 	stmtFor
 	stmtSwitch
 	stmtSelect
+
+	// S-Go (W03). Appended so that existing statement encodings are unchanged.
+	stmtNursery     // nursery (n) { ... } (SGO-NUR-001)
+	stmtNurseryExit // prefix of a return/break/continue that leaves k nurseries (SGO-CTL-004)
 )
 
 // A codeExpr distinguishes among expression encodings.

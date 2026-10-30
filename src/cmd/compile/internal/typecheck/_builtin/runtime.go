@@ -309,5 +309,9 @@ var riscv64HasZbb bool
 
 func asanregisterglobals(unsafe.Pointer, uintptr)
 
+// S-Go nursery statements (src/runtime/sgo_nursery.go)
+func sgoNurseryEnter() unsafe.Pointer
+func sgoNurseryExit(scope unsafe.Pointer)
+
 // used by testing.B.Loop
 func KeepAlive(interface{})

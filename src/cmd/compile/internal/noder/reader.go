@@ -115,6 +115,10 @@ type reader struct {
 	locals      []*ir.Name
 	closureVars []*ir.Name
 
+	// S-Go: scope temporaries of the nursery statements enclosing the statement being read,
+	// innermost last.
+	sgoNest []*ir.Name
+
 	// funarghack is used during inlining to suppress setting
 	// Field.Nname to the inlined copies of the parameters. This is
 	// necessary because we reuse the same types.Type as the original
@@ -1874,7 +1878,97 @@ func (r *reader) stmt1(tag codeStmt, out *ir.Nodes) ir.Node {
 
 	case stmtSwitch:
 		return r.switchStmt(label)
+
+	case stmtNursery:
+		r.nurseryStmt(out)
+		return nil
+
+	case stmtNurseryExit:
+		k := r.Len()
+		inner := r.stmt1(codeStmt(r.Code(pkgbits.SyncStmt1)), out)
+		return r.nurseryExit(k, inner)
 	}
+}
+
+// nurseryStmt lowers nursery (n) { body } (SGO-NUR-001, SGO-NUR-003) to
+//
+//	s := sgoNurseryEnter() // hidden temporary: the runtime scope
+//	n := &sgo.Nursery{s}
+//	body
+//	sgoNurseryExit(s) // at the closing brace: join, close, apply the outcome (SGO-NUR-004)
+//
+// The handle wraps the scope pointer, so a Nursery value the runtime did not create carries nil
+// and is refused by the runtime instead of being reinterpreted as a scope.
+// Exits that leave the body early complete it themselves (nurseryExit); unwinding completes it in
+// the runtime before the frame's deferred calls run (SGO-DEF-005).
+func (r *reader) nurseryStmt(out *ir.Nodes) {
+	pos := r.pos()
+	r.openScope()
+	npos := r.pos()
+	name := r.curfn.NewLocal(npos, r.localIdent(), r.typ())
+	r.addLocal(name)
+
+	handle := name.Type()
+	if !handle.IsPtr() || !handle.Elem().IsStruct() || handle.Elem().NumFields() != 1 ||
+		!handle.Elem().Field(0).Type.IsUnsafePtr() {
+		base.FatalfAt(npos, "S-Go: nursery binder type %v is not *sgo.Nursery{unsafe.Pointer}", handle)
+	}
+	scope := r.temp(pos, types.Types[types.TUNSAFEPTR])
+	enter := typecheck.Call(pos, typecheck.LookupRuntime("sgoNurseryEnter"), nil, false)
+	sas := ir.NewAssignStmt(pos, scope, enter)
+	sas.Def = true
+	sas.PtrInit().Append(ir.NewDecl(pos, ir.ODCL, scope))
+	scope.Defn = sas
+	out.Append(typecheck.Stmt(sas))
+
+	field := ir.NewStructKeyExpr(pos, handle.Elem().Field(0), scope)
+	lit := typecheck.Expr(ir.NewCompLitExpr(pos, ir.OCOMPLIT, handle.Elem(), []ir.Node{field}))
+	ptr := typecheck.Expr(typecheck.NodAddrAt(pos, lit))
+	ptr.SetType(handle)
+	as := ir.NewAssignStmt(pos, name, ptr)
+	as.Def = r.initDefn(as, []*ir.Name{name})
+	out.Append(typecheck.Stmt(as))
+
+	r.sgoNest = append(r.sgoNest, scope)
+	out.Append(r.blockStmt()...)
+	r.sgoNest = r.sgoNest[:len(r.sgoNest)-1]
+
+	end := r.pos()
+	out.Append(r.nurseryComplete(end, scope))
+	r.closeScope()
+}
+
+// nurseryComplete returns the call completing the nursery whose scope temporary is scope.
+func (r *reader) nurseryComplete(pos src.XPos, scope *ir.Name) ir.Node {
+	return typecheck.Stmt(typecheck.Call(pos, typecheck.LookupRuntime("sgoNurseryExit"), []ir.Node{scope}, false))
+}
+
+// nurseryExit lowers a return, break, or continue that leaves the k innermost nurseries
+// (SGO-CTL-004): return operands are evaluated once, left to right, and held; then each crossed
+// nursery completes from the innermost outward; then control transfers. If a completion unwinds,
+// the held values are discarded with the exit.
+func (r *reader) nurseryExit(k int, inner ir.Node) ir.Node {
+	if k <= 0 || k > len(r.sgoNest) {
+		base.FatalfAt(inner.Pos(), "S-Go: exit leaves %d nurseries, %d enclosing", k, len(r.sgoNest))
+	}
+	pos := inner.Pos()
+	var stmts ir.Nodes
+	if ret, ok := inner.(*ir.ReturnStmt); ok {
+		for i, res := range ret.Results {
+			tmp := r.temp(pos, res.Type())
+			as := ir.NewAssignStmt(pos, tmp, res)
+			as.Def = true
+			as.PtrInit().Append(ir.NewDecl(pos, ir.ODCL, tmp))
+			tmp.Defn = as
+			stmts.Append(typecheck.Stmt(as))
+			ret.Results[i] = tmp
+		}
+	}
+	for i := len(r.sgoNest) - 1; i >= len(r.sgoNest)-k; i-- {
+		stmts.Append(r.nurseryComplete(pos, r.sgoNest[i]))
+	}
+	stmts.Append(inner)
+	return ir.NewBlockStmt(pos, stmts)
 }
 
 func (r *reader) assignList() ([]*ir.Name, []ir.Node) {

@@ -5,8 +5,9 @@ no build_args/procedure/build_env. Each case's files are compiled as package mai
 for the compiled sgo package; diagnostics are compared in order (code and exact position).
 
 It also guards against false positives: every flat *run* case must compile with no diagnostic other
-than the not-yet-lowered gates of later W03 layers (LATER_LAYERS). Any other diagnostic on a run
-case is a failure and makes the exit status nonzero.
+than the gates of later W03 layers (LATER_LAYERS), and must exit 0 (an internal compiler error
+without a position also counts). Any other outcome on a run case is a failure and makes the exit
+status nonzero.
 
     conformance-compile.py [-v] [case ...]
 """
@@ -30,8 +31,8 @@ PLAT = {"Darwin": "darwin", "Linux": "linux"}[os.uname().sysname] + "_" + {"arm6
 COMPILE = os.path.join(ROOT, "pkg", "tool", PLAT, "compile")
 DIAG = re.compile(r"^(\S+:\d+:\d+): (SGO_E_[A-Z_]+|[^:]*?):", re.M)
 LINE = re.compile(r"^\S+:\d+:\d+: .*$", re.M)
-# Diagnostics of features a later W03 layer implements (lowering, layer 3/4; multi-package builds, layer 5).
-LATER_LAYERS = ("lowering not yet supported", "could not import")
+# Diagnostics of features a later W03 layer implements (multi-package builds, layer 5).
+LATER_LAYERS = ("could not import",)
 
 
 def eligible(d, e, kind="reject"):
@@ -66,7 +67,10 @@ def main():
             if eligible(d, e, "run"):
                 r = subprocess.run([COMPILE, "-p", "main", "-importcfg", cfg, "-o", os.path.join(tmp, "out.o")] + files,
                                    cwd=d, capture_output=True, text=True)
-                bad = [l for l in LINE.findall(r.stdout + r.stderr) if not any(g in l for g in LATER_LAYERS)]
+                text = r.stdout + r.stderr
+                bad = [l for l in LINE.findall(text) if not any(g in l for g in LATER_LAYERS)]
+                if r.returncode != 0 and not bad and not any(g in text for g in LATER_LAYERS):
+                    bad = [f"exit status {r.returncode}: " + " | ".join(text.strip().splitlines()[:3])]
                 (spurious.append((name, bad[:2])) if bad else clean.append(name))
                 continue
             if not eligible(d, e):

@@ -7,6 +7,8 @@
 
 package runtime
 
+import "unsafe"
+
 type SGoScope = sgoScope
 type SGoTask = sgoTask
 
@@ -42,6 +44,18 @@ func SGoScopeState(s *SGoScope) string {
 }
 
 func SGoSpawn(s *SGoScope, fn func(*SGoTask) error) error { return sgoSpawn(s, fn) }
+
+// Compiler entry points of the nursery statement (sgo_nursery.go), as function values so that the
+// caller's frame (the test function) is the frame that executes the nursery.
+var (
+	SGoNurseryEnter = sgoNurseryEnter // func() unsafe.Pointer
+	SGoNurseryExit  = sgoNurseryExit  // func(unsafe.Pointer)
+)
+
+func SGoScopeOf(p unsafe.Pointer) *SGoScope { return (*sgoScope)(p) }
+
+// SGoNest reports how many nurseries the calling task has open.
+func SGoNest() int { return len(sgoCurrent().nest) }
 
 func SGoJoin(s *SGoScope) (SGoResult, error) {
 	r, err := sgoNurseryJoin(s)

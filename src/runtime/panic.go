@@ -1051,6 +1051,13 @@ func (p *_panic) nextFrame() (ok bool) {
 		ok = true
 	})
 
+	// S-Go (SGO-DEF-005): before a frame's deferred calls run during unwinding, the nurseries of
+	// that frame and of the frames already left complete; if no frame remains, all of them do.
+	// Normal returns (deferreturn) complete their nurseries in compiled code first.
+	if !p.deferreturn && gp.sgo != nil && len(gp.sgo.nest) > 0 {
+		sgoUnwindNurseries(gp.stack.hi-uintptr(p.sp), !ok)
+	}
+
 	return
 }
 

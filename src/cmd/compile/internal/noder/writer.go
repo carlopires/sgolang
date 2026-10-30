@@ -197,6 +197,12 @@ type writer struct {
 	closureVars    []posVar
 	closureVarsIdx map[*types2.Var]int // index of previously seen free variables
 
+	// S-Go: number of nursery statements enclosing the statement being written, and that number
+	// at each break/continue target, so exits know how many nurseries they leave (SGO-CTL-004).
+	// Function literals are written by their own writer, so a literal starts at zero.
+	sgoNest  int
+	sgoDepth map[syntax.Stmt]int
+
 	dict *writerDict
 
 	// derived tracks whether the type being written out references any
@@ -1376,6 +1382,9 @@ func (w *writer) stmts(stmts []syntax.Stmt) {
 }
 
 func (w *writer) stmt1(stmt syntax.Stmt) {
+	if w.sgoNest > 0 { // only S-Go code contains nursery statements
+		w.sgoExitPrefix(stmt)
+	}
 	switch stmt := stmt.(type) {
 	default:
 		w.p.unexpected("statement", stmt)
@@ -1384,9 +1393,7 @@ func (w *writer) stmt1(stmt syntax.Stmt) {
 		return
 
 	case *syntax.NurseryStmt:
-		// S-Go W03 in progress: Unified IR encoding and lowering of nursery statements land in the
-		// next layers; until then a type-checked nursery is rejected, never compiled.
-		w.p.errorf(stmt, "nursery statement lowering not yet supported by this compiler (S-Go W03 in progress)")
+		w.nurseryStmt(stmt)
 
 	case *syntax.AssignStmt:
 		switch {
@@ -1585,6 +1592,50 @@ func (w *writer) assignStmt(pos poser, lhs0, rhs0 syntax.Expr) {
 	}
 
 	w.multiExpr(pos, dstType, rhs)
+}
+
+// nurseryStmt writes nursery (n) { ... } (SGO-NUR-001): the binder as a new local, then the body
+// and the position of its closing brace, where the reader completes the nursery.
+func (w *writer) nurseryStmt(stmt *syntax.NurseryStmt) {
+	obj := w.p.info.Defs[stmt.Name].(*types2.Var)
+	w.Code(stmtNursery)
+	w.pos(stmt)
+	w.openScope(stmt.Pos())
+	w.pos(obj)
+	w.localIdent(obj)
+	w.typ(obj.Type())
+	w.addLocal(obj)
+	w.sgoNest++
+	w.blockStmt(stmt.Body)
+	w.sgoNest--
+	w.pos(stmt.Body.Rbrace)
+	w.closeScope(stmt.Body.Rbrace)
+}
+
+// sgoExitPrefix records the nursery depth at break/continue targets and, for a return, break, or
+// continue that leaves k > 0 nurseries, writes stmtNurseryExit k before the statement itself.
+func (w *writer) sgoExitPrefix(stmt syntax.Stmt) {
+	k := 0
+	switch stmt := stmt.(type) {
+	case *syntax.ForStmt, *syntax.SwitchStmt, *syntax.SelectStmt:
+		if w.sgoDepth == nil {
+			w.sgoDepth = make(map[syntax.Stmt]int)
+		}
+		w.sgoDepth[stmt] = w.sgoNest
+		return
+	case *syntax.ReturnStmt:
+		k = w.sgoNest
+	case *syntax.BranchStmt:
+		if stmt.Tok != syntax.Break && stmt.Tok != syntax.Continue {
+			return
+		}
+		// Targets are recorded only while inside a nursery; an absent target was entered at depth 0.
+		k = w.sgoNest - w.sgoDepth[stmt.Target]
+	}
+	if k > 0 {
+		w.Code(stmtNurseryExit)
+		w.Len(k)
+	}
 }
 
 func (w *writer) blockStmt(stmt *syntax.BlockStmt) {
