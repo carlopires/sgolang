@@ -14,8 +14,18 @@ SGO_ROOT="$(cd "$SGO_DIR/.." && pwd)"
 SGO_LOCK="$SGO_DIR/UPSTREAM.lock.json"
 SGO_CACHE="${SGO_CACHE:-$HOME/.cache/sgolang}"
 SGO_EVIDENCE="$SGO_DIR/evidence/w00"
-# Minimal, explicit PATH for child processes. Contains no Go installation.
-SGO_SAFE_PATH="/usr/bin:/bin:/usr/sbin:/sbin"
+# Minimal, explicit PATH for child processes. System directories may contain a Go installation
+# (e.g. /usr/bin/go on GitHub's Ubuntu images), so a guard directory comes first: its `go` and
+# `gofmt` fail loudly, turning any PATH lookup of Go into an error instead of a silent fallback.
+SGO_GUARD_BIN="$SGO_CACHE/guard/bin"
+SGO_SAFE_PATH="$SGO_GUARD_BIN:/usr/bin:/bin:/usr/sbin:/sbin"
+if [ ! -x "$SGO_GUARD_BIN/go" ] || [ ! -x "$SGO_GUARD_BIN/gofmt" ]; then
+	mkdir -p "$SGO_GUARD_BIN"
+	for t in go gofmt; do
+		printf '#!/bin/sh\necho "sgo: PATH lookup of %s is forbidden; tools are selected by absolute path (sgo/scripts/lib.sh)" >&2\nexit 97\n' "$t" >"$SGO_GUARD_BIN/$t"
+		chmod +x "$SGO_GUARD_BIN/$t"
+	done
+fi
 
 die() { echo "sgo: error: $*" >&2; exit 1; }
 log() { echo "sgo: $*" >&2; }

@@ -32,9 +32,14 @@ got="$(env "${hostile[@]}" "$SGO_SCRIPTS/fetch-bootstrap.sh" 2>/dev/null)" || go
 	record B05 "fetch-bootstrap selects recorded bootstrap under hostile PATH/env" pass "$got" ||
 	record B05 "fetch-bootstrap selects recorded bootstrap under hostile PATH/env" fail "got=$got marker=$([ -e "$marker" ] && echo yes || echo no)"
 
-scrub="$(env "${hostile[@]}" bash -c "source '$SGO_SCRIPTS/lib.sh'; run_clean -- /bin/sh -c 'command -v go || echo NO_GO_ON_PATH; env | grep \"^GO\" | sort | tr \"\\n\" \" \"'")"
+cat >"$tmp/probe.sh" <<'PROBE'
+g="$(command -v go)"
+if [ "$g" = "$SGO_GUARD" ] && ! go version >/dev/null 2>&1; then echo GO_LOOKUP_GUARDED; else echo "GO_LOOKUP_RESOLVES_TO=$g"; fi
+env | grep '^GO' | sort
+PROBE
+scrub="$(env "${hostile[@]}" bash -c 'source "$1/lib.sh"; run_clean SGO_GUARD="$SGO_GUARD_BIN/go" -- /bin/sh "$2"' _ "$SGO_SCRIPTS" "$tmp/probe.sh" 2>&1 | tr '\n' ' ')"
 case "$scrub" in
-	NO_GO_ON_PATH*"GOFLAGS= GOPROXY=off GOTELEMETRY=off GOTOOLCHAIN=local "*)
+	GO_LOOKUP_GUARDED*"GOFLAGS= GOPROXY=off GOTELEMETRY=off GOTOOLCHAIN=local "*)
 		if echo "$scrub" | grep -q 'GOROOT=\|GOEXPERIMENT=\|GODEBUG='; then
 			record B05 "run_clean scrubs inherited Go environment and PATH" fail "$scrub"
 		else
@@ -54,7 +59,8 @@ bad = [p for p in paths if not p.startswith(root + "/")]
 print("pass" if d.get("status") == "passed" and not bad and d["bootstrap_goroot"] == sys.argv[2] else "fail:" + ",".join(bad))
 EOF
 )"
-	record B05 "tool identities inside their build tree: $(basename "$f")" "${ok%%:*}" "${ok#*:}"
+	detail=""; [[ "$ok" == *:* ]] && detail="${ok#*:}"
+	record B05 "tool identities inside their build tree: $(basename "$f")" "${ok%%:*}" "$detail"
 done
 
 # --- B02: independent worktree build used the same pinned inputs; report binary equality honestly --
