@@ -101,8 +101,9 @@ FINDINGS = """## 3. Confirmed findings (manual, verified 2026-10-30 at go1.27.3)
 1. **Keyword table is a perfect hash, and `nursery` collides.** `syntax/scanner.go` uses `var keywordMap [1 << 6]token`
    indexed by `hash(s) = (s[0]<<4 ^ s[1] + len(s)) & 63`, populated in `init` for tokens `_Break.._Var`, panicking on
    collision. `hash("nursery") = 28 = hash("chan")` (checked by running the function with the pinned bootstrap Go).
-   W03 must change the hash/table and keep the `_Break.._Var` token range contiguous; the PHASE2 `map[string]token` snippet
-   does not apply. `go/scanner` and `go/token` have separate keyword tables that must agree (plan §4.1).
+   **Fixed in the fork:** the table is now `[1 << 7]token` (128 slots), where all Go keywords plus `nursery` are distinct;
+   `TestKeywordHashRoom` fails on upstream and passes on the fork (host test lane). W03 still adds the `_Nursery` token inside
+   the `_Break.._Var` range; the PHASE2 `map[string]token` snippet does not apply. `go/scanner` and `go/token` have separate keyword tables that must agree (plan §4.1).
 2. **No `needStackCheck` / `LoweredStackCheck`.** Prologue stack checks are emitted by the assemblers' `stacksplit`
    (`obj/x86/obj6.go` for amd64, `obj/arm64/obj7.go` for arm64), not by an SSA op. PHASE1's compiler edits have no target;
    fixed stacks remain the separate W11 investigation.

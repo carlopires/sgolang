@@ -421,7 +421,10 @@ func hash(s []byte) uint {
 	return (uint(s[0])<<4 ^ uint(s[1]) + uint(len(s))) & uint(len(keywordMap)-1)
 }
 
-var keywordMap [1 << 6]token // size must be power of two
+// S-Go: 128 slots instead of upstream's 64. With 64 slots the S-Go keyword "nursery" collides
+// with "chan" (both hash to 28); with 128 slots all Go keywords plus "nursery" are distinct.
+// See TestKeywordHashRoom and sgo/docs/source-map.md §3.
+var keywordMap [1 << 7]token // size must be power of two
 
 func init() {
 	// populate keywordMap

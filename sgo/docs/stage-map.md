@@ -24,6 +24,7 @@ Stages 3–6 use the fork's own compiler to compile Go source. Under the constit
 | **H1** host tools: `dist`, `compile`, `link`, `asm`, and later the S-Go driver | H0 only | Host-built implementation of the S-Go toolchain. Never compiled by the S-Go compiler. | toolchain1 path implemented as `dist bootstrap -sgo-stage0` (`build-stage0.sh`). The S-Go driver is W03. |
 | **T0** target runtime and TCB | H1 compiler, **admission lane for TCB sources** | `runtime` and its internal dependencies are Go source today. They enter the target only as TCB code admitted by exact source digest and individual contracts (`TARGET_TCB.json`, plan §8.1), not by package name. | Open: W01 specifies the TCB lane; W02/W03 implement it. |
 | **T1** `sgo` package and user programs | H1 compiler | S-Go subset-0 programs, admitted by `SGO_SPEC_ADMISSION.json`. | W03. Until then the target gate denies everything. |
+| **H1-test** host test lane | H0 only | Unit tests of host packages (compiler code) copied into a temporary module and run with the bootstrap (`test-host-pkg.sh`). Upstream-internal test helpers: `internal/testenv` is shimmed (`MustHaveGoBuild` skips, visibly); other internal imports exclude the test file. | Implemented for std-only packages (e.g. `cmd/compile/internal/syntax`). Packages importing `cmd/...` need import rewriting like `dist` (later). |
 | **R** reference | H0 → upstream `make.bash` in an untouched worktree | Upstream comparison only (B01–B03). | Implemented (`build-reference.sh`, `test-reference.sh`). |
 
 Consequences:
