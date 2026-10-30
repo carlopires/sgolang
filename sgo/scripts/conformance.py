@@ -2,7 +2,11 @@
 """conformance.py — S-Go conformance cases (SGO-TEST-001).
 
     conformance.py validate             check every case and that every fixture a clause names exists
-    conformance.py run --sgo PATH       build/run every case with the given sgo driver and compare
+    conformance.py run --sgo PATH [--pending FILE] [case ...]
+                                        build/run every case with the given sgo driver and compare;
+                                        cases listed in FILE (JSON: {case: work package}) are expected
+                                        to fail until their work package lands, and an unexpected
+                                        pass is an error (the list may only shrink)
     conformance.py selftest             test this runner against fake drivers
 
 Case layout: sgo/testdata/conformance/<name>/{sgo.mod, *.sgo, ..., expect.json}. expect.json keys:
@@ -294,9 +298,28 @@ def main():
     if "--sgo" not in sys.argv:
         print("conformance: run needs --sgo PATH", file=sys.stderr)
         return 2
-    sgo = sys.argv[sys.argv.index("--sgo") + 1]
-    res = run(os.path.abspath(sgo), sys.argv[sys.argv.index("--sgo") + 2:] or None)
-    return 1 if any(res.values()) else 0
+    args = sys.argv[2:]
+    sgo = args[args.index("--sgo") + 1]
+    del args[args.index("--sgo"):args.index("--sgo") + 2]
+    pending = {}
+    if "--pending" in args:
+        i = args.index("--pending")
+        pending = json.load(open(args[i + 1]))
+        del args[i:i + 2]
+    res = run(os.path.abspath(sgo), args or None)
+    bad = 0
+    for name, why in sorted(res.items()):
+        if name in pending and not why:
+            print(f"UNEXPECTED PASS {name}: remove it from the pending list ({pending[name]})")
+            bad += 1
+        elif why and name not in pending:
+            bad += 1
+    unknown = sorted(set(pending) - set(load_cases()))
+    for name in unknown:
+        print(f"PENDING UNKNOWN {name}: not a case")
+    npend = sum(1 for name, why in res.items() if why and name in pending)
+    print(f"conformance: {npend} pending (listed in --pending), {bad} unexpected result(s)")
+    return 1 if bad or unknown else 0
 
 
 if __name__ == "__main__":

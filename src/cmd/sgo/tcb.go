@@ -1,0 +1,279 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"go/build"
+	"internal/buildcfg"
+	"internal/goversion"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"sort"
+	"strings"
+)
+
+// The target TCB (SGO-TCB-002) is the package closure of runtime and sgo. It is compiled from the
+// fork's sources by the fork's compiler and assembler; the compiler itself admits each package as
+// trusted Go only if every file digest is pinned in sgo/TARGET_TCB.json, so the driver selects
+// files but grants nothing. Archives are cached by the identity of the tools, the target, and
+// every source file.
+
+type tcbPkg struct {
+	path   string
+	dir    string
+	gofile []string // absolute
+	sfile  []string // absolute
+	deps   []string
+}
+
+// buildContext selects files for a target exactly as the go command would for a CGO_ENABLED=0
+// build with the toolchain's default experiments.
+func (t *toolchain) buildContext(goos, goarch string) (*build.Context, error) {
+	exp, err := buildcfg.ParseGOEXPERIMENT(goos, goarch, "")
+	if err != nil {
+		return nil, err
+	}
+	var tags []string
+	for _, e := range exp.Enabled() {
+		tags = append(tags, "goexperiment."+e)
+	}
+	switch goarch {
+	case "amd64":
+		tags = append(tags, "amd64.v1")
+	case "arm64":
+		tags = append(tags, "arm64.v8.0")
+	}
+	var release []string
+	for i := 1; i <= goversion.Version; i++ {
+		release = append(release, fmt.Sprintf("go1.%d", i))
+	}
+	ctx := build.Default
+	ctx.GOROOT, ctx.GOPATH, ctx.GOOS, ctx.GOARCH = t.goroot, "", goos, goarch
+	ctx.CgoEnabled, ctx.Compiler, ctx.BuildTags, ctx.ToolTags, ctx.ReleaseTags = false, "gc", nil, tags, release
+	return &ctx, nil
+}
+
+// loadTCB returns the closure of runtime and sgo in dependency order.
+func (t *toolchain) loadTCB(ctx *build.Context) ([]*tcbPkg, error) {
+	pkgs := map[string]*tcbPkg{}
+	var order []*tcbPkg
+	var visit func(path string) error
+	visit = func(path string) error {
+		if path == "unsafe" || pkgs[path] != nil {
+			return nil
+		}
+		dir := filepath.Join(t.goroot, "src", filepath.FromSlash(path))
+		bp, err := ctx.ImportDir(dir, 0)
+		if err != nil {
+			return fmt.Errorf("sgo: target TCB package %s: %v", path, err)
+		}
+		if len(bp.CgoFiles)+len(bp.CFiles)+len(bp.SysoFiles) > 0 {
+			return fmt.Errorf("sgo: target TCB package %s needs cgo or C files", path)
+		}
+		p := &tcbPkg{path: path, dir: dir, deps: bp.Imports}
+		pkgs[path] = p
+		for _, f := range bp.GoFiles {
+			p.gofile = append(p.gofile, filepath.Join(dir, f))
+		}
+		for _, f := range bp.SFiles {
+			p.sfile = append(p.sfile, filepath.Join(dir, f))
+		}
+		for _, d := range bp.Imports {
+			if err := visit(d); err != nil {
+				return err
+			}
+		}
+		order = append(order, p)
+		return nil
+	}
+	for _, root := range []string{"runtime", "sgo"} {
+		if err := visit(root); err != nil {
+			return nil, err
+		}
+	}
+	return order, nil
+}
+
+func cacheRoot() (string, error) {
+	if d := os.Getenv("SGO_CACHE"); d != "" {
+		return filepath.Join(d, "sgo-driver"), nil
+	}
+	d, err := os.UserCacheDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(d, "sgo"), nil
+}
+
+// buildTCB returns the archive of every target TCB package, building them if needed.
+func (t *toolchain) buildTCB(goos, goarch string) (map[string]string, error) {
+	ctx, err := t.buildContext(goos, goarch)
+	if err != nil {
+		return nil, err
+	}
+	pkgs, err := t.loadTCB(ctx)
+	if err != nil {
+		return nil, err
+	}
+	h := sha256.New()
+	fmt.Fprintf(h, "%s %s/%s %v\n", t.version, goos, goarch, ctx.ToolTags)
+	for _, p := range pkgs {
+		fmt.Fprintf(h, "pkg %s\n", p.path)
+		for _, f := range append(append([]string(nil), p.gofile...), p.sfile...) {
+			data, err := os.ReadFile(f)
+			if err != nil {
+				return nil, err
+			}
+			sum := sha256.Sum256(data)
+			fmt.Fprintf(h, "%s %x\n", filepath.Base(f), sum)
+		}
+	}
+	root, err := cacheRoot()
+	if err != nil {
+		return nil, err
+	}
+	dir := filepath.Join(root, "tcb", hex.EncodeToString(h.Sum(nil))[:24])
+	archives := map[string]string{}
+	for _, p := range pkgs {
+		archives[p.path] = filepath.Join(dir, strings.ReplaceAll(p.path, "/", "%")+".a")
+	}
+	if _, err := os.Stat(filepath.Join(dir, "complete")); err == nil {
+		return archives, nil
+	}
+
+	// Build in a sibling directory and rename it into place, so a cache entry is complete or absent.
+	if err := os.MkdirAll(filepath.Dir(dir), 0o777); err != nil {
+		return nil, err
+	}
+	work, err := os.MkdirTemp(filepath.Dir(dir), "tcb-build-")
+	if err != nil {
+		return nil, err
+	}
+	defer os.RemoveAll(work)
+	built := map[string]string{}
+	for _, p := range pkgs {
+		a, err := t.buildTCBPkg(p, goos, goarch, work, built)
+		if err != nil {
+			return nil, err
+		}
+		built[p.path] = a
+	}
+	if err := os.WriteFile(filepath.Join(work, "complete"), nil, 0o666); err != nil {
+		return nil, err
+	}
+	if err := os.Rename(work, dir); err != nil {
+		if _, serr := os.Stat(filepath.Join(dir, "complete")); serr != nil {
+			return nil, err // not a concurrent build that finished first
+		}
+	}
+	return archives, nil
+}
+
+// buildTCBPkg compiles one package (with assembly when it has .s files) into work.
+func (t *toolchain) buildTCBPkg(p *tcbPkg, goos, goarch, work string, built map[string]string) (string, error) {
+	name := strings.ReplaceAll(p.path, "/", "%")
+	obj := filepath.Join(work, name+".obj")
+	if err := os.MkdirAll(obj, 0o777); err != nil {
+		return "", err
+	}
+	archive := filepath.Join(work, name+".a")
+	var cfg bytes.Buffer
+	for _, d := range p.deps {
+		if a, ok := built[d]; ok {
+			fmt.Fprintf(&cfg, "packagefile %s=%s\n", d, a)
+		}
+	}
+	importcfg := filepath.Join(obj, "importcfg")
+	if err := os.WriteFile(importcfg, cfg.Bytes(), 0o666); err != nil {
+		return "", err
+	}
+	env := t.toolEnv(goos, goarch)
+	asmArgs := []string{"-p", p.path, "-std", "-I", obj, "-I", filepath.Join(t.goroot, "src", "runtime"),
+		"-D", "GOOS_" + goos, "-D", "GOARCH_" + goarch}
+	if goarch == "amd64" {
+		asmArgs = append(asmArgs, "-D", "GOAMD64_v1")
+	}
+	args := []string{"-o", archive, "-p", p.path, "-std", "-lang=go1." + fmt.Sprint(goversion.Version),
+		"-importcfg", importcfg, "-pack", "-trimpath", t.goroot + "=>GOROOT"}
+	if len(p.sfile) > 0 {
+		// As the go command does: -gensymabis runs before compile writes go_asm.h, so an empty
+		// go_asm.h satisfies the assembly's #include for that pass.
+		if err := os.WriteFile(filepath.Join(obj, "go_asm.h"), nil, 0o666); err != nil {
+			return "", err
+		}
+		symabis := filepath.Join(obj, "symabis")
+		gen := append(append([]string{"-gensymabis", "-o", symabis}, asmArgs...), p.sfile...)
+		if err := t.runTool(p.dir, env, "asm", gen...); err != nil {
+			return "", err
+		}
+		args = append(args, "-symabis", symabis, "-asmhdr", filepath.Join(obj, "go_asm.h"))
+	} else {
+		args = append(args, "-complete")
+	}
+	if err := t.runTool(p.dir, env, "compile", append(args, p.gofile...)...); err != nil {
+		return "", err
+	}
+	var ofiles []string
+	for _, s := range p.sfile {
+		o := filepath.Join(obj, strings.TrimSuffix(filepath.Base(s), ".s")+".o")
+		if err := t.runTool(p.dir, env, "asm", append(append([]string{"-o", o}, asmArgs...), s)...); err != nil {
+			return "", err
+		}
+		ofiles = append(ofiles, o)
+	}
+	sort.Strings(ofiles)
+	return archive, appendArchive(archive, ofiles)
+}
+
+// runTool runs a fork tool with the driver's fixed environment; its output goes to stderr.
+func (t *toolchain) runTool(dir string, env []string, tool string, args ...string) error {
+	cmd := exec.Command(t.tool(tool), args...)
+	cmd.Dir, cmd.Env = dir, env
+	var out bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &out
+	err := cmd.Run()
+	os.Stderr.Write(out.Bytes())
+	if err != nil {
+		if _, ok := err.(*exec.ExitError); ok {
+			return buildFailed
+		}
+		return err
+	}
+	return nil
+}
+
+// appendArchive appends object files to a Go archive written by compile -pack (the go command's
+// packInternal: ar headers with zero ownership and mode 0644).
+func appendArchive(archive string, ofiles []string) error {
+	if len(ofiles) == 0 {
+		return nil
+	}
+	f, err := os.OpenFile(archive, os.O_WRONLY|os.O_APPEND, 0)
+	if err != nil {
+		return err
+	}
+	for _, o := range ofiles {
+		data, err := os.ReadFile(o)
+		if err != nil {
+			f.Close()
+			return err
+		}
+		name := filepath.Base(o)
+		if len(name) > 16 {
+			name = name[:16]
+		}
+		fmt.Fprintf(f, "%-16s%-12d%-6d%-6d%-8o%-10d`\n", name, 0, 0, 0, 0o644, len(data))
+		f.Write(data)
+		if len(data)&1 != 0 {
+			f.Write([]byte{0})
+		}
+	}
+	return f.Close()
+}

@@ -59,6 +59,7 @@ var bootstrapDirs = []string{
 	"cmd/internal/telemetry/counter",
 	"cmd/link",
 	"cmd/link/internal/...",
+	"cmd/sgo", // S-Go driver: host code built only by the bootstrap (SGO-BUILD-001)
 	"compress/flate",
 	"compress/zlib",
 	"container/heap",

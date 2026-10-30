@@ -1,0 +1,19 @@
+{
+ "cancel-basic": "W04 (cancellation, Sleep, drain budget)",
+ "cancel-checkpoint-loop": "W04 (cancellation, Sleep, drain budget)",
+ "cancel-consumed-at-boundary": "W04 (cancellation, Sleep, drain budget)",
+ "cancel-idempotent": "W04 (cancellation, Sleep, drain budget)",
+ "cancel-owner-woken-by-child-failure": "W04 (cancellation, Sleep, drain budget)",
+ "cancel-propagates-nested": "W04 (cancellation, Sleep, drain budget)",
+ "cancel-wakes-sleep": "W04 (cancellation, Sleep, drain budget)",
+ "def-child-panic-cancels-siblings": "W04 (cancellation, Sleep, drain budget)",
+ "drain-cooperative-child": "W04 (cancellation, Sleep, drain budget)",
+ "drain-noncooperative-budget": "W04 (cancellation, Sleep, drain budget)",
+ "mem-join-visibility": "W04 (cancellation, Sleep, drain budget)",
+ "nur-child-spawns-during-join": "W04 (cancellation, Sleep, drain budget)",
+ "nur-inner-cancel-not-outer": "W04 (cancellation, Sleep, drain budget)",
+ "nur-join-all": "W04 (cancellation, Sleep, drain budget)",
+ "spawn-cancelled-outcome": "W04 (cancellation, Sleep, drain budget)",
+ "spawn-cancelling-no-child": "W04 (cancellation, Sleep, drain budget)",
+ "wait-sleep": "W04 (cancellation, Sleep, drain budget)"
+}

@@ -50,6 +50,11 @@ jobs:
       - name: Compile-level conformance (W03 progress; reject cases against the stage-0 compiler)
         run: sgo/scripts/conformance-compile.py
 
+      - name: Conformance with the sgo driver (build and run every case; W04 cases pending)
+        run: |
+          plat="$(uname -s | tr A-Z a-z)_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
+          sgo/scripts/conformance.py run --sgo "pkg/tool/$plat/sgo" --pending sgo/testdata/conformance-pending.json
+
       - name: Host test lane (compiler syntax package, incl. keyword table)
         run: sgo/scripts/test-host-pkg.sh cmd/compile/internal/syntax -count=1
 
