@@ -32,6 +32,13 @@ func sgo_violation(msg string) {
 	panic(error(&sgoViolation{msg}))
 }
 
+// sgo_fail unwinds with a checked failure of the given kind (SGO-DEF-003).
+//
+//go:linkname sgo_fail sgo.runtime_fail
+func sgo_fail(kind, msg string) {
+	panic(error(&sgoFailure{kind, msg}))
+}
+
 var sgoStdoutLock mutex
 
 // sgo_write writes all of s to fd 1, atomically with respect to other calls (SGO-PROC-003). It

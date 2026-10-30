@@ -207,6 +207,10 @@ func unified(m posMap, noders []*noder) {
 
 	readBodies(target, false, nil)
 
+	if sgoMode && types.LocalPkg.Name == "main" {
+		sgoMainWrapper(target) // S-Go entry point (sgo_main.go)
+	}
+
 	// Check that nothing snuck past typechecking.
 	for _, fn := range target.Funcs {
 		if fn.Typecheck() == 0 {

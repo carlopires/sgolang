@@ -320,8 +320,8 @@
  ],
  "summary": {
   "packages": 31,
-  "files": 1026,
-  "files_changed_from_upstream": 9,
+  "files": 1027,
+  "files_changed_from_upstream": 10,
   "services": {
    "active": 5,
    "dormant": 5,
@@ -3801,7 +3801,7 @@
   },
   {
    "path": "src/runtime/panic.go",
-   "sha256": "6f8060b5f5c4166cea196d01ad4cfe2f9cd28f611793a015a7f622569b352ff4",
+   "sha256": "7c4633d07ddd44409d0d6a38b7dfba1052998bbd3d06f6c24c65e1b2d5db7eb0",
    "upstream_identical": false
   },
   {
@@ -4321,7 +4321,12 @@
   },
   {
    "path": "src/runtime/sgo_api.go",
-   "sha256": "064a5987b4eb8330e5b78122f0ff44c72f97d3f620c2c3d542529dd761806010",
+   "sha256": "1cade0d1d6f0a34969d58c1c3562d6489001bb0f5739a1c4dad5a204553e7f68",
+   "upstream_identical": false
+  },
+  {
+   "path": "src/runtime/sgo_main.go",
+   "sha256": "72dd9e2be472e7e82770abe5a214d970fe1a5cd05f143229ba747ff4a2eb2ffb",
    "upstream_identical": false
   },
   {
@@ -5446,7 +5451,7 @@
   },
   {
    "path": "src/sgo/sgo.go",
-   "sha256": "2f340af0462923aaa01535381967fe94e24f47fdb34eecf397689e6dbfffe0cf",
+   "sha256": "1981fc089ce8049eac45926805b028cfe26ea8bccdf02f91eece7c15814a0b17",
    "upstream_identical": false
   },
   {

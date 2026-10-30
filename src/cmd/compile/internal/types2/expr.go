@@ -416,7 +416,8 @@ func (check *Checker) implicitTypeAndValue(x *operand, target Type) (Type, const
 	}
 	// x is untyped
 
-	if check.conf.SGo && x.isNil() && !check.sgoNilOK(x, target) {
+	// check is nil when called through the API (AssignableTo, ConvertibleTo): no S-Go rules then.
+	if check != nil && check.conf.SGo && x.isNil() && !check.sgoNilOK(x, target) {
 		// S-Go nil rules (sgo.go). x is invalidated so the caller's follow-on error is suppressed.
 		x.invalidate()
 		return nil, nil, InvalidUntypedConversion

@@ -27,6 +27,7 @@ func runtime_isRoot(task unsafe.Pointer) bool
 func runtime_isCurrent(task unsafe.Pointer) bool
 func runtime_write(s string) (int, bool)
 func runtime_violation(msg string)
+func runtime_fail(kind, msg string) // unwinds with a checked failure of the kind (SGO-DEF-003)
 
 // Spawn admits f as a child of n (SGO-SPAWN-001..004). A refused admission is a
 // SpawnContractViolation that unwinds the caller (SGO-SPAWN-002).
@@ -56,7 +57,7 @@ func (c *Context) Checkpoint() error {
 func (c *Context) Sleep(ms int) error {
 	c.own()
 	if ms < 0 {
-		panic(failure{"InvalidArgument", "Sleep with a negative duration"})
+		runtime_fail("InvalidArgument", "Sleep with a negative duration")
 	}
 	runtime_violation("Context.Sleep is not implemented yet (S-Go W04)")
 	return nil
@@ -66,7 +67,7 @@ func (c *Context) Sleep(ms int) error {
 func (c *Context) Stdout() *Writer {
 	c.own()
 	if !runtime_isRoot(c.t) {
-		panic(failure{"MissingCapability", "Stdout called on a context that does not hold the stdout capability"})
+		runtime_fail("MissingCapability", "Stdout called on a context that does not hold the stdout capability")
 	}
 	return &stdout
 }
@@ -96,11 +97,6 @@ func (e *errorString) Error() string { return e.s }
 // IsCancelled reports whether err is a cancellation error (SGO-CANCEL-003). Cancellation errors are
 // produced from W04; until then none exist.
 func IsCancelled(err error) bool { return false }
-
-// failure is a checked runtime failure of a named kind (SGO-DEF-003), carried by a panic.
-type failure struct{ kind, msg string }
-
-func (f failure) Error() string { return f.kind + ": " + f.msg }
 
 func itoa(n int) string {
 	if n == 0 {

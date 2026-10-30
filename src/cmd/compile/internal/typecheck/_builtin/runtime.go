@@ -313,5 +313,9 @@ func asanregisterglobals(unsafe.Pointer, uintptr)
 func sgoNurseryEnter() unsafe.Pointer
 func sgoNurseryExit(scope unsafe.Pointer)
 
+// S-Go program entry (src/runtime/sgo_main.go)
+func sgoEnterMain() unsafe.Pointer
+func sgoExitMain(err interface{})
+
 // used by testing.B.Loop
 func KeepAlive(interface{})

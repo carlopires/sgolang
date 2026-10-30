@@ -1110,8 +1110,23 @@ func (w *writer) qualifiedIdent(obj types2.Object) {
 		name = fmt.Sprintf(fstr, types2.Unalias(deref2(recv)).(*types2.Named).Obj().Name(), name)
 	}
 
+	if isSgoMain(obj) {
+		name = sgoMainName
+	}
+
 	w.pkg(obj.Pkg())
 	w.String(name)
+}
+
+// sgoMainName is the link name of an S-Go program's func main(root *sgo.Context) error. The
+// compiler synthesizes the Go entry point main.main, which runs it as the root task (sgo_main.go).
+const sgoMainName = "main·sgo"
+
+// isSgoMain reports whether obj is the package-level func main of an S-Go package main.
+func isSgoMain(obj types2.Object) bool {
+	fn, ok := obj.(*types2.Func)
+	return ok && sgoMode && obj.Name() == "main" && obj.Pkg() != nil && obj.Pkg().Name() == "main" &&
+		obj.Parent() == obj.Pkg().Scope() && fn.Signature().Recv() == nil
 }
 
 // TODO(mdempsky): We should be able to omit pkg from both localIdent

@@ -235,6 +235,8 @@ var builtins = [...]struct {
 	{"runtime.asanregisterglobals", 1},
 	{"runtime.sgoNurseryEnter", 1},
 	{"runtime.sgoNurseryExit", 1},
+	{"runtime.sgoEnterMain", 1},
+	{"runtime.sgoExitMain", 1},
 	{"runtime.KeepAlive", 1},
 	{"runtime.deferproc", 1},
 	{"runtime.deferprocStack", 1},

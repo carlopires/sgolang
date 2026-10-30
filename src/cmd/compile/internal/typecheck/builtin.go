@@ -256,6 +256,8 @@ var runtimeDecls = [...]struct {
 	{"asanregisterglobals", funcTag, 136},
 	{"sgoNurseryEnter", funcTag, 164},
 	{"sgoNurseryExit", funcTag, 165},
+	{"sgoEnterMain", funcTag, 164},
+	{"sgoExitMain", funcTag, 11},
 	{"KeepAlive", funcTag, 11},
 }
 

@@ -74,6 +74,7 @@ runtime-builtin  newobject|mallocgc|typedmemmove|typedmemclr|memmove|memclrNoHea
 runtime-builtin  panicdivide|panicshift|int64div|uint64div|int64mod|uint64mod  internal  SGO-VAL-001
 runtime-builtin  concatstring[2-5]|concatstrings|cmpstring|strequal|memequal(0|8|16|32|64|128)?  internal  SGO-VAL-002
 runtime-builtin  gopanic  internal  SGO-DEF-002
+runtime-builtin  sgoEnterMain|sgoExitMain  internal  SGO-PROC-002  # synthesized main.main runs main(root) as the root task (W03)
 runtime-builtin  sgoNurseryEnter|sgoNurseryExit  internal  SGO-NUR-003  # nursery statement lowering (W03); unwinding completes via the panic frame walk (SGO-DEF-005)
 runtime-builtin  gorecover  deny  SGO-DEF-002
 runtime-builtin  panicwrap  deny  SGO-UTYPE-001

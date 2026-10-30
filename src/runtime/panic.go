@@ -869,6 +869,13 @@ func gopanic(e any) {
 		traceAdvance(false)
 	}
 
+	// S-Go: a failure that unwound out of an S-Go program's main ends the process with the
+	// diagnostic record (SGO-PROC-002, SGO-ERR-002); it does not return for the root task. It
+	// runs before preprintpanics, which would replace error payloads by their messages.
+	if sgoProgram {
+		sgoUnwoundOut(&p)
+	}
+
 	// ran out of deferred calls - old-school panic now
 	// Because it is unsafe to call arbitrary user code after freezing
 	// the world, we call preprintpanics to invoke all necessary Error
