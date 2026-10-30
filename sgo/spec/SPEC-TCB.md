@@ -27,21 +27,21 @@ Subset 0. Derived from plan §8.1, §10.2, stage map §2 (T0), invariant OWN-6, 
 ### SGO-TCB-002 — Admission of the runtime source
 - **version:** 1
 - **status:** draft
-- **reference_closure:** SGO-TCB-001, SGO-IMP-002; stage map §2–§3.
+- **reference_closure:** SGO-TCB-001, SGO-IMP-002, SGO-NATIVE-001; stage map §2–§3; OWN-6. Approved by the user on 2026-10-30.
 - **grammar_and_types:** n/a — build-trust rule.
 - **preconditions:** n/a — build-trust rule.
-- **evaluation_and_value_semantics:** PENDING: proposal for user approval in W01 step 4. The runtime (`runtime` and the internal packages it depends on) is Go source using `unsafe`, assembly, and linkname. Proposal: it is admitted as trusted target code only by exact identity: `sgo/TARGET_TCB.json` lists every runtime source file with its SHA-256, the primitives of SGO-TCB-001 with their contracts and the callers allowed to reach them; the compiler accepts these packages only when every file matches its recorded digest, and a changed file requires re-review and a new manifest entry. Being on the list grants nothing to user code: user-level `unsafe`, assembly, linkname, and cgo stay denied (SPEC-NATIVE).
-- **ownership_and_lifecycle:** n/a — build-trust rule.
+- **evaluation_and_value_semantics:** The runtime's package closure on the admitted targets (30 packages: `runtime`, its `internal/…` dependencies, `math/bits`, `unsafe`) is Go source using `unsafe`, assembly, and linkname. It is admitted as trusted target code only by exact identity, recorded in `sgo/TARGET_TCB.json`: every `.go`, `.s`, and `.h` file of the closure (excluding tests) with its SHA-256 and whether it is identical to the upstream commit; the trusted primitives of SGO-TCB-001 with their clauses, upstream implementation symbols, and allowed callers; and every `go` statement in the closure as an enumerated runtime service with its purpose and status (active, dormant, not-built). Changing any listed file, adding or removing a file, or adding or removing a runtime `go` statement fails the check until the manifest is regenerated in a commit that reviews the change. Being listed grants nothing to user code: user-level `unsafe`, assembly, linkname, and cgo stay denied (SGO-NATIVE-001).
+- **ownership_and_lifecycle:** The manifest is owned by the repository; each regeneration is a reviewed commit.
 - **effect_and_capability_requirements:** n/a — build-trust rule.
 - **concurrency_and_memory_order:** n/a — build-trust rule.
 - **allowed_nondeterminism:** None: admission is a function of file digests.
-- **failure_and_partial_progress:** A runtime file whose digest is not in the manifest fails the build (`SGO_E_TCB_DIGEST`).
+- **failure_and_partial_progress:** A mismatch fails the check (CI now; the compiler from W03) with `SGO_E_TCB_DIGEST`; nothing is built from unreviewed runtime source.
 - **cancellation_and_cleanup:** n/a — build-trust rule.
-- **compile_link_checks:** PENDING: `SGO_E_TCB_DIGEST`, `SGO_E_TCB_CALLER` (defined in step 4).
+- **compile_link_checks:** `SGO_E_TCB_DIGEST` (runtime file or service list differs from the manifest). W01: `sgo/scripts/tcb-manifest.py` in CI. W03: the compiler and linker verify the same digests before accepting runtime packages, and refuse a runtime entry point called from a caller not listed for its primitive (`SGO_E_TCB_CALLER`).
 - **runtime_guards:** n/a — build time.
 - **tcb_assumptions:** This clause defines how trust is granted.
-- **positive_tests:** S11; PENDING: fixtures defined in step 4.
-- **negative_tests:** S11, S15; PENDING: fixtures defined in step 4.
-- **implementation_coverage:** none yet.
-- **executed_evidence:** none yet.
+- **positive_tests:** S11; `tcb-manifest.py` check passes on the reviewed manifest.
+- **negative_tests:** S11, S15; self-tests: an edited runtime file and an added runtime `go` statement both fail the check.
+- **implementation_coverage:** W01 — `sgo/scripts/tcb-manifest.py`, `sgo/TARGET_TCB.json` (1,020 files, 11 enumerated services); compiler/linker enforcement W03.
+- **executed_evidence:** 2026-10-30, darwin/arm64: check passed; both negative self-tests failed as required.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

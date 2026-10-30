@@ -2,7 +2,7 @@
   "schema_version": 1,
   "plan_version": "2.0",
   "spec_version": "0.1.0-draft",
-  "admission_digest": "bf59cd59276e775652c9f60102077976251c53f5dabdbd9a9974e01d91b6b5f5",
+  "admission_digest": "87da6db3c8c32292696ae7f9ba4be247913be4b40b9b407472c88381f4050426",
   "status": "inventory_seed_not_an_admission_allowlist",
   "warning": "This is not a completed language specification. Every family must be expanded into concrete clauses and checked against real compiler/API/IR surfaces. No feature is claimed implemented or admitted by this handoff.",
   "default_decision": "reject",
@@ -630,7 +630,7 @@
         "SGO-TCB-001",
         "SGO-TCB-002"
       ],
-      "normative_text_digest": "95dfd529f97d185a4ca027d51fa3b46042c4a9f0b06982e84fb8f674e5b808c8",
+      "normative_text_digest": "574eec2fb40b806d54462446f81cc5dff524d9081a8a54b69e2a5f2c1384f292",
       "admitted_in": [],
       "acceptance_case_ids": [
         "O07",
@@ -642,7 +642,7 @@
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-TCB-001": "00212c2b036245d587c8d91fdd8a62b1f0c5e2ba4e99867e92ee491c14ddc4b6",
-        "SGO-TCB-002": "d4b04b1f52df064a4639e8262bcb5f60bcb33b454cfac958b3af04c6ab68b0a0"
+        "SGO-TCB-002": "ba1283b6fb1a706a73f593b1e7460720d4bdd189d45350613a0c105b637065b9"
       },
       "clause_status": {
         "SGO-TCB-001": "draft",

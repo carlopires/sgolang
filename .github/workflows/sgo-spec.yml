@@ -19,3 +19,5 @@ jobs:
         run: sgo/scripts/spec-tool.py check
       - name: Surface inventory (every compiler/runtime surface maps to a clause)
         run: sgo/scripts/inventory-check.py
+      - name: Runtime TCB manifest (SGO-TCB-002)
+        run: sgo/scripts/tcb-manifest.py

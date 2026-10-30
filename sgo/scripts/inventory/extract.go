@@ -163,7 +163,47 @@ func funcs(kind, rel string) {
 	}
 }
 
+// goStmts lists every go statement in the .go files (excluding tests) of the given package directories.
+func goStmts(dirs []string) {
+	for _, d := range dirs {
+		ents, err := os.ReadDir(filepath.Join(root, d))
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "extract:", err)
+			os.Exit(1)
+		}
+		for _, e := range ents {
+			n := e.Name()
+			if filepath.Ext(n) != ".go" || len(n) > 8 && n[len(n)-8:] == "_test.go" {
+				continue
+			}
+			f := parse(filepath.Join(d, n))
+			ast.Inspect(f, func(x ast.Node) bool {
+				if g, ok := x.(*ast.GoStmt); ok {
+					name := "<func literal>"
+					switch fn := g.Call.Fun.(type) {
+					case *ast.Ident:
+						name = fn.Name
+					case *ast.SelectorExpr:
+						name = fn.Sel.Name
+					}
+					add("go-stmt", name, g.Pos())
+				}
+				return true
+			})
+		}
+	}
+}
+
 func main() {
+	if len(os.Args) > 2 && os.Args[1] == "-gostmts" {
+		root = os.Args[2]
+		goStmts(os.Args[3:])
+		enc := json.NewEncoder(os.Stdout)
+		for _, s := range out {
+			enc.Encode(s)
+		}
+		return
+	}
 	if len(os.Args) != 2 {
 		fmt.Fprintln(os.Stderr, "usage: extract <fork root>")
 		os.Exit(2)
