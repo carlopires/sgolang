@@ -117,6 +117,15 @@ type AssignOpStmt struct {
 	AsOp   Op // OADD etc
 	Y      Node
 	IncDec bool // actually ++ or --
+
+	SGoChecked bool // S-Go checked int arithmetic (SGO-VAL-001); kept by Binary
+}
+
+// Binary returns x AsOp y for rewriting n as x = x AsOp y, keeping n's S-Go arithmetic check.
+func (n *AssignOpStmt) Binary(pos src.XPos, x, y Node) *BinaryExpr {
+	b := NewBinaryExpr(pos, n.AsOp, x, y)
+	b.SGoChecked = n.SGoChecked
+	return b
 }
 
 func NewAssignOpStmt(pos src.XPos, asOp Op, x, y Node) *AssignOpStmt {

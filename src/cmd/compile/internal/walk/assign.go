@@ -49,7 +49,7 @@ func walkAssign(init *ir.Nodes, n ir.Node) ir.Node {
 
 	if n.Op() == ir.OASOP {
 		// Rewrite x op= y into x = x op y.
-		n = ir.NewAssignStmt(base.Pos, left, typecheck.Expr(ir.NewBinaryExpr(base.Pos, n.(*ir.AssignOpStmt).AsOp, left, right)))
+		n = ir.NewAssignStmt(base.Pos, left, typecheck.Expr(n.(*ir.AssignOpStmt).Binary(base.Pos, left, right)))
 	} else {
 		n.(*ir.AssignStmt).X = left
 	}

@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-VAL-001"
+ ],
+ "exit": 2,
+ "stdout": "before\n",
+ "stderr_kind": "IntegerOverflow",
+ "note": "W03 checked arithmetic coverage: one operator path per case, operands from non-constant locals."
+}

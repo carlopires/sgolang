@@ -317,5 +317,8 @@ func sgoNurseryExit(scope unsafe.Pointer)
 func sgoEnterMain() unsafe.Pointer
 func sgoExitMain(err interface{})
 
+// S-Go failures with positions (src/runtime/sgo_api.go)
+func sgoPanicValue(msg string, pos string) interface{}
+
 // used by testing.B.Loop
 func KeepAlive(interface{})

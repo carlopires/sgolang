@@ -43,7 +43,9 @@ func (check *Checker) sgoMainDecl(s *syntax.FuncDecl) {
 // sgoPackageChecks applies package-level rules once objects are collected.
 func (check *Checker) sgoPackageChecks(files []*syntax.File) {
 	if check.pkg.name == "main" && len(files) > 0 && check.pkg.scope.Lookup("main") == nil {
-		check.softErrorf(files[0], InvalidMainDecl, "SGO_E_MAIN_SIGNATURE: package main has no func main(root *sgo.Context) error (SGO-PROC-001)")
+		// At the start of the package clause's line (the package keyword) of the first file.
+		name := files[0].PkgName.Pos()
+		check.softErrorf(syntax.MakePos(name.Base(), name.Line(), 1), InvalidMainDecl, "SGO_E_MAIN_SIGNATURE: package main has no func main(root *sgo.Context) error (SGO-PROC-001)")
 	}
 }
 

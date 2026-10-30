@@ -23,8 +23,9 @@ import (
 	"unsafe"
 )
 
-// sgoFailure is a checked failure raised by the runtime on behalf of S-Go code (SGO-DEF-003).
-type sgoFailure struct{ kind, msg string }
+// sgoFailure is a checked failure raised by the runtime on behalf of S-Go code (SGO-DEF-003). pos
+// is "file:line:col" when the compiler supplied the position, else empty.
+type sgoFailure struct{ kind, msg, pos string }
 
 func (f *sgoFailure) Error() string { return f.kind + ": " + f.msg }
 
@@ -52,7 +53,7 @@ func sgoNurseryExit(p unsafe.Pointer) {
 		panic(r.Panic)
 	case sgoErrored:
 		// Rule 3: unwind with ChildError carrying the errored child's message.
-		panic(error(&sgoFailure{"ChildError", r.Err.Error()}))
+		panic(error(&sgoFailure{"ChildError", r.Err.Error(), ""}))
 	}
 	// Rule 4: normal completion. (Non-primary child failures go to the diagnostic chain, W03 ERR.)
 }

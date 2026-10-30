@@ -1415,12 +1415,14 @@ func (w *writer) stmt1(stmt syntax.Stmt) {
 		case stmt.Rhs == nil:
 			w.Code(stmtIncDec)
 			w.op(binOps[stmt.Op])
+			w.Bool(w.sgoChecked(stmt.Op, w.p.typeOf(stmt.Lhs)))
 			w.expr(stmt.Lhs)
 			w.pos(stmt)
 
 		case stmt.Op != 0 && stmt.Op != syntax.Def:
 			w.Code(stmtAssignOp)
 			w.op(binOps[stmt.Op])
+			w.Bool(w.sgoChecked(stmt.Op, w.p.typeOf(stmt.Lhs)))
 			w.expr(stmt.Lhs)
 			w.pos(stmt)
 
@@ -1607,6 +1609,22 @@ func (w *writer) assignStmt(pos poser, lhs0, rhs0 syntax.Expr) {
 	}
 
 	w.multiExpr(pos, dstType, rhs)
+}
+
+// sgoChecked reports whether an operation with operator op and result type typ is checked int
+// arithmetic of S-Go code (SGO-VAL-001): + - * / % << >> and unary - on int. The flag is written
+// for every package so that inlined S-Go bodies keep their checks in other packages.
+func (w *writer) sgoChecked(op syntax.Operator, typ types2.Type) bool {
+	if !sgoMode {
+		return false
+	}
+	switch op {
+	case syntax.Add, syntax.Sub, syntax.Mul, syntax.Div, syntax.Rem, syntax.Shl, syntax.Shr:
+	default:
+		return false
+	}
+	b, ok := types2.Unalias(typ).(*types2.Basic)
+	return ok && b.Kind() == types2.Int
 }
 
 // nurseryStmt writes nursery (n) { ... } (SGO-NUR-001): the binder as a new local, then the body
@@ -2121,6 +2139,7 @@ func (w *writer) expr(expr syntax.Expr) {
 		if expr.Y == nil {
 			w.Code(exprUnaryOp)
 			w.op(unOps[expr.Op])
+			w.Bool(w.sgoChecked(expr.Op, w.p.typeOf(expr)))
 			w.pos(expr)
 			w.expr(expr.X)
 			break
@@ -2145,6 +2164,7 @@ func (w *writer) expr(expr syntax.Expr) {
 
 		w.Code(exprBinaryOp)
 		w.op(binOps[expr.Op])
+		w.Bool(w.sgoChecked(expr.Op, w.p.typeOf(expr)))
 		w.implicitConvExpr(commonType, expr.X)
 		w.pos(expr)
 		w.implicitConvExpr(commonType, expr.Y)
@@ -2161,6 +2181,17 @@ func (w *writer) expr(expr syntax.Expr) {
 		var rtype types2.Type
 		if tv.IsBuiltin() {
 			switch obj, _ := lookupObj(w.p, syntax.Unparen(expr.Fun)); obj.Name() {
+			case "panic":
+				if !sgoMode {
+					break
+				}
+				// S-Go: the failure records where it arose (SGO-DEF-002, SGO-ERR-002).
+				assert(len(expr.ArgList) == 1)
+				w.Code(exprSGoPanic)
+				w.pos(syntax.StartPos(expr))
+				w.implicitConvExpr(types2.Typ[types2.String], expr.ArgList[0])
+				return
+
 			case "make":
 				assert(len(expr.ArgList) >= 1)
 				assert(!expr.HasDots)

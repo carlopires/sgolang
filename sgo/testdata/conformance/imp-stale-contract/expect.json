@@ -6,8 +6,9 @@
  "diagnostics": [
   {
    "code": "SGO_E_TYPE_MISMATCH",
-   "at": "lib.Value() == 1"
+   "at": "1 {"
   }
  ],
- "procedure": "rebuild-after-edit"
+ "procedure": "rebuild-after-edit",
+ "note": "Reported at the operand that no longer matches the rebuilt contract (the constant 1 against string), the convention for type-level diagnostics."
 }

@@ -1812,17 +1812,22 @@ func (r *reader) stmt1(tag codeStmt, out *ir.Nodes) ir.Node {
 
 	case stmtAssignOp:
 		op := r.op()
+		checked := r.Bool()
 		lhs := r.expr()
 		pos := r.pos()
 		rhs := r.expr()
-		return ir.NewAssignOpStmt(pos, op, lhs, rhs)
+		n := ir.NewAssignOpStmt(pos, op, lhs, rhs)
+		n.SGoChecked = checked
+		return n
 
 	case stmtIncDec:
 		op := r.op()
+		checked := r.Bool()
 		lhs := r.expr()
 		pos := r.pos()
 		n := ir.NewAssignOpStmt(pos, op, lhs, ir.NewOne(pos, lhs.Type()))
 		n.IncDec = true
+		n.SGoChecked = checked
 		return n
 
 	case stmtBlock:
@@ -2493,6 +2498,7 @@ func (r *reader) expr() (res ir.Node) {
 
 	case exprUnaryOp:
 		op := r.op()
+		checked := r.Bool()
 		pos := r.pos()
 		x := r.expr()
 
@@ -2502,10 +2508,13 @@ func (r *reader) expr() (res ir.Node) {
 		case ir.ODEREF:
 			return typecheck.Expr(ir.NewStarExpr(pos, x))
 		}
-		return typecheck.Expr(ir.NewUnaryExpr(pos, op, x))
+		un := ir.NewUnaryExpr(pos, op, x)
+		un.SGoChecked = checked
+		return typecheck.Expr(un)
 
 	case exprBinaryOp:
 		op := r.op()
+		checked := r.Bool()
 		x := r.expr()
 		pos := r.pos()
 		y := r.expr()
@@ -2521,7 +2530,9 @@ func (r *reader) expr() (res ir.Node) {
 				assert(val.Kind() == constant.Int && constant.Sign(val) >= 0)
 			}
 		}
-		return typecheck.Expr(ir.NewBinaryExpr(pos, op, x, y))
+		bin := ir.NewBinaryExpr(pos, op, x, y)
+		bin.SGoChecked = checked
+		return typecheck.Expr(bin)
 
 	case exprRecv:
 		x := r.expr()
@@ -2749,6 +2760,14 @@ func (r *reader) expr() (res ir.Node) {
 	case exprRuntimeBuiltin:
 		builtin := typecheck.LookupRuntime(r.String())
 		return builtin
+
+	case exprSGoPanic:
+		// panic(sgoPanicValue(msg, "file:line:col")): a Panic failure that records its position.
+		pos := r.pos()
+		msg := r.expr()
+		at := ir.NewBasicLit(pos, types.Types[types.TSTRING], constant.MakeString(sgoPosString(pos)))
+		val := typecheck.Call(pos, typecheck.LookupRuntime("sgoPanicValue"), []ir.Node{msg, at}, false)
+		return typecheck.Expr(ir.NewUnaryExpr(pos, ir.OPANIC, val))
 	}
 }
 

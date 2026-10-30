@@ -160,6 +160,10 @@ type BinaryExpr struct {
 	X     Node
 	Y     Node
 	RType Node `mknode:"-"` // see reflectdata/helpers.go
+
+	// SGoChecked marks int arithmetic of S-Go code: an out-of-range result, division by zero, or
+	// a shift count outside 0..63 is a checked failure (SGO-VAL-001), not a wrapped value.
+	SGoChecked bool
 }
 
 func NewBinaryExpr(pos src.XPos, op Op, x, y Node) *BinaryExpr {
@@ -763,6 +767,8 @@ func (n *DynamicTypeAssertExpr) SetOp(op Op) {
 type UnaryExpr struct {
 	miniExpr
 	X Node
+
+	SGoChecked bool // S-Go: -MinInt is IntegerOverflow (SGO-VAL-001); see BinaryExpr.SGoChecked
 }
 
 func NewUnaryExpr(pos src.XPos, op Op, x Node) *UnaryExpr {

@@ -36,7 +36,28 @@ func sgo_violation(msg string) {
 //
 //go:linkname sgo_fail sgo.runtime_fail
 func sgo_fail(kind, msg string) {
-	panic(error(&sgoFailure{kind, msg}))
+	panic(error(&sgoFailure{kind, msg, ""}))
+}
+
+// sgoPanicValue is the payload of panic(msg) in S-Go code: a Panic failure with the position of
+// the call (SGO-DEF-002, SGO-ERR-002). The compiler passes the position.
+func sgoPanicValue(msg, pos string) any {
+	return error(&sgoFailure{"Panic", msg, pos})
+}
+
+// Checked int arithmetic failures (SGO-VAL-001), called by compiled S-Go code with the position of
+// the operation (cmd/compile/internal/ssagen/sgo.go).
+
+func sgoOverflow(pos string) {
+	panic(error(&sgoFailure{"IntegerOverflow", "integer overflow", pos}))
+}
+
+func sgoDivideByZero(pos string) {
+	panic(error(&sgoFailure{"DivideByZero", "integer divide by zero", pos}))
+}
+
+func sgoShiftRange(pos string) {
+	panic(error(&sgoFailure{"ShiftRange", "shift count outside 0..63", pos}))
 }
 
 var sgoStdoutLock mutex

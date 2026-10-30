@@ -9,6 +9,7 @@ import (
 	"cmd/compile/internal/ir"
 	"cmd/compile/internal/typecheck"
 	"cmd/compile/internal/types"
+	"cmd/internal/src"
 )
 
 // sgoMainWrapper synthesizes the Go entry point of an S-Go program (SGO-PROC-001, SGO-PROC-002).
@@ -52,3 +53,6 @@ func sgoMainWrapper(target *ir.Package) {
 
 	typecheck.FinishFuncBody()
 }
+
+// sgoPosString formats pos for S-Go diagnostic records (base.SGoPos).
+func sgoPosString(pos src.XPos) string { return base.SGoPos(pos) }

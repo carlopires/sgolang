@@ -44,8 +44,27 @@ def toolexec(argv):
             # stage-0 tools run on the bootstrap runtime, so their runtime.Version differs.
             i = args.index("-goversion")
             del args[i:i + 2]
+        root = os.environ.get("SGO_INTERIM_ROOT")
+        if name == "compile" and root:
+            # Module-relative positions in runtime records (base.SGoPos applies -trimpath).
+            if "-trimpath" in args:
+                i = args.index("-trimpath") + 1
+                args[i] = args[i] + ";" + root + "=>"
+            else:
+                args[:0] = ["-trimpath", root + "=>"]
         tool = os.path.join(FORK_TOOLS, name)
     os.execv(tool, [tool] + args)
+
+
+def tools_digest():
+    """The go command keys its build cache on the compiler's version string when that is a release
+    version (go1.27.3), not on the binary, so objects from an earlier stage-0 build would be reused.
+    The cache directory is therefore per tool build."""
+    import hashlib
+    h = hashlib.sha256()
+    for name in ("compile", "asm", "link"):
+        h.update(open(os.path.join(FORK_TOOLS, name), "rb").read())
+    return h.hexdigest()[:16]
 
 
 def overlay():
@@ -73,15 +92,23 @@ def build(out):
                     rel = os.path.normpath(os.path.join(root, f))
                     dst = os.path.join(tmp, rel[:-4] + ".go")
                     os.makedirs(os.path.dirname(dst), exist_ok=True)
-                    shutil.copyfile(rel, dst)
+                    # A line directive at the top keeps the .sgo name in every position the compiler
+                    # reports or embeds, with lines and columns of the original file (admission maps
+                    # positions back to source bytes in one base). A relative directive name is
+                    # resolved against the file's own directory, hence the base name; the root is
+                    # mapped away by -trimpath (records) and in the printed diagnostics.
+                    with open(dst, "wb") as f_out:
+                        f_out.write(f"//line {os.path.basename(rel)}:1:1\n".encode())
+                        f_out.write(open(rel, "rb").read())
         open(os.path.join(tmp, "go.mod"), "w").write(f"module {mod}\n\ngo 1.27\n")
         env = {"HOME": os.environ.get("HOME", "/tmp"), "PATH": os.path.join(LANE, "bin") + ":/usr/bin:/bin",
                "GOROOT": LANE, "GOTOOLCHAIN": "local", "GOFLAGS": "-mod=mod", "GOWORK": "off",
-               "GOCACHE": os.path.join(CACHE, "gocache", "interim-sgo"), "GOENV": "off",
-               "CGO_ENABLED": "0", "LANG": "C"}
+               "GOCACHE": os.path.join(CACHE, "gocache", "interim-sgo", tools_digest()), "GOENV": "off",
+               "CGO_ENABLED": "0", "LANG": "C", "SGO_INTERIM_ROOT": os.path.realpath(tmp)}
         r = subprocess.run([os.path.join(LANE, "bin", "go"), "build", "-toolexec", os.path.abspath(__file__) + " --toolexec",
                             "-o", os.path.abspath(out), "."], cwd=tmp, env=env, capture_output=True, text=True)
-        text = re.sub(r"(?m)^\./", "", r.stdout + r.stderr)
+        text = (r.stdout + r.stderr).replace(os.path.realpath(tmp) + "/", "")
+        text = re.sub(r"(?m)^\./", "", text)
         text = re.sub(r"(?m)^(\S+?)\.go:(\d+:\d+): ", r"\1.sgo:\2: ", text)
         sys.stderr.write(text)
         return r.returncode

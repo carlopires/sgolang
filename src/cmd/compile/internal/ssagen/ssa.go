@@ -158,6 +158,7 @@ func InitConfig() {
 	ir.Syms.Panicnildottype = typecheck.LookupRuntimeFunc("panicnildottype")
 	ir.Syms.Panicoverflow = typecheck.LookupRuntimeFunc("panicoverflow")
 	ir.Syms.Panicshift = typecheck.LookupRuntimeFunc("panicshift")
+	sgoInitSyms()
 	ir.Syms.PanicSimdImm = typecheck.LookupRuntimeFunc("panicSimdImm")
 	ir.Syms.Racefuncenter = typecheck.LookupRuntimeFunc("racefuncenter")
 	ir.Syms.Racefuncexit = typecheck.LookupRuntimeFunc("racefuncexit")
@@ -1068,6 +1069,8 @@ type state struct {
 	// list of panic calls by function name and line number.
 	// Used to deduplicate panic calls.
 	panics map[funcLine]*ssa.Block
+
+	sgoPanics map[sgoPanicKey]*ssa.Block // S-Go checked-arithmetic failure blocks (sgo.go)
 
 	cgoUnsafeArgs       bool
 	hasdefer            bool // whether the function contains a defer statement
@@ -3306,6 +3309,9 @@ func (s *state) exprCheckPtr(n ir.Node, checkPtrOK bool) *ssa.Value {
 		if n.Type().IsFloat() {
 			return s.newValueOrSfCall2(s.ssaOp(n.Op(), n.Type()), a.Type, a, b)
 		}
+		if n.SGoChecked {
+			return s.sgoBinary(n, a, b)
+		}
 
 		return s.newValue2(s.ssaOp(n.Op(), n.Type()), a.Type, a, b)
 
@@ -3356,11 +3362,17 @@ func (s *state) exprCheckPtr(n ir.Node, checkPtrOK bool) *ssa.Value {
 		if n.Type().IsFloat() {
 			return s.newValueOrSfCall2(s.ssaOp(n.Op(), n.Type()), a.Type, a, b)
 		}
+		if n.SGoChecked {
+			return s.sgoBinary(n, a, b)
+		}
 		return s.intDivide(n, a, b)
 	case ir.OMOD:
 		n := n.(*ir.BinaryExpr)
 		a := s.expr(n.X)
 		b := s.expr(n.Y)
+		if n.SGoChecked {
+			return s.sgoBinary(n, a, b)
+		}
 		return s.intDivide(n, a, b)
 	case ir.OADD, ir.OSUB:
 		n := n.(*ir.BinaryExpr)
@@ -3375,6 +3387,9 @@ func (s *state) exprCheckPtr(n ir.Node, checkPtrOK bool) *ssa.Value {
 		}
 		if n.Type().IsFloat() {
 			return s.newValueOrSfCall2(s.ssaOp(n.Op(), n.Type()), a.Type, a, b)
+		}
+		if n.SGoChecked {
+			return s.sgoBinary(n, a, b)
 		}
 		return s.newValue2(s.ssaOp(n.Op(), n.Type()), a.Type, a, b)
 	case ir.OAND, ir.OOR, ir.OXOR:
@@ -3392,6 +3407,9 @@ func (s *state) exprCheckPtr(n ir.Node, checkPtrOK bool) *ssa.Value {
 		n := n.(*ir.BinaryExpr)
 		a := s.expr(n.X)
 		b := s.expr(n.Y)
+		if n.SGoChecked {
+			return s.sgoBinary(n, a, b)
+		}
 		bt := b.Type
 		if bt.IsSigned() {
 			cmp := s.newValue2(s.ssaOp(ir.OLE, bt), types.Types[types.TBOOL], s.zeroVal(bt), b)
@@ -3460,6 +3478,9 @@ func (s *state) exprCheckPtr(n ir.Node, checkPtrOK bool) *ssa.Value {
 			return s.newValue2(ssa.OpComplexMake, n.Type(),
 				s.newValue1(negop, tp, s.newValue1(ssa.OpComplexReal, tp, a)),
 				s.newValue1(negop, tp, s.newValue1(ssa.OpComplexImag, tp, a)))
+		}
+		if n.SGoChecked {
+			return s.sgoNeg(n, a)
 		}
 		return s.newValue1(s.ssaOp(n.Op(), n.Type()), a.Type, a)
 	case ir.ONOT, ir.OBITNOT:

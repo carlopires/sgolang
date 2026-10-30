@@ -6,7 +6,8 @@
  "diagnostics": [
   {
    "code": "SGO_E_UNEXPORTED",
-   "at": "lib.helper"
+   "at": "helper()"
   }
- ]
+ ],
+ "note": "Reported at the unexported name (types2 selector), the convention for type-level diagnostics; SGO-ERR-001 fixes token positions only for admission denials."
 }

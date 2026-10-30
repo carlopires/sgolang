@@ -720,7 +720,7 @@ func (o *orderState) stmt(n ir.Node) {
 				l2.Assigned = false
 			}
 			l2 = o.copyExpr(l2)
-			r := o.expr(typecheck.Expr(ir.NewBinaryExpr(n.Pos(), n.AsOp, l2, n.Y)), nil)
+			r := o.expr(typecheck.Expr(n.Binary(n.Pos(), l2, n.Y)), nil)
 			as := typecheck.Stmt(ir.NewAssignStmt(n.Pos(), l1, r))
 			o.mapAssign(as)
 			o.popTemp(t)

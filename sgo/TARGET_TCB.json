@@ -4321,17 +4321,17 @@
   },
   {
    "path": "src/runtime/sgo_api.go",
-   "sha256": "1cade0d1d6f0a34969d58c1c3562d6489001bb0f5739a1c4dad5a204553e7f68",
+   "sha256": "80e4eeed69dc8102131dce145d33a42f10e46a45c049523ad3849d601ab8b655",
    "upstream_identical": false
   },
   {
    "path": "src/runtime/sgo_main.go",
-   "sha256": "f3fef2ac361409ce268edab3d25630140b117cac280a7198fd4e5f23697717a0",
+   "sha256": "8dd86ff4d5507da0d31879753baf16c3a1972b67db4ecd3e90358f4e9fe6e33e",
    "upstream_identical": false
   },
   {
    "path": "src/runtime/sgo_nursery.go",
-   "sha256": "46c4dcca3a57d877cdb689f6c4939aab0e736efe23c0bae45372d73491c49e58",
+   "sha256": "73704f792cf13b17c05912f42357ae5299b227753a8bd4d581261b6c4737fef0",
    "upstream_identical": false
   },
   {
