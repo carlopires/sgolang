@@ -43,3 +43,7 @@ The v2 work corrected planning artifacts and validated document/metadata consist
 - Start prompt: reading order adds `SGO_DECISIONS.md` and `SGO_SPEC_SUBSET0.md`; pin `go1.27.3`; implementation repository `github.com/carlopires/sgolang`.
 - `SGO_SPEC_ADMISSION.json`: 10 families added (FLOAT, COMPOSITE, USERTYPE, IFACE, GENERIC, REFLECT, NATIVE, SYNC, PROC, TEST), 37 total; every row tagged `subset0` = partial or denied.
 - Added `SGO_SPEC_SUBSET0.md` (draft, not frozen): clauses for subset 0 with IDs per D18, a denied list, and nine open drafting items for W01.
+
+## 2026-10-30 D22 approved
+
+- Targets: darwin/arm64 first (development host); linux/amd64 the real target; linux/arm64 first-class. Plan §1.2 and start prompt amended. From this point the canonical bundle is `sgo/` in `github.com/carlopires/sgolang`.

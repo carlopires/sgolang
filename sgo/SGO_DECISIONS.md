@@ -1,6 +1,6 @@
 # S-Go open design decisions
 
-**Version:** 1 · **Date:** 2026-10-30 · **Status:** D01–D21 APPROVED by the user on 2026-10-30, as recommended. D22 OPEN.
+**Version:** 1 · **Date:** 2026-10-30 · **Status:** D01–D22 APPROVED by the user on 2026-10-30 (D01–D21 as recommended; D22 as the user specified).
 
 ## Purpose and precedence
 
@@ -37,7 +37,7 @@ Legend: **[USER]** = needs an explicit user choice (changes language semantics).
 | D19 | Reusing Go-spec text | Rewrite in S-Go clauses; quote with attribution where useful | DEFAULT | APPROVED |
 | D20 | Map iteration order (post-subset 0) | Deterministic insertion order | USER (can wait) | APPROVED |
 | D21 | Upstream pin | `go1.27.3` instead of `go1.27.1` | DEFAULT | APPROVED |
-| D22 | First execution target vs. darwin/arm64 dev host | Keep Linux/amd64 (plan default) until decided | USER | OPEN |
+| D22 | Execution targets | darwin/arm64 first (development); linux/amd64 is the real target; linux/arm64 first-class | USER | APPROVED |
 
 ---
 
@@ -200,13 +200,27 @@ Checked 2026-10-30 against `go.googlesource.com/go`:
 
 ---
 
-## D22 — First execution target **[USER]** · OPEN
+## D22 — Execution targets **[USER]** · APPROVED 2026-10-30
 
-The plan's first target is Linux/amd64 (§1.2). The user's development host is darwin/arm64 (host Go 1.26.2). Options: (a) keep Linux/amd64 and develop on a Linux/amd64 VM or remote host (emulated amd64 on Apple Silicon is slow); (b) make Linux/arm64 the first target, which runs natively in a VM/container on the host; (c) make darwin/arm64 first, pulling macOS-specific runtime work into the first slice. **Until decided, the plan default (a) stands.** W00 must not lock a target before this decision is recorded.
+User decision: *"let's do macOS directly first, because I'm working from it, so it is easy to test results from here. linux/amd64 is the real target, so any decision must take this into consideration. linux/arm64 is also first-class."*
+
+| Target | Role |
+|---|---|
+| darwin/arm64 | **First development target.** The first slice is built, run, and debugged natively here (the user's host). |
+| linux/amd64 | **The real (production) target.** Every design decision must be valid for it. No work package gate passes on darwin/arm64 evidence alone once the work package touches target-dependent code. |
+| linux/arm64 | **First-class target.** Same standing as linux/amd64 for conformance; not deferred to "later". |
+
+Rules that follow:
+1. **No darwin-only design.** Runtime, scheduler, timer, I/O, and TCB contracts are written against all three targets. A darwin mechanism (kqueue, Mach, libSystem calls) is an adapter behind a target-neutral contract, never the contract itself.
+2. **Memory ordering.** arm64 has a weaker memory model than amd64. Developing on arm64 first exposes ordering bugs early, but code must not rely on amd64 TSO either: synchronization uses the runtime's atomics with specified ordering.
+3. **Linux evidence.** Every work package that changes compiler/runtime/target behavior records conformance evidence on linux/amd64 and linux/arm64 as well as darwin/arm64 before its gate passes. GitHub Actions provides hosted linux/amd64 and linux/arm64 runners for the public repository; a local Linux VM is an alternative. Cross-compilation alone is not evidence of execution (plan §1.2).
+4. **Darwin specifics.** Darwin calls go through libSystem in the upstream runtime (no raw syscalls); that boundary is a TCB adapter (SPEC-TCB). Linux uses raw syscalls in the upstream runtime; both paths need individual contracts.
+5. **Plan §1.2 is amended accordingly** (first target, later-target row).
 
 ---
 
 ## Approval record
 
 - 2026-10-30: user approved D01–D21 as recommended ("decision approved").
+- 2026-10-30: user approved D22 (darwin/arm64 first; linux/amd64 real target; linux/arm64 first-class).
 - Follow-up applied: execution plan amended (§1.2, §4.2, §4.5, §4.6, §15.1), start prompt reading order and pin updated, missing inventory families added to `SGO_SPEC_ADMISSION.json` as denied in subset 0, `SGO_SPEC_SUBSET0.md` drafted.

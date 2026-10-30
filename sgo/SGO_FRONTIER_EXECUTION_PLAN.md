@@ -6,7 +6,7 @@
 
 ## 0. Read this before making changes
 
-**2026-10-30 amendment:** `SGO_DECISIONS.md` records user-approved decisions D01–D21 (D22, first target, is open). They are approved amendments: they take precedence over this plan where they differ, and they define subset 0, the closed first-slice language. `SGO_SPEC_SUBSET0.md` is its draft specification. The implementation repository is `github.com/carlopires/sgolang`.
+**2026-10-30 amendment:** `SGO_DECISIONS.md` records user-approved decisions D01–D22. They are approved amendments: they take precedence over this plan where they differ, and they define subset 0, the closed first-slice language. `SGO_SPEC_SUBSET0.md` is its draft specification. The implementation repository is `github.com/carlopires/sgolang`.
 
 This revision supersedes handoff v1.0. Read `SGO_LANGUAGE_CONSTITUTION.md` first: it records the user's non-negotiable no-compatibility and specification-admission requirements. It has precedence over this plan and the historical input. This plan supplies execution defaults; the implementing agent must freeze precise, versioned contracts before enabling a language feature. Preserve originals as historical input; do not apply their code mechanically.
 
@@ -51,8 +51,8 @@ Keep the original ambition. Separate claims so that progress on one pillar canno
 |---|---|
 | Upstream base | `go1.27.3` (D21; tag observed at commit `2aae1000ea1d4b28923b96db28acf4e3b99d6aff` on 2026-10-30); W00 verifies and locks the commit and source/bootstrap checksums. Reference URLs in §16 still name `go1.27.1`; use the pinned tag's counterparts. |
 | Why this tag | Carried forward as a source-selection default from v1.0, not a semantic dependency. W00 must verify availability and provenance and lock the exact source. No moving branch or fallback toolchain is permitted. [R1] |
-| First supported execution target | Linux/amd64, 64-bit, pending open decision D22 (development host is darwin/arm64); initially use the inherited growable-stack machinery subject to S-Go runtime contracts. |
-| Later target | Linux/arm64 after the core conformance suite; Darwin/arm64 after native runtime validation, not cross-compilation alone. |
+| Execution targets (D22) | darwin/arm64 is the first development target (native host). linux/amd64 is the real production target and every decision must hold for it; linux/arm64 is first-class. Target-dependent work-package gates require execution evidence on all three. Initially use the inherited growable-stack machinery subject to S-Go runtime contracts. |
+| Other targets | None admitted. Additional targets need their own TCB contracts and native execution evidence, not cross-compilation alone. |
 | Core implementation language | Go and the existing Go assembly where necessary. Shell scripts for build orchestration. |
 | Source layout | Reuse upstream layout where useful; remove/isolate unadmitted target code. Add project documents/tests/tools under `sgo/`; public fork packages under `src/sgo/`. |
 | Root module | Do not run `go mod init` at the toolchain root or replace upstream module/workspace files. A standalone reference model may have a separate module under `sgo/model/`. |

@@ -9,14 +9,14 @@ You are implementing **S-Go**, an independent, specification-defined language bu
 Read in order:
 
 1. `SGO_LANGUAGE_CONSTITUTION.md` — authoritative constraints and labeled design defaults.
-2. `SGO_DECISIONS.md` — user-approved decisions D01–D21 (approved amendments; they override the plan where they differ) and open decision D22.
+2. `SGO_DECISIONS.md` — user-approved decisions D01–D22 (approved amendments; they override the plan where they differ).
 3. `SGO_FRONTIER_EXECUTION_PLAN.md` — v2 architecture, semantic decisions, work packages, and gates.
 4. `SGO_SPEC_SUBSET0.md` — draft specification of subset 0, the closed first-slice language.
 5. `SGO_SPEC_ADMISSION.json` — required inventory; initially unadmitted, not a finished specification.
 6. `SGO_TASKS.json` and `SGO_TEST_MATRIX.json` — execution ledger and unrun acceptance scenarios.
 7. `CHANGELOG_V2.md` and `original/` — correction history and unchanged historical design input.
 
-The implementation repository is `github.com/carlopires/sgolang` (local clone `/Users/carlopires/ycode/sgolang`). Do not lock the first execution target in W00 until decision D22 is recorded.
+The implementation repository is `github.com/carlopires/sgolang` (local clone `/Users/carlopires/ycode/sgolang`). Targets (D22): develop first on darwin/arm64; linux/amd64 is the real target and linux/arm64 is first-class, so every decision must hold for both and target-dependent gates need Linux execution evidence.
 
 Inspect the actual tree and checkpoint. Preserve user changes. Identify any v1 work that implemented compatibility profiles, dynamic implicit spawning, preserved ambient APIs, or permissive build/import paths. Do not silently preserve those decisions; remove or quarantine the affected implementation before target admission.
 
