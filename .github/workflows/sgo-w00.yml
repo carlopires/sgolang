@@ -55,6 +55,15 @@ jobs:
           plat="$(uname -s | tr A-Z a-z)_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
           sgo/scripts/conformance.py run --sgo "pkg/tool/$plat/sgo" --pending sgo/testdata/conformance-pending.json
 
+      - name: Every admitted target builds from this host (sgo build -target)
+        run: |
+          plat="$(uname -s | tr A-Z a-z)_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
+          cd sgo/testdata/conformance/proc-hello
+          for t in darwin/arm64 linux/amd64 linux/arm64; do
+            "$GITHUB_WORKSPACE/pkg/tool/$plat/sgo" build -target=$t -o "$RUNNER_TEMP/hello-${t%/*}-${t#*/}"
+            file "$RUNNER_TEMP/hello-${t%/*}-${t#*/}"
+          done
+
       - name: Host test lane (compiler syntax package, incl. keyword table)
         run: sgo/scripts/test-host-pkg.sh cmd/compile/internal/syntax -count=1
 

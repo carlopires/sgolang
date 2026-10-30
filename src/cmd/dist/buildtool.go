@@ -306,12 +306,23 @@ func isUnneededSSARewriteFile(srcFile, goArch string) (archCaps string, unneeded
 	return archCaps, true
 }
 
+// sgoTargetArchRewrite reports whether a rewrite file (by its architecture part, e.g. AMD64,
+// ARM64latelower) belongs to an S-Go target architecture.
+func sgoTargetArchRewrite(archCaps string) bool {
+	a := strings.TrimSuffix(strings.TrimSuffix(strings.ToLower(archCaps), "splitload"), "latelower")
+	return a == "amd64" || a == "arm64"
+}
+
 func bootstrapRewriteFile(srcFile string) string {
 	// During bootstrap, generate dummy rewrite files for
 	// irrelevant architectures. We only need to build a bootstrap
 	// binary that works for the current gohostarch.
 	// This saves 6+ seconds of bootstrap.
-	if archCaps, ok := isUnneededSSARewriteFile(srcFile, gohostarch); ok {
+	//
+	// S-Go: the stage-0 tools are the S-Go toolchain (SGO-BUILD-001), and sgo build -target must
+	// reach every admitted target from any host, so the rewrite rules of the target architectures
+	// amd64 and arm64 are always kept.
+	if archCaps, ok := isUnneededSSARewriteFile(srcFile, gohostarch); ok && !sgoTargetArchRewrite(archCaps) {
 		return fmt.Sprintf(`%spackage ssa
 
 func rewriteValue%s(v *Value) bool { panic("unused during bootstrap") }
