@@ -549,6 +549,7 @@ type g struct {
 	runningCleanups atomic.Bool
 	sig             uint32
 	secret          int32 // current nesting of runtime/secret.Do calls.
+	sgoService      uint8 // sgoServiceKind of a runtime service goroutine (sgo_service.go)
 	writebuf        []byte
 	sigcode0        uintptr
 	sigcode1        uintptr

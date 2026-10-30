@@ -1,0 +1,37 @@
+# S-Go runtime (TCB) tests in the runtime test lane on the Linux targets (D22).
+name: sgo-runtime
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/runtime/**"
+      - "src/internal/**"
+      - "sgo/scripts/runtime-lane.sh"
+      - "sgo/scripts/lib.sh"
+      - ".github/workflows/sgo-runtime.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runtime:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    env:
+      SGO_CACHE: ${{ github.workspace }}/../sgo-cache
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the lane worktree is created at the locked upstream commit
+      - name: S-Go runtime tests (O01-O10, S06, S07, S11 parts)
+        run: sgo/scripts/runtime-lane.sh -count=3 -cpu=1,4 -v -run 'TestSGo' runtime
+      - name: S-Go runtime tests under the race detector
+        run: sgo/scripts/runtime-lane.sh -race -count=2 -run 'TestSGo' runtime
+      - name: Upstream runtime suite (regression, -short)
+        run: sgo/scripts/runtime-lane.sh -short -count=1 runtime

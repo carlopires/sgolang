@@ -6,6 +6,8 @@ package runtime_test
 
 import (
 	"errors"
+	"os"
+	"os/exec"
 	"runtime"
 	"strings"
 	"sync"
@@ -376,4 +378,64 @@ func TestSGoOutcomes(t *testing.T) {
 			t.Fatalf("errored: %+v", r)
 		}
 	})
+}
+
+// O10: runtime services are classified at creation; none escapes the enumerated list.
+func TestSGoServiceCensus(t *testing.T) {
+	var x = new([64]byte)
+	runtime.SetFinalizer(x, func(*[64]byte) {}) // starts the finalizer service if needed
+	x = nil
+	for i := 0; i < 3; i++ {
+		runtime.GC()
+	}
+	unclassified, services := runtime.SGoServiceCensus()
+	if len(unclassified) != 0 {
+		t.Fatalf("runtime goroutines without a service kind: %v", unclassified)
+	}
+	if got := runtime.SGoServiceStarted("gc-enable"); got != 2 {
+		t.Errorf("gc-enable started %d goroutines, want 2 (bgsweep, bgscavenge)", got)
+	}
+	if got := runtime.SGoServiceStarted("force-gc"); got != 1 {
+		t.Errorf("force-gc started %d, want 1", got)
+	}
+	if runtime.SGoServiceStarted("gc-mark-worker") < 1 || runtime.SGoServiceStarted("finalizer") != 1 {
+		t.Errorf("mark workers %d, finalizer %d", runtime.SGoServiceStarted("gc-mark-worker"), runtime.SGoServiceStarted("finalizer"))
+	}
+	t.Logf("live services: %v", services)
+}
+
+//go:noinline
+func gcenable() { go func() {}() } // spoof: same simple name as the runtime's service creator
+
+// O10 / S11: with enforcement on, only enumerated runtime services may be created through the
+// go-statement path; a plain go statement and a spoofed creator name both fail-stop.
+func TestSGoServiceEnforcement(t *testing.T) {
+	if mode := os.Getenv("SGO_ENFORCE_CHILD"); mode != "" {
+		runtime.SGoSetEnforce(true)
+		switch mode {
+		case "services":
+			x := new([64]byte)
+			runtime.SetFinalizer(x, func(*[64]byte) {})
+			for i := 0; i < 3; i++ {
+				runtime.GC()
+			}
+		case "plain":
+			go func() {}()
+		case "spoof":
+			gcenable()
+		}
+		os.Exit(0)
+	}
+	for _, c := range []struct {
+		mode string
+		fail bool
+	}{{"services", false}, {"plain", true}, {"spoof", true}} {
+		cmd := exec.Command(os.Args[0], "-test.run=^TestSGoServiceEnforcement$")
+		cmd.Env = append(os.Environ(), "SGO_ENFORCE_CHILD="+c.mode)
+		out, err := cmd.CombinedOutput()
+		died := err != nil && strings.Contains(string(out), "goroutine created outside the enumerated runtime services")
+		if c.fail != died || (!c.fail && err != nil) {
+			t.Errorf("mode %s: err=%v output:\n%s", c.mode, err, out)
+		}
+	}
 }

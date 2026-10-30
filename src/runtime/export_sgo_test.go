@@ -56,3 +56,40 @@ func SGoCurrentTaskID() (uint64, bool) {
 	}
 	return t.id, true
 }
+
+// SGoSetEnforce switches go-statement enforcement (sgo_service.go) for child-process tests.
+func SGoSetEnforce(on bool) { sgoEnforce.Store(on) }
+
+// SGoServiceStarted reports how many goroutines of the named service kind were started.
+func SGoServiceStarted(name string) int64 {
+	for k, n := range sgoServiceNames {
+		if n == name {
+			return sgoServiceStarted[k].Load()
+		}
+	}
+	return -1
+}
+
+// SGoServiceCensus lists live goroutines started by a runtime function that are neither S-Go tasks,
+// the main goroutine, nor classified runtime services.
+func SGoServiceCensus() (unclassified []string, services map[string]int) {
+	services = map[string]int{}
+	forEachG(func(gp *g) {
+		if readgstatus(gp) == _Gdead {
+			return
+		}
+		f := findfunc(gp.startpc)
+		if !f.valid() {
+			return
+		}
+		name := funcname(f)
+		switch {
+		case gp.sgo != nil || name == "runtime.main" || name == "runtime.sgoTaskStart":
+		case gp.sgoService != 0:
+			services[sgoServiceNames[gp.sgoService]]++
+		case len(name) > 8 && name[:8] == "runtime.":
+			unclassified = append(unclassified, name)
+		}
+	})
+	return
+}

@@ -26,9 +26,9 @@ EXTS = (".go", ".s", ".h")
 # Trusted primitives relied on by subset 0 (SGO-TCB-001). "upstream" names the current implementation
 # symbols in go1.27.3; "sgo" is the S-Go entry point added by the named work package.
 PRIMITIVES = [
-    {"id": "TCB-P01", "name": "task creation and registration", "clauses": ["SGO-SPAWN-003"], "upstream": ["newproc", "newproc1"], "sgo": "W02", "callers": ["sgo package (Nursery.Spawn)"]},
-    {"id": "TCB-P02", "name": "park and unpark", "clauses": ["SGO-WAIT-001", "SGO-WAIT-002", "SGO-NUR-003"], "upstream": ["gopark", "goready"], "sgo": "W02", "callers": ["TCB-P01", "TCB-P03", "TCB-P05"]},
-    {"id": "TCB-P03", "name": "scope state machine and join", "clauses": ["SGO-NUR-002", "SGO-NUR-003", "SGO-NUR-004"], "upstream": [], "sgo": "W02", "callers": ["compiler-generated nursery barriers", "sgo package"]},
+    {"id": "TCB-P01", "name": "task creation and registration", "clauses": ["SGO-SPAWN-003"], "upstream": ["newproc", "newproc1"], "sgo": "W02: sgoSpawn, sgoTaskStart, sgoTaskMain, sgoTaskExit (sgo_scope.go)", "callers": ["sgo package (Nursery.Spawn)"]},
+    {"id": "TCB-P02", "name": "park and unpark", "clauses": ["SGO-WAIT-001", "SGO-WAIT-002", "SGO-NUR-003"], "upstream": ["gopark", "goready"], "sgo": "W02: goparkunlock/goready in sgoNurseryJoin, sgoTaskExit", "callers": ["TCB-P01", "TCB-P03", "TCB-P05"]},
+    {"id": "TCB-P03", "name": "scope state machine and join", "clauses": ["SGO-NUR-002", "SGO-NUR-003", "SGO-NUR-004"], "upstream": [], "sgo": "W02: sgoNurseryOpen, sgoNurseryJoin (sgo_scope.go)", "callers": ["compiler-generated nursery barriers", "sgo package"]},
     {"id": "TCB-P04", "name": "cancellation propagation and query", "clauses": ["SGO-CANCEL-001", "SGO-CANCEL-002", "SGO-CANCEL-004"], "upstream": [], "sgo": "W04", "callers": ["sgo package (Cancel, Checkpoint, Sleep)", "TCB-P03"]},
     {"id": "TCB-P05", "name": "monotonic clock, timers, sleep", "clauses": ["SGO-WAIT-001", "SGO-TIMER-001", "SGO-DRAIN-002"], "upstream": ["nanotime", "timer.modify", "timeSleep"], "sgo": "W04", "callers": ["sgo package (Sleep)", "TCB-P03 (drain budget)"]},
     {"id": "TCB-P06", "name": "stdout write", "clauses": ["SGO-PROC-003"], "upstream": ["write1"], "sgo": "W03", "callers": ["sgo package (Writer.WriteString)"]},
@@ -36,7 +36,7 @@ PRIMITIVES = [
     {"id": "TCB-P08", "name": "failure unwinding and defers", "clauses": ["SGO-DEF-001", "SGO-DEF-002", "SGO-DEF-004", "SGO-DEF-005"], "upstream": ["gopanic", "deferreturn", "panicdivide", "panicshift"], "sgo": "W03", "callers": ["compiler-generated code"]},
     {"id": "TCB-P09", "name": "allocation and garbage collection", "clauses": ["SGO-MEM-001", "SGO-TCB-001"], "upstream": ["mallocgc", "newobject", "typedmemmove", "gcStart"], "sgo": "upstream", "callers": ["compiler-generated code", "runtime"]},
     {"id": "TCB-P10", "name": "stack growth and overflow detection", "clauses": ["SGO-STACK-001", "SGO-ERR-003"], "upstream": ["morestack", "newstack"], "sgo": "upstream", "callers": ["function prologues (stacksplit)"]},
-    {"id": "TCB-P11", "name": "runtime service goroutines", "clauses": ["SGO-TCB-001"], "upstream": ["see services"], "sgo": "W02 (sealed service primitive replacing go statements)", "callers": ["runtime only"]},
+    {"id": "TCB-P11", "name": "runtime service goroutines", "clauses": ["SGO-TCB-001"], "upstream": ["see services"], "sgo": "W02: sgoServiceStart/sgoServiceExit classify every newproc creation; enforcement fail-stops unenumerated creation (sgo_service.go)", "callers": ["runtime only"]},
 ]
 
 # Every go statement in the runtime closure (OWN-6), keyed by callee and file.

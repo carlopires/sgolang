@@ -61,7 +61,7 @@
     "newproc",
     "newproc1"
    ],
-   "sgo": "W02",
+   "sgo": "W02: sgoSpawn, sgoTaskStart, sgoTaskMain, sgoTaskExit (sgo_scope.go)",
    "callers": [
     "sgo package (Nursery.Spawn)"
    ]
@@ -78,7 +78,7 @@
     "gopark",
     "goready"
    ],
-   "sgo": "W02",
+   "sgo": "W02: goparkunlock/goready in sgoNurseryJoin, sgoTaskExit",
    "callers": [
     "TCB-P01",
     "TCB-P03",
@@ -94,7 +94,7 @@
     "SGO-NUR-004"
    ],
    "upstream": [],
-   "sgo": "W02",
+   "sgo": "W02: sgoNurseryOpen, sgoNurseryJoin (sgo_scope.go)",
    "callers": [
     "compiler-generated nursery barriers",
     "sgo package"
@@ -232,7 +232,7 @@
    "upstream": [
     "see services"
    ],
-   "sgo": "W02 (sealed service primitive replacing go statements)",
+   "sgo": "W02: sgoServiceStart/sgoServiceExit classify every newproc creation; enforcement fail-stops unenumerated creation (sgo_service.go)",
    "callers": [
     "runtime only"
    ]
@@ -291,7 +291,7 @@
   {
    "callee": "updateMaxProcsGoroutine",
    "file": "src/runtime/proc.go",
-   "line": 7135,
+   "line": 7138,
    "status": "active",
    "purpose": "scheduler: GOMAXPROCS updates from CPU limits"
   },
@@ -319,8 +319,8 @@
  ],
  "summary": {
   "packages": 30,
-  "files": 1021,
-  "files_changed_from_upstream": 3,
+  "files": 1022,
+  "files_changed_from_upstream": 4,
   "services": {
    "active": 5,
    "dormant": 5,
@@ -3915,7 +3915,7 @@
   },
   {
    "path": "src/runtime/proc.go",
-   "sha256": "6702748227ec610747cc990732b81c32e7f4d940520956f73e303a783878836b",
+   "sha256": "bc984e8fd98c49623eaf6f2e16eff59659de925d880d89f4d0787adbb5b41458",
    "upstream_identical": false
   },
   {
@@ -4220,7 +4220,7 @@
   },
   {
    "path": "src/runtime/runtime2.go",
-   "sha256": "c62a834b25c25197c47f07cb4dfd9a7cd7414d5fb442b88c71dd12d175d245f5",
+   "sha256": "6fdf0b244b0c95e1a9379b56245621c63f0446034e282808804fe8dfb3f5ce1f",
    "upstream_identical": false
   },
   {
@@ -4321,6 +4321,11 @@
   {
    "path": "src/runtime/sgo_scope.go",
    "sha256": "4b0cabb68b788ffe95de2f4a149739e191361b75217b66d83ade9908ffef34bf",
+   "upstream_identical": false
+  },
+  {
+   "path": "src/runtime/sgo_service.go",
+   "sha256": "192771edecf5aaabc12bbb43b40fa3f7a6288824c588c358f3b98bd1cb6ddf04",
    "upstream_identical": false
   },
   {

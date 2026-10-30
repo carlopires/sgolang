@@ -4539,6 +4539,7 @@ func gdestroy(gp *g) {
 	gp.timer = nil
 	gp.bubble = nil
 	gp.sgo = nil // never let a reused goroutine inherit an S-Go task (SGO-SPAWN-003, O06)
+	sgoServiceExit(gp)
 	gp.fipsOnlyBypass = false
 	gp.secret = 0
 
@@ -5335,8 +5336,10 @@ func malg(stacksize int32) *g {
 func newproc(fn *funcval) {
 	gp := getg()
 	pc := sys.GetCallerPC()
+	svc := sgoServiceStart(pc, fn) // S-Go: classify or refuse (sgo_service.go, OWN-6)
 	systemstack(func() {
 		newg := newproc1(fn, gp, pc, false, waitReasonZero)
+		newg.sgoService = uint8(svc)
 
 		pp := getg().m.p.ptr()
 		runqput(pp, newg, true)

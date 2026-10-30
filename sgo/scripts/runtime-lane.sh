@@ -16,6 +16,7 @@ commit="$(lock upstream.commit)"
 lane="$SGO_CACHE/runtime-lane/$(lock upstream.tag)"
 boot="$("$SGO_SCRIPTS/fetch-bootstrap.sh")"
 
+mkdir -p "$SGO_CACHE/logs"
 if [ ! -x "$lane/bin/go" ]; then
 	if [ ! -d "$lane" ]; then
 		mkdir -p "$(dirname "$lane")"
@@ -33,7 +34,17 @@ for p in $pkgs; do
 	rsync -a --delete --exclude testdata "$SGO_ROOT/src/$p/" "$lane/src/$p/"
 	[ -d "$SGO_ROOT/src/$p/testdata" ] && rsync -a --delete "$SGO_ROOT/src/$p/testdata/" "$lane/src/$p/testdata/"
 done
-overlay="$(cd "$SGO_ROOT" && for p in $pkgs; do find "src/$p" -maxdepth 1 -type f; done | sort | xargs shasum -a 256 | shasum -a 256 | cut -d' ' -f1)"
+overlay="$(cd "$SGO_ROOT" && python3 -c '
+import hashlib, os, sys
+h = hashlib.sha256()
+for p in sys.argv[1:]:
+    d = os.path.join("src", p)
+    for n in sorted(os.listdir(d)):
+        f = os.path.join(d, n)
+        if os.path.isfile(f):
+            h.update(f.encode() + b"\0" + hashlib.sha256(open(f, "rb").read()).digest())
+print(h.hexdigest())
+' $pkgs)"
 log "runtime lane: upstream tools at ${commit:0:12}, fork TCB overlay digest ${overlay:0:16}"
 
 cd "$lane/src"

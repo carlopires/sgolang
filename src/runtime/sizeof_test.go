@@ -21,7 +21,7 @@ func TestSizeof(t *testing.T) {
 		_32bit uintptr // size on 32bit platforms
 		_64bit uintptr // size on 64bit platforms
 	}{
-		{runtime.G{}, 292 + xreg, 456 + xreg}, // g, but exported for testing (S-Go: +1 pointer, g.sgo; 32-bit value unverified, no admitted 32-bit target)
+		{runtime.G{}, 296 + xreg, 464 + xreg}, // g, but exported for testing (S-Go: g.sgo pointer + g.sgoService byte; 32-bit value unverified, no admitted 32-bit target)
 		{runtime.Sudog{}, 64, 104},            // sudog, but exported for testing
 	}
 
