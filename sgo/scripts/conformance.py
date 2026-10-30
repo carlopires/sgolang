@@ -81,6 +81,15 @@ def validate_case(name, d, clauses):
     for k in e:
         if k not in KEYS:
             errs.append(f"{name}: unknown key {k!r}")
+    # Files a case names (build arguments, diagnostic files) must be tracked by git: a fixture
+    # matching a .gitignore pattern (stock.a did) exists only in the checkout that created it.
+    named = [a for a in e.get("build_args", []) if not a.startswith("-")]
+    named += [dg["file"] for dg in e.get("diagnostics", []) if "file" in dg]
+    for f in named:
+        rel = os.path.relpath(os.path.join(d, f), ROOT)
+        tracked = subprocess.run(["git", "-C", ROOT, "ls-files", "--error-unmatch", rel], capture_output=True).returncode == 0
+        if not tracked:
+            errs.append(f"{name}: {f} is not tracked by git (check .gitignore; use git add -f)")
     if e.get("kind") not in ("run", "reject"):
         errs.append(f"{name}: kind must be run or reject")
     if not e.get("clauses"):
