@@ -1,0 +1,142 @@
+{
+  "bundle": "S-Go Frontier LLM Execution Handoff",
+  "plan_version": "2.0",
+  "created_at": "2026-10-02",
+  "supersedes": "1.0",
+  "language_policy": "One specification-defined language; no compatibility path; explicit nursery capability spawning; closed default-deny target admission.",
+  "input_archive": {
+    "name": "sgo.zip",
+    "sha256": "b6672dbf5fef2839c6bb4779f92c9b0fd0d6151a47cfe08aad18ed040d8996bf"
+  },
+  "superseded_handoff_archive_sha256": "b24e11bc86b50f8d545cc33a08ecb7558d7e33216dc71990fc1201263cad0e14",
+  "work_package_count": 13,
+  "acceptance_case_count": 147,
+  "specification_inventory_family_count": 37,
+  "initial_work_package_status": "pending",
+  "initial_acceptance_execution_status": "unrun",
+  "specification_status": "Inventory and design contracts, not a finished formal language specification; no feature marked admitted.",
+  "implementation_status": "No compiler/runtime implementation produced or tested for this revision.",
+  "document_validation": {
+    "unique_work_package_case_and_inventory_identifiers": "passed",
+    "acyclic_dependency_graph": "passed",
+    "bidirectional_task_case_references": "passed",
+    "specification_inventory_references": "passed",
+    "original_bytes_match_input_archive": "passed",
+    "all_implementation_tasks_pending_and_cases_unrun": "passed",
+    "no_compat_or_strict_test_dialect_lanes": "passed",
+    "known_v1_compatibility_directives_removed": "passed",
+    "markdown_fences_and_bundle_links": "passed",
+    "reference_definitions_present": "passed",
+    "note": "These are document/metadata checks, not executed S-Go conformance or a proof of full semantic completeness."
+  },
+  "upstream_source_verification": {
+    "status": "External references carried forward from v1; not re-verified in v2.",
+    "default_tag": "go1.27.1",
+    "exact_commit": null,
+    "exact_commit_status": "Must be verified and resolved by W00",
+    "checkout_built": false
+  },
+  "hash_scope": "Distribution snapshot; every bundle file except this self-referential manifest. Working-copy edits invalidate snapshot hashes.",
+  "files": [
+    {
+      "path": "CHANGELOG_V2.md",
+      "bytes": 5083,
+      "sha256": "74125bf8c736c12730493f98a97658afbae3873efa2737fdb17c3d4b762c3ef8"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3155,
+      "sha256": "60d85634d396f6cb17a47f0d229e406f71f6993fa4b5412006627300fb293ae1"
+    },
+    {
+      "path": "SGO_AGENT_START_PROMPT.md",
+      "bytes": 5919,
+      "sha256": "f9d6083368c4a52171db3feafeca6c856c6a6748b6f64e20d08f89555064d752"
+    },
+    {
+      "path": "SGO_DECISIONS.md",
+      "bytes": 17648,
+      "sha256": "487b01c2b4c3b388169cccb8afb76647056a0c50b8b69b354b7bcfb83539bafa"
+    },
+    {
+      "path": "SGO_FRONTIER_EXECUTION_PLAN.md",
+      "bytes": 104117,
+      "sha256": "b55a444326a862b1cc8e5d60385b3a144d34cb17f74b9178639c812df77bcec3"
+    },
+    {
+      "path": "SGO_LANGUAGE_CONSTITUTION.md",
+      "bytes": 9881,
+      "sha256": "38f64c6ce66a4c02eebb76be5f45f1657d18fcb0cdd55bb3df774ad37be0266f"
+    },
+    {
+      "path": "SGO_SPEC_SUBSET0.md",
+      "bytes": 27166,
+      "sha256": "b138114f3df06b7c88fa62aa56c1b672e88d18331461a6968e2f13eb4507b970"
+    },
+    {
+      "path": "SGO_SPEC_ADMISSION.json",
+      "bytes": 21109,
+      "sha256": "e9816b57edef80fe80aec9620818848fd61b98ac8aef42106140755e6b118a80"
+    },
+    {
+      "path": "SGO_TASKS.json",
+      "bytes": 13983,
+      "sha256": "73adbfad6f559121cc4ff64042693af43e7583ae013e15bee2141b0b5fd6fe87"
+    },
+    {
+      "path": "SGO_TEST_MATRIX.json",
+      "bytes": 83612,
+      "sha256": "359ed051d1f2a1ef5eddfd075c753332cc7a13df42b0b2da95d0193c2707ac81"
+    },
+    {
+      "path": "original/SGO_CONCEPTUAL_WHITEPAPER.md",
+      "bytes": 5524,
+      "sha256": "75075c16b8520a21f8eff1c7b73f02daa4dcf6255aed3106739c67906fe9116a"
+    },
+    {
+      "path": "original/SGO_MASTER_BLUEPRINT.md",
+      "bytes": 1107,
+      "sha256": "6f6bdfe997c2ee29675e33ff407f7bd53549acf481792f955fed36c2520ac2ac"
+    },
+    {
+      "path": "original/docs/PHASE1_FIXED_STACKS.md",
+      "bytes": 1494,
+      "sha256": "55b87c65f6455458f81451f9c4fdeff90a45ba6b3aeb3b5faf69fdcb21f5f6a7"
+    },
+    {
+      "path": "original/docs/PHASE2_FRONTEND_PARSER.md",
+      "bytes": 806,
+      "sha256": "b9cf4d4d78e7cf17d448d66b8020634fbf38bbe6c053315cf3f505c47ecb7a74"
+    },
+    {
+      "path": "original/docs/PHASE3_DESUGARING_IR.md",
+      "bytes": 2426,
+      "sha256": "642f4cb6fe685d320e91d2453a2b138585403e8ddb53f94fed4baf8697590f9b"
+    },
+    {
+      "path": "original/docs/PHASE4_LAB_SCHEDULER.md",
+      "bytes": 789,
+      "sha256": "eeeb901568d8b1fe962240a1d679d7761c2fc48247f6a025d3adeac50ad3657f"
+    },
+    {
+      "path": "original/docs/PHASE5_BLEND2_CHANNELS.md",
+      "bytes": 967,
+      "sha256": "b375d3f24d6c09fdfaff6e64a0f0f7b51f4488f6ece2f4f11b2b4606c341be82"
+    }
+  ],
+  "reference_corrections": [
+    {
+      "date": "2026-10-30",
+      "summary": "'BlenD2' identified as a mislabel (likely Bend 2, R18); reserve/commit and deterministic-lab inspiration attributed to asupersync (R13). Active plan and changelog updated; original/ unchanged."
+    },
+    {
+      "date": "2026-10-30",
+      "summary": "Added SGO_DECISIONS.md (proposed open decisions D01-D21, awaiting user approval)."
+    },
+    {
+      "date": "2026-10-30",
+      "summary": "D01-D21 approved; plan/prompt amended; 10 inventory families added (37); SGO_SPEC_SUBSET0.md drafted."
+    }
+  ],
+  "implementation_repository": "https://github.com/carlopires/sgolang"
+}

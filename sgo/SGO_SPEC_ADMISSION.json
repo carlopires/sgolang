@@ -1,0 +1,720 @@
+{
+  "schema_version": 1,
+  "plan_version": "2.0",
+  "spec_version": null,
+  "admission_digest": null,
+  "status": "inventory_seed_not_an_admission_allowlist",
+  "warning": "This is not a completed language specification. Every family must be expanded into concrete clauses and checked against real compiler/API/IR surfaces. No feature is claimed implemented or admitted by this handoff.",
+  "default_decision": "reject",
+  "missing_draft_conflicting_or_stale_contract_decision": "reject",
+  "language_dialects": [
+    "sgo"
+  ],
+  "execution_configurations": [
+    "production",
+    "lab"
+  ],
+  "forbidden_application_routes": [
+    "bare_go_statement",
+    "legacy_compatibility_mode",
+    "opt_in_safety_dialect",
+    "implicit_spawn_authority",
+    "unmanaged_channel_tier",
+    "unsafe_enable_switch",
+    "stock_go_object_linking",
+    "automatic_stock_toolchain_fallback",
+    "unchecked_contract_annotation",
+    "broad_package_name_tcb_exemption"
+  ],
+  "host_build_tools_are_target_modes": false,
+  "compiler_inventory_closure_required": true,
+  "required_clause_fields": [
+    "clause_id",
+    "version",
+    "normative_text_digest",
+    "reference_closure",
+    "grammar_and_types",
+    "preconditions",
+    "evaluation_and_value_semantics",
+    "ownership_and_lifecycle",
+    "effect_and_capability_requirements",
+    "concurrency_and_memory_order",
+    "allowed_nondeterminism",
+    "failure_and_partial_progress",
+    "cancellation_and_cleanup",
+    "compile_link_checks",
+    "runtime_guards",
+    "tcb_assumptions",
+    "positive_tests",
+    "negative_tests",
+    "implementation_coverage",
+    "executed_evidence",
+    "supported_execution_configurations"
+  ],
+  "rows": [
+    {
+      "id": "SPEC-LEX",
+      "surface_family": "Lexing, grammar, reserved words, and source recovery",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "X01",
+        "X03",
+        "S02",
+        "S05",
+        "S19"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-BIND",
+      "surface_family": "Names, scopes, imports, initialization, and nursery bindings",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "X02",
+        "S03",
+        "S09"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-TYPE",
+      "surface_family": "Type system, function types, checked callable/effect summaries",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "X10",
+        "S09",
+        "S10"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-VALUE",
+      "surface_family": "Primitive values, conversions, equality, arithmetic and evaluation order",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "X05",
+        "S16"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-MEM",
+      "surface_family": "References, aliasing, shared mutable memory, atomics and data-race contract",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W07",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "O09",
+        "S16"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-CONTROL",
+      "surface_family": "Branches, loops, returns, closures and all scope exits",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "X04",
+        "X05",
+        "X06",
+        "X07",
+        "X08",
+        "X11"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-DEFER",
+      "surface_family": "Function defers, scoped finalizers, panic/recover and task exit",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W04",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "X09",
+        "X12",
+        "P01",
+        "P04",
+        "P05",
+        "P06",
+        "P08"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-NURSERY",
+      "surface_family": "Nursery lifecycle, nesting, terminal snapshots, quiescence",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "O01",
+        "O02",
+        "O05",
+        "X04"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-SPAWN",
+      "surface_family": "Explicit nursery capability, callback admission and outcome reporting",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "O03",
+        "O04",
+        "S05",
+        "S06",
+        "S07",
+        "S08"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-CANCEL",
+      "surface_family": "Sticky cancellation, owner/ancestor propagation, progress boundaries",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W04",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "C01",
+        "C02",
+        "C03",
+        "C04",
+        "P07"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-DRAIN",
+      "surface_family": "Cleanup budget, non-cooperation, fail-stop and diagnostic behavior",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W04",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "C07",
+        "C09",
+        "S17"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-WAIT",
+      "surface_family": "Wait registration, terminal winner, park/unpark and lock order",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W04",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "C02",
+        "C03",
+        "C04"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-CHAN",
+      "surface_family": "Reserve/commit/abort and native channels, select, close and reflection",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W07",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "H01",
+        "H02",
+        "N01",
+        "N04",
+        "S12"
+      ],
+      "evidence": [],
+      "subset0": "denied"
+    },
+    {
+      "id": "SPEC-PERMIT",
+      "surface_family": "Permit alias/lifetime/affinity and abandoned obligation resolution",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W06",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "H03",
+        "H04",
+        "H05",
+        "H06"
+      ],
+      "evidence": [],
+      "subset0": "denied"
+    },
+    {
+      "id": "SPEC-READY",
+      "surface_family": "Explicit nursery-authorized readiness handshake",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W05",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "R01",
+        "R02",
+        "R03",
+        "R04"
+      ],
+      "evidence": [],
+      "subset0": "denied"
+    },
+    {
+      "id": "SPEC-CAP",
+      "surface_family": "Capabilities, task ceilings, attenuation, revocation and opaque handles",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W05",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "A01",
+        "A02",
+        "A03",
+        "A04",
+        "S06"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-IMPORT",
+      "surface_family": "Transitive package/body/initialization contracts and artifact identity",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "S09",
+        "S10",
+        "S13",
+        "T01"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-TCB",
+      "surface_family": "Runtime/GC/service/assembly/intrinsic contracts and sealed callers",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W02",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "O07",
+        "O10",
+        "S11",
+        "S15"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-TIMER",
+      "surface_family": "Production/virtual clocks, timers, deadlines and tie ordering",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W04",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "C01",
+        "D06"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-RANDOM",
+      "surface_family": "Separate cryptographic entropy and deterministic PRNG capabilities",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W05",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "D01",
+        "A01"
+      ],
+      "evidence": [],
+      "subset0": "denied"
+    },
+    {
+      "id": "SPEC-FILE",
+      "surface_family": "Confined file capabilities, operation progress and lifetime",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W09",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "I01",
+        "I03",
+        "I04",
+        "I05"
+      ],
+      "evidence": [],
+      "subset0": "denied"
+    },
+    {
+      "id": "SPEC-NET",
+      "surface_family": "Network capability, readiness, address policy and partial progress",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W09",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "I02",
+        "I03",
+        "I04",
+        "I05"
+      ],
+      "evidence": [],
+      "subset0": "denied"
+    },
+    {
+      "id": "SPEC-LAB",
+      "surface_family": "Allowed nondeterminism, scheduling boundaries, virtual time and replay",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W08",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "D02",
+        "D03",
+        "D04",
+        "D05",
+        "D09",
+        "S14"
+      ],
+      "evidence": [],
+      "subset0": "denied"
+    },
+    {
+      "id": "SPEC-TOOL",
+      "surface_family": "Driver/compiler/linker/export/cache and source-tool admission",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W10",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "T01",
+        "T02",
+        "T03",
+        "S01",
+        "S18",
+        "S19"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-BUILD",
+      "surface_family": "Host/reference/target separation and truthful self-hosting status",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W00",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "B04",
+        "B05",
+        "S01",
+        "S15"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-STACK",
+      "surface_family": "GC roots, stack relocation, overflow and experimental stack contract",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W02",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "O07",
+        "O08",
+        "F02",
+        "F03",
+        "F04"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-ERRORS",
+      "surface_family": "Diagnostics, resource exhaustion and runtime-check versus compile-error policy",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "O04",
+        "S03",
+        "S16",
+        "S20"
+      ],
+      "evidence": [],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-FLOAT",
+      "surface_family": "Floating-point types, IEEE 754 rounding, NaN and conversion outcomes",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "S16",
+        "S17"
+      ],
+      "evidence": [],
+      "decision_refs": "D03",
+      "subset0": "denied"
+    },
+    {
+      "id": "SPEC-COMPOSITE",
+      "surface_family": "Pointers, arrays, structs, slices, maps (incl. iteration order), strings indexing/range",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "S16",
+        "S17"
+      ],
+      "evidence": [],
+      "decision_refs": "D06,D20",
+      "subset0": "denied"
+    },
+    {
+      "id": "SPEC-USERTYPE",
+      "surface_family": "User-defined named types, methods and method sets",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "S16",
+        "S17"
+      ],
+      "evidence": [],
+      "decision_refs": "D05",
+      "subset0": "denied"
+    },
+    {
+      "id": "SPEC-IFACE",
+      "surface_family": "Interfaces, dynamic dispatch, type assertions/switches and their effect summaries",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "S10",
+        "S17"
+      ],
+      "evidence": [],
+      "decision_refs": "D05",
+      "subset0": "denied"
+    },
+    {
+      "id": "SPEC-GENERIC",
+      "surface_family": "Generics, type parameters, constraints and instantiation closure",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "X10",
+        "S10",
+        "S17"
+      ],
+      "evidence": [],
+      "decision_refs": "D05",
+      "subset0": "denied"
+    },
+    {
+      "id": "SPEC-REFLECT",
+      "surface_family": "Reflection, including reflect.Select and unsafe reflection bypasses",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "S10",
+        "S12",
+        "S17"
+      ],
+      "evidence": [],
+      "decision_refs": "D05",
+      "subset0": "denied"
+    },
+    {
+      "id": "SPEC-NATIVE",
+      "surface_family": "Application-level unsafe, cgo, assembly, go:linkname, plugins and raw syscalls",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "S11",
+        "S15",
+        "S17"
+      ],
+      "evidence": [],
+      "decision_refs": "D05; plan §8.1",
+      "subset0": "denied"
+    },
+    {
+      "id": "SPEC-SYNC",
+      "surface_family": "Shared-memory synchronization: mutexes, atomics, once, wait groups and sendability",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "S16",
+        "S17"
+      ],
+      "evidence": [],
+      "decision_refs": "D01",
+      "subset0": "denied"
+    },
+    {
+      "id": "SPEC-PROC",
+      "surface_family": "Process entry/exit status, stdout/stderr, arguments and environment",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "S06",
+        "S13"
+      ],
+      "evidence": [],
+      "decision_refs": "D08,D09",
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    },
+    {
+      "id": "SPEC-TEST",
+      "surface_family": "Test harness: golden program tests (subset 0) and later a testing package",
+      "specification_work_package": "W01",
+      "implementation_owner_work_package": "W03",
+      "status": "required_not_admitted",
+      "clause_ids": [],
+      "normative_text_digest": null,
+      "admitted_in": [],
+      "acceptance_case_ids": [
+        "S01",
+        "S19"
+      ],
+      "evidence": [],
+      "decision_refs": "D10",
+      "subset0": "partial_see_SGO_SPEC_SUBSET0"
+    }
+  ],
+  "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. No row is admitted until its clauses are frozen."
+}

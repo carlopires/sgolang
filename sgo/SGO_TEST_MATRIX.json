@@ -1,0 +1,2439 @@
+{
+  "schema_version": 2,
+  "plan_version": "2.0",
+  "purpose": "Implementation acceptance scenarios, not existing executable tests or completed test results.",
+  "case_count": 147,
+  "lane_note": "Lanes are test categories, not alternate language dialects. upstream_reference and host_bootstrap are external builds, not S-Go target modes. Production/lab retain identical safety/admission rules. Shared model/typed/native cases must be instantiated per required implementation phase.",
+  "cases": [
+    {
+      "id": "B01",
+      "name": "Pinned clean bootstrap",
+      "required_for_work_packages": [
+        "W00"
+      ],
+      "execution_lanes": [
+        "upstream_reference"
+      ],
+      "scenario": "Build the unmodified exact upstream pin using the recorded bootstrap installation.",
+      "expected": "Build succeeds, tool identities point inside the checkout, and commit/checksums are retained.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "B02",
+      "name": "Independent worktree build",
+      "required_for_work_packages": [
+        "W00"
+      ],
+      "execution_lanes": [
+        "upstream_reference"
+      ],
+      "scenario": "Repeat the documented build in a clean independent worktree.",
+      "expected": "The same pinned inputs and supported behavior are obtained; generated timestamps are not falsely claimed bit-identical.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "B03",
+      "name": "Upstream baseline",
+      "required_for_work_packages": [
+        "W00"
+      ],
+      "execution_lanes": [
+        "upstream_reference"
+      ],
+      "scenario": "Run applicable distribution and targeted compiler/runtime tests before S-Go edits.",
+      "expected": "Every command and exit code is retained; environmental skips are named and distinguishable from failures.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "B04",
+      "name": "Host-target bootstrap separation",
+      "required_for_work_packages": [
+        "W00"
+      ],
+      "execution_lanes": [
+        "host_bootstrap"
+      ],
+      "scenario": "Build the stage-0 S-Go compiler with the isolated host toolchain while target S-Go fixtures exist; map every inherited self-hosting stage.",
+      "expected": "Host tools build without treating host Go as S-Go target input. No legacy frontend flag or stock target object is introduced; the stage map records the external host dependency.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "B05",
+      "name": "Toolchain selection",
+      "required_for_work_packages": [
+        "W00"
+      ],
+      "execution_lanes": [
+        "host_bootstrap"
+      ],
+      "scenario": "Place another go binary on PATH and attempt scripted host, reference, and S-Go target builds.",
+      "expected": "Each script selects its recorded tool explicitly; S-Go target operations cannot silently fall back to stock Go; all executable and artifact identities are retained.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "B06",
+      "name": "Source map audit",
+      "required_for_work_packages": [
+        "W00"
+      ],
+      "execution_lanes": [
+        "host_bootstrap"
+      ],
+      "scenario": "Resolve every original suggested patch symbol against the actual checkout.",
+      "expected": "Real edit points/callers are recorded; absent or incompatible illustrative symbols are not installed as unused stubs.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "M01",
+      "name": "Scope action enumeration",
+      "required_for_work_packages": [
+        "W01"
+      ],
+      "execution_lanes": [
+        "model"
+      ],
+      "scenario": "Enumerate bounded create/admit/finish/join/cancel/finalize histories.",
+      "expected": "Every accepted terminal state satisfies the declared ownership and obligation invariants; exploration bounds are reported.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "M02",
+      "name": "Registration mutation",
+      "required_for_work_packages": [
+        "W01"
+      ],
+      "execution_lanes": [
+        "model"
+      ],
+      "scenario": "Mutate the model to allow a child to run before admission.",
+      "expected": "The invariant oracle rejects a witness history.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "M03",
+      "name": "Premature closure mutation",
+      "required_for_work_packages": [
+        "W01"
+      ],
+      "execution_lanes": [
+        "model"
+      ],
+      "scenario": "Mutate the model to close with a live child or outstanding permit.",
+      "expected": "The oracle rejects both witnesses.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "M04",
+      "name": "Duplicate completion mutation",
+      "required_for_work_packages": [
+        "W01"
+      ],
+      "execution_lanes": [
+        "model"
+      ],
+      "scenario": "Complete one modeled task twice.",
+      "expected": "Second completion is rejected without decrementing counters again.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "M05",
+      "name": "Join admission race model",
+      "required_for_work_packages": [
+        "W01"
+      ],
+      "execution_lanes": [
+        "model"
+      ],
+      "scenario": "Explore a live child spawning a descendant while its owner begins normal join.",
+      "expected": "Either valid admission is counted before finalization or invalid admission is rejected; no admitted descendant is lost.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "O01",
+      "name": "Brace-equivalent join",
+      "required_for_work_packages": [
+        "W02"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Use the specified runtime admission primitive through internal, non-distributed conformance hooks before frontend syntax is complete.",
+      "expected": "Successful join implies no child effects afterward and no live obligations; test hooks are not a target-language legacy entry point.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "O02",
+      "name": "Nested scope ownership",
+      "required_for_work_packages": [
+        "W02"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "A child enters a nested nursery and starts grandchildren.",
+      "expected": "Owner scope and current structured scope differ correctly; nested work joins before child completion.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "O03",
+      "name": "Explicit dependency delegation",
+      "required_for_work_packages": [
+        "W02"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Call an admitted dependency helper with an explicit nursery handle; it calls the checked Spawn API.",
+      "expected": "The handle is validated and the child is registered/joined in the authorized nursery. No dynamic implicit spawn route exists.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "O04",
+      "name": "Invalid spawn capability",
+      "required_for_work_packages": [
+        "W02"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Attempt explicit spawn using nil, stale, closed, unrelated-domain, or ancestor-bypassing handles; separately test cancellation admission.",
+      "expected": "Static invalidity is rejected; state-dependent misuse yields the specified SpawnContractViolation before child publication. Cancellation follows its distinct sticky cancellation path. No unowned child starts.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "O05",
+      "name": "Descendant admission during join",
+      "required_for_work_packages": [
+        "W02"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "An already-live member holding the explicit nursery handle admits a descendant after the owner starts normal join.",
+      "expected": "The new child is admitted and joined; last-child completion cannot race past its registration.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "O06",
+      "name": "Goroutine record reuse",
+      "required_for_work_packages": [
+        "W02"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Repeatedly create/finish tasks so the runtime reuses goroutine records.",
+      "expected": "No stale scope, context, cancellation, ID, or outcome leaks into the new task.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "O07",
+      "name": "GC root pressure",
+      "required_for_work_packages": [
+        "W02"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Force collection while scopes, closures, wait records, and pointer payloads are otherwise reachable only through intended runtime ownership.",
+      "expected": "All live objects survive and are released after quiescence; the documented root paths are exercised.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "O08",
+      "name": "Movable parent stack",
+      "required_for_work_packages": [
+        "W02"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Grow/shrink parent stacks while a nursery and its children remain live.",
+      "expected": "Scope state remains valid; no dangling parent-stack pointer or stale frame marker is observed.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "O09",
+      "name": "Join visibility",
+      "required_for_work_packages": [
+        "W02"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Each child writes disjoint state and completes; the owner reads after join.",
+      "expected": "All writes are visible with legitimate synchronization; race instrumentation does not report a false join race.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "O10",
+      "name": "Runtime service separation",
+      "required_for_work_packages": [
+        "W02"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Run GC/runtime services together with user and dependency task creation.",
+      "expected": "Every service task uses a sealed primitive with a specification and lifecycle record. User/dependency tasks cannot forge the service identity or acquire an exemption.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "X01",
+      "name": "Single-language lexer and rejection gate",
+      "required_for_work_packages": [
+        "W03"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production"
+      ],
+      "scenario": "Parse admitted nursery forms; attempt a legacy keyword mode, bare go inside/outside a nursery, and unadmitted inherited constructs.",
+      "expected": "Nursery keyword/token metadata is coherent. Bare go is rejected with SGO_E_UNSTRUCTURED_SPAWN; no compatibility parser mode or unregistered accepted node exists.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "X02",
+      "name": "Distinct nursery capability binder",
+      "required_for_work_packages": [
+        "W03"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production"
+      ],
+      "scenario": "Test named/anonymous nursery, missing/aliased import, shadowing, invalid expressions, reassignment, and passing a task Context where a Nursery is required.",
+      "expected": "The named binding has the distinct opaque nursery capability type. Invalid forms and context-to-nursery conversions fail with source-positioned diagnostics; import/binding rules match frozen clauses.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "X03",
+      "name": "All source surfaces",
+      "required_for_work_packages": [
+        "W03"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production"
+      ],
+      "scenario": "Round-trip a nursery file through fork parser/AST/printer/formatter/type-checker APIs.",
+      "expected": "The construct, contract identity, and source positions survive. Shipped build-facing source tools agree on S-Go acceptance and reject legacy/unadmitted forms.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "X04",
+      "name": "Normal block exit",
+      "required_for_work_packages": [
+        "W03"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production"
+      ],
+      "scenario": "Execute statements after a nursery in the same function.",
+      "expected": "Children and scope finalizers finish before the first following statement.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "X05",
+      "name": "Return operands and named results",
+      "required_for_work_packages": [
+        "W03"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production"
+      ],
+      "scenario": "Use side-effecting multiple return operands, named results, and enclosing function defers across a nursery exit.",
+      "expected": "Operands evaluate once in the frozen S-Go evaluation order; joins occur before return completion; defers can modify named results as specified.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "X06",
+      "name": "Nested return",
+      "required_for_work_packages": [
+        "W03"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production"
+      ],
+      "scenario": "Return across two nested nurseries.",
+      "expected": "The inner nursery closes before the outer; each scope closes once.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "X07",
+      "name": "Labeled break and continue",
+      "required_for_work_packages": [
+        "W03"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production"
+      ],
+      "scenario": "Exercise inward-staying and outward labeled loop transfers.",
+      "expected": "Only the scopes exited by the selected transfer are joined, in inside-out order.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "X08",
+      "name": "Goto boundaries",
+      "required_for_work_packages": [
+        "W03"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production"
+      ],
+      "scenario": "Attempt goto into a nursery; also execute legal outward gotos and re-entry through loops.",
+      "expected": "Inward entry is rejected; outward edges close exactly once; each re-entered nursery has a new identity.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "X09",
+      "name": "Ordinary defer versus scope finalizer",
+      "required_for_work_packages": [
+        "W03"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production"
+      ],
+      "scenario": "Register ordinary defers and scope finalizers inside nested nurseries.",
+      "expected": "Scope finalizers run LIFO after child join; ordinary defers remain function-scoped and retain relative LIFO order.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "X10",
+      "name": "Export, generics, and inlining",
+      "required_for_work_packages": [
+        "W03"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production"
+      ],
+      "scenario": "Export generic functions containing nurseries and call them across packages with normal optimization and disabled inlining.",
+      "expected": "Both configurations agree; Unified IR import/export and source positions remain valid.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "X11",
+      "name": "Closures and captures",
+      "required_for_work_packages": [
+        "W03"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production"
+      ],
+      "scenario": "Capture nursery-visible variables in child closures, including values that must escape.",
+      "expected": "Lifetime/escape analysis is correct; compiler-generated temporaries do not collide or force unsafe stack residence.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "X12",
+      "name": "Exceptional frame movement",
+      "required_for_work_packages": [
+        "W03"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production"
+      ],
+      "scenario": "Grow the stack with active nursery unwind markers and then panic or the specified task-exit operation.",
+      "expected": "The correct lexical scopes are found and drained; relocation metadata is valid.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "P01",
+      "name": "Single escaping child panic",
+      "required_for_work_packages": [
+        "W03",
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess"
+      ],
+      "scenario": "A child panics with a distinguishable payload and siblings have cleanup.",
+      "expected": "Siblings are cancelled and drained; their defers complete; parent join re-panics with the original payload.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "P02",
+      "name": "Recovered child panic",
+      "required_for_work_packages": [
+        "W03",
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess"
+      ],
+      "scenario": "A child helper recovers a panic before it escapes the task.",
+      "expected": "No false nursery failure/cancellation is published for that recovered panic.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "P03",
+      "name": "Multiple escaping panics",
+      "required_for_work_packages": [
+        "W03",
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess"
+      ],
+      "scenario": "Make multiple children panic before drain completes.",
+      "expected": "All outcomes are retained; primary selection follows stable task creation ID, not host timestamp.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "P04",
+      "name": "Owner panic precedence",
+      "required_for_work_packages": [
+        "W03",
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess"
+      ],
+      "scenario": "The owner panics while children also fail during drain.",
+      "expected": "The original owner panic remains primary; child/finalizer failures are secondary diagnostics.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "P05",
+      "name": "Nil and replacement panics",
+      "required_for_work_packages": [
+        "W03",
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess"
+      ],
+      "scenario": "Exercise panic(nil), panic during defer, and recover followed by another panic.",
+      "expected": "Normal completion is not inferred from recover returning nil; final escaping outcome is classified correctly.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "P06",
+      "name": "Specified task exit and test failure",
+      "required_for_work_packages": [
+        "W03",
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess"
+      ],
+      "scenario": "Call sgo.ExitTask inside owned work; exercise a contracted test-runner failure path; separately attempt raw runtime.Goexit.",
+      "expected": "Scopes drain before the specified task exit; failure remains failure. Raw unadmitted runtime.Goexit is rejected, not treated as automatically available.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "P07",
+      "name": "Owner blocked during child failure",
+      "required_for_work_packages": [
+        "W03",
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess"
+      ],
+      "scenario": "The owner waits inside the nursery body while a child fails.",
+      "expected": "Cancellation reaches the active nursery of the owner as well as siblings; the owner does not wait forever because only ownerScope was checked.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "P08",
+      "name": "Recovery after nursery unwind",
+      "required_for_work_packages": [
+        "W03",
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess"
+      ],
+      "scenario": "An enclosing function defer recovers a panic after nursery cleanup.",
+      "expected": "Affected nurseries are already drained; defer order and recovery semantics match the chosen language contract.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "C01",
+      "name": "Cancel before registration",
+      "required_for_work_packages": [
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess",
+        "production_stress"
+      ],
+      "scenario": "Request cancellation before a managed operation registers a waiter.",
+      "expected": "Operation reports cancellation without a wait registration or effect.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "C02",
+      "name": "Cancel before park window",
+      "required_for_work_packages": [
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess",
+        "production_stress"
+      ],
+      "scenario": "Inject cancellation between the initial check, registration, and atomic park handshake.",
+      "expected": "No lost wakeup; exactly one terminal waiter disposition.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "C03",
+      "name": "Cancel versus readiness",
+      "required_for_work_packages": [
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess",
+        "production_stress"
+      ],
+      "scenario": "Race cancellation against operation completion/readiness.",
+      "expected": "One terminal winner, no duplicate wake, and returned progress matches the winner.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "C04",
+      "name": "Repeated cancellation",
+      "required_for_work_packages": [
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess",
+        "production_stress"
+      ],
+      "scenario": "Issue duplicate requests with different later causes.",
+      "expected": "Cancellation is idempotent; original cause identity and budget remain intact.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "C05",
+      "name": "Nested inherited cancellation",
+      "required_for_work_packages": [
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess",
+        "production_stress"
+      ],
+      "scenario": "Cancel an outer scope while execution is inside an inner nursery.",
+      "expected": "Inner cleanup runs but cannot consume the ancestor-targeted signal; propagation remains sticky.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "C06",
+      "name": "Cancelled admission",
+      "required_for_work_packages": [
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess",
+        "production_stress"
+      ],
+      "scenario": "A child attempts to start new children after cancellation is published.",
+      "expected": "Admission is rejected before the new child becomes runnable.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "C07",
+      "name": "Cleanup shielding and quota",
+      "required_for_work_packages": [
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess",
+        "production_stress"
+      ],
+      "scenario": "A scope finalizer uses a cleanup context and attempts to reset budget or spawn.",
+      "expected": "Necessary cleanup may proceed within remaining allowance; reset/escalation/spawn is denied.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "C08",
+      "name": "Timer lifecycle",
+      "required_for_work_packages": [
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess",
+        "production_stress"
+      ],
+      "scenario": "Cancel/reset/expire managed sleep/deadline operations under repeated races.",
+      "expected": "No stale timer wakes a completed or recycled task; terminal timer records are removed.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "C09",
+      "name": "Non-cooperative task",
+      "required_for_work_packages": [
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess",
+        "production_stress"
+      ],
+      "scenario": "Run an owned infinite loop or uninterruptible test operation under the host runner.",
+      "expected": "A non-success watchdog/contract result terminates the process; the program never reports successful nursery closure.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "C10",
+      "name": "Sticky recovered cancellation",
+      "required_for_work_packages": [
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess",
+        "production_stress"
+      ],
+      "scenario": "Recover cancellation and attempt another supported blocking effect or new task.",
+      "expected": "Cancellation remains effective; no new authority/admission is created by recovery.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "C11",
+      "name": "Primary failure during cleanup",
+      "required_for_work_packages": [
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess",
+        "production_stress"
+      ],
+      "scenario": "Make cleanup fail while a primary child/owner failure is pending.",
+      "expected": "The primary is retained and cleanup failure is recorded; all resolvable obligations are finalized.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "A01",
+      "name": "Missing authority",
+      "required_for_work_packages": [
+        "W05"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "policy_negative"
+      ],
+      "scenario": "Attempt each supported effect without its required grant.",
+      "expected": "Denial occurs before a visible effect or resource creation.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "A02",
+      "name": "Attenuation",
+      "required_for_work_packages": [
+        "W05"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "policy_negative"
+      ],
+      "scenario": "Give a child a narrower path/operation/endpoint grant and attempt the parent-level effect.",
+      "expected": "The child cannot regain the broader authority through a copied context or public constructor.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "A03",
+      "name": "Expired and revoked handle",
+      "required_for_work_packages": [
+        "W05"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "policy_negative"
+      ],
+      "scenario": "Use a grant after revocation, expiry, or owning scope closure.",
+      "expected": "Forbidden effects fail before execution; immutable result inspection remains allowed where specified.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "A04",
+      "name": "Cross-domain handle",
+      "required_for_work_packages": [
+        "W05"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "policy_negative"
+      ],
+      "scenario": "Pass a capability from another lab/host execution domain.",
+      "expected": "Domain mismatch is detected without using the foreign resource.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "A05",
+      "name": "Hidden dependency effect",
+      "required_for_work_packages": [
+        "W05"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "policy_negative"
+      ],
+      "scenario": "Call a forbidden effect through a transitive dependency, callback, function value, or init path.",
+      "expected": "Transitive checking/runtime guardrails prevent the bypass; the TCB does not expand implicitly.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "A06",
+      "name": "Unsafe escape hatches",
+      "required_for_work_packages": [
+        "W05"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "policy_negative"
+      ],
+      "scenario": "Build S-Go target code with cgo, assembly, unsafe, linkname, plugin loading, or raw syscall escape paths.",
+      "expected": "All uncontracted application escape routes are rejected in production and lab. No flag, package name, unsafe marker, or alternate profile can enable them.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "A07",
+      "name": "Uncontrolled cleanup callback",
+      "required_for_work_packages": [
+        "W05"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "policy_negative"
+      ],
+      "scenario": "Register an uncontrolled user runtime finalizer/cleanup in S-Go production or lab execution.",
+      "expected": "The uncontracted callback path is rejected. There is no warning-only or outside-guarantees execution within S-Go.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "A08",
+      "name": "Separate entropy sources",
+      "required_for_work_packages": [
+        "W05"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "policy_negative"
+      ],
+      "scenario": "Use test randomness in lab and request cryptographic randomness in production.",
+      "expected": "Replayable randomness is deterministic; production security randomness is never silently substituted by the scheduler PRNG.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "A09",
+      "name": "TCB confusion",
+      "required_for_work_packages": [
+        "W05"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "policy_negative"
+      ],
+      "scenario": "Name a user package or symbol like an allowlisted internal entry point.",
+      "expected": "Authorization uses verified package/symbol provenance, not a printed name match.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "A10",
+      "name": "Mutable authority alias",
+      "required_for_work_packages": [
+        "W05"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "policy_negative"
+      ],
+      "scenario": "Retain aliases to a grant/context and attempt to mutate the parent ceiling through child state.",
+      "expected": "Authority cannot be escalated and concurrent access is synchronized.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "R01",
+      "name": "Readiness success",
+      "required_for_work_packages": [
+        "W05"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Use the explicit nursery-authorized readiness API to start a child, delay its ready notification, then release it.",
+      "expected": "Start waits for exactly one ready signal and the child remains registered in its nursery.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "R02",
+      "name": "Failure before readiness",
+      "required_for_work_packages": [
+        "W05"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Fail or cancel the child before ready.",
+      "expected": "The waiting parent wakes with the correct failure/cancellation and no detached child.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "R03",
+      "name": "Duplicate readiness",
+      "required_for_work_packages": [
+        "W05"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Notify ready twice through aliases.",
+      "expected": "The second notification is diagnosed without changing the accepted readiness outcome.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "R04",
+      "name": "Start cancel race",
+      "required_for_work_packages": [
+        "W05"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Race parent cancellation with child admission and readiness.",
+      "expected": "No successful start is reported for unowned work; every admitted child remains accounted for and drains.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "H01",
+      "name": "Buffered capacity invariant",
+      "required_for_work_packages": [
+        "W06",
+        "W07"
+      ],
+      "execution_lanes": [
+        "model",
+        "typed_channel",
+        "strict_native"
+      ],
+      "scenario": "Enumerate sends/receives/reservations with capacities one and two.",
+      "expected": "Queued plus reserved send capacity never exceeds capacity and visible FIFO order is preserved.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "H02",
+      "name": "Zero-capacity rendezvous",
+      "required_for_work_packages": [
+        "W06",
+        "W07"
+      ],
+      "execution_lanes": [
+        "model",
+        "typed_channel",
+        "strict_native"
+      ],
+      "scenario": "Pair and cancel unbuffered send/receive operations.",
+      "expected": "A separate handshake arbitrates both peers; no modulo-zero path or unmatched successful publication occurs.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "H03",
+      "name": "Reserve then abort",
+      "required_for_work_packages": [
+        "W06",
+        "W07"
+      ],
+      "execution_lanes": [
+        "model",
+        "typed_channel",
+        "strict_native"
+      ],
+      "scenario": "Reserve capacity, abort, and immediately attempt another send.",
+      "expected": "Capacity is restored exactly once and no value was published.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "H04",
+      "name": "Permit aliases",
+      "required_for_work_packages": [
+        "W06",
+        "W07"
+      ],
+      "execution_lanes": [
+        "model",
+        "typed_channel",
+        "strict_native"
+      ],
+      "scenario": "Copy/alias a permit and attempt duplicate commit, double abort, and commit-after-abort.",
+      "expected": "Aliases share one terminal state and no duplicate effect/capacity change occurs.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "H05",
+      "name": "Cross-task permit misuse",
+      "required_for_work_packages": [
+        "W06",
+        "W07"
+      ],
+      "execution_lanes": [
+        "model",
+        "typed_channel",
+        "strict_native"
+      ],
+      "scenario": "Another task attempts to use a task-affine permit.",
+      "expected": "Misuse is rejected; ownership is not silently transferred.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "H06",
+      "name": "Cancel before commit",
+      "required_for_work_packages": [
+        "W06",
+        "W07"
+      ],
+      "execution_lanes": [
+        "model",
+        "typed_channel",
+        "strict_native"
+      ],
+      "scenario": "Inject cancellation after reserve but before commit arbitration.",
+      "expected": "Abort wins when ordered first; the explicit result reports no effect and retains publication responsibility.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "H07",
+      "name": "Cancel after commit",
+      "required_for_work_packages": [
+        "W06",
+        "W07"
+      ],
+      "execution_lanes": [
+        "model",
+        "typed_channel",
+        "strict_native"
+      ],
+      "scenario": "Inject cancellation immediately after publication linearizes.",
+      "expected": "The send is still reported successful and the published value appears exactly once.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "H08",
+      "name": "Close versus commit",
+      "required_for_work_packages": [
+        "W06",
+        "W07"
+      ],
+      "execution_lanes": [
+        "model",
+        "typed_channel",
+        "strict_native"
+      ],
+      "scenario": "Explore both orderings of close and send publication.",
+      "expected": "Close-first has the specified no-effect/closed outcome; commit-first retains the published item.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "H09",
+      "name": "Panic with permit",
+      "required_for_work_packages": [
+        "W06",
+        "W07"
+      ],
+      "execution_lanes": [
+        "model",
+        "typed_channel",
+        "strict_native"
+      ],
+      "scenario": "Panic after reserving but before committing.",
+      "expected": "Reservation is released before task completion; no capacity or GC reference leak remains.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "H10",
+      "name": "Owner exits with permit",
+      "required_for_work_packages": [
+        "W06",
+        "W07"
+      ],
+      "execution_lanes": [
+        "model",
+        "typed_channel",
+        "strict_native"
+      ],
+      "scenario": "Owner finishes its body while retaining an unused reservation needed by a child.",
+      "expected": "The exiting body reservation is aborted before join, allowing the child to make progress.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "H11",
+      "name": "Pointer value lifetime",
+      "required_for_work_packages": [
+        "W06",
+        "W07"
+      ],
+      "execution_lanes": [
+        "model",
+        "typed_channel",
+        "strict_native"
+      ],
+      "scenario": "Send pointer-rich values under GC pressure and abort competing reservations.",
+      "expected": "Live values survive until delivery; aborted/consumed references are cleared at the right time.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "H12",
+      "name": "Conservation under stress",
+      "required_for_work_packages": [
+        "W06",
+        "W07"
+      ],
+      "execution_lanes": [
+        "model",
+        "typed_channel",
+        "strict_native"
+      ],
+      "scenario": "Record unique payload IDs across concurrent send/receive/close/cancel histories.",
+      "expected": "Each successful publication is accounted for exactly once; no-effect outcomes do not appear in the receive history.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "N01",
+      "name": "Select single winner",
+      "required_for_work_packages": [
+        "W07"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Make multiple cases ready simultaneously and cancel competing cases.",
+      "expected": "Exactly one user case/effect wins; all losing registrations are removed.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "N02",
+      "name": "Select evaluation order",
+      "required_for_work_packages": [
+        "W07"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Use side effects in channel operands and send values.",
+      "expected": "Each operand/value evaluates once in the specified order, regardless of selected case.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "N03",
+      "name": "Nil, default, and empty select",
+      "required_for_work_packages": [
+        "W07"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Exercise nil channel send/receive, default, and an empty select with cancellation.",
+      "expected": "Normal readiness rules are preserved; cancellation does not fabricate a received zero value or execute a default incorrectly.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "N04",
+      "name": "Close semantics",
+      "required_for_work_packages": [
+        "W07"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Test send on closed, drain buffered closed channel, and closed receive comma-ok.",
+      "expected": "Outcomes follow frozen S-Go close/send/receive clauses. Cancellation remains distinct from channel closure; no raw Go channel path is selected.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "N05",
+      "name": "Reflection and range",
+      "required_for_work_packages": [
+        "W07"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Use reflect.Select, channel range, directional channels, and generic helper paths.",
+      "expected": "All relevant paths preserve ownership/domain/cancel contracts or explicitly reject an advertised-unsupported surface before claiming support.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "N06",
+      "name": "Duplicate channel cases",
+      "required_for_work_packages": [
+        "W07"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Select on multiple cases referring to the same channel.",
+      "expected": "No self-deadlock, duplicate commitment, or leaked loser waiter occurs.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "N07",
+      "name": "Channel memory ordering",
+      "required_for_work_packages": [
+        "W07"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Run litmus tests for buffered/unbuffered/close synchronization and join.",
+      "expected": "The required happens-before relations are maintained and correctly represented to race instrumentation.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "N08",
+      "name": "Cancellation signal and recovery",
+      "required_for_work_packages": [
+        "W07"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Cancel a blocked native send/receive and deliberately recover the internal signal.",
+      "expected": "The waiter is removed before signal delivery; cancellation stays sticky; no fabricated data or dropped committed value.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "N09",
+      "name": "Fast path and stack movement",
+      "required_for_work_packages": [
+        "W07"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Exercise optimized native operations under GC/stack copying and goroutine reuse.",
+      "expected": "No bypass of managed protocol, stale stack pointer, or domain confusion occurs.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "D01",
+      "name": "PRNG vectors and stream isolation",
+      "required_for_work_packages": [
+        "W08"
+      ],
+      "execution_lanes": [
+        "lab",
+        "subprocess"
+      ],
+      "scenario": "Check PCG initialization, rotation, bounded sampling, and independent scheduler/data/fault streams.",
+      "expected": "Known/reference vectors match and changing test-data draws does not consume the scheduler stream.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "D02",
+      "name": "Repeatable process runs",
+      "required_for_work_packages": [
+        "W08"
+      ],
+      "execution_lanes": [
+        "lab",
+        "subprocess"
+      ],
+      "scenario": "Execute identical manifests in fresh processes repeatedly.",
+      "expected": "Canonical managed-event traces and semantic outcomes match; host metadata is kept outside the canonical trace.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "D03",
+      "name": "Ready-set trace",
+      "required_for_work_packages": [
+        "W08"
+      ],
+      "execution_lanes": [
+        "lab",
+        "subprocess"
+      ],
+      "scenario": "Record each scheduling and select choice then replay.",
+      "expected": "Replay validates eligible sets and chooses the recorded task/case, not a newly randomized alternative.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "D04",
+      "name": "Manifest mismatch",
+      "required_for_work_packages": [
+        "W08"
+      ],
+      "execution_lanes": [
+        "lab",
+        "subprocess"
+      ],
+      "scenario": "Change binary, source, flags, fixture, capability policy, architecture, or trace version.",
+      "expected": "Replay rejects incompatible inputs before silently running a different experiment.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "D05",
+      "name": "Impossible choice divergence",
+      "required_for_work_packages": [
+        "W08"
+      ],
+      "execution_lanes": [
+        "lab",
+        "subprocess"
+      ],
+      "scenario": "Alter a recorded choice to an ineligible task or case.",
+      "expected": "Replay stops at the first divergence with expected/actual sets and last matching event; no fallback occurs.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "D06",
+      "name": "Virtual time and timer ties",
+      "required_for_work_packages": [
+        "W08"
+      ],
+      "execution_lanes": [
+        "lab",
+        "subprocess"
+      ],
+      "scenario": "Block all tasks on timers including equal deadlines.",
+      "expected": "Time jumps to the next event and tie ordering is canonical; no wall-clock sleep determines user order.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "D07",
+      "name": "Runnable work and time",
+      "required_for_work_packages": [
+        "W08"
+      ],
+      "execution_lanes": [
+        "lab",
+        "subprocess"
+      ],
+      "scenario": "Keep a task runnable while another awaits a virtual deadline.",
+      "expected": "Virtual time is not falsely advanced; checkpoint/event quota bounds the scheduled run.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "D08",
+      "name": "Managed deadlock",
+      "required_for_work_packages": [
+        "W08"
+      ],
+      "execution_lanes": [
+        "lab",
+        "subprocess"
+      ],
+      "scenario": "Create a closed wait graph with no runnable task or pending event.",
+      "expected": "A managed deadlock diagnostic includes live scope/operation identities, distinct from quota exhaustion.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "D09",
+      "name": "Unsupported effect denial",
+      "required_for_work_packages": [
+        "W08"
+      ],
+      "execution_lanes": [
+        "lab",
+        "subprocess"
+      ],
+      "scenario": "Attempt real I/O, wall-clock/entropy access, uncontrolled map iteration, or foreign callbacks.",
+      "expected": "UnsupportedLabEffect is raised or compilation rejects the path; no warning-only continuation claims replay.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "D10",
+      "name": "GC and runtime interference",
+      "required_for_work_packages": [
+        "W08"
+      ],
+      "execution_lanes": [
+        "lab",
+        "subprocess"
+      ],
+      "scenario": "Repeat supported runs with deliberate allocation/GC pressure.",
+      "expected": "Runtime activity does not change canonical eligible user decisions or effect outcomes under the recorded configuration.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "D11",
+      "name": "Host watchdog separation",
+      "required_for_work_packages": [
+        "W08"
+      ],
+      "execution_lanes": [
+        "lab",
+        "subprocess"
+      ],
+      "scenario": "Run an uninstrumented hang and an instrumented quota-exhausting loop.",
+      "expected": "The former is a host-hang sidecar failure; the latter has a deterministic managed budget outcome.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "D12",
+      "name": "Trace integrity",
+      "required_for_work_packages": [
+        "W08"
+      ],
+      "execution_lanes": [
+        "lab",
+        "subprocess"
+      ],
+      "scenario": "Truncate or corrupt the header, event stream, or footer.",
+      "expected": "Reader/replay detects missing completion/integrity and never reports a successful complete replay.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "D13",
+      "name": "Find and replay a bug",
+      "required_for_work_packages": [
+        "W08"
+      ],
+      "execution_lanes": [
+        "lab",
+        "subprocess"
+      ],
+      "scenario": "Sweep seeds over a deliberate boundary-ordering bug and save the first failure.",
+      "expected": "A reproducible failure artifact is retained; a fresh process replays it; the fixed implementation passes the corresponding regression.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "I01",
+      "name": "Confined path resolution",
+      "required_for_work_packages": [
+        "W09"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "controlled_host_io"
+      ],
+      "scenario": "Attempt traversal, prefix-confusion, symlink escape, and relevant concurrent path changes.",
+      "expected": "The file capability cannot access outside its grant; no naive string-prefix authorization is accepted.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "I02",
+      "name": "Network scope",
+      "required_for_work_packages": [
+        "W09"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "controlled_host_io"
+      ],
+      "scenario": "Use allowed and forbidden endpoints plus redirects/reconnects where supported.",
+      "expected": "Every new connection/effect passes the declared capability policy; later connections do not bypass the initial grant.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "I03",
+      "name": "Partial reads and writes",
+      "required_for_work_packages": [
+        "W09"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "controlled_host_io"
+      ],
+      "scenario": "Inject short transfers and cancellation after known byte counts.",
+      "expected": "Results report actual progress and distinguish retryable no-effect from partial effects.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "I04",
+      "name": "Shared-handle cancellation",
+      "required_for_work_packages": [
+        "W09"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "controlled_host_io"
+      ],
+      "scenario": "Cancel one operation while another task owns/uses a related handle.",
+      "expected": "Cancellation/close behavior follows explicit ownership and does not silently destroy unrelated work.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "I05",
+      "name": "Close and reuse",
+      "required_for_work_packages": [
+        "W09"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "controlled_host_io"
+      ],
+      "scenario": "Race resource close, pending completion, and handle/descriptor reuse.",
+      "expected": "Stale completions cannot operate on a new resource generation.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "I06",
+      "name": "Real/fake adapter contract",
+      "required_for_work_packages": [
+        "W09"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "controlled_host_io"
+      ],
+      "scenario": "Run matching bounded scenarios through simulated and controlled real adapters.",
+      "expected": "Normalized outcomes/progress satisfy the same contract; timing need not be falsely identical.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "I07",
+      "name": "Unsupported blocking host operation",
+      "required_for_work_packages": [
+        "W09"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "controlled_host_io"
+      ],
+      "scenario": "Invoke a host operation without a safe managed cancellation contract.",
+      "expected": "The uncontracted host operation is rejected. An admitted adapter may execute only with its explicit containment, progress, and cancellation contract; dropping a waiter is never reported as stopping the operation.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "T01",
+      "name": "Spec and host-target artifact isolation",
+      "required_for_work_packages": [
+        "W10"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "lab",
+        "tooling"
+      ],
+      "scenario": "Try mixed spec/ABI/admission digests, stock Go archives, host implementation objects, production/lab adapters, and stale dependency contracts.",
+      "expected": "All mismatched or uncontracted objects are rejected before execution. No fallback, header-only relabeling, or cache contamination enables linking.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "T02",
+      "name": "Seed cannot upgrade a production artifact",
+      "required_for_work_packages": [
+        "W10"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "lab",
+        "tooling"
+      ],
+      "scenario": "Set GOLABSEED on an S-Go production artifact without required lab instrumentation/adapters.",
+      "expected": "The combination is rejected and no replay guarantee is reported. Ownership/effect/admission checks remain mandatory; no compatibility binary exists.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "T03",
+      "name": "Format and typecheck integration",
+      "required_for_work_packages": [
+        "W10"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "lab",
+        "tooling"
+      ],
+      "scenario": "Run the distributed formatter/parser/type checker over positive and negative nursery fixtures.",
+      "expected": "All shipped source tools agree on enabled syntax and diagnostics; unsupported external LSP behavior is documented.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "T04",
+      "name": "Per-test root ownership",
+      "required_for_work_packages": [
+        "W10"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "lab",
+        "tooling"
+      ],
+      "scenario": "Run tests that spawn managed work, fail, and attempt cross-test sharing.",
+      "expected": "Each test has an audited lifetime root; failed tests drain or terminate; tasks cannot leak across test domains.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "T05",
+      "name": "Adopted conformance versus external reference",
+      "required_for_work_packages": [
+        "W10"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "lab",
+        "tooling"
+      ],
+      "scenario": "Map inherited test expectations to explicit S-Go clauses; run admitted tests with S-Go and the untouched suite separately with the reference toolchain.",
+      "expected": "Intentional Go incompatibility is accepted as a design difference or a S-Go rejection test. No target legacy lane is added to keep upstream tests green; unexplained failures of admitted clauses block release.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "T06",
+      "name": "Three executable examples",
+      "required_for_work_packages": [
+        "W10"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "lab",
+        "tooling"
+      ],
+      "scenario": "Build/run pipeline, readiness service, and injected-failure replay examples from a clean installation.",
+      "expected": "All examples assert quiescence and their expected outcomes; replay example is independently reproducible.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "T07",
+      "name": "Performance evidence",
+      "required_for_work_packages": [
+        "W10"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "lab",
+        "tooling"
+      ],
+      "scenario": "Benchmark equivalent workloads with recorded compiler/spec/host and repeated samples.",
+      "expected": "Raw samples, allocation/resource measurements, and uncertainty are retained; no unmeasured speedup claims.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "T08",
+      "name": "Target qualification",
+      "required_for_work_packages": [
+        "W10"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "lab",
+        "tooling"
+      ],
+      "scenario": "Build and execute the conformance subset natively on each advertised target.",
+      "expected": "Cross-compilation alone is not used as runtime-support evidence.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "F01",
+      "name": "Memory-state layout",
+      "required_for_work_packages": [
+        "W11"
+      ],
+      "execution_lanes": [
+        "experimental_fixed_stack",
+        "sgo_growable_stack_reference"
+      ],
+      "scenario": "Inspect and test reserved, accessible, guarded, and resident stack regions.",
+      "expected": "Layout matches OS/runtime contracts; no sysAlloc-as-PROT_NONE assumption remains.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "F02",
+      "name": "Large frame and overflow",
+      "required_for_work_packages": [
+        "W11"
+      ],
+      "execution_lanes": [
+        "experimental_fixed_stack",
+        "sgo_growable_stack_reference"
+      ],
+      "scenario": "Use deep recursion and large frames that could cross a guard region.",
+      "expected": "Overflow is controlled without writing into unrelated memory; guard-skipping is prevented.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "F03",
+      "name": "Preemption and GC progress",
+      "required_for_work_packages": [
+        "W11"
+      ],
+      "execution_lanes": [
+        "experimental_fixed_stack",
+        "sgo_growable_stack_reference"
+      ],
+      "scenario": "Run CPU loops with GC, cancellation monitoring, and scheduler pressure.",
+      "expected": "Stack changes do not remove required safepoints/preemption or block collector progress.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "F04",
+      "name": "Unwind and traceback",
+      "required_for_work_packages": [
+        "W11"
+      ],
+      "execution_lanes": [
+        "experimental_fixed_stack",
+        "sgo_growable_stack_reference"
+      ],
+      "scenario": "Exercise panic, recover, the specified task-exit operation, nested nurseries, and profiling on the candidate stack model.",
+      "expected": "Unwind/traceback and scope barriers remain correct.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "F05",
+      "name": "System and signal stack isolation",
+      "required_for_work_packages": [
+        "W11"
+      ],
+      "execution_lanes": [
+        "experimental_fixed_stack",
+        "sgo_growable_stack_reference"
+      ],
+      "scenario": "Exercise signals/runtime service work while experimental user stacks are active.",
+      "expected": "g0/signal stacks retain the validated upstream path unless separately qualified.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "F06",
+      "name": "Idle task density",
+      "required_for_work_packages": [
+        "W11"
+      ],
+      "execution_lanes": [
+        "experimental_fixed_stack",
+        "sgo_growable_stack_reference"
+      ],
+      "scenario": "Create increasing numbers of mostly idle tasks under recorded limits.",
+      "expected": "Report virtual space, RSS, mappings, commit/page-table overhead, and clean exhaustion behavior.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "F07",
+      "name": "Stack reuse",
+      "required_for_work_packages": [
+        "W11"
+      ],
+      "execution_lanes": [
+        "experimental_fixed_stack",
+        "sgo_growable_stack_reference"
+      ],
+      "scenario": "Recycle experimental stacks and run pointer-rich workloads with GC pressure.",
+      "expected": "No stale data/reference/state reuse or incorrect accounting.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "F08",
+      "name": "Adoption decision",
+      "required_for_work_packages": [
+        "W11"
+      ],
+      "execution_lanes": [
+        "experimental_fixed_stack",
+        "sgo_growable_stack_reference"
+      ],
+      "scenario": "Compare preregistered representative workloads with the growable-stack baseline.",
+      "expected": "Adopt only after correctness and meaningful benefit; otherwise record an evidence-backed not-adopted/deferred outcome.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "Q01",
+      "name": "Independent invariant review",
+      "required_for_work_packages": [
+        "W12"
+      ],
+      "execution_lanes": [
+        "release_review"
+      ],
+      "scenario": "Review actual diffs, root paths, lock order, unwind barriers, policies, and claims from a fresh context.",
+      "expected": "All correctness/claim blockers are resolved or the release is explicitly withheld.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "Q02",
+      "name": "Negative fixture validation",
+      "required_for_work_packages": [
+        "W12"
+      ],
+      "execution_lanes": [
+        "release_review"
+      ],
+      "scenario": "Verify representative intentional orphan/duplicate-commit/bypass/replay-divergence fixtures.",
+      "expected": "They fail for the intended reason; no false-green harness suppresses them.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "Q03",
+      "name": "Clean release reproduction",
+      "required_for_work_packages": [
+        "W12"
+      ],
+      "execution_lanes": [
+        "release_review"
+      ],
+      "scenario": "Use release instructions/checksums in a clean environment.",
+      "expected": "The supported toolchain/examples/replay can be built/run without hidden local state.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "Q04",
+      "name": "Guarantee traceability",
+      "required_for_work_packages": [
+        "W12"
+      ],
+      "execution_lanes": [
+        "release_review"
+      ],
+      "scenario": "Compare every published guarantee with task/test/evidence status.",
+      "expected": "Every accepted feature and published guarantee has normative clauses, enforcement, and executed evidence. Unknown/unimplemented features are rejected, not merely listed outside guarantees; stack and bootstrap identities are explicit.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S01",
+      "name": "No legacy flags or defaults",
+      "required_for_work_packages": [
+        "W00",
+        "W03",
+        "W10"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "policy_negative"
+      ],
+      "scenario": "Invoke the driver, compiler, and linker with legacy/permissive flags, source pragmas, special filenames, and environment overrides.",
+      "expected": "Every public path enforces the single S-Go language; attempts to enable old semantics fail. Unsupported CLI settings cannot default to stock Go.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S02",
+      "name": "Closed inventory completeness",
+      "required_for_work_packages": [
+        "W01",
+        "W03"
+      ],
+      "execution_lanes": [
+        "model",
+        "compiler"
+      ],
+      "scenario": "Compare the admission registry against actual expression/statement/type/IR dispatch, builtins, exports, and intrinsic entry points; add an unregistered feature in a mutation.",
+      "expected": "Every accepted surface maps to frozen clauses and enforcement; the mutated omission blocks admission. Inventory is not a manually selected examples-only list.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S03",
+      "name": "Missing or draft clause denial",
+      "required_for_work_packages": [
+        "W01",
+        "W03"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "policy_negative"
+      ],
+      "scenario": "Remove a normative clause, leave a TODO, create conflicting versions, or reference an unresolved clause dependency.",
+      "expected": "Affected syntax/import/intrinsic is rejected with the exact missing/conflicting clause identity; upstream behavior is not used as a fallback.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S04",
+      "name": "Deliberate upstream clause adoption",
+      "required_for_work_packages": [
+        "W01",
+        "W12"
+      ],
+      "execution_lanes": [
+        "model",
+        "release_review"
+      ],
+      "scenario": "Adopt a specific frozen upstream clause, then change its content or omit a normative dependency; also try a blanket same-as-Go rule.",
+      "expected": "Only a bounded, digest-locked, closed, conflict-resolved clause set can be admitted; drift and blanket inheritance fail review/admission.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S05",
+      "name": "Bare go rejected transitively",
+      "required_for_work_packages": [
+        "W03",
+        "W05"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "policy_negative"
+      ],
+      "scenario": "Place bare go in a nursery, helper, init, unused function, generated file, and indirect dependency.",
+      "expected": "All target source paths reject SGO_E_UNSTRUCTURED_SPAWN. No runtime interception silently turns legacy go into structured spawning.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S06",
+      "name": "No implicit authority",
+      "required_for_work_packages": [
+        "W02",
+        "W03"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "sgo_production"
+      ],
+      "scenario": "Call a helper without a nursery handle, derive a nursery from a task Context, or request CurrentNursery through a public API.",
+      "expected": "Missing authority is rejected. Valid delegated handles work, but ambient runtime state cannot supply a handle or authorize a spawn.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S07",
+      "name": "Checked nested-scope capability",
+      "required_for_work_packages": [
+        "W02",
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "production_stress"
+      ],
+      "scenario": "Capture an outer nursery handle, enter an inner nursery, and try to spawn into the outer scope; also try during cleanup and after close.",
+      "expected": "Misuse is rejected before registration; inner-scope lifetime, cleanup no-spawn rule, and closed-scope terminal state cannot be bypassed.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S08",
+      "name": "Spawn callback failures are observed",
+      "required_for_work_packages": [
+        "W03",
+        "W04"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "subprocess"
+      ],
+      "scenario": "Return a non-nil error from a spawned callback while siblings hold cleanup obligations; also test nil callback and caller-side expression effects.",
+      "expected": "Child error triggers the specified nursery failure/drain; nil callback admits no child. Already evaluated caller effects are neither repeated nor falsely rolled back.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S09",
+      "name": "Dependency contract integrity",
+      "required_for_work_packages": [
+        "W03",
+        "W05",
+        "W10"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "policy_negative"
+      ],
+      "scenario": "Import a ported package with valid contracts, then change its code/digest, remove an internal operation contract, or add unchecked effect annotations.",
+      "expected": "Only checked source and matching contract/export identities are admitted. Labels, declared purity, names, and recompilation alone do not authorize execution.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S10",
+      "name": "Indirect dispatch contract closure",
+      "required_for_work_packages": [
+        "W03",
+        "W05"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "policy_negative"
+      ],
+      "scenario": "Attempt forbidden targets through interfaces, closures, function values, generic instantiation, callbacks, or reflected invocation.",
+      "expected": "Checked signatures/effect summaries preserve the closed admitted set; unsupported summary/dispatch cases are rejected rather than trusted.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S11",
+      "name": "Target TCB is specified",
+      "required_for_work_packages": [
+        "W01",
+        "W02",
+        "W05",
+        "W12"
+      ],
+      "execution_lanes": [
+        "model",
+        "policy_negative",
+        "release_review"
+      ],
+      "scenario": "Remove a runtime-service/intrinsic contract, spoof a trusted package name, or invoke a sealed primitive from application code.",
+      "expected": "Missing TCB clauses block the target path and spoofed identity/callers fail. Trust never means unspecified or generally privileged application code.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S12",
+      "name": "Unadmitted channel cannot execute",
+      "required_for_work_packages": [
+        "W03",
+        "W07"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "policy_negative"
+      ],
+      "scenario": "Before native channel admission, attempt chan/select/reflect fast paths; after admission, attempt a raw-channel escape.",
+      "expected": "Not-yet-implemented native operations are rejected; admitted ones use the sole S-Go contract. No legacy channel fallback exists.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S13",
+      "name": "No ambient library preservation",
+      "required_for_work_packages": [
+        "W05",
+        "W09"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "policy_negative"
+      ],
+      "scenario": "Import an old ambient I/O API, pure utility with uncontracted behavior, or service package that retains background tasks.",
+      "expected": "Each unported surface is rejected. Familiar package names, ecosystem demand, and pure labeling provide no exception.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S14",
+      "name": "Production and lab share safety",
+      "required_for_work_packages": [
+        "W08",
+        "W10"
+      ],
+      "execution_lanes": [
+        "sgo_production",
+        "lab"
+      ],
+      "scenario": "Run paired ownership, cancellation, cleanup, permission, and invalid-spawn scenarios under production and lab configurations.",
+      "expected": "Both enforce the same invariants and failure contracts. Only specified scheduling/effect adapters and replay admission differ; lab denial never downgrades to production.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S15",
+      "name": "No target build escape",
+      "required_for_work_packages": [
+        "W00",
+        "W03",
+        "W10"
+      ],
+      "execution_lanes": [
+        "host_bootstrap",
+        "compiler",
+        "policy_negative"
+      ],
+      "scenario": "Try to rebuild unported host-Go compiler sources with S-Go, link stock target objects, or invoke a backend directly without admission metadata.",
+      "expected": "Host rebuilding remains an external stage; target entries reject legacy sources/objects and missing verification records. No bootstrap-only target parser mode exists.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S16",
+      "name": "Value and memory semantics closure",
+      "required_for_work_packages": [
+        "W01",
+        "W03",
+        "W07"
+      ],
+      "execution_lanes": [
+        "model",
+        "compiler",
+        "sgo_production"
+      ],
+      "scenario": "Audit and test admitted integer/float edges, nil/bounds errors, aliases, shared-memory races, atomic ordering, and resource-exhaustion outcomes.",
+      "expected": "Every admitted family has explicit legality and allowed outcomes with tests. Unresolved families remain rejected; arbitrary implementation behavior is not a spec.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S17",
+      "name": "Documented unsupported still rejected",
+      "required_for_work_packages": [
+        "W03",
+        "W09",
+        "W12"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "policy_negative",
+        "release_review"
+      ],
+      "scenario": "Mark an unimplemented feature experimental/unsupported in documentation but leave an inherited execution path reachable.",
+      "expected": "The negative fixture fails release qualification until the path rejects. Documentation and experimental labels cannot waive admission.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S18",
+      "name": "Specification amendment propagation",
+      "required_for_work_packages": [
+        "W03",
+        "W10",
+        "W12"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "tooling",
+        "release_review"
+      ],
+      "scenario": "Change a spawn/effect clause without updating frontend checks, package summaries, manifest identities, or tests.",
+      "expected": "Consistency/identity checks reject stale artifacts and block the release until specification, enforcement, and evidence are reconciled.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S19",
+      "name": "Source tools cannot reintroduce legacy",
+      "required_for_work_packages": [
+        "W03",
+        "W10"
+      ],
+      "execution_lanes": [
+        "compiler",
+        "tooling"
+      ],
+      "scenario": "Use every shipped build-facing parser/typechecker/formatter/importer on legacy go or unknown constructs, including recovery-mode ASTs.",
+      "expected": "Tools may inspect invalid source for diagnostics, but no recovery AST or alternate parser becomes a buildable accepted target path.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "S20",
+      "name": "No implementation-only proof claims",
+      "required_for_work_packages": [
+        "W01",
+        "W12"
+      ],
+      "execution_lanes": [
+        "model",
+        "release_review"
+      ],
+      "scenario": "Compare claims of valid specification, static checking, runtime enforcement, model exploration, test evidence, and full functional proof.",
+      "expected": "Each claim states its actual scope. Contract coverage is not mislabeled as proof of arbitrary program correctness, termination, or all schedules.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    }
+  ]
+}

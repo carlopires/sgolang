@@ -1,0 +1,539 @@
+{
+  "schema_version": 2,
+  "plan_version": "2.0",
+  "created_at": "2026-10-02",
+  "input_archive_sha256": "b6672dbf5fef2839c6bb4779f92c9b0fd0d6151a47cfe08aad18ed040d8996bf",
+  "upstream_tag_default": "go1.27.1",
+  "upstream_commit": null,
+  "upstream_commit_note": "Resolve the real release tag to an exact commit in W00; no commit SHA has been invented.",
+  "first_vertical_slice": [
+    "W00",
+    "W01",
+    "W02",
+    "W03",
+    "W04"
+  ],
+  "execution_policy": "Execute dependency-ready packages. Keep one integration owner for overlapping compiler/runtime/ABI edits. Prototype/model tests must be re-instantiated where required by later native integration.",
+  "allowed_statuses": [
+    "pending",
+    "in_progress",
+    "blocked",
+    "failed",
+    "passed",
+    "investigated_not_adopted"
+  ],
+  "dependency_satisfaction": "Dependencies normally require passed. For W11 only, investigated_not_adopted with evidence also satisfies W12; pending, failed, or undocumented deferral does not.",
+  "task_count": 13,
+  "acceptance_case_count": 147,
+  "evidence_required_fields": [
+    "work_package_id",
+    "state",
+    "spec_version",
+    "fork_commit",
+    "upstream_commit",
+    "host_and_toolchain",
+    "exact_commands",
+    "exit_codes",
+    "test_case_ids",
+    "passed_failed_skipped_unrun",
+    "skip_reasons",
+    "trace_and_log_paths",
+    "artifact_digests",
+    "benchmark_configuration",
+    "changed_invariants",
+    "known_limitations",
+    "next_dependency_ready_task",
+    "spec_digest",
+    "admission_digest",
+    "execution_configuration",
+    "host_target_build_identity"
+  ],
+  "tasks": [
+    {
+      "id": "W00",
+      "title": "Isolated host bootstrap and target admission boundary",
+      "depends_on": [],
+      "risk": "medium",
+      "status": "pending",
+      "plan_section": "11/W00",
+      "deliverables": [
+        "Pinned upstream/bootstrap manifest",
+        "Actual clean build and baseline evidence",
+        "Source map and build scripts",
+        "Host/reference/target stage map and separate caches",
+        "No-legacy target entry policy and initial default denial"
+      ],
+      "acceptance_case_ids": [
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "S01",
+        "S15"
+      ],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+    },
+    {
+      "id": "W01",
+      "title": "Closed first-subset specification and executable oracle",
+      "depends_on": [
+        "W00"
+      ],
+      "risk": "high",
+      "status": "pending",
+      "plan_section": "11/W01",
+      "deliverables": [
+        "Frozen first-subset normative clauses and explicit adoption ledger",
+        "Mechanically complete default-deny feature/API/intrinsic inventory",
+        "TCB primitive contracts and initial checked dependency-summary rules",
+        "Pure state-machine model with bounded enumeration, mutation, and specification-closure checks"
+      ],
+      "acceptance_case_ids": [
+        "M01",
+        "M02",
+        "M03",
+        "M04",
+        "M05",
+        "S02",
+        "S03",
+        "S04",
+        "S11",
+        "S16",
+        "S20"
+      ],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+    },
+    {
+      "id": "W02",
+      "title": "Runtime ownership and GC-safe state",
+      "depends_on": [
+        "W01"
+      ],
+      "risk": "very_high",
+      "status": "pending",
+      "plan_section": "11/W02",
+      "deliverables": [
+        "Transitive task accounting",
+        "GC-root and lock-order design",
+        "Join and goroutine-reuse tests",
+        "Explicit nursery-handle validation",
+        "Contracted sealed service-task creation; no raw go route"
+      ],
+      "acceptance_case_ids": [
+        "O01",
+        "O02",
+        "O03",
+        "O04",
+        "O05",
+        "O06",
+        "O07",
+        "O08",
+        "O09",
+        "O10",
+        "S06",
+        "S07",
+        "S11"
+      ],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+    },
+    {
+      "id": "W03",
+      "title": "Nursery compiler and all exit paths",
+      "depends_on": [
+        "W02"
+      ],
+      "risk": "very_high",
+      "status": "pending",
+      "plan_section": "11/W03",
+      "deliverables": [
+        "Private/public syntax pipeline",
+        "Unified IR and native exit lowering",
+        "Panic/defer/Goexit integration",
+        "Bare go rejection across all target source",
+        "Closed compiler/link/import admission with checked callable summaries"
+      ],
+      "acceptance_case_ids": [
+        "X01",
+        "X02",
+        "X03",
+        "X04",
+        "X05",
+        "X06",
+        "X07",
+        "X08",
+        "X09",
+        "X10",
+        "X11",
+        "X12",
+        "P01",
+        "P02",
+        "P03",
+        "P04",
+        "P05",
+        "P06",
+        "P07",
+        "P08",
+        "S01",
+        "S02",
+        "S03",
+        "S05",
+        "S06",
+        "S08",
+        "S09",
+        "S10",
+        "S12",
+        "S15",
+        "S16",
+        "S17",
+        "S18",
+        "S19"
+      ],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+    },
+    {
+      "id": "W04",
+      "title": "Cancellation waiting and budgets",
+      "depends_on": [
+        "W03"
+      ],
+      "risk": "very_high",
+      "status": "pending",
+      "plan_section": "11/W04",
+      "deliverables": [
+        "Cancellation-aware waits/timers",
+        "Cleanup contexts and budgets",
+        "Subprocess watchdog and diagnostics"
+      ],
+      "acceptance_case_ids": [
+        "P01",
+        "P02",
+        "P03",
+        "P04",
+        "P05",
+        "P06",
+        "P07",
+        "P08",
+        "C01",
+        "C02",
+        "C03",
+        "C04",
+        "C05",
+        "C06",
+        "C07",
+        "C08",
+        "C09",
+        "C10",
+        "C11",
+        "S07",
+        "S08"
+      ],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+    },
+    {
+      "id": "W05",
+      "title": "Capabilities and readiness",
+      "depends_on": [
+        "W04"
+      ],
+      "risk": "high",
+      "status": "pending",
+      "plan_section": "11/W05",
+      "deliverables": [
+        "Opaque grants and enforcement",
+        "TCB/policy manifest",
+        "Simulated effects and readiness handshake"
+      ],
+      "acceptance_case_ids": [
+        "A01",
+        "A02",
+        "A03",
+        "A04",
+        "A05",
+        "A06",
+        "A07",
+        "A08",
+        "A09",
+        "A10",
+        "R01",
+        "R02",
+        "R03",
+        "R04",
+        "S05",
+        "S09",
+        "S10",
+        "S11",
+        "S13"
+      ],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+    },
+    {
+      "id": "W06",
+      "title": "Modeled and typed permit channels",
+      "depends_on": [
+        "W04"
+      ],
+      "risk": "high",
+      "status": "pending",
+      "plan_section": "11/W06",
+      "deliverables": [
+        "Channel state model",
+        "Typed reserve/commit/abort implementation",
+        "Close/cancel/rendezvous exploration"
+      ],
+      "acceptance_case_ids": [
+        "H01",
+        "H02",
+        "H03",
+        "H04",
+        "H05",
+        "H06",
+        "H07",
+        "H08",
+        "H09",
+        "H10",
+        "H11",
+        "H12"
+      ],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+    },
+    {
+      "id": "W07",
+      "title": "Native channels and select",
+      "depends_on": [
+        "W03",
+        "W05",
+        "W06"
+      ],
+      "risk": "very_high",
+      "status": "pending",
+      "plan_section": "11/W07",
+      "deliverables": [
+        "Native channel and select paths",
+        "Cancellation transfer and waiter cleanup",
+        "Memory-order/reflect/fast-path tests"
+      ],
+      "acceptance_case_ids": [
+        "H01",
+        "H02",
+        "H03",
+        "H04",
+        "H05",
+        "H06",
+        "H07",
+        "H08",
+        "H09",
+        "H10",
+        "H11",
+        "H12",
+        "N01",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N07",
+        "N08",
+        "N09",
+        "S12",
+        "S16"
+      ],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+    },
+    {
+      "id": "W08",
+      "title": "Deterministic lab and replay",
+      "depends_on": [
+        "W04",
+        "W05",
+        "W07"
+      ],
+      "risk": "very_high",
+      "status": "pending",
+      "plan_section": "11/W08",
+      "deliverables": [
+        "Controlled scheduler and virtual time",
+        "Versioned canonical trace/replay",
+        "Enforced lab subset and fault corpus"
+      ],
+      "acceptance_case_ids": [
+        "D01",
+        "D02",
+        "D03",
+        "D04",
+        "D05",
+        "D06",
+        "D07",
+        "D08",
+        "D09",
+        "D10",
+        "D11",
+        "D12",
+        "D13",
+        "S14"
+      ],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+    },
+    {
+      "id": "W09",
+      "title": "Production I/O adapters",
+      "depends_on": [
+        "W05",
+        "W07"
+      ],
+      "risk": "high",
+      "status": "pending",
+      "plan_section": "11/W09",
+      "deliverables": [
+        "Bounded audited I/O surface",
+        "Capability confinement",
+        "Truthful partial-progress contracts"
+      ],
+      "acceptance_case_ids": [
+        "I01",
+        "I02",
+        "I03",
+        "I04",
+        "I05",
+        "I06",
+        "I07",
+        "S13",
+        "S17"
+      ],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+    },
+    {
+      "id": "W10",
+      "title": "Tooling admission conformance and examples",
+      "depends_on": [
+        "W08",
+        "W09"
+      ],
+      "risk": "high",
+      "status": "pending",
+      "plan_section": "11/W10",
+      "deliverables": [
+        "Single-language launcher and spec/ABI/admission identity",
+        "Host-target/cache isolation and rejection tests",
+        "Three executable examples",
+        "S-Go conformance, intentional Go rejection, and performance reports"
+      ],
+      "acceptance_case_ids": [
+        "T01",
+        "T02",
+        "T03",
+        "T04",
+        "T05",
+        "T06",
+        "T07",
+        "T08",
+        "S01",
+        "S09",
+        "S14",
+        "S15",
+        "S18",
+        "S19"
+      ],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+    },
+    {
+      "id": "W11",
+      "title": "Fixed virtual-stack investigation",
+      "depends_on": [
+        "W10"
+      ],
+      "risk": "very_high",
+      "status": "pending",
+      "plan_section": "11/W11",
+      "deliverables": [
+        "Isolated prototype or evidence-backed feasibility report",
+        "Correctness/resource/performance evidence",
+        "Explicit adoption decision"
+      ],
+      "acceptance_case_ids": [
+        "F01",
+        "F02",
+        "F03",
+        "F04",
+        "F05",
+        "F06",
+        "F07",
+        "F08"
+      ],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": "Investigation is required. Prototype adoption is optional; investigated_not_adopted requires explicit evidence and leaves core stacks unchanged."
+    },
+    {
+      "id": "W12",
+      "title": "Independent review and release",
+      "depends_on": [
+        "W10",
+        "W11"
+      ],
+      "risk": "high",
+      "status": "pending",
+      "plan_section": "11/W12",
+      "deliverables": [
+        "Fresh-context review and fixes",
+        "Clean release evidence/checksums",
+        "Guarantee and limitations manifest",
+        "No-legacy-path audit",
+        "Complete clause-to-implementation-to-evidence traceability"
+      ],
+      "acceptance_case_ids": [
+        "Q01",
+        "Q02",
+        "Q03",
+        "Q04",
+        "S04",
+        "S11",
+        "S17",
+        "S18",
+        "S20"
+      ],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+    }
+  ],
+  "language_policy": "One specification-defined S-Go language; no Go compatibility path. Bare go rejected; explicit nursery capabilities; missing contracts rejected transitively. Host/reference tools are external build dependencies.",
+  "spec_admission_file": "SGO_SPEC_ADMISSION.json",
+  "constitution_file": "SGO_LANGUAGE_CONSTITUTION.md"
+}
