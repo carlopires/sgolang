@@ -1429,8 +1429,11 @@ func cmdbootstrap() {
 	timelog("start", "dist bootstrap")
 	defer timelog("end", "dist bootstrap")
 
-	var debug, distpack, force, noBanner, noClean bool
+	var debug, distpack, force, noBanner, noClean, sgoStage0 bool
 	flag.BoolVar(&rebuildall, "a", rebuildall, "rebuild all")
+	// S-Go: build only the host-built toolchain (toolchain1) and stop before any stage that
+	// compiles Go source with the fork's own compiler. See sgo/docs/stage-map.md.
+	flag.BoolVar(&sgoStage0, "sgo-stage0", sgoStage0, "S-Go: build only the host-built stage-0 toolchain (toolchain1) and stop")
 	flag.BoolVar(&debug, "d", debug, "enable debugging of bootstrap process")
 	flag.BoolVar(&distpack, "distpack", distpack, "write distribution files to pkg/distpack")
 	flag.BoolVar(&force, "force", force, "build even if the port is marked as broken")
@@ -1501,6 +1504,12 @@ func cmdbootstrap() {
 	timelog("build", "toolchain1")
 	checkCC()
 	bootstrapBuildTools()
+
+	if sgoStage0 {
+		xprintf("S-Go stage 0: host-built toolchain installed in %s\n", tooldir)
+		xprintf("S-Go stage 0: self-hosted stages (go_bootstrap, toolchain2, toolchain3, std) skipped.\n")
+		return
+	}
 
 	// Remember old content of $GOROOT/bin for comparison below.
 	oldBinFiles, err := filepath.Glob(pathf("%s/bin/*", goroot))

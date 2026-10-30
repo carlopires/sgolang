@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+"""sgo-target — the S-Go target entry point at W00: a deny-by-default admission gate.
+
+Every target request (build, run, compile, link, any flag, any file) is checked against
+sgo/SGO_SPEC_ADMISSION.json. Nothing is admitted until W01 freezes clauses and W03 implements
+enforcement, so every request is rejected with SGO_E_UNADMITTED (exit status 2).
+
+This program never executes a Go toolchain, never reads PATH to find one, and has no flag,
+environment variable, file name, or pragma that changes the decision (test cases S01, B05, S15).
+When the registry admits features, this gate still refuses until the W03 driver replaces it:
+there is no fallback to stock Go.
+"""
+import json
+import os
+import sys
+
+HERE = os.path.dirname(os.path.realpath(__file__))
+REGISTRY = os.path.join(HERE, "..", "SGO_SPEC_ADMISSION.json")
+
+
+def main(argv):
+    try:
+        reg = json.load(open(REGISTRY))
+    except (OSError, ValueError) as e:
+        print(f"sgo-target: SGO_E_REGISTRY: cannot read admission registry {REGISTRY}: {e}", file=sys.stderr)
+        return 2
+    rows = reg.get("rows", [])
+    admitted = [r["id"] for r in rows if r.get("status") == "admitted"]
+    req = " ".join(argv) if argv else "<no arguments>"
+    if not admitted:
+        print(
+            "sgo-target: SGO_E_UNADMITTED: request denied: " + req + "\n"
+            f"  No S-Go feature is admitted (spec_version={reg.get('spec_version')}, "
+            f"{len(admitted)} of {len(rows)} surface families admitted).\n"
+            "  The target toolchain denies all programs until W01 freezes and W03 enforces clauses.\n"
+            "  There is no compatibility mode and no fallback to a stock Go toolchain.",
+            file=sys.stderr,
+        )
+        return 2
+    print(
+        "sgo-target: SGO_E_NO_DRIVER: request denied: " + req + "\n"
+        f"  Admitted families exist ({', '.join(admitted)}), but the W03 target driver is not installed.\n"
+        "  The W00 gate never compiles programs and never falls back to stock Go.",
+        file=sys.stderr,
+    )
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

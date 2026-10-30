@@ -1,0 +1,60 @@
+# S-Go W00: reproduce the pinned reference build, upstream baseline tests, stage-0 build, and
+# deny-by-default gate checks on the Linux targets required by decision D22
+# (linux/amd64 = real target, linux/arm64 = first-class). darwin/arm64 runs locally.
+name: sgo-w00
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "sgo/**"
+      - "src/cmd/dist/**"
+      - ".github/workflows/sgo-w00.yml"
+  workflow_dispatch:
+    inputs:
+      full_tests:
+        description: "Run the full upstream dist test suite (B03)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  w00:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 240
+    env:
+      SGO_CACHE: ${{ github.workspace }}/../sgo-cache
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the locked upstream commit is in the merged history
+
+      - name: B01 reference build (untouched upstream worktree)
+        run: sgo/scripts/build-reference.sh
+
+      - name: B02 independent worktree build
+        run: sgo/scripts/build-reference.sh --label b02
+
+      - name: B04 stage-0 host-built toolchain
+        run: sgo/scripts/build-stage0.sh
+
+      - name: B05/S01/S15 gate checks
+        run: sgo/scripts/check-w00.sh
+
+      - name: B03 upstream baseline tests
+        if: github.event_name == 'push' || inputs.full_tests
+        run: sgo/scripts/test-reference.sh
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: w00-evidence-${{ matrix.runner }}
+          path: sgo/evidence/w00/
+          retention-days: 90

@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+// A valid subset-0 program per SGO_SPEC_SUBSET0.md §0.1. At W00 it must still be
+// rejected: no clause is admitted yet (deny by default).
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			return out.WriteString("hello from a child\n")
+		})
+	}
+	return out.WriteString("all children joined\n")
+}

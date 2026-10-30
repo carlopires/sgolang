@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-30",
+  "decision_refs": ["D21", "D22"],
+  "upstream": {
+    "repository": "https://go.googlesource.com/go",
+    "tag": "go1.27.3",
+    "tag_kind": "lightweight (git cat-file -t go1.27.3 = commit)",
+    "commit": "2aae1000ea1d4b28923b96db28acf4e3b99d6aff",
+    "commit_date": "2026-10-19T18:19:22-07:00",
+    "version_file": "go1.27.3\ntime 2026-10-19T22:20:36Z",
+    "source_tarball": {
+      "url": "https://go.dev/dl/go1.27.3.src.tar.gz",
+      "sha256": "6e7749035cf360f06b2575d162ea79df9fda8ef671889e5c375f8e50777f26bb",
+      "note": "Published checksum from https://go.dev/dl/?mode=json&include=all. The fork is built from the git commit, not this tarball."
+    },
+    "fork_merge": "Merged into github.com/carlopires/sgolang main with full upstream history (--allow-unrelated-histories). The fork tree equals the upstream commit except sgo/ and the root README.md."
+  },
+  "bootstrap": {
+    "minimum_required": "go1.24.6 (src/make.bash bootgo=1.24.6; src/cmd/dist/notgo124.go)",
+    "pinned_version": "go1.26.10",
+    "reason": "Latest patch of a supported Go release at recording time; go1.24.6 is the floor but is out of support.",
+    "source": "Official go.dev binary archives, verified by SHA-256 before extraction. Homebrew or PATH installations are never used.",
+    "archives": {
+      "darwin-arm64": {
+        "url": "https://go.dev/dl/go1.26.10.darwin-arm64.tar.gz",
+        "sha256": "0b5183492292ada170f9b561a834863808dd02edba599e4ad0e89899330020b3",
+        "size": 64669745
+      },
+      "linux-amd64": {
+        "url": "https://go.dev/dl/go1.26.10.linux-amd64.tar.gz",
+        "sha256": "ccfe7ae822d2c2f41f4fe7c956199967a4dac22d0ee0d2b2bfdb440aab3b20c5",
+        "size": 66936659
+      },
+      "linux-arm64": {
+        "url": "https://go.dev/dl/go1.26.10.linux-arm64.tar.gz",
+        "sha256": "3f4227ce7b206a513e794f1393adb473a07b46e94d18bd15d1c684bbb7319797",
+        "size": 63827526
+      }
+    }
+  },
+  "targets": {
+    "first_development": "darwin/arm64",
+    "real": "linux/amd64",
+    "first_class": ["linux/amd64", "linux/arm64"]
+  }
+}
