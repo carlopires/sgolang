@@ -4,7 +4,7 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-SYNC`: `subset0` 
 
 ### SGO-SYNC-001 — Shared-memory synchronization are denied in subset 0
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-ERR-001; D01.
 - **grammar_and_types:** Denied: `sync`, `sync/atomic`, and any mutex, condition variable, wait group, once, or atomic API. No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
 - **preconditions:** n/a — denial clause; there is nothing to use.

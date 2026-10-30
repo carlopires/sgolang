@@ -4,7 +4,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 
 ### SGO-SPAWN-001 — Call form
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-TYPE-005, SGO-VAL-005, SGO-MEM-002; D11.
 - **grammar_and_types:** `n.Spawn(f)` where `n` has type `*sgo.Nursery` and `f` has type `func(*sgo.Context) error`. `Spawn` has no result; it is used as a call statement.
 - **preconditions:** Static: types as above. Dynamic: SGO-SPAWN-002.
@@ -26,7 +26,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 
 ### SGO-SPAWN-002 — Admission checks
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-NUR-002, SGO-NUR-005, SGO-DEF-003, SGO-CANCEL-002; R5; plan §4.2.
 - **grammar_and_types:** n/a — dynamic rule.
 - **preconditions:** n/a — this clause defines the dynamic preconditions.
@@ -48,7 +48,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 
 ### SGO-SPAWN-003 — Registration and start
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-SPAWN-002, SGO-CANCEL-004, SGO-CAP-001, SGO-MEM-004; OWN-2.
 - **grammar_and_types:** n/a — dynamic rule.
 - **preconditions:** Admission succeeded.
@@ -70,7 +70,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 
 ### SGO-SPAWN-004 — Child outcomes
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-CANCEL-001, SGO-CANCEL-003, SGO-DEF-005, SGO-NUR-004.
 - **grammar_and_types:** n/a — dynamic rule.
 - **preconditions:** n/a — dynamic rule.
@@ -92,7 +92,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 
 ### SGO-SPAWN-005 — No bare go
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-LEX-003, SGO-ERR-001; OWN-5; constitution §4.
 - **grammar_and_types:** The `go` statement is not part of S-Go. Any occurrence of the `go` keyword in statement position, in any file of any package compiled for the target (including unreachable code and dependencies), is rejected. It is not rewritten into a structured spawn.
 - **preconditions:** n/a — static rule.

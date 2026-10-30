@@ -4,7 +4,7 @@ Subset 0. Derived from decision D10 and `SGO_SPEC_SUBSET0.md` §16.
 
 ### SGO-TEST-001 — Conformance cases
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-ERR-001, SGO-ERR-002, SGO-PROC-002, SGO-DRAIN-003; D10.
 - **grammar_and_types:** A conformance case is a directory `sgo/testdata/conformance/<name>/` containing an `sgo.mod`, one or more `.sgo` packages, and `expect.json` with: `"kind"` (`"run"` or `"reject"`); for `run`: `"exit"` (integer), `"stdout"` (exact string) or `"stdout_any_of"` (list of exact strings, for cases with allowed nondeterminism), and optionally `"stderr_kind"` (the diagnostic `kind`); for `reject`: `"diagnostics"`, a list of `{"code", "position"}`; plus `"clauses"` (clause IDs the case checks) and optionally `"timeout_ms"` and `"expect_watchdog"`.
 - **preconditions:** n/a — harness rule.

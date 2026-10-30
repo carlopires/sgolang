@@ -21,6 +21,8 @@ jobs:
         run: sgo/scripts/inventory-check.py
       - name: Runtime TCB manifest (SGO-TCB-002)
         run: sgo/scripts/tcb-manifest.py
+      - name: Clause adoption ledger (S04)
+        run: sgo/scripts/adoption-check.py
       - name: Conformance cases (validate + runner self-test)
         run: |
           sgo/scripts/conformance.py validate

@@ -6,25 +6,25 @@ import (
 )
 
 // Program-building helpers.
-func N(name string, body ...Instr) Instr  { return Instr{Op: OpNursery, Name: name, Body: body} }
+func N(name string, body ...Instr) Instr   { return Instr{Op: OpNursery, Name: name, Body: body} }
 func Sp(name string, child ...Instr) Instr { return Instr{Op: OpSpawn, Name: name, Child: child} }
-func C(name string) Instr                 { return Instr{Op: OpCancel, Name: name} }
-func CP() Instr                           { return Instr{Op: OpCheckpoint} }
-func CPc() Instr                          { return Instr{Op: OpCheckpoint, Continue: true} }
-func SL() Instr                           { return Instr{Op: OpSleep} }
-func SLc() Instr                          { return Instr{Op: OpSleep, Continue: true} }
-func RN() Instr                           { return Instr{Op: OpReturnNil} }
-func RE(msg string) Instr                 { return Instr{Op: OpReturnErr, Msg: msg} }
-func P(msg string) Instr                  { return Instr{Op: OpPanic, Msg: msg} }
-func Spin() Instr                         { return Instr{Op: OpSpin} }
-func M(msg string) Instr                  { return Instr{Op: OpMark, Msg: msg} }
+func C(name string) Instr                  { return Instr{Op: OpCancel, Name: name} }
+func CP() Instr                            { return Instr{Op: OpCheckpoint} }
+func CPc() Instr                           { return Instr{Op: OpCheckpoint, Continue: true} }
+func SL() Instr                            { return Instr{Op: OpSleep} }
+func SLc() Instr                           { return Instr{Op: OpSleep, Continue: true} }
+func RN() Instr                            { return Instr{Op: OpReturnNil} }
+func RE(msg string) Instr                  { return Instr{Op: OpReturnErr, Msg: msg} }
+func P(msg string) Instr                   { return Instr{Op: OpPanic, Msg: msg} }
+func Spin() Instr                          { return Instr{Op: OpSpin} }
+func M(msg string) Instr                   { return Instr{Op: OpMark, Msg: msg} }
 
 type scenario struct {
 	name     string
 	clauses  string // clauses the scenario checks
 	prog     Program
 	cfg      Config
-	expect   []string             // exact set of terminal outcomes over all interleavings
+	expect   []string            // exact set of terminal outcomes over all interleavings
 	property func(*State) string // checked on every terminal state; "" means ok
 }
 

@@ -4,7 +4,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §10, resolution R1, plan §6.1, in
 
 ### SGO-CANCEL-001 — Cancellation request and propagation
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-NUR-002, SGO-NUR-005, SGO-SPAWN-002, SGO-SPAWN-004, SGO-DEF-005, SGO-DEF-003; R1; CAN-1.
 - **grammar_and_types:** `n.Cancel()` where `n` has type `*sgo.Nursery`; no result; a call statement.
 - **preconditions:** The caller may call `Cancel` on `n` only if it could spawn into `n` (SGO-SPAWN-002 conditions (b) and (c)); a call in state CANCELLING, FINALIZING, or CLOSED by such a caller has no effect.
@@ -26,7 +26,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §10, resolution R1, plan §6.1, in
 
 ### SGO-CANCEL-002 — Observation at checkpoints
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-CANCEL-001, SGO-CANCEL-003, SGO-CANCEL-004, SGO-WAIT-001; plan §6.1.
 - **grammar_and_types:** `task.Checkpoint() error` where `task` has type `*sgo.Context`.
 - **preconditions:** `task` is the context of the calling task (the `root` of `main` or the parameter of the running `Spawn` callback); using another task's context fails with `SpawnContractViolation`.
@@ -48,7 +48,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §10, resolution R1, plan §6.1, in
 
 ### SGO-CANCEL-003 — Cancellation errors
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-TYPE-006, SGO-SPAWN-004, SGO-CANCEL-001.
 - **grammar_and_types:** `sgo.IsCancelled(err error) bool`.
 - **preconditions:** n/a — total function.
@@ -70,7 +70,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §10, resolution R1, plan §6.1, in
 
 ### SGO-CANCEL-004 — Owner and ancestry
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-CANCEL-001, SGO-NUR-005; plan §6.1.
 - **grammar_and_types:** n/a — dynamic rule.
 - **preconditions:** n/a — dynamic rule.

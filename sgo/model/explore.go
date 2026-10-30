@@ -160,6 +160,12 @@ func Check(prev, next *State) string {
 			return fmt.Sprintf("OWN-2: T%d exists but is not registered live in S%d", t.ID, t.Scope)
 		}
 	}
+	// M04: a child's completion is published exactly once.
+	for id, n := range next.published {
+		if n > 1 {
+			return fmt.Sprintf("M04: completion of T%d published %d times", id, n)
+		}
+	}
 	// CAN-2: every wait has at most one terminal disposition.
 	for w, n := range next.waitsDone {
 		if n > 1 {

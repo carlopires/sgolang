@@ -4,7 +4,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §4 and decisions D02–D04.
 
 ### SGO-VAL-001 — Integer arithmetic
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-TYPE-001, SGO-DEF-003; D02; R3.
 - **grammar_and_types:** Operators on `int` operands (both of type `int`): binary `+ - * / %`, bitwise `& | ^ &^`, shifts `<< >>` (right operand also `int`), unary `-` and `^` (bitwise complement), comparisons `== != < <= > >=` (result `bool`), and the statements `x op= e` and `x++`, `x--`. Unary `+` is admitted and is the identity.
 - **preconditions:** For `/` and `%`: right operand ≠ 0. For shifts: `0 ≤ count ≤ 63`.
@@ -26,7 +26,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §4 and decisions D02–D04.
 
 ### SGO-VAL-002 — Strings
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-TYPE-001, SGO-ERR-003.
 - **grammar_and_types:** Operators on `string` operands: `+` (concatenation), comparisons `== != < <= > >=` (result `bool`), `s += e`, and the builtin `len(s) int`. Indexing, slicing, conversion to or from other types, and `range` are denied.
 - **preconditions:** For `+`: the result length must not exceed the implementation limit recorded in the build metadata (at least 2^31−1 bytes).
@@ -48,7 +48,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §4 and decisions D02–D04.
 
 ### SGO-VAL-003 — Booleans
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-TYPE-001, SGO-VAL-005.
 - **grammar_and_types:** Operators on `bool` operands: `&&`, `||`, unary `!`, `==`, `!=`. Conditions of `if` and `for` and boolean `switch` tags have type `bool`.
 - **preconditions:** n/a — total operations.
@@ -70,7 +70,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §4 and decisions D02–D04.
 
 ### SGO-VAL-004 — Constants
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-LEX-004, SGO-TYPE-002, SGO-VAL-001; R3.
 - **grammar_and_types:** A constant expression consists of literals, constant names, `true`, `false`, the operators of SGO-VAL-001..003 applied to constant operands, and `len` of a constant string. Constants are untyped unless declared with a type (`const c int = 3`).
 - **preconditions:** n/a — compile-time evaluation.
@@ -92,7 +92,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §4 and decisions D02–D04.
 
 ### SGO-VAL-005 — Evaluation order
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-VAL-003, SGO-TYPE-003, SGO-MEM-001, SGO-SPAWN-001.
 - **grammar_and_types:** n/a — dynamic rule over all expressions and statements.
 - **preconditions:** n/a — dynamic rule.

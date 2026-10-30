@@ -4,7 +4,7 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-COMPOSITE`: `subs
 
 ### SGO-COMP-001 — Composite types are denied in subset 0
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-ERR-001; D06, D20.
 - **grammar_and_types:** Denied: pointers and `&`/`*`, arrays, slices, maps, structs, `make`, `new`, `append`, `copy`, `delete`, `cap`, composite literals, indexing, slicing, and string indexing and `range`. No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
 - **preconditions:** n/a — denial clause; there is nothing to use.

@@ -4,7 +4,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §15, decision D16, resolution R9.
 
 ### SGO-ERR-001 — Compile-time diagnostics
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-LEX-001, SGO-TEST-001.
 - **grammar_and_types:** n/a — toolchain rule.
 - **preconditions:** n/a — toolchain rule.
@@ -26,7 +26,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §15, decision D16, resolution R9.
 
 ### SGO-ERR-002 — Runtime diagnostic record
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-PROC-002, SGO-DEF-003, SGO-DEF-004, SGO-NUR-004; R9.
 - **grammar_and_types:** n/a — output format.
 - **preconditions:** The process is ending with status 1–4.
@@ -48,7 +48,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §15, decision D16, resolution R9.
 
 ### SGO-ERR-003 — Resource exhaustion and runtime defects
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-PROC-002, SGO-ERR-002; D16.
 - **grammar_and_types:** n/a — runtime rule.
 - **preconditions:** n/a — runtime rule.

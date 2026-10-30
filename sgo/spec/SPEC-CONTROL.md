@@ -4,7 +4,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §6, decision D14, resolutions R3/R
 
 ### SGO-CTL-001 — Statements
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-BIND-003, SGO-VAL-001, SGO-DEF-001, SGO-NUR-001, SGO-CTL-002; D14; R3, R4.
 - **grammar_and_types:** Admitted statements: blocks `{ … }`; declarations (SGO-BIND-003); assignments `=`, `:=`, `op=`; `x++`, `x--`; `_ = e` (explicit discard); expression statements that are calls; `if [init;] cond { … } [else if … | else { … }]`; `for { … }`, `for cond { … }`, `for [init]; [cond]; [post] { … }`; expression `switch` (SGO-CTL-002); `return [e, …]`; `break [label]`; `continue [label]`; labeled statements `L: stmt` where stmt is `for`, `switch`, or a block; `defer` (SGO-DEF-001); `panic(msg)` as a call statement (SGO-DEF-002); `nursery (n) { … }` (SGO-NUR-001). Init and post statements are simple statements (assignment, `:=`, `++`/`--`, call). Denied: `goto`, `fallthrough`, `select`, type switches, `for … range`, `go`, and empty statements other than an empty block. An expression statement whose call returns one or more results including an `error` is denied; `_ = f()` (or `_, _ = f()`) is the explicit discard. A label must be used.
 - **preconditions:** Conditions have type `bool` (SGO-VAL-003). `break` appears inside a `for` or `switch`; `continue` inside a `for`; a label names an enclosing labeled statement of the right kind.
@@ -26,7 +26,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §6, decision D14, resolutions R3/R
 
 ### SGO-CTL-002 — Switch
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-CTL-001, SGO-VAL-005, SGO-TYPE-002.
 - **grammar_and_types:** `switch [init;] [tag] { case e1, e2: … default: … }`. The tag has type `int`, `string`, or `bool`; a missing tag means `true`. Each case expression is assignable to the tag's type. At most one `default`. Duplicate constant case values are a compile error. `fallthrough` is denied.
 - **preconditions:** n/a — static rules above.
@@ -48,7 +48,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §6, decision D14, resolutions R3/R
 
 ### SGO-CTL-003 — Terminating statements and unreachable code
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-CTL-001, SGO-DEF-002; R3.
 - **grammar_and_types:** A terminating statement is: `return`; a call `panic(…)`; a block whose last statement is terminating; an `if` with an `else` where both branches are terminating; a `for` with no condition and no `break` referring to it; a `switch` with a `default`, no `break` referring to it, and every clause ending in a terminating statement; a labeled terminating statement; a `nursery` statement whose block is terminating. A function with results must end in a terminating statement. A statement that follows a terminating statement in the same block is a compile error.
 - **preconditions:** n/a — static rule.
@@ -70,7 +70,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §6, decision D14, resolutions R3/R
 
 ### SGO-CTL-004 — Exits that cross nurseries
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-NUR-003, SGO-NUR-004, SGO-VAL-005, SGO-DEF-001; plan §4.4.
 - **grammar_and_types:** `return`, `break`, and `continue` may leave one or more enclosing `nursery` statements of the same function. Labels may not be used to jump into a nursery (no `goto` exists).
 - **preconditions:** n/a — applies to every such exit.

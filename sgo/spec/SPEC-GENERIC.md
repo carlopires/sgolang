@@ -4,7 +4,7 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-GENERIC`: `subset
 
 ### SGO-GEN-001 — Generics are denied in subset 0
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-ERR-001; D05.
 - **grammar_and_types:** Denied: type parameters, constraints, instantiation, and generic functions or types. No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
 - **preconditions:** n/a — denial clause; there is nothing to use.

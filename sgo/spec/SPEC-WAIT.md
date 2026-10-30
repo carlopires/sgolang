@@ -4,7 +4,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §12, resolution R8, plan §6.2, in
 
 ### SGO-WAIT-001 — Sleep
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-CANCEL-002, SGO-CANCEL-003, SGO-DEF-003, SGO-TIMER-001; R8; CAN-2.
 - **grammar_and_types:** `task.Sleep(ms int) error` where `task` has type `*sgo.Context`.
 - **preconditions:** `task` is the calling task's own context (as SGO-CANCEL-002); `ms ≥ 0`.
@@ -26,7 +26,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §12, resolution R8, plan §6.2, in
 
 ### SGO-WAIT-002 — Join is a managed wait
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-NUR-003, SGO-WAIT-001.
 - **grammar_and_types:** n/a — dynamic rule.
 - **preconditions:** n/a — dynamic rule.

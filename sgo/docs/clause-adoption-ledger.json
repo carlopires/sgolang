@@ -1,0 +1,114 @@
+{
+ "schema_version": 1,
+ "decision": "D19",
+ "source": "doc/go_spec.html",
+ "upstream_commit": "2aae1000ea1d4b28923b96db28acf4e3b99d6aff",
+ "rule": "Adapted wording is reproduced and self-contained in each clause; no clause defers meaning to the Go spec.",
+ "adoptions": [
+  {
+   "clause": "SGO-BIND-004",
+   "source_sections": [
+    {
+     "section": "Declarations_and_scope",
+     "sha256": "750ae3f512989945cca9aa95ffee77730d81ea624756026592e9ff080068a44e"
+    },
+    {
+     "section": "Blocks",
+     "sha256": "5ae793b852426ffe2ab30529e5f76a0c596231161d34377cce00b4a7ac236da5"
+    }
+   ],
+   "adopted": "block and scope structure",
+   "sgo_changes": "shadowing of enclosing locals and predeclared names is an error; unused locals are errors"
+  },
+  {
+   "clause": "SGO-CTL-002",
+   "source_sections": [
+    {
+     "section": "Expression_switches",
+     "sha256": "409d0b22016765b1499b9422bf2e8cf362b6202c122014d3ebaff8eafb3f2bba"
+    }
+   ],
+   "adopted": "case evaluation order and matching",
+   "sgo_changes": "no fallthrough; tag types int, string, bool only"
+  },
+  {
+   "clause": "SGO-CTL-003",
+   "source_sections": [
+    {
+     "section": "Terminating_statements",
+     "sha256": "3378738c7227c0ffe6c2fc897d19441ed72e3b50ef7fbf72efb1f4319886e949"
+    }
+   ],
+   "adopted": "terminating-statement rules",
+   "sgo_changes": "adds the nursery statement; unreachable statements are errors"
+  },
+  {
+   "clause": "SGO-LEX-002",
+   "source_sections": [
+    {
+     "section": "Comments",
+     "sha256": "4692343239cc69bf84e72d5d2db4091cd4e6d58ac30f7824dea25f4e9b9f2379"
+    },
+    {
+     "section": "Tokens",
+     "sha256": "306896f66b7af9bd46431635c35acd25a081d85aca50b32aed35a67158b0cff9"
+    },
+    {
+     "section": "Semicolons",
+     "sha256": "75364263f297c9438b9b0fb879c83ea428aef65abfdbd30a9fcdd4062eb312d5"
+    },
+    {
+     "section": "Identifiers",
+     "sha256": "5e63975c1e89b7be5e8c90a21d4c8b278cdd740dc208595f512bcf3a520375b9"
+    },
+    {
+     "section": "Operators_and_punctuation",
+     "sha256": "087ca91e3b5edd78a06334235be29ddfc2a6445e05071d913eed1fb9fd4fa581"
+    }
+   ],
+   "adopted": "comment, token, identifier, and automatic-semicolon rules",
+   "sgo_changes": "operators outside subset 0 are recognized only to be denied"
+  },
+  {
+   "clause": "SGO-LEX-004",
+   "source_sections": [
+    {
+     "section": "Integer_literals",
+     "sha256": "8daae8105f089a7824bd94b75221d8b8b249a0ce18b492b2c006e550c765233b"
+    },
+    {
+     "section": "String_literals",
+     "sha256": "4d0ffdc28ce52070c974b6d483fca542246a282e4a79025ed5ee49ab004a75df"
+    }
+   ],
+   "adopted": "integer and string literal syntax",
+   "sgo_changes": "no legacy octal, rune, float, imaginary literals; escape set reduced"
+  },
+  {
+   "clause": "SGO-VAL-001",
+   "source_sections": [
+    {
+     "section": "Arithmetic_operators",
+     "sha256": "ea168ea92e3288193e4e0110d62b06350b908a1664aaca8223fa46eab4679415"
+    },
+    {
+     "section": "Integer_operators",
+     "sha256": "032a9be0934ba2f3fb04e30e62de70f48850957babd7c027f5b9dfbbbadce929"
+    }
+   ],
+   "adopted": "truncated division and remainder, shift and bitwise meaning",
+   "sgo_changes": "overflow, division by zero, and out-of-range shifts are checked failures (D02)"
+  },
+  {
+   "clause": "SGO-VAL-004",
+   "source_sections": [
+    {
+     "section": "Constant_expressions",
+     "sha256": "f243e9c979b3eaff168e7c405a5585f3169f4d11b86f448d27a7c625c61bedb3"
+    }
+   ],
+   "adopted": "exact untyped constant arithmetic",
+   "sgo_changes": "iota denied; typed int only"
+  }
+ ]
+}

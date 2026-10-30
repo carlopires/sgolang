@@ -4,7 +4,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §16, the user's naming decision (d
 
 ### SGO-TOOL-001 — The sgo driver
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-001, SGO-IMP-002, SGO-DRAIN-002, SGO-ERR-001, SGO-BUILD-001; R7.
 - **grammar_and_types:** The S-Go driver is the executable `sgo`. Subset-0 commands: `sgo build [-o out] [-drain-budget=<ms>] [-target=<os>/<arch>] [packages]`, `sgo run [-drain-budget=<ms>] <main package>`, `sgo version`, `sgo fmt [files]`. Any other command or flag is rejected. In particular there is no flag, environment variable, file name, build tag, or pragma that changes the language, disables a check, selects a different compiler, or enables Go compatibility (S01).
 - **preconditions:** The working directory is inside a module (SGO-IMP-001).

@@ -41,6 +41,7 @@ func TestMutationsDetected(t *testing.T) {
 		MutLatestFailure:       "nursery outcome picks latest failure",
 		MutNoCurrentScopeCheck: "spawn into a non-current scope allowed",
 		MutDoubleWake:          "sleep resolved twice",
+		MutDuplicateCompletion: "child completion published twice",
 	}
 	for mut, desc := range muts {
 		var hits []string
@@ -98,6 +99,7 @@ func TestCheckRejectsInvalidHistories(t *testing.T) {
 		"scope state went backwards":   func(s *State) { s.Scopes[0].State = Open },
 		"wait resolved twice":          func(s *State) { s.waitsDone[99] = 2 },
 		"task missing from its scope":  func(s *State) { s.Scopes[0].Children = nil },
+		"completion published twice":   func(s *State) { s.published[1] = 2 },
 	}
 	for name, corrupt := range cases {
 		bad := base.Clone()

@@ -4,7 +4,7 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-NET`: `subset0` =
 
 ### SGO-NET-001 — Network are denied in subset 0
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-ERR-001; plan §8.3.
 - **grammar_and_types:** Denied: all network access: sockets, DNS, HTTP, and listeners. No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
 - **preconditions:** n/a — denial clause; there is nothing to use.

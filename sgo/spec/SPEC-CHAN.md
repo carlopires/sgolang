@@ -4,7 +4,7 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-CHAN`: `subset0` 
 
 ### SGO-CHAN-001 — Channels and select are denied in subset 0
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-ERR-001; D06; plan §7.
 - **grammar_and_types:** Denied: channel types (`chan T`, `<-chan T`, `chan<- T`), `make` of channels, send and receive operators `<-`, `close`, `len`/`cap` of channels, `select`, and channel `range`. No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
 - **preconditions:** n/a — denial clause; there is nothing to use.

@@ -4,7 +4,7 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-USERTYPE`: `subse
 
 ### SGO-UTYPE-001 — User-defined types and methods are denied in subset 0
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-ERR-001; D05.
 - **grammar_and_types:** Denied: `type` declarations, named types, type aliases, methods and method values, and embedding. No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
 - **preconditions:** n/a — denial clause; there is nothing to use.

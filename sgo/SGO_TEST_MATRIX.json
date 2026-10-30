@@ -118,9 +118,11 @@
       ],
       "scenario": "Enumerate bounded create/admit/finish/join/cancel/finalize histories.",
       "expected": "Every accepted terminal state satisfies the declared ownership and obligation invariants; exploration bounds are reported.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "sgo/model (test-model.sh) on darwin/arm64, linux/amd64, linux/arm64; sgo/evidence/w01/README.md"
+      ]
     },
     {
       "id": "M02",
@@ -133,9 +135,11 @@
       ],
       "scenario": "Mutate the model to allow a child to run before admission.",
       "expected": "The invariant oracle rejects a witness history.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "sgo/model (test-model.sh) on darwin/arm64, linux/amd64, linux/arm64; sgo/evidence/w01/README.md"
+      ]
     },
     {
       "id": "M03",
@@ -148,9 +152,11 @@
       ],
       "scenario": "Mutate the model to close with a live child or outstanding permit.",
       "expected": "The oracle rejects both witnesses.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "sgo/model (test-model.sh) on darwin/arm64, linux/amd64, linux/arm64; sgo/evidence/w01/README.md"
+      ]
     },
     {
       "id": "M04",
@@ -163,9 +169,11 @@
       ],
       "scenario": "Complete one modeled task twice.",
       "expected": "Second completion is rejected without decrementing counters again.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "sgo/model (test-model.sh) on darwin/arm64, linux/amd64, linux/arm64; sgo/evidence/w01/README.md"
+      ]
     },
     {
       "id": "M05",
@@ -178,9 +186,11 @@
       ],
       "scenario": "Explore a live child spawning a descendant while its owner begins normal join.",
       "expected": "Either valid admission is counted before finalization or invalid admission is rejected; no admitted descendant is lost.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "sgo/model (test-model.sh) on darwin/arm64, linux/amd64, linux/arm64; sgo/evidence/w01/README.md"
+      ]
     },
     {
       "id": "O01",
@@ -2129,7 +2139,9 @@
       "expected": "Every accepted surface maps to frozen clauses and enforcement; the mutated omission blocks admission. Inventory is not a manually selected examples-only list.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages"
+      ]
     },
     {
       "id": "S03",
@@ -2146,7 +2158,9 @@
       "expected": "Affected syntax/import/intrinsic is rejected with the exact missing/conflicting clause identity; upstream behavior is not used as a fallback.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages"
+      ]
     },
     {
       "id": "S04",
@@ -2163,7 +2177,9 @@
       "expected": "Only a bounded, digest-locked, closed, conflict-resolved clause set can be admitted; drift and blanket inheritance fail review/admission.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages"
+      ]
     },
     {
       "id": "S05",
@@ -2286,7 +2302,9 @@
       "expected": "Missing TCB clauses block the target path and spoofed identity/callers fail. Trust never means unspecified or generally privileged application code.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages"
+      ]
     },
     {
       "id": "S12",
@@ -2377,7 +2395,9 @@
       "expected": "Every admitted family has explicit legality and allowed outcomes with tests. Unresolved families remain rejected; arbitrary implementation behavior is not a spec.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages"
+      ]
     },
     {
       "id": "S17",
@@ -2449,7 +2469,9 @@
       "expected": "Each claim states its actual scope. Contract coverage is not mislabeled as proof of arbitrary program correctness, termination, or all schedules.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages"
+      ]
     }
   ]
 }

@@ -4,7 +4,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §1, decisions D14/D19, and resolut
 
 ### SGO-LEX-001 — Source text
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-ERR-001; D19; R2.
 - **grammar_and_types:** A source file is a sequence of Unicode code points encoded as UTF-8, stored in a file whose name ends in `.sgo`. A byte-order mark (U+FEFF) is permitted only as the first code point and is ignored. Files ending in `.go` or any other extension are never S-Go source.
 - **preconditions:** The file is readable and its bytes are valid UTF-8.
@@ -26,7 +26,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §1, decisions D14/D19, and resolut
 
 ### SGO-LEX-002 — Tokens, comments, and semicolons
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-LEX-001, SGO-LEX-003; D19.
 - **grammar_and_types:** Tokens are identifiers, keywords, operators and punctuation, and literals. Identifiers are a letter or `_` followed by letters, digits, or `_`, where letters are Unicode categories Lu, Ll, Lt, Lm, Lo and digits are category Nd. Comments are `//` to end of line and `/* … */` (not nested); a comment containing a newline acts like a newline. Admitted operators: `+ - * / % & | ^ &^ << >> && || ! == != < <= > >= = := += -= *= /= %= &= |= ^= &^= <<= >>= ++ -- ( ) { } , ; . :`. The scanner recognizes all other Go operators (e.g. `<-`, `...`, `~`, `[`, `]`) so that their use is reported by SGO-ERR-001 rather than misparsed. Automatic semicolon insertion: a semicolon is inserted after a line's final token if that token is an identifier, an integer or string literal, one of the keywords `break`, `continue`, `return`, or one of `++ -- ) }`. These rules are adapted from the Go specification at go1.27.3 (D19) and are complete as stated here.
 - **preconditions:** SGO-LEX-001 holds.
@@ -48,7 +48,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §1, decisions D14/D19, and resolut
 
 ### SGO-LEX-003 — Reserved words
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-LEX-002, SGO-SPAWN-005, SGO-ERR-001; D11, D14.
 - **grammar_and_types:** The reserved words are `break case chan const continue default defer else fallthrough for func go goto if import interface map package range return select struct switch type var nursery`. A reserved word is never an identifier, in any position. Of these, `chan`, `fallthrough`, `go`, `goto`, `interface`, `map`, `range`, `select`, `struct`, and `type` begin constructs denied in subset 0.
 - **preconditions:** n/a — applies to every token.
@@ -70,7 +70,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §1, decisions D14/D19, and resolut
 
 ### SGO-LEX-004 — Literals
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-VAL-004, SGO-ERR-001; D03, D04; R2.
 - **grammar_and_types:** Integer literals: decimal (`0` or a non-zero digit followed by digits), hexadecimal (`0x`/`0X`), octal (`0o`/`0O`), binary (`0b`/`0B`), with optional single `_` between digits or after the base prefix. A leading-zero form such as `012` is a compile error (no legacy octal). String literals: interpreted (`"…"`, escapes exactly `\n \t \r \\ \" \xHH`, no raw newline) and raw (backquoted, no escapes, carriage returns removed). Floating-point, imaginary, and rune literals, and the escapes `\a \b \f \v \' \u \U \NNN`, are denied.
 - **preconditions:** SGO-LEX-001 holds.

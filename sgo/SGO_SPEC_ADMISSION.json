@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": "0.1.0-draft",
-  "admission_digest": "f8d964efde0f2439eb4199439bcec2f4cb3cc0078b89040cd3b9433939db7985",
-  "status": "inventory_seed_not_an_admission_allowlist",
-  "warning": "This is not a completed language specification. Every family must be expanded into concrete clauses and checked against real compiler/API/IR surfaces. No feature is claimed implemented or admitted by this handoff.",
+  "spec_version": "0.1.0",
+  "admission_digest": "0cb2a1c95d357c936cbbc9982062860fc780ccf2b59756d0a1f68f317fbc7935",
+  "status": "subset0_frozen_not_admitted",
+  "warning": "Spec 0.1.0 is frozen: every row's clauses are fixed by digest. No row is admitted: admission requires implementation, enforcement, and executed evidence (constitution §6), starting in W03.",
   "default_decision": "reject",
   "missing_draft_conflicting_or_stale_contract_decision": "reject",
   "language_dialects": [
@@ -57,14 +57,14 @@
       "surface_family": "Lexing, grammar, reserved words, and source recovery",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-LEX-001",
         "SGO-LEX-002",
         "SGO-LEX-003",
         "SGO-LEX-004"
       ],
-      "normative_text_digest": "16c867fb01b1cb763e9ece249450ed6c391ae2bd59a467d4205e12b312f195c8",
+      "normative_text_digest": "7e2981f3b5fffcebd82c56070b38c9439aa7a40dd96312e10368760e5b089c3a",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X01",
@@ -76,16 +76,22 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-LEX-001": "2cfbeab442e1f80ccc4a361c983d63fb95acfa425f024db18d9022b42cf8f0ad",
-        "SGO-LEX-002": "f9d765fc78e7bda8d128f525e2ef83e89ce52cacf09b8c7a3490fd6746c07afe",
-        "SGO-LEX-003": "71866962f86eeb7fd34be2979b3ca09e78735fe5c5873b19a5b91d4823b40f11",
-        "SGO-LEX-004": "59c5ae5f5b980d8b8a9372e270b575c6c9266267ef1e30c3a69d7f3d9c155915"
+        "SGO-LEX-001": "2235bd8f9312d1c7757421ad5275d263515361e10ce67d1e559891ae5088aa14",
+        "SGO-LEX-002": "5ab53a125a61b1522289062a481e6ce1cdd6f51178500930f11921048f9c570f",
+        "SGO-LEX-003": "303c7bef90fe07f8265aa4556bc236e64376cfeb4dff119bbc88bac18ab5f5aa",
+        "SGO-LEX-004": "1de767d0f494cd18a8ad92de26480504a95f86cf98b8c14eae4eedce742ca6ff"
       },
       "clause_status": {
-        "SGO-LEX-001": "draft",
-        "SGO-LEX-002": "draft",
-        "SGO-LEX-003": "draft",
-        "SGO-LEX-004": "draft"
+        "SGO-LEX-001": "frozen",
+        "SGO-LEX-002": "frozen",
+        "SGO-LEX-003": "frozen",
+        "SGO-LEX-004": "frozen"
+      },
+      "clause_versions": {
+        "SGO-LEX-001": 1,
+        "SGO-LEX-002": 1,
+        "SGO-LEX-003": 1,
+        "SGO-LEX-004": 1
       }
     },
     {
@@ -93,7 +99,7 @@
       "surface_family": "Names, scopes, imports, initialization, and nursery bindings",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-BIND-001",
         "SGO-BIND-002",
@@ -101,7 +107,7 @@
         "SGO-BIND-004",
         "SGO-BIND-005"
       ],
-      "normative_text_digest": "1184f74d6d6994d691aa42ca50b824af0d769ce7e1e37f271b329c35953d3dfc",
+      "normative_text_digest": "5743b7a11a1178fccf29c41cf6798fe8fe62d889ce40d51861a1699a47ee4782",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X02",
@@ -111,18 +117,25 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-BIND-001": "206a3204b829a241fd73cf85e6d6a7998c8c72eedb9a4c4f3d99f889a35f155b",
-        "SGO-BIND-002": "f7c48d99db63dd6707a51a1ff1c52b5a5d46953b70acfecf36ee1ca142a5a286",
-        "SGO-BIND-003": "73a3133e7b3ea93bc2f117d121f011e344a09c8ea304b62d6d10a406f552ae80",
-        "SGO-BIND-004": "1aaa3ec9fbcdce530e457474f77cdc0e6e56078acd4e3132c1168b49b9012c74",
-        "SGO-BIND-005": "8f10357b4e4dfc0a00115743596b4b05ad1c1b806dff3ba7acafa7b69be6f11b"
+        "SGO-BIND-001": "6e990dc11d03f357df717f0f7bad0290b2674b114bc919072a320f4311db1377",
+        "SGO-BIND-002": "3dd42fe9abb02c8f20f67b6a4b40f2696edf26c6baa080fdabb0a2978fab6dbc",
+        "SGO-BIND-003": "6fe754599ccc149e144aa90937dd2d2659cc39b290133b3fa7315b0fdc77216b",
+        "SGO-BIND-004": "cb5bfd6f8c05ead33cbf3761cd1738907c9746b9c9063b6c2b0428b6d32ad555",
+        "SGO-BIND-005": "9821bab680dce84c76599e97cbd2be814767e417d0435afdf868e0edc795034b"
       },
       "clause_status": {
-        "SGO-BIND-001": "draft",
-        "SGO-BIND-002": "draft",
-        "SGO-BIND-003": "draft",
-        "SGO-BIND-004": "draft",
-        "SGO-BIND-005": "draft"
+        "SGO-BIND-001": "frozen",
+        "SGO-BIND-002": "frozen",
+        "SGO-BIND-003": "frozen",
+        "SGO-BIND-004": "frozen",
+        "SGO-BIND-005": "frozen"
+      },
+      "clause_versions": {
+        "SGO-BIND-001": 1,
+        "SGO-BIND-002": 1,
+        "SGO-BIND-003": 1,
+        "SGO-BIND-004": 1,
+        "SGO-BIND-005": 1
       }
     },
     {
@@ -130,7 +143,7 @@
       "surface_family": "Type system, function types, checked callable/effect summaries",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-TYPE-001",
         "SGO-TYPE-002",
@@ -139,7 +152,7 @@
         "SGO-TYPE-005",
         "SGO-TYPE-006"
       ],
-      "normative_text_digest": "d15b3c561c84cb1834216049fcd44c163a68ed65e3f2ea1a7693a0543cbc543a",
+      "normative_text_digest": "ec857ea587e8c66102c480767ce7a8f8bea2b64dd76bf7eb7008597230b304e6",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X10",
@@ -149,20 +162,28 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-TYPE-001": "6083da406ced4ce2790911a70ed475caa4c14f78edf1382eb0157a9352fb20d2",
-        "SGO-TYPE-002": "a8add95831751c40569a3b95301af45f747fc0a1142428ddef42f8abf585a510",
-        "SGO-TYPE-003": "26476d37ca42c8ce0c74e92e79ce3fb15baea8b0814de79c9d1ddcb520d536b1",
-        "SGO-TYPE-004": "18e1d299ad16d3db84871fa2963f3f491bb485d6461ab37ce2d01edb8030593c",
-        "SGO-TYPE-005": "523a384ee1289ce5608ee8e987622050c99e22ca6ce6291b9ce6aabbf664b4e9",
-        "SGO-TYPE-006": "b211dd34ab3f0e87904024d41f83e869d349c6b27127eeac5f6357f29ceb1f68"
+        "SGO-TYPE-001": "e8b7576d40c1130276fd3f5917cacb6005ced6d8957a0f0b166e371ba6f4c481",
+        "SGO-TYPE-002": "8f0be92070475862d6095c90b28a2b0e63d24f6a3f9062b278fed9f01b61d1e2",
+        "SGO-TYPE-003": "a1e06f6a06fccd6bc4d5a83ecf208d1a612639b582bf70abef98331e8b841343",
+        "SGO-TYPE-004": "ed7f04b19e34d997c1d626f4056021977c51e644d9adc52207ca5a149f9d4819",
+        "SGO-TYPE-005": "765d5ca37e3d0face6b3d7512bd179e7d6831ed7b645bb9141003a0d497f5936",
+        "SGO-TYPE-006": "782ac892c2affcdc43a6c63e4007c4e2bf47c7f98583e0f194194c9b7febc992"
       },
       "clause_status": {
-        "SGO-TYPE-001": "draft",
-        "SGO-TYPE-002": "draft",
-        "SGO-TYPE-003": "draft",
-        "SGO-TYPE-004": "draft",
-        "SGO-TYPE-005": "draft",
-        "SGO-TYPE-006": "draft"
+        "SGO-TYPE-001": "frozen",
+        "SGO-TYPE-002": "frozen",
+        "SGO-TYPE-003": "frozen",
+        "SGO-TYPE-004": "frozen",
+        "SGO-TYPE-005": "frozen",
+        "SGO-TYPE-006": "frozen"
+      },
+      "clause_versions": {
+        "SGO-TYPE-001": 1,
+        "SGO-TYPE-002": 1,
+        "SGO-TYPE-003": 1,
+        "SGO-TYPE-004": 1,
+        "SGO-TYPE-005": 1,
+        "SGO-TYPE-006": 1
       }
     },
     {
@@ -170,7 +191,7 @@
       "surface_family": "Primitive values, conversions, equality, arithmetic and evaluation order",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-VAL-001",
         "SGO-VAL-002",
@@ -178,7 +199,7 @@
         "SGO-VAL-004",
         "SGO-VAL-005"
       ],
-      "normative_text_digest": "e75549addd83377f5d0223d91efaa4af0036b14e1f33baaae54f663ad9c46d39",
+      "normative_text_digest": "0294a05c630fb35050df0dfe196ab5671d4e4a4dc96c9a4d175236eb49ab3ea0",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X05",
@@ -187,18 +208,25 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-VAL-001": "f0fe13f69f281f9a1dd29fa629cd12abf4799ac7ac4907998a2cc331dfd712c6",
-        "SGO-VAL-002": "8a028d01ba9be689e252ccb8cd82d0b72361b1bb9216e295b928cc3176a18004",
-        "SGO-VAL-003": "fdf53a4b90b3cb37d657412925aea61c3a75c2ce1cbe5ca3ad0ea9e1d6e4b4fa",
-        "SGO-VAL-004": "76377e3af619be6851cfd512c150b40a5b29395357d1f40306fe15df9cfa0a97",
-        "SGO-VAL-005": "8565775a7539042b78561964be77935df801dd3f13f8e449255345563ddb320b"
+        "SGO-VAL-001": "34e8f53afd2b5480eb3c70c1f87bc89e215a73ae3d0ba2a8f175cf061a29ac1a",
+        "SGO-VAL-002": "ec580b8df1c8055c93e7752e379875788b037e9addece335784c6fd2dca7f773",
+        "SGO-VAL-003": "6d1cc38c5611fdc49961cc541f8e5c82d7ffd6e7b991f534f15f4c21ed83b368",
+        "SGO-VAL-004": "0d96e3242a9b2d098219415e02cc6eca78917f7fa9dfbc7aaecd7c13201805a8",
+        "SGO-VAL-005": "22ac1d498ce3c0394968e13e118f121233ee6bcf5176c1f1b50d38e87afb3f9c"
       },
       "clause_status": {
-        "SGO-VAL-001": "draft",
-        "SGO-VAL-002": "draft",
-        "SGO-VAL-003": "draft",
-        "SGO-VAL-004": "draft",
-        "SGO-VAL-005": "draft"
+        "SGO-VAL-001": "frozen",
+        "SGO-VAL-002": "frozen",
+        "SGO-VAL-003": "frozen",
+        "SGO-VAL-004": "frozen",
+        "SGO-VAL-005": "frozen"
+      },
+      "clause_versions": {
+        "SGO-VAL-001": 1,
+        "SGO-VAL-002": 1,
+        "SGO-VAL-003": 1,
+        "SGO-VAL-004": 1,
+        "SGO-VAL-005": 1
       }
     },
     {
@@ -206,14 +234,14 @@
       "surface_family": "References, aliasing, shared mutable memory, atomics and data-race contract",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W07",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-MEM-001",
         "SGO-MEM-002",
         "SGO-MEM-003",
         "SGO-MEM-004"
       ],
-      "normative_text_digest": "e6a8c39153e10be446fd58bc6c2a0984c40ed52ec869698512c1ccd267a06797",
+      "normative_text_digest": "40772a49c5895148a7f6a48afb5f368760312089fd7cd021c86f5a2c44517ee8",
       "admitted_in": [],
       "acceptance_case_ids": [
         "O09",
@@ -222,16 +250,22 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-MEM-001": "d83409541674016733b8a84506a8a5ae508c6cc930ccb64aea340dd21495463f",
-        "SGO-MEM-002": "e81c3f75d61ab6094c5de16561cdcc264aec1d176d6411bc57df318a79fbef1f",
-        "SGO-MEM-003": "7cf39bd837d99ebb050ed2fe5445b77113fc76414477316305e7c1fe158907b9",
-        "SGO-MEM-004": "7644f8b9d76f3a610e6c95b8f9f5b86dbe7cace6609445b94723abb9cee46c1e"
+        "SGO-MEM-001": "dadf4fd01d135c27c98916532bffbb6117469ef920f178158a6b9a4dc8e11db6",
+        "SGO-MEM-002": "d5b73b4725896bf537264759b44b61383f6e1c7f7b4073256acb91b0ecfb826f",
+        "SGO-MEM-003": "f6db2e4e1390c429f17944e111a14803d0cc8c1e47d47da9599af1f98cdfd02c",
+        "SGO-MEM-004": "b459160b94cf0d75d444d97ef73930182055ad8ac55bf934644533f712d0d987"
       },
       "clause_status": {
-        "SGO-MEM-001": "draft",
-        "SGO-MEM-002": "draft",
-        "SGO-MEM-003": "draft",
-        "SGO-MEM-004": "draft"
+        "SGO-MEM-001": "frozen",
+        "SGO-MEM-002": "frozen",
+        "SGO-MEM-003": "frozen",
+        "SGO-MEM-004": "frozen"
+      },
+      "clause_versions": {
+        "SGO-MEM-001": 1,
+        "SGO-MEM-002": 1,
+        "SGO-MEM-003": 1,
+        "SGO-MEM-004": 1
       }
     },
     {
@@ -239,14 +273,14 @@
       "surface_family": "Branches, loops, returns, closures and all scope exits",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-CTL-001",
         "SGO-CTL-002",
         "SGO-CTL-003",
         "SGO-CTL-004"
       ],
-      "normative_text_digest": "c0f3a2a24b49e146740263f76c60f60a8a6752cb3be648b5e1a6343db39cd756",
+      "normative_text_digest": "8e21c0a4f6adc0f053f47091b33e15d15c806c2bd37bc64964140781b1f88394",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X04",
@@ -259,16 +293,22 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-CTL-001": "05cc294f93cb2413e2a2b9ca5742a29584cd79ecf61a9234ea297800032053b5",
-        "SGO-CTL-002": "b9486382021af5e5a5643b0063d45ec05944db9993cdeeced8b0ad2415097748",
-        "SGO-CTL-003": "3d2447edd9d501468a062778dc687245e5fce3a645dc2b50737e559f384a847b",
-        "SGO-CTL-004": "55500bf4ea97261b3d48aa7617704ebade7cbcfd0900509e0c7178778ca51b78"
+        "SGO-CTL-001": "9ed4d5bcbd38d6a3ca98cd7877dd76ab65d8ad9b500528f4baadf04d1716b628",
+        "SGO-CTL-002": "3087cd21a820d14ed4f0e06471a6ad4337740c0c517db067c7baf24cc73e62e4",
+        "SGO-CTL-003": "ca88b5232a175d679c9f77ed15214bf1a95f0f774346dd974e391ed29a3805d9",
+        "SGO-CTL-004": "9e4a91bbd310b58c76f8d4529f545e0aa3a45a2b6f220bd87ae51d21d6c502b8"
       },
       "clause_status": {
-        "SGO-CTL-001": "draft",
-        "SGO-CTL-002": "draft",
-        "SGO-CTL-003": "draft",
-        "SGO-CTL-004": "draft"
+        "SGO-CTL-001": "frozen",
+        "SGO-CTL-002": "frozen",
+        "SGO-CTL-003": "frozen",
+        "SGO-CTL-004": "frozen"
+      },
+      "clause_versions": {
+        "SGO-CTL-001": 1,
+        "SGO-CTL-002": 1,
+        "SGO-CTL-003": 1,
+        "SGO-CTL-004": 1
       }
     },
     {
@@ -276,7 +316,7 @@
       "surface_family": "Function defers, scoped finalizers, panic/recover and task exit",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W04",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-DEF-001",
         "SGO-DEF-002",
@@ -284,7 +324,7 @@
         "SGO-DEF-004",
         "SGO-DEF-005"
       ],
-      "normative_text_digest": "79cb4ae7695e0299603fc40f76e9f4b33c493a517f527542250539664735fafc",
+      "normative_text_digest": "b097e95277aa867b65f674eea7f0efd4885a88132a0d5d6ece71b2090e3265a5",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X09",
@@ -298,18 +338,25 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-DEF-001": "ada7cd8d3aa5b4a0305044fba0106cc64318cc377a1457a70e6b75c125d4864d",
-        "SGO-DEF-002": "d91d278bf1727e126b2af992d7e9f580f3deb8c4644e210ebf660c1fb2e4166a",
-        "SGO-DEF-003": "71b0f0b237095a7451e011c385dfeacfe5404eafa5f30de571dcfc3402d7537a",
-        "SGO-DEF-004": "5b0f4fd3aa7b93f6ee447374cf9f07121098c1efca47895354f323d591aa4518",
-        "SGO-DEF-005": "cfa32e603fc99a48788af8b4fb217eddaa63a8e0bdb061bb733d761034a7d349"
+        "SGO-DEF-001": "c05ee5ce795aea70813fc91b16fc35f2a0fc75c3f7c051e70a19044754840e59",
+        "SGO-DEF-002": "d592131a36b9b05ca6c4ea5b3e543f77dba165a9a1ebe86a45df134eb0139cde",
+        "SGO-DEF-003": "003c87b00e6255b5465fdbd6f8cd3d0301b0afada3335e108276ddc4588654ec",
+        "SGO-DEF-004": "06425d1f4c9e53e61cbeb203d41ca5cd34ed551f2200de1d70f946343445b2bc",
+        "SGO-DEF-005": "f3ff2c1ecbccf5785b35b2f685ca4e686dea3594b25f75e7a78b9ae74a9b6f6e"
       },
       "clause_status": {
-        "SGO-DEF-001": "draft",
-        "SGO-DEF-002": "draft",
-        "SGO-DEF-003": "draft",
-        "SGO-DEF-004": "draft",
-        "SGO-DEF-005": "draft"
+        "SGO-DEF-001": "frozen",
+        "SGO-DEF-002": "frozen",
+        "SGO-DEF-003": "frozen",
+        "SGO-DEF-004": "frozen",
+        "SGO-DEF-005": "frozen"
+      },
+      "clause_versions": {
+        "SGO-DEF-001": 1,
+        "SGO-DEF-002": 1,
+        "SGO-DEF-003": 1,
+        "SGO-DEF-004": 1,
+        "SGO-DEF-005": 1
       }
     },
     {
@@ -317,7 +364,7 @@
       "surface_family": "Nursery lifecycle, nesting, terminal snapshots, quiescence",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-NUR-001",
         "SGO-NUR-002",
@@ -325,7 +372,7 @@
         "SGO-NUR-004",
         "SGO-NUR-005"
       ],
-      "normative_text_digest": "0b644efe0569407cdf8d1e22e4099f195c020d295701fbd593ff7be67cd5a68c",
+      "normative_text_digest": "a871f6c9a093855d934c44aff321afea7df96f535cbe0de52e70fa4f1373c18a",
       "admitted_in": [],
       "acceptance_case_ids": [
         "O01",
@@ -336,18 +383,25 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-NUR-001": "2ff6a7a7ca23b49f66f19cf10a1b3c1ed3eaaaf2eab3d991abb8dde266d2618f",
-        "SGO-NUR-002": "4a75ec870d15a55c30fb0618819374693f8561bc2a97326e6366eda56523ec15",
-        "SGO-NUR-003": "c285bd1d28b9c54d59ba61cffea0cdedfa6eaad7f2ba5aea698dc67aa478d798",
-        "SGO-NUR-004": "1128474df2190e953aab3767db9960e4dc63b2f4e0ae8c87ae9c2888ad97bb5a",
-        "SGO-NUR-005": "e7ed783a04d332b39f9ece2021e3a6f827f3c435540403ad29fdd01750c3afb9"
+        "SGO-NUR-001": "12bf08589117df5d8470569f6ec0262361c5de6fbb03ae51ab3007ffa194c7c9",
+        "SGO-NUR-002": "5fae5d6a50599224bbcd0f9c0e43266ce8c29e4cce4852f66aaddcc4348de630",
+        "SGO-NUR-003": "6378dcbcd64989ca4fe22a6d9f72239ed43c5d767a54c024ec6aec1792688bb1",
+        "SGO-NUR-004": "680f8d9af19827d9800e718d87f1198ea71744aa7d3cf11ac0422ddccb632cfa",
+        "SGO-NUR-005": "68147c33764f0c3bd201527a65ca428e07e7230b50cda8eae196f28ea01216b0"
       },
       "clause_status": {
-        "SGO-NUR-001": "draft",
-        "SGO-NUR-002": "draft",
-        "SGO-NUR-003": "draft",
-        "SGO-NUR-004": "draft",
-        "SGO-NUR-005": "draft"
+        "SGO-NUR-001": "frozen",
+        "SGO-NUR-002": "frozen",
+        "SGO-NUR-003": "frozen",
+        "SGO-NUR-004": "frozen",
+        "SGO-NUR-005": "frozen"
+      },
+      "clause_versions": {
+        "SGO-NUR-001": 1,
+        "SGO-NUR-002": 1,
+        "SGO-NUR-003": 1,
+        "SGO-NUR-004": 1,
+        "SGO-NUR-005": 1
       }
     },
     {
@@ -355,7 +409,7 @@
       "surface_family": "Explicit nursery capability, callback admission and outcome reporting",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-SPAWN-001",
         "SGO-SPAWN-002",
@@ -363,7 +417,7 @@
         "SGO-SPAWN-004",
         "SGO-SPAWN-005"
       ],
-      "normative_text_digest": "1d658834c994e2d8c917f8e22730234557b42ec55cc2a9a010c7a4bf8de1bab2",
+      "normative_text_digest": "beb516f9dce5cbf267e0d6caeaaf466ea317d851a87abd0e880a534ef0c93123",
       "admitted_in": [],
       "acceptance_case_ids": [
         "O03",
@@ -376,18 +430,25 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-SPAWN-001": "288d426046a0eb11fa64a22e7d4b9f261c84e4c211dfbe6e3b8912eb05d23f02",
-        "SGO-SPAWN-002": "9879906467c52229374d385f33745c41f48557c15cd5100e6391364cde8c5f31",
-        "SGO-SPAWN-003": "8f79d7382397fe0edc32353b4ca7007b86d13b4c34d8e39e81455d17355330bb",
-        "SGO-SPAWN-004": "7165b0a227fa080dabf0c426a611d9f68f6a9e7b951ea4ff9c951319cfa023eb",
-        "SGO-SPAWN-005": "b9587becd0451fbcb3bbc8f72377d0efe8df034af3828f54c5bc4e18b7d0c4cc"
+        "SGO-SPAWN-001": "2a90e2c678ca14b39c210763ba48ab5f22b2e9b0a9cb60f28c8cde5d8c83b0ba",
+        "SGO-SPAWN-002": "3b5a4c8da056da54ae22e44fa1c8612b88e98169c774da18cdf83768f35c63aa",
+        "SGO-SPAWN-003": "1cf041a1bfe0fe014a4443c46a42c6112e62d8fd4917b8cc0385a400289d0d23",
+        "SGO-SPAWN-004": "4d13f4daf63cba4af4836f2e9241599551e49943145bb8451f8a4abe2e038289",
+        "SGO-SPAWN-005": "f26e200b1285c109101a9cc06bd3cccc5a6795936733142147f4948c17c2eeeb"
       },
       "clause_status": {
-        "SGO-SPAWN-001": "draft",
-        "SGO-SPAWN-002": "draft",
-        "SGO-SPAWN-003": "draft",
-        "SGO-SPAWN-004": "draft",
-        "SGO-SPAWN-005": "draft"
+        "SGO-SPAWN-001": "frozen",
+        "SGO-SPAWN-002": "frozen",
+        "SGO-SPAWN-003": "frozen",
+        "SGO-SPAWN-004": "frozen",
+        "SGO-SPAWN-005": "frozen"
+      },
+      "clause_versions": {
+        "SGO-SPAWN-001": 1,
+        "SGO-SPAWN-002": 1,
+        "SGO-SPAWN-003": 1,
+        "SGO-SPAWN-004": 1,
+        "SGO-SPAWN-005": 1
       }
     },
     {
@@ -395,14 +456,14 @@
       "surface_family": "Sticky cancellation, owner/ancestor propagation, progress boundaries",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W04",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-CANCEL-001",
         "SGO-CANCEL-002",
         "SGO-CANCEL-003",
         "SGO-CANCEL-004"
       ],
-      "normative_text_digest": "54dd7d01c94de763f6224f09aff74a1ba966944497270a64f1053c20d69f6857",
+      "normative_text_digest": "950d1e909101469d036266645904fbfac5ef73273ffc1facf73d5e7f38a27324",
       "admitted_in": [],
       "acceptance_case_ids": [
         "C01",
@@ -414,16 +475,22 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-CANCEL-001": "4dc59d03c070d845d8c026dece15e1871727f58a6d2d16b2b77b3516d3bba7ca",
-        "SGO-CANCEL-002": "363e05ca262c7dce0dc510c40ac86214f38c4365de357c192fbcb360685fd1ac",
-        "SGO-CANCEL-003": "1cd1394055b1be20d28766ca66ba9d1f1bcf67f7d767b5106c30664649123503",
-        "SGO-CANCEL-004": "97941460ef7c25deda8e0a3c2a62bca4ce077d427d432ff9cd98c7338a8ef6d7"
+        "SGO-CANCEL-001": "60ade2e07554f653c37b2249a93c3ad32dbf1a7a3882e0bdae559d2f7691cb57",
+        "SGO-CANCEL-002": "80339981ff5ffb814b0b9321353e5feb1e90b92ad04a04137ef7d1878718f907",
+        "SGO-CANCEL-003": "d6c4d21ede2d387d4b5f6e37c760c3fc839b80b6532cb45b4f48a8b406420409",
+        "SGO-CANCEL-004": "0ffc77ed22373be0c68fd5a4b43dcf8b4c625edaf75f83730de08a069e099c60"
       },
       "clause_status": {
-        "SGO-CANCEL-001": "draft",
-        "SGO-CANCEL-002": "draft",
-        "SGO-CANCEL-003": "draft",
-        "SGO-CANCEL-004": "draft"
+        "SGO-CANCEL-001": "frozen",
+        "SGO-CANCEL-002": "frozen",
+        "SGO-CANCEL-003": "frozen",
+        "SGO-CANCEL-004": "frozen"
+      },
+      "clause_versions": {
+        "SGO-CANCEL-001": 1,
+        "SGO-CANCEL-002": 1,
+        "SGO-CANCEL-003": 1,
+        "SGO-CANCEL-004": 1
       }
     },
     {
@@ -431,13 +498,13 @@
       "surface_family": "Cleanup budget, non-cooperation, fail-stop and diagnostic behavior",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W04",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-DRAIN-001",
         "SGO-DRAIN-002",
         "SGO-DRAIN-003"
       ],
-      "normative_text_digest": "b723972f9c66f50376399f465f16bd1cb16d1262f8c8bfd4ad3e8d18ab202a39",
+      "normative_text_digest": "9a9f9c622a7dea5c108f72f40e2e0915f6e05d2009e589f989f21745cf323b95",
       "admitted_in": [],
       "acceptance_case_ids": [
         "C07",
@@ -447,14 +514,19 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-DRAIN-001": "178801311e8a840ccaae43083f9b4e3d9a015f3d3975eb54f556add33fb32049",
-        "SGO-DRAIN-002": "d0a1a1a9a5823a7354b2446058f29fc22e73666de978f38e108bbb62b7648571",
-        "SGO-DRAIN-003": "84c623ed2a424873aa3c6be3f340b4f07e66a11a2b5e76ce61c1622274a8f878"
+        "SGO-DRAIN-001": "fc0baf81aee47d7202bbc85f04e08846972bba11c1306150d65ddb4d2cf192f7",
+        "SGO-DRAIN-002": "c198ffa60e4bd3dba051f324ddfa9069605f05eebe2593876687310c22e1868c",
+        "SGO-DRAIN-003": "0a9d1eca1d73d0979a1d479cf44ac6a52b3d0ad2808e752a528d348b2c9ef1d7"
       },
       "clause_status": {
-        "SGO-DRAIN-001": "draft",
-        "SGO-DRAIN-002": "draft",
-        "SGO-DRAIN-003": "draft"
+        "SGO-DRAIN-001": "frozen",
+        "SGO-DRAIN-002": "frozen",
+        "SGO-DRAIN-003": "frozen"
+      },
+      "clause_versions": {
+        "SGO-DRAIN-001": 1,
+        "SGO-DRAIN-002": 1,
+        "SGO-DRAIN-003": 1
       }
     },
     {
@@ -462,12 +534,12 @@
       "surface_family": "Wait registration, terminal winner, park/unpark and lock order",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W04",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-WAIT-001",
         "SGO-WAIT-002"
       ],
-      "normative_text_digest": "3534d072e3cc96a9dc4f91f39fd5a276d67ae9a5e9530ea0bd547c00ef86aca9",
+      "normative_text_digest": "8e6fb6243b2f377ba9ee2ac5a1225a10ad0ef5e7b5f9fa61a4963d74118eccbf",
       "admitted_in": [],
       "acceptance_case_ids": [
         "C02",
@@ -477,12 +549,16 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-WAIT-001": "d21f21065c365c05c834fc78bb059b1edb94f81e9f7e16fa956d44b808e07086",
-        "SGO-WAIT-002": "076e0484c79463cb3e15ec0d013157b412379d6be83f8e8cbed95466435e0f66"
+        "SGO-WAIT-001": "f7d2036b89d4992fcac526824569046e5ed598f1be387141927437c5ad852b04",
+        "SGO-WAIT-002": "abdf2196d49216cdf8039688db092763fdc8f04033573ab6dac95705b98acb03"
       },
       "clause_status": {
-        "SGO-WAIT-001": "draft",
-        "SGO-WAIT-002": "draft"
+        "SGO-WAIT-001": "frozen",
+        "SGO-WAIT-002": "frozen"
+      },
+      "clause_versions": {
+        "SGO-WAIT-001": 1,
+        "SGO-WAIT-002": 1
       }
     },
     {
@@ -490,11 +566,11 @@
       "surface_family": "Reserve/commit/abort and native channels, select, close and reflection",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W07",
-      "status": "required_not_admitted",
+      "status": "denied",
       "clause_ids": [
         "SGO-CHAN-001"
       ],
-      "normative_text_digest": "1fb06d89a48a6e7d6293cab308a8da566ca38fe30394db73199c8b5954e89550",
+      "normative_text_digest": "3c5d6c8b691b6f89557d1a8278fbe9cca64bb1b257b14f664d79b9f8b7eefb1d",
       "admitted_in": [],
       "acceptance_case_ids": [
         "H01",
@@ -506,10 +582,13 @@
       "evidence": [],
       "subset0": "denied",
       "clause_digests": {
-        "SGO-CHAN-001": "845ac588d1274e34f4227327ec2d315db663c3e54ed23a47b5fd12063eca303d"
+        "SGO-CHAN-001": "c7f9fcda2055123abba122405220619df5a6b0bd3dd47509521b857fe7594276"
       },
       "clause_status": {
-        "SGO-CHAN-001": "draft"
+        "SGO-CHAN-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-CHAN-001": 1
       }
     },
     {
@@ -517,11 +596,11 @@
       "surface_family": "Permit alias/lifetime/affinity and abandoned obligation resolution",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W06",
-      "status": "required_not_admitted",
+      "status": "denied",
       "clause_ids": [
         "SGO-PERMIT-001"
       ],
-      "normative_text_digest": "f1b8d08932b9d9d537e6fb714540a1bf0ffa2f2d1d2db13ff5429ddc8d2437b4",
+      "normative_text_digest": "b111f5749861a55695a5cbffc6e37cd07b37453a336cff64fe059e8c8acfa9ae",
       "admitted_in": [],
       "acceptance_case_ids": [
         "H03",
@@ -532,10 +611,13 @@
       "evidence": [],
       "subset0": "denied",
       "clause_digests": {
-        "SGO-PERMIT-001": "7f8c74c1ee54a3eb79f1f67d3800f6683969f0a7d02306635f90c0f0e43b4361"
+        "SGO-PERMIT-001": "d58855ece11c8b1df21ffebabd57714013ab0c75f601ae15960b8e0424510f9b"
       },
       "clause_status": {
-        "SGO-PERMIT-001": "draft"
+        "SGO-PERMIT-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-PERMIT-001": 1
       }
     },
     {
@@ -543,11 +625,11 @@
       "surface_family": "Explicit nursery-authorized readiness handshake",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W05",
-      "status": "required_not_admitted",
+      "status": "denied",
       "clause_ids": [
         "SGO-READY-001"
       ],
-      "normative_text_digest": "62226e7be883cdbc48a48ab319d7182cd394d915c0332293f227cd03760e5d00",
+      "normative_text_digest": "2b3c950bfc49d21e9fe035fe3cd7d164d3627e33dad29c189db8fb1f2b5f054d",
       "admitted_in": [],
       "acceptance_case_ids": [
         "R01",
@@ -558,10 +640,13 @@
       "evidence": [],
       "subset0": "denied",
       "clause_digests": {
-        "SGO-READY-001": "483dd1b1d92b1f64b395b0dc302fc29f72bc03888df88ded7b6e08e6603b882c"
+        "SGO-READY-001": "debf73d66c2c54c39b48d39db1ba10ec92ba55a1e63a3d1eca9f9ac9b9bddd58"
       },
       "clause_status": {
-        "SGO-READY-001": "draft"
+        "SGO-READY-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-READY-001": 1
       }
     },
     {
@@ -569,11 +654,11 @@
       "surface_family": "Capabilities, task ceilings, attenuation, revocation and opaque handles",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W05",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-CAP-001"
       ],
-      "normative_text_digest": "260ba606b97f171988c90fb096c6cf1d5ff92468292c14ace253752108946d3c",
+      "normative_text_digest": "85a3a172179e4a357f1b11ea29df9b8df228990c96ff234694b7b8806e5b070d",
       "admitted_in": [],
       "acceptance_case_ids": [
         "A01",
@@ -585,10 +670,13 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-CAP-001": "5ad75f98db3997892a82256a619c70d3eb137a898765b1ab4caf8a4f9e84e719"
+        "SGO-CAP-001": "e811f7cd10fa39f4d2f29f7f4cfd7f50bcf54fab402f5c70d5c6ef2d03fcb649"
       },
       "clause_status": {
-        "SGO-CAP-001": "draft"
+        "SGO-CAP-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-CAP-001": 1
       }
     },
     {
@@ -596,12 +684,12 @@
       "surface_family": "Transitive package/body/initialization contracts and artifact identity",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-IMP-001",
         "SGO-IMP-002"
       ],
-      "normative_text_digest": "52ec7bb054b32fb1eb4cc640079fa66a7e870969e554ae9bdb7b76bc2af0cf25",
+      "normative_text_digest": "95ef7e0719504b1088d5207a1d2fbce205e8a12f0ec170d6a3a9b25272fcd008",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S09",
@@ -612,12 +700,16 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-IMP-001": "326a185c896b4f684134da0c59192e4b45bdc1c867174dcd6f60146578732a5d",
-        "SGO-IMP-002": "e4883b1da8931dea3da6a87a1e4b6f20af235a190d9ee30e88d865ed8f706a79"
+        "SGO-IMP-001": "c908d569bf0ab1935508fb2653e8178134a90f6274d9e65293a9840db84a6e03",
+        "SGO-IMP-002": "41dbe48f4eee70c3a6662bfdac21192897ef1ffa4b5372c0186f7ae0a9029126"
       },
       "clause_status": {
-        "SGO-IMP-001": "draft",
-        "SGO-IMP-002": "draft"
+        "SGO-IMP-001": "frozen",
+        "SGO-IMP-002": "frozen"
+      },
+      "clause_versions": {
+        "SGO-IMP-001": 1,
+        "SGO-IMP-002": 1
       }
     },
     {
@@ -625,12 +717,12 @@
       "surface_family": "Runtime/GC/service/assembly/intrinsic contracts and sealed callers",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W02",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-TCB-001",
         "SGO-TCB-002"
       ],
-      "normative_text_digest": "574eec2fb40b806d54462446f81cc5dff524d9081a8a54b69e2a5f2c1384f292",
+      "normative_text_digest": "d63059dbf804e7059986b1a549602cceb90935366c2372e81a61ac4d37a06bea",
       "admitted_in": [],
       "acceptance_case_ids": [
         "O07",
@@ -641,12 +733,16 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-TCB-001": "00212c2b036245d587c8d91fdd8a62b1f0c5e2ba4e99867e92ee491c14ddc4b6",
-        "SGO-TCB-002": "ba1283b6fb1a706a73f593b1e7460720d4bdd189d45350613a0c105b637065b9"
+        "SGO-TCB-001": "8d20627ca979da20e7b47f29d344f3a6f4567893f5c68003bc79f31c70f4bcbc",
+        "SGO-TCB-002": "4b75768af8a2f243edce706fe51c72bdfb37ba2231abdbf820e4833be9ef83e9"
       },
       "clause_status": {
-        "SGO-TCB-001": "draft",
-        "SGO-TCB-002": "draft"
+        "SGO-TCB-001": "frozen",
+        "SGO-TCB-002": "frozen"
+      },
+      "clause_versions": {
+        "SGO-TCB-001": 1,
+        "SGO-TCB-002": 1
       }
     },
     {
@@ -654,11 +750,11 @@
       "surface_family": "Production/virtual clocks, timers, deadlines and tie ordering",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W04",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-TIMER-001"
       ],
-      "normative_text_digest": "4fe3c54ec72778fd66cadff9302ba8b48f4a8e36efa3306c4afbe576928b08b1",
+      "normative_text_digest": "e72df26e31b489f522b86470c72a4c0fe364c73a009248950047e7e7247d01f1",
       "admitted_in": [],
       "acceptance_case_ids": [
         "C01",
@@ -667,10 +763,13 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-TIMER-001": "407974eb2c123a95ffa7e0a62cce87c6174af4b8b90ec27f1b4c4f92fbdde3b3"
+        "SGO-TIMER-001": "9376cf97d257974ef3aa5586d3f20ae30fe2e73bb845430eb174baff4febf72d"
       },
       "clause_status": {
-        "SGO-TIMER-001": "draft"
+        "SGO-TIMER-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-TIMER-001": 1
       }
     },
     {
@@ -678,11 +777,11 @@
       "surface_family": "Separate cryptographic entropy and deterministic PRNG capabilities",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W05",
-      "status": "required_not_admitted",
+      "status": "denied",
       "clause_ids": [
         "SGO-RANDOM-001"
       ],
-      "normative_text_digest": "d81e5c556cba0b37328983422735e26d1c4da1e51f1670b0ee91de845f9b6c8e",
+      "normative_text_digest": "ebfb9f07327bb86b5be285e1c2c7c165071c476bba8ca5f05ca4ef38ae120b40",
       "admitted_in": [],
       "acceptance_case_ids": [
         "D01",
@@ -691,10 +790,13 @@
       "evidence": [],
       "subset0": "denied",
       "clause_digests": {
-        "SGO-RANDOM-001": "25e229295e53638b88360b8adfc87201fb0f5336e9c98acb0d46a8a6c018a667"
+        "SGO-RANDOM-001": "635e94625cc6ac120a2689c5aca2fc96bfb686a7c0422b89fb90fa14804f0de9"
       },
       "clause_status": {
-        "SGO-RANDOM-001": "draft"
+        "SGO-RANDOM-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-RANDOM-001": 1
       }
     },
     {
@@ -702,11 +804,11 @@
       "surface_family": "Confined file capabilities, operation progress and lifetime",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W09",
-      "status": "required_not_admitted",
+      "status": "denied",
       "clause_ids": [
         "SGO-FILE-001"
       ],
-      "normative_text_digest": "a29eebd69574d07ed5c33ddf56bd320755b58cad9b2a32145a822a4b16e5639f",
+      "normative_text_digest": "a60c06d433734d8549af92ef1db4df437a2e951cd4fbcc8c2062390b4e796740",
       "admitted_in": [],
       "acceptance_case_ids": [
         "I01",
@@ -717,10 +819,13 @@
       "evidence": [],
       "subset0": "denied",
       "clause_digests": {
-        "SGO-FILE-001": "a8e62f3eb08029f38ed8d6dc78d68401b4670fcba3f24509e2c2698ba63bbfad"
+        "SGO-FILE-001": "ff7764acd866851ddc03021a8b1fb0eeb9ffa3b88cd79be410971eece2749a3b"
       },
       "clause_status": {
-        "SGO-FILE-001": "draft"
+        "SGO-FILE-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-FILE-001": 1
       }
     },
     {
@@ -728,11 +833,11 @@
       "surface_family": "Network capability, readiness, address policy and partial progress",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W09",
-      "status": "required_not_admitted",
+      "status": "denied",
       "clause_ids": [
         "SGO-NET-001"
       ],
-      "normative_text_digest": "873892ba286b5bd31d3e3fe9b5b4aaee691f6fc4873f0636636a98f4a1f80759",
+      "normative_text_digest": "94b8500a51f4d8c851e1025055def1acaa0ca1aaef45c867803bf31020018204",
       "admitted_in": [],
       "acceptance_case_ids": [
         "I02",
@@ -743,10 +848,13 @@
       "evidence": [],
       "subset0": "denied",
       "clause_digests": {
-        "SGO-NET-001": "2ca51a85ae6b997f2c1423710a306ce882a4e79eee0fe5868fbbf474896a1ec7"
+        "SGO-NET-001": "4e105bdde46541e6eb4f47d01cf42a1e33ed499ec60381dea1ef594852c22ba7"
       },
       "clause_status": {
-        "SGO-NET-001": "draft"
+        "SGO-NET-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-NET-001": 1
       }
     },
     {
@@ -754,11 +862,11 @@
       "surface_family": "Allowed nondeterminism, scheduling boundaries, virtual time and replay",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W08",
-      "status": "required_not_admitted",
+      "status": "denied",
       "clause_ids": [
         "SGO-LAB-001"
       ],
-      "normative_text_digest": "b348d38181d1f5494e74ac880d84149b58b3ef7b1a871c5f41a9b6ec12a89507",
+      "normative_text_digest": "8d9a9f50eba953e9dcf11f997de431461ce8fd8b17274e0de348f6a2081cb345",
       "admitted_in": [],
       "acceptance_case_ids": [
         "D02",
@@ -771,10 +879,13 @@
       "evidence": [],
       "subset0": "denied",
       "clause_digests": {
-        "SGO-LAB-001": "ea7af09986bae2bd8850e2230b16912c2032a8a0f4398d00235c95df067223bc"
+        "SGO-LAB-001": "9ac71fdd99d036e9307f3e35401a407bcde5842886ebb8b7a21dd765ed771327"
       },
       "clause_status": {
-        "SGO-LAB-001": "draft"
+        "SGO-LAB-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-LAB-001": 1
       }
     },
     {
@@ -782,11 +893,11 @@
       "surface_family": "Driver/compiler/linker/export/cache and source-tool admission",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W10",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-TOOL-001"
       ],
-      "normative_text_digest": "b6e17f1e321099d30b0fb6c4be98fe33f1581978897ed384b7ad5210556dad8d",
+      "normative_text_digest": "72f38f2e6f452964d9cb15c4024a690f1845d932ec29201e585a88a594c7d7e3",
       "admitted_in": [],
       "acceptance_case_ids": [
         "T01",
@@ -799,10 +910,13 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-TOOL-001": "b0dcdc0b8bee6e3e8792cb9b68668cd551c02857382ce5d9307b2744f3b4cf13"
+        "SGO-TOOL-001": "a5153f1fc319ffcac0a4276a8ad0be8cda9ead285e9a914fa529625af08e3fb8"
       },
       "clause_status": {
-        "SGO-TOOL-001": "draft"
+        "SGO-TOOL-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-TOOL-001": 1
       }
     },
     {
@@ -810,11 +924,11 @@
       "surface_family": "Host/reference/target separation and truthful self-hosting status",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W00",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-BUILD-001"
       ],
-      "normative_text_digest": "64d88878a5266301cb725402c2d5c9dd3a832ad0ed032784171d37d45665fb8b",
+      "normative_text_digest": "636c31555a7ece45e91a2f6978608c88ddf215f7ec22be82d306bd3af2899b76",
       "admitted_in": [],
       "acceptance_case_ids": [
         "B04",
@@ -825,10 +939,13 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-BUILD-001": "1183132b31077cf48c3aa825c4c0fff1823008a6c03dcb21696bfff297672ba0"
+        "SGO-BUILD-001": "c2dfdc139ecfd24652ea428d84c2ddcf63434110ec2f30be4f7b37ac12473ef5"
       },
       "clause_status": {
-        "SGO-BUILD-001": "draft"
+        "SGO-BUILD-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-BUILD-001": 1
       }
     },
     {
@@ -836,11 +953,11 @@
       "surface_family": "GC roots, stack relocation, overflow and experimental stack contract",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W02",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-STACK-001"
       ],
-      "normative_text_digest": "d6972b6e4a5c50a8c51a1e5bab738580f928ff75de03cb98322b43d1e3209dd7",
+      "normative_text_digest": "35564a8c7bc50ec2563680b382d93fb300d3699d759b81d7e61dc237f4920940",
       "admitted_in": [],
       "acceptance_case_ids": [
         "O07",
@@ -852,10 +969,13 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-STACK-001": "28617472e363f296cfd2c8af5d34166941b67706acbb064a82bda7b8abb07f45"
+        "SGO-STACK-001": "72199f3f2627b39568c422f79bfb4ae59963dc93636e54f6ec79ea3c0d213315"
       },
       "clause_status": {
-        "SGO-STACK-001": "draft"
+        "SGO-STACK-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-STACK-001": 1
       }
     },
     {
@@ -863,13 +983,13 @@
       "surface_family": "Diagnostics, resource exhaustion and runtime-check versus compile-error policy",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-ERR-001",
         "SGO-ERR-002",
         "SGO-ERR-003"
       ],
-      "normative_text_digest": "d598ff50dfb99bbea21aca3a60c7a7d5ee7b83d24540d0680eb7cbb9c35daca9",
+      "normative_text_digest": "d5b07404f472cf4e455df50ea8bb4344114ad10929d3dca93e440351f4e74f90",
       "admitted_in": [],
       "acceptance_case_ids": [
         "O04",
@@ -880,14 +1000,19 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-ERR-001": "20db72d0dcf9753b0958ef2f8d34d0bb80bc718e1a98fd926d3b2f2435949328",
-        "SGO-ERR-002": "8ed490232f477eb6346367b16d73b73054442d4988ec65ec6c4eaee5f2ee3665",
-        "SGO-ERR-003": "c8b897dc3e7b60b1d5167e7bf7cdce342f7d104c2c11cacb4866efb417c0df5b"
+        "SGO-ERR-001": "17f732afab5e5edbe6fe8bdc2e22437be0d74923cfae45fb5b0b0363d4860a13",
+        "SGO-ERR-002": "1f08a076f513576cf74f492c7eacecf5e7780e390ebbdff4ed2fb7b3d5971eaf",
+        "SGO-ERR-003": "42a0da03bae9a0da8e186438fa26df95fe89442cddffa4df0ac5431f261b95a5"
       },
       "clause_status": {
-        "SGO-ERR-001": "draft",
-        "SGO-ERR-002": "draft",
-        "SGO-ERR-003": "draft"
+        "SGO-ERR-001": "frozen",
+        "SGO-ERR-002": "frozen",
+        "SGO-ERR-003": "frozen"
+      },
+      "clause_versions": {
+        "SGO-ERR-001": 1,
+        "SGO-ERR-002": 1,
+        "SGO-ERR-003": 1
       }
     },
     {
@@ -895,11 +1020,11 @@
       "surface_family": "Floating-point types, IEEE 754 rounding, NaN and conversion outcomes",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "denied",
       "clause_ids": [
         "SGO-FLOAT-001"
       ],
-      "normative_text_digest": "59561603e92d91e2b9252310cbccb65f5ad8f2bf1219d9dc81fce7c4816f78a3",
+      "normative_text_digest": "d72c54096c1829b93945ce8de54fade8bb1beca55ecffa4d78d7261be8905818",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S16",
@@ -909,10 +1034,13 @@
       "decision_refs": "D03",
       "subset0": "denied",
       "clause_digests": {
-        "SGO-FLOAT-001": "04aca0677ab72f6587d719a2980bc286260da8e533efe38b41975b9a1382314c"
+        "SGO-FLOAT-001": "071159cfff4dfc6e4b67886f4e7f40376bdc6c086105982b34ed2b7cc70aca56"
       },
       "clause_status": {
-        "SGO-FLOAT-001": "draft"
+        "SGO-FLOAT-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-FLOAT-001": 1
       }
     },
     {
@@ -920,11 +1048,11 @@
       "surface_family": "Pointers, arrays, structs, slices, maps (incl. iteration order), strings indexing/range",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "denied",
       "clause_ids": [
         "SGO-COMP-001"
       ],
-      "normative_text_digest": "cd9040129624cc581d46746326fac15ee5bc7da0cdee2200311d539263feb605",
+      "normative_text_digest": "cbf6f2d13c35a5b19dd2ef0559cb985571e749a41a71047e03e929ebc52232d8",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S16",
@@ -934,10 +1062,13 @@
       "decision_refs": "D06,D20",
       "subset0": "denied",
       "clause_digests": {
-        "SGO-COMP-001": "fa2c93b65165d98a5c2f781d10c50d071f75ca05be6a105ddae36b1bbfd9e8c9"
+        "SGO-COMP-001": "d8cc11145d1c5a268a18cedc8d13e40b21d9b9a946084cee5eb405858dd561a9"
       },
       "clause_status": {
-        "SGO-COMP-001": "draft"
+        "SGO-COMP-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-COMP-001": 1
       }
     },
     {
@@ -945,11 +1076,11 @@
       "surface_family": "User-defined named types, methods and method sets",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "denied",
       "clause_ids": [
         "SGO-UTYPE-001"
       ],
-      "normative_text_digest": "dfe940ad50a8250d5f68c6eb73f90996653b670a3ad2e7fa90852c7abb0e171c",
+      "normative_text_digest": "b6c957eb711906f732f85cbdc4060e6af73ef15d932af08b9fbedef1e77ca5d5",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S16",
@@ -959,10 +1090,13 @@
       "decision_refs": "D05",
       "subset0": "denied",
       "clause_digests": {
-        "SGO-UTYPE-001": "4251abad6a180616774f2a7690328c03ea1d17e3a86f191fa4a58280a7288ad3"
+        "SGO-UTYPE-001": "e5e704fb5efbeb02a597ed2ef50add523fa6e5c1639f12b4161a99aa4532aa72"
       },
       "clause_status": {
-        "SGO-UTYPE-001": "draft"
+        "SGO-UTYPE-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-UTYPE-001": 1
       }
     },
     {
@@ -970,11 +1104,11 @@
       "surface_family": "Interfaces, dynamic dispatch, type assertions/switches and their effect summaries",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "denied",
       "clause_ids": [
         "SGO-IFACE-001"
       ],
-      "normative_text_digest": "887398a8e69b119633d49bd4fa43bc3c2a1e440b5c200cdc4c63872244226659",
+      "normative_text_digest": "b492f8d10ee563817de556ae81fb73e637e41902f9a94dac68c3df861ad85fd9",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S10",
@@ -984,10 +1118,13 @@
       "decision_refs": "D05",
       "subset0": "denied",
       "clause_digests": {
-        "SGO-IFACE-001": "b3c498670dea262d9dae1dd0eda0165545f73f20b7666bbe4039e5eb10e9c3b1"
+        "SGO-IFACE-001": "8bd53e28b3e54673b6277c983e8c8ba992df2a9066fc2325ae094ca2a938ec3e"
       },
       "clause_status": {
-        "SGO-IFACE-001": "draft"
+        "SGO-IFACE-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-IFACE-001": 1
       }
     },
     {
@@ -995,11 +1132,11 @@
       "surface_family": "Generics, type parameters, constraints and instantiation closure",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "denied",
       "clause_ids": [
         "SGO-GEN-001"
       ],
-      "normative_text_digest": "29df127417fec11adc05a7d96ff730b7f3edefd87847c9a43c3555717593cec8",
+      "normative_text_digest": "5baa1024ffd4f62e3cc5d9bee83b0527cbafe90dbfc06f111303ac870264b44c",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X10",
@@ -1010,10 +1147,13 @@
       "decision_refs": "D05",
       "subset0": "denied",
       "clause_digests": {
-        "SGO-GEN-001": "a40d475c6202e9d9906c56d831da95b5654a505dfb84f264ab916e15b4591fda"
+        "SGO-GEN-001": "4c5394c0aaa2ecf204ee92391a4bb62c4b2387c628dc02ce35c9c180acd35f4b"
       },
       "clause_status": {
-        "SGO-GEN-001": "draft"
+        "SGO-GEN-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-GEN-001": 1
       }
     },
     {
@@ -1021,11 +1161,11 @@
       "surface_family": "Reflection, including reflect.Select and unsafe reflection bypasses",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "denied",
       "clause_ids": [
         "SGO-REFLECT-001"
       ],
-      "normative_text_digest": "302a76b86d55d4919f89f02d3aa9e039eab87740ad51e846c39a0efef3729e64",
+      "normative_text_digest": "400f0172cc54e6e3a7e03e524d5edc46bee3db6d5b0e786f9a6f236316fe3fcd",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S10",
@@ -1036,10 +1176,13 @@
       "decision_refs": "D05",
       "subset0": "denied",
       "clause_digests": {
-        "SGO-REFLECT-001": "2509c4b06f0ce76527cc362941ffbafcf2026a7bd4d74983f782516d2d660799"
+        "SGO-REFLECT-001": "6d471766144c93194b3e1664ba458ab7094f05aab20bbe4527d21e0e96a83f78"
       },
       "clause_status": {
-        "SGO-REFLECT-001": "draft"
+        "SGO-REFLECT-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-REFLECT-001": 1
       }
     },
     {
@@ -1047,11 +1190,11 @@
       "surface_family": "Application-level unsafe, cgo, assembly, go:linkname, plugins and raw syscalls",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "denied",
       "clause_ids": [
         "SGO-NATIVE-001"
       ],
-      "normative_text_digest": "e3c8313e791b0f8961114f1865b08959238fda14034b993121e4162f63c7581e",
+      "normative_text_digest": "4b1bc0bd39efb0526dcee1f789d9e017389fc3ff0c5851930b1fc59f6174dd36",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S11",
@@ -1062,10 +1205,13 @@
       "decision_refs": "D05; plan §8.1",
       "subset0": "denied",
       "clause_digests": {
-        "SGO-NATIVE-001": "14ea1ba0200b218cb396e68097f404068fa6ce4e549f8d3c5e1f73457dc08c67"
+        "SGO-NATIVE-001": "0d9cc07ab0510ca5458e6cf579e9f4fac2ab545e78a4c495c7b843a62cebda08"
       },
       "clause_status": {
-        "SGO-NATIVE-001": "draft"
+        "SGO-NATIVE-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-NATIVE-001": 1
       }
     },
     {
@@ -1073,11 +1219,11 @@
       "surface_family": "Shared-memory synchronization: mutexes, atomics, once, wait groups and sendability",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "denied",
       "clause_ids": [
         "SGO-SYNC-001"
       ],
-      "normative_text_digest": "8c182fcf3311ac4a25b0c71836ec7db5e74a2a2ac1030382f5bdaf2e8e0d0cc8",
+      "normative_text_digest": "ae513b39e35218991eb36b78267c95f12e00ad726d7bfbc2c47c16810a20d604",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S16",
@@ -1087,10 +1233,13 @@
       "decision_refs": "D01",
       "subset0": "denied",
       "clause_digests": {
-        "SGO-SYNC-001": "af0b3c5d567b39c72f3fded44209d91183bb619efa0ce0dab726a49c773a9203"
+        "SGO-SYNC-001": "c1daaeb64cc4dc7cfcc5b567b1d6e1119c179687bd560174fab5d78d71a4bc59"
       },
       "clause_status": {
-        "SGO-SYNC-001": "draft"
+        "SGO-SYNC-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-SYNC-001": 1
       }
     },
     {
@@ -1098,14 +1247,14 @@
       "surface_family": "Process entry/exit status, stdout/stderr, arguments and environment",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-PROC-001",
         "SGO-PROC-002",
         "SGO-PROC-003",
         "SGO-PROC-004"
       ],
-      "normative_text_digest": "10d8b38e7412856ac6c45a3deac88192e3e45d2827aaddc4361d0340176b8373",
+      "normative_text_digest": "126b675cc46bd8f7e58c8a6ea776e0351f8870b94f5f8a26e8fc012ac5acfc3e",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S06",
@@ -1115,16 +1264,22 @@
       "decision_refs": "D08,D09",
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-PROC-001": "c73bfa51abd02b72f64c1e4a06e9648a92c68a5717391b7650b77bcc095fc5b7",
-        "SGO-PROC-002": "272adae160543a0672c328074f34987d26a127b68f0472d2248608c26091c6fd",
-        "SGO-PROC-003": "504380ed72ca0fe57c23670d4fb14c869f25f44901d4e051b41a14d0c0f32890",
-        "SGO-PROC-004": "aea4d308e71e58476e1596ac10d37e559056899b872196dcdb677df03b58c445"
+        "SGO-PROC-001": "2c7b704866f18ec7553f7711c048173e0ac87f597c951014fa370a5c728f169e",
+        "SGO-PROC-002": "43cc2ff8ddf53a18189750d92aa8bff977122e2715ecfb26cd8d3a9474521ced",
+        "SGO-PROC-003": "f50d3d7b4b617770907a504d3294f19a276f0b948ca2288d692a612b73b9fb2f",
+        "SGO-PROC-004": "7498b299d931a8ad3d372123c18af17b160b59544c429df8870980f326a1639d"
       },
       "clause_status": {
-        "SGO-PROC-001": "draft",
-        "SGO-PROC-002": "draft",
-        "SGO-PROC-003": "draft",
-        "SGO-PROC-004": "draft"
+        "SGO-PROC-001": "frozen",
+        "SGO-PROC-002": "frozen",
+        "SGO-PROC-003": "frozen",
+        "SGO-PROC-004": "frozen"
+      },
+      "clause_versions": {
+        "SGO-PROC-001": 1,
+        "SGO-PROC-002": 1,
+        "SGO-PROC-003": 1,
+        "SGO-PROC-004": 1
       }
     },
     {
@@ -1132,11 +1287,11 @@
       "surface_family": "Test harness: golden program tests (subset 0) and later a testing package",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "required_not_admitted",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-TEST-001"
       ],
-      "normative_text_digest": "6dd9db72ba90e5acf940f8934b612afc9f7c66c8fdbbcf394d7effb31e938dcd",
+      "normative_text_digest": "18be935cf7bf07246c7a956325d104117e5ffb2e39509e5bc845b654bb3234a6",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S01",
@@ -1146,10 +1301,13 @@
       "decision_refs": "D10",
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-TEST-001": "28205c311ff5cb0a202bb36602a545fef00ca55619f5097f30ea8d14207abb7a"
+        "SGO-TEST-001": "db988520f433af67d5245dc178a5b0cb25eb0b5c99b3fdee7d4edc0fc0f11a24"
       },
       "clause_status": {
-        "SGO-TEST-001": "draft"
+        "SGO-TEST-001": "frozen"
+      },
+      "clause_versions": {
+        "SGO-TEST-001": 1
       }
     }
   ],

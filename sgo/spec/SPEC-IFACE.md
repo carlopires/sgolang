@@ -4,7 +4,7 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-IFACE`: `subset0`
 
 ### SGO-IFACE-001 — Interfaces are denied in subset 0
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-ERR-001; D05; plan §1.4.
 - **grammar_and_types:** Denied: interface types (including `any`), dynamic dispatch, type assertions, type switches, and user implementations of `error`. No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
 - **preconditions:** n/a — denial clause; there is nothing to use.

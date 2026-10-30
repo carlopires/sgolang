@@ -54,3 +54,10 @@ The v2 work corrected planning artifacts and validated document/metadata consist
 - Evidence on darwin/arm64 (local) and linux/amd64 + linux/arm64 (CI run 41079191705): B01–B06 passed; S01/S15 passed at gate level. Upstream baseline: 0 test failures on all three targets. Reference builds are bit-identical across independent worktrees.
 - Findings: `nursery` collides with `chan` in the scanner's perfect-hash keyword table (W03 must change it); 10 of 37 symbols in the original phase documents do not exist at go1.27.3; CI images ship `/usr/bin/go`, now shadowed by a PATH guard.
 - Next: W01 (closed first-subset specification and executable oracle).
+
+## 2026-10-30 W01 passed — spec 0.1.0 frozen
+
+- 84 clauses frozen (user-approved) at spec version 0.1.0; admission digest 0cb2a1c9…. Registry rows are `specified_not_admitted` or `denied`; nothing is admitted until W03.
+- Clause digests cover only normative fields; progress fields (status, implementation_coverage, executed_evidence) can be updated without amendments. A frozen clause cannot change without a version bump (spec-tool).
+- Added: clause adoption ledger (7 clauses, 14 digest-locked Go-spec sections), model mutation M04 (duplicate completion), W01 evidence record with an explicit scope statement (S20).
+- Next: W02 (runtime ownership, join, GC-safe state).

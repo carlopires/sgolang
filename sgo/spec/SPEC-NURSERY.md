@@ -4,7 +4,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §8, decision D11, plan §4.3–§4
 
 ### SGO-NUR-001 — Syntax and binding
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-LEX-003, SGO-TYPE-005, SGO-MEM-002, SGO-BIND-004; D11.
 - **grammar_and_types:** `nursery ( identifier ) Block` is a statement. It declares `identifier` with type `*sgo.Nursery`, in scope only inside `Block`. The binder cannot be assigned. It may be passed as an argument and captured (it is effectively final). The binder may not be `_`. The anonymous form `nursery Block` is denied. A file that uses a nursery statement must import `"sgo"`.
 - **preconditions:** The statement executes on a live task.
@@ -26,7 +26,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §8, decision D11, plan §4.3–§4
 
 ### SGO-NUR-002 — Lifecycle states
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-NUR-003, SGO-CANCEL-001; plan §4.3.
 - **grammar_and_types:** n/a — dynamic rule.
 - **preconditions:** n/a — dynamic rule.
@@ -48,7 +48,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §8, decision D11, plan §4.3–§4
 
 ### SGO-NUR-003 — Join
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-NUR-002, SGO-SPAWN-002, SGO-MEM-004; OWN-3, OWN-4.
 - **grammar_and_types:** n/a — dynamic rule.
 - **preconditions:** n/a — dynamic rule.
@@ -70,7 +70,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §8, decision D11, plan §4.3–§4
 
 ### SGO-NUR-004 — Outcome
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-SPAWN-004, SGO-DEF-003, SGO-DEF-005, SGO-PROC-002; R6; plan §4.5.
 - **grammar_and_types:** n/a — dynamic rule.
 - **preconditions:** The scope is CLOSED.
@@ -92,7 +92,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §8, decision D11, plan §4.3–§4
 
 ### SGO-NUR-005 — Nesting
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-NUR-001, SGO-CANCEL-004, SGO-SPAWN-002.
 - **grammar_and_types:** A nursery statement may appear inside another nursery's block, inside a `Spawn` callback, or in any function called from them.
 - **preconditions:** n/a — always permitted.

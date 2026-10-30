@@ -4,7 +4,7 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-NATIVE`: `subset0
 
 ### SGO-NATIVE-001 — Native escape hatches are denied in subset 0
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-ERR-001; constitution §2; plan §8.1.
 - **grammar_and_types:** Denied: `unsafe`, cgo (`import "C"`), assembly files, `//go:` directives (including `linkname`, `noescape`, `nosplit`, `build`), `//sgo:` pragmas, plugins, and direct system calls (`syscall`, `golang.org/x/sys`). No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
 - **preconditions:** n/a — denial clause; there is nothing to use.

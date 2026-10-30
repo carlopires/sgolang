@@ -118,7 +118,7 @@
         "W00"
       ],
       "risk": "high",
-      "status": "pending",
+      "status": "passed",
       "plan_section": "11/W01",
       "deliverables": [
         "Frozen first-subset normative clauses and explicit adoption ledger",
@@ -139,10 +139,30 @@
         "S16",
         "S20"
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "record": "sgo/evidence/w01/README.md",
+          "recorded_at": "2026-10-30",
+          "spec_version": "0.1.0",
+          "platforms": "darwin/arm64 local; linux/amd64, linux/arm64 CI (sgo-spec workflow)",
+          "cases": {
+            "M01": "passed",
+            "M02": "passed",
+            "M03": "passed",
+            "M04": "passed",
+            "M05": "passed",
+            "S02": "W01 part passed",
+            "S03": "W01 part passed",
+            "S04": "W01 part passed",
+            "S11": "W01 part passed",
+            "S16": "W01 part passed",
+            "S20": "W01 part passed"
+          }
+        }
+      ],
       "blockers": [],
       "commit": null,
-      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+      "completion_note": "Spec 0.1.0 frozen (84 clauses, user-approved). Inventory, TCB manifest, adoption ledger, model, and 170 conformance cases in CI. Nothing is admitted until W03 implements and enforces clauses."
     },
     {
       "id": "W02",

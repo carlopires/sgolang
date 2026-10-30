@@ -212,6 +212,10 @@ func (s *State) end(t *Task) {
 	}
 	sc.Outcomes[t.ID] = t.Outcome
 	delete(sc.Live, t.ID)
+	s.published[t.ID]++
+	if s.cfg.Mut == MutDuplicateCompletion {
+		s.published[t.ID]++ // wrong: the completion is published a second time
+	}
 	s.logf("T%d ends %s", t.ID, t.Outcome)
 	if (t.Outcome == Failed || t.Outcome == Errored) && s.cfg.Mut != MutNoCancelOnFail {
 		s.cancelScope(sc.ID, fmt.Sprintf("child %d failed", t.ID))

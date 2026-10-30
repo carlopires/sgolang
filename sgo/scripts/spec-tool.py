@@ -12,8 +12,9 @@ Clause format (sgo/spec/README.md):
     - **status:** draft | frozen | superseded
     - **<field>:** text            (one per required field; continuation lines indented by two spaces)
 
-Digests are SHA-256 over the clause text (heading through the line before the next heading),
-with LF line endings, trailing whitespace stripped, and trailing blank lines removed.
+Digests are SHA-256 over the clause's normative text (heading through the line before the next heading,
+excluding the progress fields status, implementation_coverage, and executed_evidence), with LF line
+endings, trailing whitespace stripped, and trailing blank lines removed.
 """
 import hashlib
 import json
@@ -38,6 +39,9 @@ COMPUTED = {"clause_id", "normative_text_digest"}
 FORBIDDEN = [(re.compile(r"\bTODO\b|\bTBD\b|\bFIXME\b"), "placeholder"),
              (re.compile(r"same as (upstream )?go\b|whatever (upstream|go) does|as in go\b", re.I), "implicit Go semantics")]
 STATUSES = {"draft", "frozen", "superseded"}
+# Progress fields: they change as work packages add implementations and evidence, so they are excluded
+# from the normative digest. Everything else in a clause is normative and locked when frozen.
+NON_NORMATIVE = {"status", "implementation_coverage", "executed_evidence"}
 
 
 def die(msg):
@@ -53,13 +57,14 @@ def normalize(lines):
 
 
 def parse_file(path, family):
-    clauses, cur, body = [], None, []
+    clauses, cur, body, normative = [], None, [], []
+    skipping = False
     lines = open(path, encoding="utf-8").read().replace("\r\n", "\n").split("\n")
 
     def close():
         if cur is not None:
             cur["text"] = normalize(body)
-            cur["digest"] = hashlib.sha256(cur["text"].encode()).hexdigest()
+            cur["digest"] = hashlib.sha256(normalize(normative).encode()).hexdigest()
             clauses.append(cur)
 
     for n, line in enumerate(lines, 1):
@@ -70,12 +75,18 @@ def parse_file(path, family):
         if m:
             cur = {"id": m.group(1), "family_code": m.group(2), "title": m.group(4), "file": os.path.relpath(path, ROOT),
                    "line": n, "fields": {}}
-            body = [line]
+            body, normative, skipping = [line], [line], False
             continue
         if cur is None:
             continue
         body.append(line)
         f = FIELD.match(line)
+        if f:
+            skipping = f.group(1) in NON_NORMATIVE
+        elif not line.startswith("  "):
+            skipping = False
+        if not skipping:
+            normative.append(line)
         if f:
             cur["fields"][f.group(1)] = f.group(2).strip()
             cur["_last"] = f.group(1)
@@ -174,6 +185,7 @@ def computed_registry(registry, families, clauses, spec_version):
         row["clause_ids"] = [c["id"] for c in cs]
         row["clause_digests"] = {c["id"]: c["digest"] for c in cs}
         row["clause_status"] = {c["id"]: c["fields"].get("status") for c in cs}
+        row["clause_versions"] = {c["id"]: int(c["fields"].get("version", "0")) for c in cs}
         row["normative_text_digest"] = (hashlib.sha256("".join(c["digest"] for c in cs).encode()).hexdigest()
                                         if cs else None)
     reg["spec_version"] = spec_version
@@ -188,11 +200,17 @@ def frozen_changes(old, clauses):
     olddig = {}
     for r in old["rows"]:
         for cid, d in (r.get("clause_digests") or {}).items():
-            olddig[cid] = (d, (r.get("clause_status") or {}).get(cid))
+            olddig[cid] = (d, (r.get("clause_status") or {}).get(cid), (r.get("clause_versions") or {}).get(cid))
     for c in clauses:
         prev = olddig.get(c["id"])
-        if prev and prev[1] == "frozen" and prev[0] != c["digest"] and c["fields"].get("status") == "frozen":
-            errs.append(f"{c['file']}:{c['line']} {c['id']}: frozen clause changed; bump version and record the amendment")
+        if not prev or prev[1] != "frozen":
+            continue
+        version = int(c["fields"].get("version", "0"))
+        if prev[0] != c["digest"] and (prev[2] is None or version <= prev[2]):
+            errs.append(f"{c['file']}:{c['line']} {c['id']}: frozen clause changed without a version bump "
+                        f"(still v{version}); bump the version and record the amendment in CHANGELOG")
+        if prev[2] is not None and version < prev[2]:
+            errs.append(f"{c['file']}:{c['line']} {c['id']}: version went down from v{prev[2]} to v{version}")
     return errs
 
 

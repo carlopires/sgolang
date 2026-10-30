@@ -4,7 +4,7 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-FILE`: `subset0` 
 
 ### SGO-FILE-001 — Files are denied in subset 0
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-ERR-001; D08; plan §8.3.
 - **grammar_and_types:** Denied: all file-system access: opening, reading, writing, listing, and stat of files or directories, including stdin. No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
 - **preconditions:** n/a — denial clause; there is nothing to use.

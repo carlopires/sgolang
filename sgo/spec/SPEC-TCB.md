@@ -4,7 +4,7 @@ Subset 0. Derived from plan §8.1, §10.2, stage map §2 (T0), invariant OWN-6, 
 
 ### SGO-TCB-001 — Trusted primitives used by subset 0
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-TCB-002, SGO-SPAWN-003, SGO-NUR-003, SGO-CANCEL-001, SGO-WAIT-001, SGO-TIMER-001, SGO-PROC-003, SGO-PROC-002, SGO-ERR-003; D22; OWN-6.
 - **grammar_and_types:** n/a — runtime contract.
 - **preconditions:** Each primitive is reachable only from compiler-generated code for its clause or from the `sgo` package's implementation, never from user source.
@@ -26,7 +26,7 @@ Subset 0. Derived from plan §8.1, §10.2, stage map §2 (T0), invariant OWN-6, 
 
 ### SGO-TCB-002 — Admission of the runtime source
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-TCB-001, SGO-IMP-002, SGO-NATIVE-001; stage map §2–§3; OWN-6. Approved by the user on 2026-10-30.
 - **grammar_and_types:** n/a — build-trust rule.
 - **preconditions:** n/a — build-trust rule.

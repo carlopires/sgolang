@@ -4,7 +4,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 
 ### SGO-TYPE-001 — Admitted types
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-TYPE-003, SGO-TYPE-005, SGO-TYPE-006; D04, D05, D06.
 - **grammar_and_types:** The admitted types are exactly: `bool`; `int`, a 64-bit two's-complement signed integer on every target; `string`, an immutable sequence of bytes; function types `func(P1, …, Pn) R` or `func(P1, …, Pn) (R1, …, Rm)` whose parameter and result types are admitted (SGO-TYPE-003); `error` (SGO-TYPE-006); and the pointer types `*sgo.Context`, `*sgo.Nursery`, `*sgo.Writer` (SGO-TYPE-005). Any other type name, type literal (array, slice, map, struct, pointer, channel, interface), type parameter, or type declaration is denied. Other integer widths, floating-point, complex, `byte`, `rune`, `uintptr`, and `any` are denied.
 - **preconditions:** n/a — static rule.
@@ -26,7 +26,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 
 ### SGO-TYPE-002 — Identity and assignability
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-TYPE-001, SGO-VAL-004.
 - **grammar_and_types:** Two types are identical if they are the same predeclared or opaque type, or function types with the same number of parameters and results and pairwise identical parameter and result types (parameter names do not matter). A value `v` is assignable to a variable of type `T` only if (a) `v`'s type is identical to `T`; or (b) `v` is an untyped constant representable as a value of `T`, where untyped integer constants are representable as `int` within its range, untyped string constants as `string`, untyped boolean constants as `bool`; or (c) `v` is the predeclared `nil` and `T` is `error`. These rules apply to assignment, initialization, argument passing, results, and comparison operands. There are no implicit conversions and no explicit conversion expressions.
 - **preconditions:** n/a — static rule.
@@ -48,7 +48,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 
 ### SGO-TYPE-003 — Function values
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-TYPE-001, SGO-MEM-002, SGO-VAL-005; R3.
 - **grammar_and_types:** A function value is a named package-level function, a function literal `func(params) results { body }`, or a variable of function type. Calls are `f(args)` with exactly as many arguments as parameters; a call to a function with multiple results may be used only as the whole right side of an assignment or declaration with matching count, or as a `return` operand list of the same types. Variadic parameters are denied. Function values cannot be compared (not even to `nil`), and there is no `nil` function value.
 - **preconditions:** The called value is a function value; with SGO-BIND-003 every function-typed variable is initialized.
@@ -70,7 +70,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 
 ### SGO-TYPE-004 — Sendability
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-MEM-002, SGO-MEM-003, SGO-SPAWN-001; D01.
 - **grammar_and_types:** A type is sendable if a value of it can be observed by more than one task without a data race. In subset 0 every admitted type is sendable: `bool`, `int`, `string`, and `error` values are immutable; capability handles are internally synchronized (SGO-TCB-001); function values are sendable because their captured variables are effectively final (SGO-MEM-002). A value may reach another task only through a `Spawn` callback's captures or through values passed by such a callback.
 - **preconditions:** n/a — static rule.
@@ -92,7 +92,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 
 ### SGO-TYPE-005 — Opaque capability types
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-CAP-001, SGO-PROC-001, SGO-NUR-001, SGO-SPAWN-003, SGO-PROC-003.
 - **grammar_and_types:** `sgo.Context`, `sgo.Nursery`, and `sgo.Writer` are opaque types usable only as `*sgo.Context`, `*sgo.Nursery`, `*sgo.Writer`. User code may declare variables and parameters of these types, pass and capture them, and call their methods (SGO-CAP-001). It may not write the type without `*`, construct values, dereference, take addresses, compare (including with `nil`), or use them in any expression other than method calls, assignment, argument passing, and capture.
 - **preconditions:** n/a — static rule.
@@ -114,7 +114,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 
 ### SGO-TYPE-006 — Sealed error
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-TYPE-002, SGO-CANCEL-003, SGO-SPAWN-004.
 - **grammar_and_types:** `error` is a predeclared type. Its values are `nil`, values returned by `sgo.NewError(msg string) error`, and values returned by `sgo` functions (cancellation errors, SGO-CANCEL-003; write errors, SGO-PROC-003). Admitted operations: `e == nil`, `e != nil`, `nil == e`, `nil != e`, and `e.Error() string`. Comparing two non-nil-literal error operands, defining types that implement `error`, wrapping, and type assertions are denied.
 - **preconditions:** `e.Error()` requires `e != nil`.

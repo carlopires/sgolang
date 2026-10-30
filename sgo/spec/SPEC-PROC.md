@@ -4,7 +4,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §13, decisions D08, D09, D16, reso
 
 ### SGO-PROC-001 — Entry point
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-BIND-001, SGO-TYPE-005, SGO-CANCEL-004, SGO-PROC-002; D08.
 - **grammar_and_types:** Package `main` declares exactly one function `main` with signature `func main(root *sgo.Context) error` (the parameter name is free). Any other signature, a Go-style `func main()`, or a missing `main` is a compile error. No other package may declare a package-level function named `main` with this signature as an entry point.
 - **preconditions:** n/a — static rule.
@@ -26,7 +26,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §13, decisions D08, D09, D16, reso
 
 ### SGO-PROC-002 — Exit status
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-PROC-001, SGO-DEF-003, SGO-NUR-004, SGO-DRAIN-002, SGO-ERR-002, SGO-ERR-003; D08; R6.
 - **grammar_and_types:** n/a — process rule.
 - **preconditions:** n/a — process rule.
@@ -48,7 +48,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §13, decisions D08, D09, D16, reso
 
 ### SGO-PROC-003 — Stdout capability
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-CAP-001, SGO-TYPE-005, SGO-DEF-003, SGO-MEM-004; D09; CAN-3.
 - **grammar_and_types:** `ctx.Stdout() *sgo.Writer` where `ctx` has type `*sgo.Context`; `w.WriteString(s string) error` where `w` has type `*sgo.Writer`. `print`, `println`, and every other output path are denied.
 - **preconditions:** `Stdout` is called on `root`; `WriteString` may be called by any task holding `w`.
@@ -70,7 +70,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §13, decisions D08, D09, D16, reso
 
 ### SGO-PROC-004 — Arguments and environment
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-ERR-001; D08.
 - **grammar_and_types:** Subset 0 provides no access to command-line arguments, environment variables, stdin, files, or the working directory.
 - **preconditions:** n/a — denial clause.

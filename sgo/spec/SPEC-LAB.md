@@ -4,7 +4,7 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-LAB`: `subset0` =
 
 ### SGO-LAB-001 — Deterministic lab are denied in subset 0
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-ERR-001; D22; plan §9; SPEC-4.
 - **grammar_and_types:** Denied: the lab execution configuration: virtual time, seeded scheduling, trace recording and replay, and any lab-only API or build flag. No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
 - **preconditions:** n/a — denial clause; there is nothing to use.

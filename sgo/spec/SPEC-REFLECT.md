@@ -4,7 +4,7 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-REFLECT`: `subset
 
 ### SGO-REFLECT-001 — Reflection are denied in subset 0
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-ERR-001; D05; plan §8.1.
 - **grammar_and_types:** Denied: the `reflect` package, `reflect.Select`, and any run-time type inspection. No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
 - **preconditions:** n/a — denial clause; there is nothing to use.

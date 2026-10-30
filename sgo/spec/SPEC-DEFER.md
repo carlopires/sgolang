@@ -4,7 +4,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §7, decisions D12, D13, resolution
 
 ### SGO-DEF-001 — defer
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-CTL-004, SGO-DEF-004, SGO-VAL-005; D12; R4.
 - **grammar_and_types:** `defer f(a1, …, an)` where `f` is a named function, a function-typed variable, or a function literal, and the call returns no result of type `error`. `defer` of a call returning an `error` is denied (`defer func() { _ = f() }()` discards explicitly). `defer` of `panic(…)` is denied. `n.Defer` scope finalizers are denied in subset 0.
 - **preconditions:** n/a — static rule.
@@ -26,7 +26,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §7, decisions D12, D13, resolution
 
 ### SGO-DEF-002 — panic
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-DEF-003, SGO-DEF-005; D13.
 - **grammar_and_types:** `panic(msg)` where `msg` has type `string`. It is a statement (it has no value). `recover` is denied in subset 0.
 - **preconditions:** n/a — always permitted.
@@ -48,7 +48,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §7, decisions D12, D13, resolution
 
 ### SGO-DEF-003 — Checked failure kinds
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-VAL-001, SGO-SPAWN-002, SGO-WAIT-001, SGO-PROC-003, SGO-TYPE-006, SGO-NUR-004, SGO-DEF-005.
 - **grammar_and_types:** n/a — dynamic rule.
 - **preconditions:** n/a — dynamic rule.
@@ -70,7 +70,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §7, decisions D12, D13, resolution
 
 ### SGO-DEF-004 — Failure during unwinding
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-DEF-001, SGO-DEF-003, SGO-ERR-002.
 - **grammar_and_types:** n/a — dynamic rule.
 - **preconditions:** n/a — dynamic rule.
@@ -92,7 +92,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §7, decisions D12, D13, resolution
 
 ### SGO-DEF-005 — Unwinding to the task boundary
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-DEF-001, SGO-NUR-004, SGO-SPAWN-004, SGO-PROC-002.
 - **grammar_and_types:** n/a — dynamic rule.
 - **preconditions:** n/a — dynamic rule.

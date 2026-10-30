@@ -4,7 +4,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §12.
 
 ### SGO-TIMER-001 — Clock
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-WAIT-001, SGO-DRAIN-002; D22.
 - **grammar_and_types:** Subset 0 has no clock-reading API; time is used only by `Sleep` (SGO-WAIT-001) and the drain budget (SGO-DRAIN-002).
 - **preconditions:** n/a — no user API.

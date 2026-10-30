@@ -4,7 +4,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §11, resolution R7, plan §6.3–�
 
 ### SGO-DRAIN-001 — No false success
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-NUR-003, SGO-DRAIN-002, SGO-CANCEL-002; CAN-5.
 - **grammar_and_types:** n/a — dynamic rule.
 - **preconditions:** n/a — dynamic rule.
@@ -26,7 +26,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §11, resolution R7, plan §6.3–�
 
 ### SGO-DRAIN-002 — Drain budget
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-DRAIN-001, SGO-PROC-002, SGO-ERR-002, SGO-TOOL-001; R7.
 - **grammar_and_types:** Build-time setting `sgo build -drain-budget=<ms>`, `<ms>` a positive decimal integer of milliseconds. Absent means no budget. It is recorded in the binary's build metadata.
 - **preconditions:** n/a — build setting.
@@ -48,7 +48,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §11, resolution R7, plan §6.3–�
 
 ### SGO-DRAIN-003 — Host watchdog
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-TEST-001, SGO-DRAIN-002.
 - **grammar_and_types:** n/a — test-runner rule.
 - **preconditions:** n/a — test-runner rule.

@@ -4,7 +4,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §5 and decision D01.
 
 ### SGO-MEM-001 — Variables are task-local
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-BIND-003, SGO-TYPE-001; D01, D06, D07.
 - **grammar_and_types:** The only variables are function parameters, results, and local variables. There are no package-level variables (SGO-BIND-003), pointers, or address-of operator (SGO-TYPE-001).
 - **preconditions:** n/a — structural rule.
@@ -26,7 +26,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §5 and decision D01.
 
 ### SGO-MEM-002 — Captured variables are effectively final
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-MEM-001, SGO-TYPE-003, SGO-TYPE-004; D01.
 - **grammar_and_types:** A local variable (including a parameter or named result) that is referenced inside any function literal is *captured*. A captured variable must be effectively final: after its declaration, no assignment, `op=`, `++`, `--`, or `:=` re-assignment to it appears anywhere, neither in the declaring function nor in any function literal. The rule applies to every function literal, not only to `Spawn` callbacks, because a function value can reach another task.
 - **preconditions:** n/a — static rule.
@@ -48,7 +48,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §5 and decision D01.
 
 ### SGO-MEM-003 — No data races
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-MEM-001, SGO-MEM-002, SGO-TYPE-004, SGO-TCB-001; D01.
 - **grammar_and_types:** n/a — theorem over the subset-0 rules.
 - **preconditions:** n/a — holds for every admitted program.
@@ -70,7 +70,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §5 and decision D01.
 
 ### SGO-MEM-004 — Happens-before
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-SPAWN-001, SGO-SPAWN-003, SGO-NUR-003, SGO-CANCEL-001, SGO-CANCEL-002, SGO-PROC-003.
 - **grammar_and_types:** n/a — dynamic ordering rule.
 - **preconditions:** n/a — dynamic ordering rule.

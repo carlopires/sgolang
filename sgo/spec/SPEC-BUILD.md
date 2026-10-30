@@ -4,7 +4,7 @@ Subset 0. Derived from plan §10.2, stage map, decision D22, invariant SPEC-5.
 
 ### SGO-BUILD-001 — Build stages, targets, and identity
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-TOOL-001, SGO-TCB-002, SGO-IMP-002; D21, D22; SPEC-5.
 - **grammar_and_types:** n/a — build rule.
 - **preconditions:** n/a — build rule.

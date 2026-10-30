@@ -4,7 +4,7 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-PERMIT`: `subset0
 
 ### SGO-PERMIT-001 — Reserve/commit permits are denied in subset 0
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-ERR-001; plan §7.2.
 - **grammar_and_types:** Denied: reserve/commit/abort permits and any permit or obligation API. No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
 - **preconditions:** n/a — denial clause; there is nothing to use.

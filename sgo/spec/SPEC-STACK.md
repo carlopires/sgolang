@@ -4,7 +4,7 @@ Subset 0. Derived from plan §5.3, §1.2 (growable stacks first), invariants GC-
 
 ### SGO-STACK-001 — Stacks and roots in subset 0
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-ERR-003, SGO-TCB-001; D16; GC-1, GC-2.
 - **grammar_and_types:** n/a — runtime rule.
 - **preconditions:** n/a — runtime rule.

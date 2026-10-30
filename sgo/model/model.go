@@ -132,14 +132,15 @@ type Config struct {
 type Mutation int
 
 const (
-	MutNone             Mutation = iota
-	MutEarlyJoin                 // join completes when the body ends, ignoring live children (breaks OWN-3/OWN-4)
-	MutLateRegister              // a spawned child is not counted live until it first runs (breaks OWN-2)
-	MutNoCancelOnFail            // a failing child does not cancel its scope (breaks SGO-SPAWN-004)
-	MutTaskStickyCancel          // cancellation is sticky per task, not per scope (breaks SGO-CANCEL-002/004)
-	MutLatestFailure             // nursery outcome uses the latest-created failed child (breaks SGO-NUR-004)
-	MutNoCurrentScopeCheck       // spawn allowed into a scope that is not the caller's current scope (breaks SGO-SPAWN-002 (c))
-	MutDoubleWake                // a sleep may complete twice when cancellation races expiry (breaks CAN-2)
+	MutNone                Mutation = iota
+	MutEarlyJoin                    // join completes when the body ends, ignoring live children (breaks OWN-3/OWN-4)
+	MutLateRegister                 // a spawned child is not counted live until it first runs (breaks OWN-2)
+	MutNoCancelOnFail               // a failing child does not cancel its scope (breaks SGO-SPAWN-004)
+	MutTaskStickyCancel             // cancellation is sticky per task, not per scope (breaks SGO-CANCEL-002/004)
+	MutLatestFailure                // nursery outcome uses the latest-created failed child (breaks SGO-NUR-004)
+	MutNoCurrentScopeCheck          // spawn allowed into a scope that is not the caller's current scope (breaks SGO-SPAWN-002 (c))
+	MutDoubleWake                   // a sleep may complete twice when cancellation races expiry (breaks CAN-2)
+	MutDuplicateCompletion          // a child's completion is published twice (test case M04)
 )
 
 // State is the whole model state.
@@ -156,13 +157,14 @@ type State struct {
 	cfg         *Config
 	closedOnce  map[int]bool
 	observedRun map[int]bool // tasks that have taken at least one step
+	published   map[int]int  // child task ID -> number of completion publications (M04)
 }
 
 // NewState creates the initial state for a program: the root task about to run main.
 func NewState(p Program, cfg *Config) *State {
 	root := &Task{ID: 0, Scope: -1, frames: []frame{{code: p, env: map[string]int{}, nursery: -1}}}
 	return &State{Tasks: []*Task{root}, Exit: -1, waitsDone: map[int]int{}, taskSticky: map[int]bool{},
-		cfg: cfg, closedOnce: map[int]bool{}, observedRun: map[int]bool{}}
+		cfg: cfg, closedOnce: map[int]bool{}, observedRun: map[int]bool{}, published: map[int]int{}}
 }
 
 // Clone deep-copies the state (programs are shared, they are immutable).
@@ -211,6 +213,7 @@ func (s *State) Clone() *State {
 	n.taskSticky = copyBoolMap(s.taskSticky)
 	n.closedOnce = copyBoolMap(s.closedOnce)
 	n.observedRun = copyBoolMap(s.observedRun)
+	n.published = copyIntMap(s.published)
 	n.Trace = append([]string(nil), s.Trace...)
 	return &n
 }
@@ -267,6 +270,6 @@ func (s *State) Key() string {
 		sort.Ints(live)
 		fmt.Fprintf(&b, "S%d %s %v %s %v %v|", sc.ID, sc.State, live, sc.Cause, sc.Outcomes, sc.Errors)
 	}
-	fmt.Fprintf(&b, "E%d %s %s %v", s.Exit, s.ExitKind, s.ExitMsg, s.taskSticky)
+	fmt.Fprintf(&b, "E%d %s %s %v %v", s.Exit, s.ExitKind, s.ExitMsg, s.taskSticky, s.published)
 	return b.String()
 }

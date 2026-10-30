@@ -4,7 +4,7 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-FLOAT`: `subset0`
 
 ### SGO-FLOAT-001 — Floating point are denied in subset 0
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-ERR-001; D03.
 - **grammar_and_types:** Denied: `float32`, `float64`, `complex64`, `complex128`, floating-point and imaginary literals, and every operation on them. No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
 - **preconditions:** n/a — denial clause; there is nothing to use.

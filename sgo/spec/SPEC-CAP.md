@@ -4,7 +4,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §13, decision D09, invariants CAP-
 
 ### SGO-CAP-001 — Capability model in subset 0
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-TYPE-005, SGO-PROC-003, SGO-SPAWN-003, SGO-NUR-001, SGO-MEM-002; CAP-1, CAP-2.
 - **grammar_and_types:** The capabilities of subset 0 are the three handle kinds: `*sgo.Nursery` (admit children into and cancel one scope), `*sgo.Context` (cancellation queries and sleeping for one task; on `root` also obtaining the writer), and `*sgo.Writer` (write to stdout). There is no ambient authority: no package, global, or runtime state grants any of these operations.
 - **preconditions:** n/a — model clause.
