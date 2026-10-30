@@ -47,3 +47,10 @@ The v2 work corrected planning artifacts and validated document/metadata consist
 ## 2026-10-30 D22 approved
 
 - Targets: darwin/arm64 first (development host); linux/amd64 the real target; linux/arm64 first-class. Plan §1.2 and start prompt amended. From this point the canonical bundle is `sgo/` in `github.com/carlopires/sgolang`.
+
+## 2026-10-30 W00 passed
+
+- Fork: `github.com/carlopires/sgolang` = upstream `go1.27.3` (`2aae1000…`, full history) + `sgo/` + one host-tool change (`cmd/dist bootstrap -sgo-stage0`). Bootstrap pinned to official `go1.26.10` archives by SHA-256 (`UPSTREAM.lock.json`).
+- Evidence on darwin/arm64 (local) and linux/amd64 + linux/arm64 (CI run 41079191705): B01–B06 passed; S01/S15 passed at gate level. Upstream baseline: 0 test failures on all three targets. Reference builds are bit-identical across independent worktrees.
+- Findings: `nursery` collides with `chan` in the scanner's perfect-hash keyword table (W03 must change it); 10 of 37 symbols in the original phase documents do not exist at go1.27.3; CI images ship `/usr/bin/go`, now shadowed by a PATH guard.
+- Next: W01 (closed first-subset specification and executable oracle).

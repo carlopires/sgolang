@@ -54,7 +54,7 @@
       "title": "Isolated host bootstrap and target admission boundary",
       "depends_on": [],
       "risk": "medium",
-      "status": "pending",
+      "status": "passed",
       "plan_section": "11/W00",
       "deliverables": [
         "Pinned upstream/bootstrap manifest",
@@ -73,10 +73,43 @@
         "S01",
         "S15"
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "platform": "darwin/arm64",
+          "recorded_at": "2026-10-30",
+          "record": "sgo/evidence/w00/README.md",
+          "cases": {
+            "B01": "passed",
+            "B02": "passed (bit-identical binaries)",
+            "B03": "passed (129,325 tests, 0 failed, 2,912 skipped)",
+            "B04": "passed",
+            "B05": "passed",
+            "B06": "passed (10/37 original claims absent, recorded)",
+            "S01": "passed at gate level; compiler/linker level is W03",
+            "S15": "passed at gate level; direct stage-0 compiler use not enforced until W03"
+          },
+          "fork_commit": "bd5889a4c8",
+          "upstream_commit": "2aae1000ea1d4b28923b96db28acf4e3b99d6aff"
+        },
+        {
+          "platform": "linux/amd64 and linux/arm64",
+          "recorded_at": "2026-10-30",
+          "record": "sgo/evidence/w00/README.md §3",
+          "ci_run": "https://github.com/carlopires/sgolang/actions/runs/41079191705",
+          "cases": {
+            "B01": "passed",
+            "B02": "passed (bit-identical)",
+            "B03": "passed (amd64 186,663 / arm64 129,697 tests, 0 failed)",
+            "B04": "passed",
+            "B05": "passed (PATH guard shadows /usr/bin/go)",
+            "S01": "passed at gate level",
+            "S15": "passed at gate level"
+          }
+        }
+      ],
       "blockers": [],
-      "commit": null,
-      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+      "commit": "de72f7fd94",
+      "completion_note": "Passed on darwin/arm64, linux/amd64, linux/arm64 (D22). S01/S15 are W00-scope (gate level) only; compiler/linker enforcement is W03. Known limitations: sgo/evidence/w00/README.md §2."
     },
     {
       "id": "W01",

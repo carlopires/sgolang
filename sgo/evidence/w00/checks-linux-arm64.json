@@ -1,0 +1,110 @@
+{
+  "checks": [
+    {
+      "case": "B05",
+      "check": "fetch-bootstrap selects recorded bootstrap under hostile PATH/env",
+      "detail": "/home/runner/work/sgolang/sgolang/../sgo-cache/bootstrap/go1.26.10-linux-arm64/go",
+      "result": "pass"
+    },
+    {
+      "case": "B05",
+      "check": "run_clean scrubs inherited Go environment and PATH",
+      "detail": "GO_LOOKUP_GUARDED GOFLAGS= GOPROXY=off GOTELEMETRY=off GOTOOLCHAIN=local ",
+      "result": "pass"
+    },
+    {
+      "case": "B05",
+      "check": "tool identities inside their build tree: reference-build-linux-arm64-b01.json",
+      "detail": "",
+      "result": "pass"
+    },
+    {
+      "case": "B05",
+      "check": "tool identities inside their build tree: reference-build-linux-arm64-b02.json",
+      "detail": "",
+      "result": "pass"
+    },
+    {
+      "case": "B05",
+      "check": "tool identities inside their build tree: stage0-build-linux-arm64.json",
+      "detail": "",
+      "result": "pass"
+    },
+    {
+      "case": "B02",
+      "check": "independent worktree build used identical pinned inputs",
+      "detail": "binary_sha256_equal=go:yes,compile:yes,link:yes",
+      "result": "pass"
+    },
+    {
+      "case": "S01",
+      "check": "valid subset-0 program is denied until admitted",
+      "detail": "exit=2 SGO_E_UNADMITTED",
+      "result": "pass"
+    },
+    {
+      "case": "S01",
+      "check": "legacy Go program with bare go is denied",
+      "detail": "exit=2 SGO_E_UNADMITTED",
+      "result": "pass"
+    },
+    {
+      "case": "S01",
+      "check": "build tag / pragma / linkname escape is denied",
+      "detail": "exit=2 SGO_E_UNADMITTED",
+      "result": "pass"
+    },
+    {
+      "case": "S01",
+      "check": "legacy flag -compat is denied",
+      "detail": "exit=2 SGO_E_UNADMITTED",
+      "result": "pass"
+    },
+    {
+      "case": "S01",
+      "check": "legacy flag --legacy is denied",
+      "detail": "exit=2 SGO_E_UNADMITTED",
+      "result": "pass"
+    },
+    {
+      "case": "S01",
+      "check": "-lang=go1.27 / -gcflags are denied",
+      "detail": "exit=2 SGO_E_UNADMITTED",
+      "result": "pass"
+    },
+    {
+      "case": "S01",
+      "check": "no-argument invocation is denied",
+      "detail": "exit=2 SGO_E_UNADMITTED",
+      "result": "pass"
+    },
+    {
+      "case": "S15",
+      "check": "rebuilding host compiler sources as target is denied",
+      "detail": "exit=2 SGO_E_UNADMITTED",
+      "result": "pass"
+    },
+    {
+      "case": "S15",
+      "check": "linking a stock object is denied",
+      "detail": "exit=2 SGO_E_UNADMITTED",
+      "result": "pass"
+    },
+    {
+      "case": "S15",
+      "check": "direct tool/backend access through the target entry is denied",
+      "detail": "exit=2 SGO_E_UNADMITTED",
+      "result": "pass"
+    },
+    {
+      "case": "S15",
+      "check": "stage-0 compiler invoked directly still accepts Go (W03 work)",
+      "detail": "host tool, not a target entry",
+      "result": "not_enforced_until_W03"
+    }
+  ],
+  "failures": 0,
+  "platform": "linux-arm64",
+  "recorded_at": "2026-10-30T15:21:26Z",
+  "scope": "Gate-level and script-level checks for B05, S01, S15. Compiler/linker-level enforcement is W03."
+}

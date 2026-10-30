@@ -1,0 +1,23 @@
+{
+  "bootstrap_archive_sha256": "3f4227ce7b206a513e794f1393adb473a07b46e94d18bd15d1c684bbb7319797",
+  "bootstrap_goroot": "/home/runner/work/sgolang/sgolang/../sgo-cache/bootstrap/go1.26.10-linux-arm64/go",
+  "bootstrap_version": "go version go1.26.10 linux/arm64",
+  "compile_binary_sha256": "35ce75b8723ca02313089c8d307a11d2a3b07bfb0a64561bdabc67d6ed516246",
+  "compile_version": "compile version go1.27.3",
+  "finished_at": "2026-10-30T15:19:12Z",
+  "go_binary_sha256": "d487fddb6939f3e78f7293fcbdeae610ba8ceae966d3faa4b2094a5688559230",
+  "go_version": "go version go1.27.3 linux/arm64",
+  "goroot": "/home/runner/work/sgolang/sgo-cache/reference/go1.27.3-b01",
+  "gotooldir": "/home/runner/work/sgolang/sgo-cache/reference/go1.27.3-b01/pkg/tool/linux_arm64",
+  "label": "b01",
+  "link_binary_sha256": "a9c068b577e6cd8074fb24dbdffe8762dcbad11e41b7ba1f2f1af6aa1fd37352",
+  "log": "sgo/evidence/w00/logs/reference-build-linux-arm64-b01.log",
+  "platform": "linux-arm64",
+  "started_at": "2026-10-30T15:17:17Z",
+  "status": "passed",
+  "test_case": "B01",
+  "upstream_commit": "2aae1000ea1d4b28923b96db28acf4e3b99d6aff",
+  "upstream_tag": "go1.27.3",
+  "worktree": "/home/runner/work/sgolang/sgo-cache/reference/go1.27.3-b01",
+  "worktree_head": "2aae1000ea1d4b28923b96db28acf4e3b99d6aff"
+}

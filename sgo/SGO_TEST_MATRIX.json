@@ -16,9 +16,11 @@
       ],
       "scenario": "Build the unmodified exact upstream pin using the recorded bootstrap installation.",
       "expected": "Build succeeds, tool identities point inside the checkout, and commit/checksums are retained.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "sgo/evidence/w00/README.md (darwin/arm64 local; linux/amd64, linux/arm64 CI run 41079191705)"
+      ]
     },
     {
       "id": "B02",
@@ -31,9 +33,11 @@
       ],
       "scenario": "Repeat the documented build in a clean independent worktree.",
       "expected": "The same pinned inputs and supported behavior are obtained; generated timestamps are not falsely claimed bit-identical.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "sgo/evidence/w00/README.md (darwin/arm64 local; linux/amd64, linux/arm64 CI run 41079191705)"
+      ]
     },
     {
       "id": "B03",
@@ -46,9 +50,11 @@
       ],
       "scenario": "Run applicable distribution and targeted compiler/runtime tests before S-Go edits.",
       "expected": "Every command and exit code is retained; environmental skips are named and distinguishable from failures.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "sgo/evidence/w00/README.md (darwin/arm64 local; linux/amd64, linux/arm64 CI run 41079191705)"
+      ]
     },
     {
       "id": "B04",
@@ -61,9 +67,11 @@
       ],
       "scenario": "Build the stage-0 S-Go compiler with the isolated host toolchain while target S-Go fixtures exist; map every inherited self-hosting stage.",
       "expected": "Host tools build without treating host Go as S-Go target input. No legacy frontend flag or stock target object is introduced; the stage map records the external host dependency.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "sgo/evidence/w00/README.md (darwin/arm64 local; linux/amd64, linux/arm64 CI run 41079191705)"
+      ]
     },
     {
       "id": "B05",
@@ -76,9 +84,11 @@
       ],
       "scenario": "Place another go binary on PATH and attempt scripted host, reference, and S-Go target builds.",
       "expected": "Each script selects its recorded tool explicitly; S-Go target operations cannot silently fall back to stock Go; all executable and artifact identities are retained.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "sgo/evidence/w00/README.md (darwin/arm64 local; linux/amd64, linux/arm64 CI run 41079191705)"
+      ]
     },
     {
       "id": "B06",
@@ -91,9 +101,11 @@
       ],
       "scenario": "Resolve every original suggested patch symbol against the actual checkout.",
       "expected": "Real edit points/callers are recorded; absent or incompatible illustrative symbols are not installed as unused stubs.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "sgo/evidence/w00/README.md (darwin/arm64 local; linux/amd64, linux/arm64 CI run 41079191705)"
+      ]
     },
     {
       "id": "M01",
@@ -2098,7 +2110,9 @@
       "expected": "Every public path enforces the single S-Go language; attempts to enable old semantics fail. Unsupported CLI settings cannot default to stock Go.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W00 gate-level checks passed on all three targets (sgo/evidence/w00/checks-*.json); compiler/linker-level part unrun until W03"
+      ]
     },
     {
       "id": "S02",
@@ -2342,7 +2356,9 @@
       "expected": "Host rebuilding remains an external stage; target entries reject legacy sources/objects and missing verification records. No bootstrap-only target parser mode exists.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W00 gate-level checks passed on all three targets (sgo/evidence/w00/checks-*.json); compiler/linker-level part unrun until W03"
+      ]
     },
     {
       "id": "S16",

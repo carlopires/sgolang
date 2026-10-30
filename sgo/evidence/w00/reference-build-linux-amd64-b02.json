@@ -1,0 +1,23 @@
+{
+  "bootstrap_archive_sha256": "ccfe7ae822d2c2f41f4fe7c956199967a4dac22d0ee0d2b2bfdb440aab3b20c5",
+  "bootstrap_goroot": "/home/runner/work/sgolang/sgolang/../sgo-cache/bootstrap/go1.26.10-linux-amd64/go",
+  "bootstrap_version": "go version go1.26.10 linux/amd64",
+  "compile_binary_sha256": "c331d8fc6c4ae9dbe20e8198435db0455f2a5ca55d2d02fc6d7337c906be8283",
+  "compile_version": "compile version go1.27.3",
+  "finished_at": "2026-10-30T15:22:56Z",
+  "go_binary_sha256": "5f5eb6d0b2fb6aa0bb5d5f8c5f1c944e0de955c925f0111af92a9d8f79680b5b",
+  "go_version": "go version go1.27.3 linux/amd64",
+  "goroot": "/home/runner/work/sgolang/sgo-cache/reference/go1.27.3-b02",
+  "gotooldir": "/home/runner/work/sgolang/sgo-cache/reference/go1.27.3-b02/pkg/tool/linux_amd64",
+  "label": "b02",
+  "link_binary_sha256": "c9990b939ed48a77ca9a29b33d408d44b56fc4950a28e3d3533025a8dc08b2fe",
+  "log": "sgo/evidence/w00/logs/reference-build-linux-amd64-b02.log",
+  "platform": "linux-amd64",
+  "started_at": "2026-10-30T15:20:12Z",
+  "status": "passed",
+  "test_case": "B02",
+  "upstream_commit": "2aae1000ea1d4b28923b96db28acf4e3b99d6aff",
+  "upstream_tag": "go1.27.3",
+  "worktree": "/home/runner/work/sgolang/sgo-cache/reference/go1.27.3-b02",
+  "worktree_head": "2aae1000ea1d4b28923b96db28acf4e3b99d6aff"
+}

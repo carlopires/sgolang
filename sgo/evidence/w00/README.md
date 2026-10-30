@@ -5,7 +5,7 @@ Fields follow `SGO_TASKS.json` `evidence_required_fields`. Machine-readable reco
 | Field | Value |
 |---|---|
 | work_package_id | W00 |
-| state | darwin/arm64: all W00 cases executed and passed (S01/S15 at gate level). linux/amd64 and linux/arm64: see §3 (CI). |
+| state | **passed** on darwin/arm64, linux/amd64, linux/arm64 (S01/S15 at gate level; compiler/linker level is W03). |
 | spec_version / spec_digest / admission_digest | `null` (no clause frozen; W01). The target gate reads `SGO_SPEC_ADMISSION.json` and admits nothing. |
 | execution_configuration | Not applicable: no S-Go program executes at W00. |
 | upstream_commit | `go1.27.3` = `2aae1000ea1d4b28923b96db28acf4e3b99d6aff` |
@@ -43,3 +43,16 @@ Fields follow `SGO_TASKS.json` `evidence_required_fields`. Machine-readable reco
 **First CI run (41077627683, cancelled):** on linux/arm64, B01, B02, and B04 passed, and the B05 environment check **failed**: GitHub's Ubuntu image ships `/usr/bin/go`, which was inside the scrubbed PATH. Fixed in `bd5889a4` with a PATH guard (`sgo/scripts/lib.sh`); the check now requires `go` on PATH to resolve to the guard. This is the kind of silent fallback B05 exists to catch.
 
 GitHub Actions workflow `.github/workflows/sgo-w00.yml` runs B01, B02, B04, B05/S01/S15, and B03 on `ubuntu-24.04` (linux/amd64) and `ubuntu-24.04-arm` (linux/arm64). Results are recorded below from the run's artifacts.
+
+**Second CI run (41079191705, at `de72f7fd94`): passed on both Linux targets.**
+
+| Case | linux/amd64 (`ubuntu-24.04`) | linux/arm64 (`ubuntu-24.04-arm`) |
+|---|---|---|
+| B01 | passed: `go version go1.27.3 linux/amd64`, 2 min 48 s | passed: `go version go1.27.3 linux/arm64`, 1 min 55 s |
+| B02 | passed: `go`, `compile`, `link` bit-identical to B01 | passed: bit-identical |
+| B03 | passed: 529 packages, **186,663 tests passed, 0 failed**, 3,112 skipped; 20 min | passed: 466 packages, **129,697 tests passed, 0 failed**, 2,952 skipped; 11.5 min |
+| B04 | passed: stage-0 toolchain1 only | passed |
+| B05 | passed: PATH lookup of `go` resolves to the guard (the image's `/usr/bin/go` is shadowed) | passed |
+| S01 / S15 | passed at gate level | passed at gate level |
+
+Records: `*-linux-amd64*.json`, `*-linux-arm64*.json`, and `logs/*linux*`. Raw test events are in the run's artifacts (`w00-evidence-ubuntu-24.04*`, kept 90 days). linux/amd64 runs more test packages than linux/arm64; the reason was not investigated, and the per-package lists are in each JSON. Benchmarks were recorded on darwin/arm64 only; CI runners are shared hosts, so their timings would not be stable baselines.

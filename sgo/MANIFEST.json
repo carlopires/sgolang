@@ -36,12 +36,12 @@
     "exact_commit_status": "Must be verified and resolved by W00",
     "checkout_built": false
   },
-  "hash_scope": "Distribution snapshot; every bundle file except this self-referential manifest. Working-copy edits invalidate snapshot hashes.",
+  "hash_scope": "Bundle documents as of the latest entry in reference_corrections. Work-package evidence lives in sgo/evidence/ and is not hashed here.",
   "files": [
     {
       "path": "CHANGELOG_V2.md",
-      "bytes": 5083,
-      "sha256": "74125bf8c736c12730493f98a97658afbae3873efa2737fdb17c3d4b762c3ef8"
+      "bytes": 6180,
+      "sha256": "4fb19f3b8fc7f13652f91213bcb6132a325a04689668b60128d75b6bac007fb1"
     },
     {
       "path": "README.md",
@@ -50,18 +50,18 @@
     },
     {
       "path": "SGO_AGENT_START_PROMPT.md",
-      "bytes": 5919,
-      "sha256": "f9d6083368c4a52171db3feafeca6c856c6a6748b6f64e20d08f89555064d752"
+      "bytes": 6023,
+      "sha256": "85a44b233f67e74ec87395172a29deea8e3c0153e62ebc288d78ba3754441090"
     },
     {
       "path": "SGO_DECISIONS.md",
-      "bytes": 17648,
-      "sha256": "487b01c2b4c3b388169cccb8afb76647056a0c50b8b69b354b7bcfb83539bafa"
+      "bytes": 19203,
+      "sha256": "78a708fee49ccd691ed47bd2642f3ec40bd821c7d8dcd265f028fd74e5f0e664"
     },
     {
       "path": "SGO_FRONTIER_EXECUTION_PLAN.md",
-      "bytes": 104117,
-      "sha256": "b55a444326a862b1cc8e5d60385b3a144d34cb17f74b9178639c812df77bcec3"
+      "bytes": 104243,
+      "sha256": "0960aeb2a44409d2f267ef4d8501de3702a336765c647655cb3648cab43d0c1a"
     },
     {
       "path": "SGO_LANGUAGE_CONSTITUTION.md",
@@ -70,8 +70,8 @@
     },
     {
       "path": "SGO_SPEC_SUBSET0.md",
-      "bytes": 27166,
-      "sha256": "b138114f3df06b7c88fa62aa56c1b672e88d18331461a6968e2f13eb4507b970"
+      "bytes": 27257,
+      "sha256": "2b41d439989df570e500108e2972c4925528c6fe29acb17017b7dd013da54fac"
     },
     {
       "path": "SGO_SPEC_ADMISSION.json",
@@ -80,13 +80,13 @@
     },
     {
       "path": "SGO_TASKS.json",
-      "bytes": 13983,
-      "sha256": "73adbfad6f559121cc4ff64042693af43e7583ae013e15bee2141b0b5fd6fe87"
+      "bytes": 15416,
+      "sha256": "624ebcbdce1d9e55dc2ccb465ae0859aadf8aba5bff056c739a50da623e23647"
     },
     {
       "path": "SGO_TEST_MATRIX.json",
-      "bytes": 83612,
-      "sha256": "359ed051d1f2a1ef5eddfd075c753332cc7a13df42b0b2da95d0193c2707ac81"
+      "bytes": 84590,
+      "sha256": "507e9ced0c79a2fdf2262d0974d8fbed8467e1a7a45f5883a7ea8df409898386"
     },
     {
       "path": "original/SGO_CONCEPTUAL_WHITEPAPER.md",
@@ -136,6 +136,10 @@
     {
       "date": "2026-10-30",
       "summary": "D01-D21 approved; plan/prompt amended; 10 inventory families added (37); SGO_SPEC_SUBSET0.md drafted."
+    },
+    {
+      "date": "2026-10-30",
+      "summary": "D22 approved; W00 passed on darwin/arm64, linux/amd64, linux/arm64; task ledger and B-cases updated."
     }
   ],
   "implementation_repository": "https://github.com/carlopires/sgolang"

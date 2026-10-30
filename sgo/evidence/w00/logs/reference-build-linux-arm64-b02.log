@@ -1,0 +1,10 @@
+Building Go cmd/dist using /home/runner/work/sgolang/sgolang/../sgo-cache/bootstrap/go1.26.10-linux-arm64/go. (go1.26.10 linux/arm64)
+Building Go toolchain1 using /home/runner/work/sgolang/sgolang/../sgo-cache/bootstrap/go1.26.10-linux-arm64/go.
+Building Go bootstrap cmd/go (go_bootstrap) using Go toolchain1.
+Building Go toolchain2 using go_bootstrap and Go toolchain1.
+Building Go toolchain3 using go_bootstrap and Go toolchain2.
+Building packages and commands for linux/arm64.
+---
+Installed Go for linux/arm64 in /home/runner/work/sgolang/sgo-cache/reference/go1.27.3-b02
+Installed commands in /home/runner/work/sgolang/sgo-cache/reference/go1.27.3-b02/bin
+*** You need to add /home/runner/work/sgolang/sgo-cache/reference/go1.27.3-b02/bin to your PATH.

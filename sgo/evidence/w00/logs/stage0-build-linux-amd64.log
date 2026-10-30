@@ -1,0 +1,3 @@
+Building Go toolchain1 using /home/runner/work/sgolang/sgolang/../sgo-cache/bootstrap/go1.26.10-linux-amd64/go.
+S-Go stage 0: host-built toolchain installed in /home/runner/work/sgolang/sgolang/pkg/tool/linux_amd64
+S-Go stage 0: self-hosted stages (go_bootstrap, toolchain2, toolchain3, std) skipped.

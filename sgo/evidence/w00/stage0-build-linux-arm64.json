@@ -1,0 +1,19 @@
+{
+  "bootstrap_goroot": "/home/runner/work/sgolang/sgolang/../sgo-cache/bootstrap/go1.26.10-linux-arm64/go",
+  "bootstrap_version": "go version go1.26.10 linux/arm64",
+  "compile_binary_sha256": "b710a95cbc995dddf31c4f77acafa2e5c4599ba0f6e2691ad6bf71ebf57628cc",
+  "compile_version": "compile version go1.27.3",
+  "finished_at": "2026-10-30T15:21:25Z",
+  "fork_bin_go_present": "no",
+  "fork_commit": "de72f7fd946046960e65a7db9f0def04bf947c8b",
+  "fork_dirty": "no",
+  "link_binary_sha256": "ac19a7405bd724c3d27b961a539c023c3f6013b12bed5785122b82c8443031a4",
+  "log": "sgo/evidence/w00/logs/stage0-build-linux-arm64.log",
+  "note": "toolchain1 still identifies as upstream (compile -V). S-Go identity/ABI metadata is W03 work; this compiler is not an S-Go target entry point (sgo/scripts/sgo-target is).",
+  "platform": "linux-arm64",
+  "self_hosted_stages_run": "no",
+  "started_at": "2026-10-30T15:21:04Z",
+  "status": "passed",
+  "test_case": "B04",
+  "tooldir": "/home/runner/work/sgolang/sgolang/pkg/tool/linux_arm64"
+}
