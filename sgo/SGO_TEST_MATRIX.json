@@ -204,9 +204,11 @@
       ],
       "scenario": "Use the specified runtime admission primitive through internal, non-distributed conformance hooks before frontend syntax is complete.",
       "expected": "Successful join implies no child effects afterward and no live obligations; test hooks are not a target-language legacy entry point.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "src/runtime/sgo_test.go in the runtime lane on darwin/arm64, linux/amd64, linux/arm64; sgo/evidence/w02/README.md"
+      ]
     },
     {
       "id": "O02",
@@ -220,9 +222,11 @@
       ],
       "scenario": "A child enters a nested nursery and starts grandchildren.",
       "expected": "Owner scope and current structured scope differ correctly; nested work joins before child completion.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "src/runtime/sgo_test.go in the runtime lane on darwin/arm64, linux/amd64, linux/arm64; sgo/evidence/w02/README.md"
+      ]
     },
     {
       "id": "O03",
@@ -236,9 +240,11 @@
       ],
       "scenario": "Call an admitted dependency helper with an explicit nursery handle; it calls the checked Spawn API.",
       "expected": "The handle is validated and the child is registered/joined in the authorized nursery. No dynamic implicit spawn route exists.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "src/runtime/sgo_test.go in the runtime lane on darwin/arm64, linux/amd64, linux/arm64; sgo/evidence/w02/README.md"
+      ]
     },
     {
       "id": "O04",
@@ -252,9 +258,11 @@
       ],
       "scenario": "Attempt explicit spawn using nil, stale, closed, unrelated-domain, or ancestor-bypassing handles; separately test cancellation admission.",
       "expected": "Static invalidity is rejected; state-dependent misuse yields the specified SpawnContractViolation before child publication. Cancellation follows its distinct sticky cancellation path. No unowned child starts.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "src/runtime/sgo_test.go in the runtime lane on darwin/arm64, linux/amd64, linux/arm64; sgo/evidence/w02/README.md"
+      ]
     },
     {
       "id": "O05",
@@ -268,9 +276,11 @@
       ],
       "scenario": "An already-live member holding the explicit nursery handle admits a descendant after the owner starts normal join.",
       "expected": "The new child is admitted and joined; last-child completion cannot race past its registration.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "src/runtime/sgo_test.go in the runtime lane on darwin/arm64, linux/amd64, linux/arm64; sgo/evidence/w02/README.md"
+      ]
     },
     {
       "id": "O06",
@@ -284,9 +294,11 @@
       ],
       "scenario": "Repeatedly create/finish tasks so the runtime reuses goroutine records.",
       "expected": "No stale scope, context, cancellation, ID, or outcome leaks into the new task.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "src/runtime/sgo_test.go in the runtime lane on darwin/arm64, linux/amd64, linux/arm64; sgo/evidence/w02/README.md"
+      ]
     },
     {
       "id": "O07",
@@ -300,9 +312,11 @@
       ],
       "scenario": "Force collection while scopes, closures, wait records, and pointer payloads are otherwise reachable only through intended runtime ownership.",
       "expected": "All live objects survive and are released after quiescence; the documented root paths are exercised.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "src/runtime/sgo_test.go in the runtime lane on darwin/arm64, linux/amd64, linux/arm64; sgo/evidence/w02/README.md"
+      ]
     },
     {
       "id": "O08",
@@ -316,9 +330,11 @@
       ],
       "scenario": "Grow/shrink parent stacks while a nursery and its children remain live.",
       "expected": "Scope state remains valid; no dangling parent-stack pointer or stale frame marker is observed.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "src/runtime/sgo_test.go in the runtime lane on darwin/arm64, linux/amd64, linux/arm64; sgo/evidence/w02/README.md"
+      ]
     },
     {
       "id": "O09",
@@ -332,9 +348,11 @@
       ],
       "scenario": "Each child writes disjoint state and completes; the owner reads after join.",
       "expected": "All writes are visible with legitimate synchronization; race instrumentation does not report a false join race.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "src/runtime/sgo_test.go in the runtime lane on darwin/arm64, linux/amd64, linux/arm64; sgo/evidence/w02/README.md"
+      ]
     },
     {
       "id": "O10",
@@ -348,9 +366,11 @@
       ],
       "scenario": "Run GC/runtime services together with user and dependency task creation.",
       "expected": "Every service task uses a sealed primitive with a specification and lifecycle record. User/dependency tasks cannot forge the service identity or acquire an exemption.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "src/runtime/sgo_test.go in the runtime lane on darwin/arm64, linux/amd64, linux/arm64; sgo/evidence/w02/README.md"
+      ]
     },
     {
       "id": "X01",
@@ -2213,7 +2233,9 @@
       "expected": "Missing authority is rejected. Valid delegated handles work, but ambient runtime state cannot supply a handle or authorize a spawn.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W02 part passed: sgo/evidence/w02/README.md"
+      ]
     },
     {
       "id": "S07",
@@ -2230,7 +2252,9 @@
       "expected": "Misuse is rejected before registration; inner-scope lifetime, cleanup no-spawn rule, and closed-scope terminal state cannot be bypassed.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W02 part passed: sgo/evidence/w02/README.md"
+      ]
     },
     {
       "id": "S08",
@@ -2303,7 +2327,8 @@
       "implementation_status": "pending",
       "execution_status": "unrun",
       "evidence": [
-        "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages"
+        "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages",
+        "W02 part passed: sgo/evidence/w02/README.md"
       ]
     },
     {

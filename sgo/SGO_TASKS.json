@@ -171,7 +171,7 @@
         "W01"
       ],
       "risk": "very_high",
-      "status": "pending",
+      "status": "passed",
       "plan_section": "11/W02",
       "deliverables": [
         "Transitive task accounting",
@@ -195,10 +195,31 @@
         "S07",
         "S11"
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "record": "sgo/evidence/w02/README.md",
+          "recorded_at": "2026-10-30",
+          "platforms": "darwin/arm64 local; linux/amd64, linux/arm64 CI run 41109703265",
+          "cases": {
+            "O01": "passed",
+            "O02": "passed",
+            "O03": "passed",
+            "O04": "passed",
+            "O05": "passed",
+            "O06": "passed",
+            "O07": "passed",
+            "O08": "passed",
+            "O09": "passed",
+            "O10": "passed",
+            "S06": "W02 part passed",
+            "S07": "W02 part passed",
+            "S11": "W02 part passed"
+          }
+        }
+      ],
       "blockers": [],
-      "commit": null,
-      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+      "commit": "ba43750d6c",
+      "completion_note": "Runtime scope core and sealed services implemented and tested in the runtime lane on all three targets. Enforcement of unenumerated goroutine creation is enabled for S-Go programs in W03."
     },
     {
       "id": "W03",

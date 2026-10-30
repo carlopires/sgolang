@@ -61,3 +61,10 @@ The v2 work corrected planning artifacts and validated document/metadata consist
 - Clause digests cover only normative fields; progress fields (status, implementation_coverage, executed_evidence) can be updated without amendments. A frozen clause cannot change without a version bump (spec-tool).
 - Added: clause adoption ledger (7 clauses, 14 digest-locked Go-spec sections), model mutation M04 (duplicate completion), W01 evidence record with an explicit scope statement (S20).
 - Next: W02 (runtime ownership, join, GC-safe state).
+
+## 2026-10-30 W02 passed — runtime ownership, join, sealed services
+
+- Runtime scope core (`sgo_scope.go`): heap records, registration before publication, explicit-handle admission, join without lost wakeups, outcomes, reclamation after quiescence.
+- Sealed runtime services (`sgo_service.go`): every go-statement creation classified by its creator; unenumerated creation fail-stops under enforcement (W03 enables it for S-Go programs).
+- Runtime test lane (upstream tools + fork TCB overlay) and `sgo-runtime` CI on linux/amd64 and linux/arm64; O01–O10 passed on all three targets.
+- Next: W03 (nursery compiler path and exit semantics).
