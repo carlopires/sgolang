@@ -14,6 +14,7 @@
 token  _EOF|_Name|_Literal|_Operator|_AssignOp|_IncOp|_Assign|_Define|_Star  admit  SGO-LEX-002  # _Star: multiplication and *sgo.T only
 token  _Lparen|_Rparen|_Lbrace|_Rbrace|_Comma|_Semi|_Colon|_Dot  admit  SGO-LEX-002
 token  _Break|_Case|_Const|_Continue|_Default|_Defer|_Else|_For|_Func|_If|_Import|_Package|_Return|_Switch|_Var  admit  SGO-LEX-003
+token  _Nursery  admit  SGO-NUR-001  # S-Go keyword (W03)
 token  _Arrow|_Chan|_Select  deny  SGO-CHAN-001
 token  _Lbrack|_Rbrack|_Map|_Struct|_Range  deny  SGO-COMP-001
 token  _DotDotDot  deny  SGO-TYPE-003
@@ -40,6 +41,7 @@ syntax-node  Operation|ParenExpr|ListExpr  admit  SGO-VAL-005
 syntax-node  BlockStmt|ExprStmt|DeclStmt|AssignStmt|BranchStmt|ReturnStmt|IfStmt|ForStmt|LabeledStmt  admit  SGO-CTL-001
 syntax-node  SwitchStmt|CaseClause  admit  SGO-CTL-002
 syntax-node  CallStmt  admit  SGO-DEF-001  # defer; the go form is denied by SGO-SPAWN-005
+syntax-node  NurseryStmt  admit  SGO-NUR-001  # anonymous form denied by SGO-NUR-001 at admission
 syntax-node  EmptyStmt  deny  SGO-CTL-001
 syntax-node  BadExpr  internal  SGO-ERR-001  # parser error recovery node
 syntax-node  TypeDecl  deny  SGO-UTYPE-001

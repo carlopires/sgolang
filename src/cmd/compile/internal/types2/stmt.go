@@ -707,6 +707,11 @@ func (check *Checker) stmt(ctxt stmtContext, s syntax.Stmt) {
 		}
 		check.stmt(inner, s.Body)
 
+	case *syntax.NurseryStmt:
+		// S-Go W03 in progress: type checking and lowering of nursery statements land in later
+		// layers; until then the statement is rejected with a clear diagnostic, never compiled.
+		check.error(s, UnsupportedFeature, "nursery statement not yet supported by this compiler (S-Go W03 in progress)")
+
 	default:
 		check.error(s, InvalidSyntaxTree, "invalid statement")
 	}

@@ -59,6 +59,7 @@ const (
 	_Import      // import
 	_Interface   // interface
 	_Map         // map
+	_Nursery     // nursery
 	_Package     // package
 	_Range       // range
 	_Return      // return

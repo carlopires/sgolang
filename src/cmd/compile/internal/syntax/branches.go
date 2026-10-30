@@ -307,6 +307,11 @@ func (ls *labelScope) blockBranches(parent *block, ctxt targets, lstmt *LabeledS
 				innerBlock(inner, s.Else.Pos(), []Stmt{s.Else})
 			}
 
+		case *NurseryStmt:
+			// A nursery body is a nested block: break/continue targets pass through (SGO-CTL-004).
+			inner := targets{ctxt.breaks, ctxt.continues, -1}
+			innerBlock(inner, s.Body.Pos(), s.Body.List)
+
 		case *ForStmt:
 			inner := targets{s, s, -1}
 			innerBlock(inner, s.Body.Pos(), s.Body.List)

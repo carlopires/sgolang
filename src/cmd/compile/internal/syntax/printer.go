@@ -608,6 +608,13 @@ func (p *printer) printRawNode(n Node) {
 		}
 		p.print(_Range, blank, n.X)
 
+	case *NurseryStmt:
+		p.print(_Nursery, blank)
+		if n.Name != nil {
+			p.print(_Lparen, n.Name, _Rparen, blank)
+		}
+		p.print(n.Body)
+
 	case *ForStmt:
 		p.print(_For, blank)
 		if n.Init == nil && n.Post == nil {

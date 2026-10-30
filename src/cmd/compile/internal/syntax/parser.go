@@ -2335,6 +2335,24 @@ func (p *parser) declStmt(f func(*Group) Decl) *DeclStmt {
 	return s
 }
 
+// nurseryStmt parses nursery (Name) Body and the anonymous form nursery Body (SGO-NUR-001).
+func (p *parser) nurseryStmt() Stmt {
+	if trace {
+		defer p.trace("nurseryStmt")()
+	}
+
+	s := new(NurseryStmt)
+	s.pos = p.pos()
+	p.next() // consume 'nursery'
+	if p.got(_Lparen) {
+		s.Name = p.name()
+		p.want(_Rparen)
+	}
+	s.Body = p.blockStmt("nursery body")
+
+	return s
+}
+
 func (p *parser) forStmt() Stmt {
 	if trace {
 		defer p.trace("forStmt")()
@@ -2653,6 +2671,9 @@ func (p *parser) stmtOrNil() Stmt {
 
 	case _For:
 		return p.forStmt()
+
+	case _Nursery:
+		return p.nurseryStmt()
 
 	case _Switch:
 		return p.switchStmt()

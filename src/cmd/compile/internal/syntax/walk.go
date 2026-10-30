@@ -261,6 +261,12 @@ func (w walker) node(n Node) {
 			w.node(n.Else)
 		}
 
+	case *NurseryStmt:
+		if n.Name != nil {
+			w.node(n.Name)
+		}
+		w.node(n.Body)
+
 	case *ForStmt:
 		if n.Init != nil {
 			w.node(n.Init)

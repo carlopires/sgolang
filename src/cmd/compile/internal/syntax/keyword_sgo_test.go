@@ -6,9 +6,8 @@ package syntax
 
 import "testing"
 
-// sgoKeywords are the reserved words S-Go adds to the token range _Break.._Var
-// (SGO_SPEC_SUBSET0.md SGO-LEX-003). The tokens themselves are added in W03.
-var sgoKeywords = []string{"nursery"}
+// sgoKeywords are the reserved words S-Go adds to the token range _Break.._Var (SGO-LEX-003).
+var sgoKeywords = map[string]token{"nursery": _Nursery}
 
 // TestKeywordHashRoom checks that the perfect hash used by keywordMap gives every
 // existing keyword and every planned S-Go keyword its own slot. The scanner's init
@@ -29,23 +28,24 @@ func TestKeywordHashRoom(t *testing.T) {
 	for tok := _Break; tok <= _Var; tok++ {
 		add(tok.String())
 	}
-	for _, kw := range sgoKeywords {
-		add(kw)
+	for kw, tok := range sgoKeywords {
+		if tok < _Break || tok > _Var {
+			t.Errorf("S-Go keyword %q is outside the _Break.._Var range", kw) // keywordMap init only covers that range
+		}
 	}
 }
 
-// TestKeywordsStillScan checks that every Go keyword still scans as its own token
-// after the table change, and that the planned S-Go keywords remain plain names
-// until their tokens exist.
+// TestKeywordsStillScan checks that every reserved word, including the S-Go
+// keywords, scans as its own token.
 func TestKeywordsStillScan(t *testing.T) {
 	for tok := _Break; tok <= _Var; tok++ {
 		if got := keywordMap[hash([]byte(tok.String()))]; got != tok {
 			t.Errorf("keyword %q maps to %v, want %v", tok.String(), got, tok)
 		}
 	}
-	for _, kw := range sgoKeywords {
-		if got := keywordMap[hash([]byte(kw))]; got != 0 {
-			t.Errorf("%q maps to token %v before its token is defined", kw, got)
+	for kw, tok := range sgoKeywords {
+		if got := keywordMap[hash([]byte(kw))]; got != tok {
+			t.Errorf("%q maps to %v, want %v", kw, got, tok)
 		}
 	}
 }

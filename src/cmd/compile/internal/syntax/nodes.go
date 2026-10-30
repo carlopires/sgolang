@@ -436,6 +436,15 @@ type (
 		stmt
 	}
 
+	// NurseryStmt is the S-Go statement nursery (Name) Body (SGO-NUR-001). Name is the nursery
+	// handle binder; it is nil for the anonymous form, which is parsed only so that admission can
+	// deny it with a precise diagnostic (SGO-ERR-001).
+	NurseryStmt struct {
+		Name *Name
+		Body *BlockStmt
+		stmt
+	}
+
 	SwitchStmt struct {
 		Init   SimpleStmt
 		Tag    Expr // incl. *TypeSwitchGuard
