@@ -21,6 +21,8 @@ MANIFEST = os.path.join(SGO, "TARGET_TCB.json")
 LOCK = json.load(open(os.path.join(SGO, "UPSTREAM.lock.json")))
 CACHE = os.environ.get("SGO_CACHE", os.path.expanduser("~/.cache/sgolang"))
 TARGETS = ["darwin/arm64", "linux/amd64", "linux/arm64"]
+# Trusted packages that are not dependencies of runtime but are part of the target TCB.
+EXTRA_PACKAGES = ["sgo"]
 EXTS = (".go", ".s", ".h")
 
 # Trusted primitives relied on by subset 0 (SGO-TCB-001). "upstream" names the current implementation
@@ -66,8 +68,8 @@ def closure(stored):
     if not os.path.exists(gobin):
         if stored is None:
             die(f"no reference toolchain at {ref} and no stored package closure; run sgo/scripts/build-reference.sh")
-        return stored
-    pkgs = set()
+        return sorted(set(stored) | set(EXTRA_PACKAGES))
+    pkgs = set(EXTRA_PACKAGES)
     for t in TARGETS:
         goos, goarch = t.split("/")
         env = {"HOME": os.environ["HOME"], "PATH": f"{ref}/bin:/usr/bin:/bin", "GOTOOLCHAIN": "local",

@@ -7,6 +7,7 @@ on:
     paths:
       - "src/runtime/**"
       - "src/internal/**"
+      - "src/sgo/**"
       - "sgo/scripts/runtime-lane.sh"
       - "sgo/scripts/lib.sh"
       - ".github/workflows/sgo-runtime.yml"
@@ -30,7 +31,7 @@ jobs:
         with:
           fetch-depth: 0 # the lane worktree is created at the locked upstream commit
       - name: S-Go runtime tests (O01-O10, S06, S07, S11 parts)
-        run: sgo/scripts/runtime-lane.sh -count=3 -cpu=1,4 -v -run 'TestSGo' runtime
+        run: sgo/scripts/runtime-lane.sh -count=3 -cpu=1,4 -v -run 'TestSGo|TestAPI' runtime sgo
       - name: S-Go runtime tests under the race detector
         run: sgo/scripts/runtime-lane.sh -race -count=2 -run 'TestSGo' runtime
       - name: Upstream runtime suite (regression, -short)

@@ -153,6 +153,32 @@ func (check *Checker) multipleSelectDefaults(list []*syntax.CommClause) {
 	}
 }
 
+// nurseryStmt type-checks nursery (Name) Body (SGO-NUR-001): the binder is declared in a scope
+// enclosing the body with type *sgo.Nursery, where sgo is the canonical package "sgo", which the
+// same file must import. Break and continue targets pass through (SGO-CTL-004).
+func (check *Checker) nurseryStmt(ctxt stmtContext, s *syntax.NurseryStmt) {
+	// Resolve through this file's own import of "sgo" (not the package-wide import list), and count
+	// the nursery statement as a use of that import.
+	var nursery Type
+	if pname, _ := check.lookup("sgo").(*PkgName); pname != nil && pname.imported.path == "sgo" {
+		check.usedPkgNames[pname] = true
+		if obj, _ := pname.imported.scope.Lookup("Nursery").(*TypeName); obj != nil {
+			nursery = NewPointer(obj.typ)
+		}
+	}
+	check.openScope(s, "nursery")
+	defer check.closeScope()
+	if s.Name != nil {
+		if nursery == nil {
+			check.error(s, UnsupportedFeature, `nursery statement requires import "sgo" (SGO-NUR-001)`)
+			nursery = Typ[Invalid]
+		}
+		v := NewVar(s.Name.Pos(), check.pkg, s.Name.Value, nursery)
+		check.declare(check.scope, s.Name, v, s.Body.Pos())
+	}
+	check.stmt(ctxt, s.Body)
+}
+
 func (check *Checker) openScope(node syntax.Node, comment string) {
 	scope := NewScope(check.scope, node.Pos(), syntax.EndPos(node), comment)
 	check.recordScope(node, scope)
@@ -708,9 +734,7 @@ func (check *Checker) stmt(ctxt stmtContext, s syntax.Stmt) {
 		check.stmt(inner, s.Body)
 
 	case *syntax.NurseryStmt:
-		// S-Go W03 in progress: type checking and lowering of nursery statements land in later
-		// layers; until then the statement is rejected with a clear diagnostic, never compiled.
-		check.error(s, UnsupportedFeature, "nursery statement not yet supported by this compiler (S-Go W03 in progress)")
+		check.nurseryStmt(inner, s)
 
 	default:
 		check.error(s, InvalidSyntaxTree, "invalid statement")

@@ -1383,6 +1383,11 @@ func (w *writer) stmt1(stmt syntax.Stmt) {
 	case nil, *syntax.EmptyStmt:
 		return
 
+	case *syntax.NurseryStmt:
+		// S-Go W03 in progress: Unified IR encoding and lowering of nursery statements land in the
+		// next layers; until then a type-checked nursery is rejected, never compiled.
+		w.p.errorf(stmt, "nursery statement lowering not yet supported by this compiler (S-Go W03 in progress)")
+
 	case *syntax.AssignStmt:
 		switch {
 		case stmt.Rhs == nil:

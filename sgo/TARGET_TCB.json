@@ -48,6 +48,7 @@
   "internal/trace/tracev2",
   "math/bits",
   "runtime",
+  "sgo",
   "unsafe"
  ],
  "primitives": [
@@ -318,9 +319,9 @@
   }
  ],
  "summary": {
-  "packages": 30,
-  "files": 1022,
-  "files_changed_from_upstream": 4,
+  "packages": 31,
+  "files": 1025,
+  "files_changed_from_upstream": 7,
   "services": {
    "active": 5,
    "dormant": 5,
@@ -4319,6 +4320,11 @@
    "upstream_identical": true
   },
   {
+   "path": "src/runtime/sgo_api.go",
+   "sha256": "064a5987b4eb8330e5b78122f0ff44c72f97d3f620c2c3d542529dd761806010",
+   "upstream_identical": false
+  },
+  {
    "path": "src/runtime/sgo_scope.go",
    "sha256": "4b0cabb68b788ffe95de2f4a149739e191361b75217b66d83ade9908ffef34bf",
    "upstream_identical": false
@@ -5432,6 +5438,16 @@
    "path": "src/runtime/zcallback_windows_arm64.s",
    "sha256": "0ebb13b131a7d52571d57de3504c05fd2e533512e29cd2d72db859f27490eba3",
    "upstream_identical": true
+  },
+  {
+   "path": "src/sgo/sgo.go",
+   "sha256": "2f340af0462923aaa01535381967fe94e24f47fdb34eecf397689e6dbfffe0cf",
+   "upstream_identical": false
+  },
+  {
+   "path": "src/sgo/sgo.s",
+   "sha256": "7bcddddf8e5c3907505575b292d48020c93c8c880014472e8e10d7ce9870a357",
+   "upstream_identical": false
   },
   {
    "path": "src/unsafe/unsafe.go",
