@@ -6,8 +6,9 @@
  "diagnostics": [
   {
    "code": "SGO_E_DUPLICATE_CASE",
-   "at": "case 1",
-   "occurrence": 2
+   "at": "1:\n\t}",
+   "occurrence": 1
   }
- ]
+ ],
+ "note": "Type-level diagnostics are reported at the offending operand (SGO-ERR-001 fixes token positions only for admission denials)."
 }

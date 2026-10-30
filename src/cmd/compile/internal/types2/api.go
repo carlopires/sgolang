@@ -106,6 +106,11 @@ type ImporterFrom interface {
 // A Config specifies the configuration for type checking.
 // The zero value for Config is a ready-to-use default configuration.
 type Config struct {
+	// SGo enables the S-Go subset-0 rules (SGO_SPEC_SUBSET0.md). The compiler sets it for every
+	// package that is not digest-pinned trusted target code (SGO-TCB-002); it is never set from
+	// user input.
+	SGo bool
+
 	// Context is the context used for resolving global identifiers. If nil, the
 	// type checker will initialize this field with a newly created context.
 	Context *Context

@@ -433,6 +433,10 @@ func (check *Checker) checkFiles(files []*syntax.File) {
 	print("== collectObjects ==")
 	check.collectObjects()
 
+	if check.conf.SGo {
+		check.sgoPackageChecks(files) // S-Go package-level rules (sgo.go)
+	}
+
 	print("== sortObjects ==")
 	check.sortObjects()
 

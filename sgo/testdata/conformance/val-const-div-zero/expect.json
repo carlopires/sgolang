@@ -6,7 +6,8 @@
  "diagnostics": [
   {
    "code": "SGO_E_CONST_DIV_ZERO",
-   "at": "1 / 0"
+   "at": "0\n"
   }
- ]
+ ],
+ "note": "Type-level diagnostics are reported at the offending operand (SGO-ERR-001 fixes token positions only for admission denials)."
 }

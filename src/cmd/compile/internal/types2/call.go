@@ -851,6 +851,11 @@ func (check *Checker) selector(x *operand, e *syntax.SelectorExpr, wantType bool
 			alt, _, _ := lookupFieldOrMethod(x.typ(), x.mode() == variable, check.pkg, sel, true)
 			why = check.lookupError(x.typ(), sel, alt, false)
 		}
+		if check.conf.SGo && isSgoHandle(x.typ()) {
+			// Members of the sgo handles outside SGO_SPEC_SUBSET0.md §0.2 are denied, not merely undefined.
+			check.errorf(e.X, UnsupportedFeature, "SGO_E_UNADMITTED: %s.%s is not admitted in S-Go subset 0 (SGO-ERR-001)", x.expr, sel)
+			goto Error
+		}
 		check.errorf(e.Sel, MissingFieldOrMethod, "%s.%s undefined (%s)", x.expr, sel, why)
 		goto Error
 	}

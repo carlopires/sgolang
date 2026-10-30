@@ -26,7 +26,10 @@ func (check *Checker) assignment(x *operand, T Type, context string) {
 		return // error reported before
 	case nilvalue:
 		assert(isTypes2)
-		// ok
+		if check.conf.SGo && !check.sgoNilOK(x, T) {
+			x.invalidate()
+			return
+		}
 	case constant_, variable, mapindex, value, commaok, commaerr:
 		// ok
 	default:

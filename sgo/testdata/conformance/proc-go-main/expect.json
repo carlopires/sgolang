@@ -6,7 +6,8 @@
  "diagnostics": [
   {
    "code": "SGO_E_MAIN_SIGNATURE",
-   "at": "func main()"
+   "at": "main()"
   }
- ]
+ ],
+ "note": "Declaration diagnostics are reported at the declared name (SGO-ERR-001 fixes token positions only for admission denials)."
 }

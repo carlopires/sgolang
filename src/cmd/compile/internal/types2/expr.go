@@ -497,6 +497,10 @@ func (check *Checker) comparison(x, y *operand, op syntax.Operator, switchCase b
 		x.invalidate()
 		return
 	}
+	if check.conf.SGo && !check.sgoComparisonOK(x, y) {
+		x.invalidate()
+		return
+	}
 
 	if switchCase {
 		op = syntax.Eql

@@ -77,7 +77,8 @@ func LoadPackage(filenames []string) {
 	// S-Go admission (SGO-ERR-001): every package except digest-pinned trusted target code
 	// (SGO-TCB-002). It runs before type checking and stops the package on any denial.
 	base.ExitIfErrors() // admission runs only on files that parsed
-	if !sgoadmit.Trusted(filenames) {
+	sgoMode = !sgoadmit.Trusted(filenames)
+	if sgoMode {
 		files := make([]*syntax.File, len(noders))
 		var directives []syntax.Pos
 		for i, p := range noders {
@@ -113,6 +114,10 @@ func trimFilename(b *syntax.PosBase) string {
 }
 
 // noder transforms package syntax's AST into a Node tree.
+// sgoMode is true when the package being compiled is under S-Go admission, i.e. it is not
+// digest-pinned trusted target code (SGO-TCB-002). Set once by LoadPackage.
+var sgoMode bool
+
 type noder struct {
 	file          *syntax.File
 	sgoDirectives []syntax.Pos // positions of //go: directives, for S-Go admission

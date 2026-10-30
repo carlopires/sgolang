@@ -691,6 +691,10 @@ func (check *Checker) builtin(x *operand, call *syntax.CallExpr, id builtinId) (
 			p[call] = true
 		}
 
+		if check.conf.SGo && !isString(x.typ()) {
+			check.errorf(x, InvalidCall, "SGO_E_TYPE_MISMATCH: panic takes a string argument (SGO-DEF-002)")
+			return
+		}
 		check.assignment(x, &emptyInterface, "argument to panic")
 		if !x.isValid() {
 			return

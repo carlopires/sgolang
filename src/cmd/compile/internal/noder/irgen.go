@@ -57,6 +57,7 @@ recheck:
 		packages: make(map[string]*types2.Package),
 	}
 	conf := types2.Config{
+		SGo:                sgoMode,
 		Context:            ctxt,
 		GoVersion:          base.Flag.Lang,
 		IgnoreBranchErrors: true, // parser already checked via syntax.CheckBranches mode

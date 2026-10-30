@@ -422,7 +422,9 @@ func (check *Checker) collectObjects() {
 				}
 				if s.Recv == nil {
 					// regular function
-					if name == "init" || name == "main" && pkg.name == "main" {
+					if check.conf.SGo && name == "main" && pkg.name == "main" {
+						check.sgoMainDecl(s) // SGO-PROC-001 replaces Go's main rule
+					} else if name == "init" || name == "main" && pkg.name == "main" {
 						// init and main functions must not declare type and ordinary parameters or results
 						code := InvalidInitDecl
 						if name == "main" {

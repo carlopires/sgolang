@@ -144,7 +144,11 @@ func (err *error_) report() {
 			check.handleError(i, p.pos, err.code, p.msg, err.soft)
 		}
 	} else {
-		check.handleError(0, err.pos(), err.code, err.msg(), err.soft)
+		msg := err.msg()
+		if check.conf.SGo {
+			msg = sgoCoded(err.code, msg) // every S-Go diagnostic carries its SGO_E_ code (SGO-ERR-001)
+		}
+		check.handleError(0, err.pos(), err.code, msg, err.soft)
 	}
 
 	// make sure the error is not reported twice
