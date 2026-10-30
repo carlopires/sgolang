@@ -77,7 +77,7 @@ def closure(stored):
     return sorted(pkgs)
 
 
-def files(pkgs):
+def files(pkgs, with_upstream):
     result = []
     for p in pkgs:
         d = os.path.join(ROOT, "src", p)
@@ -87,7 +87,9 @@ def files(pkgs):
             rel = f"src/{p}/{n}"
             data = open(os.path.join(ROOT, rel), "rb").read()
             result.append({"path": rel, "sha256": hashlib.sha256(data).hexdigest()})
-    # Mark files identical to the upstream commit (blob hash comparison, one git call).
+    if not with_upstream:
+        return result
+    # Mark files identical to the upstream commit (needs history; only when writing the manifest).
     commit = LOCK["upstream"]["commit"]
     proc = subprocess.run(["git", "-C", ROOT, "ls-tree", "-r", commit, "--", "src"], capture_output=True, text=True, check=True)
     upstream = {}
@@ -130,14 +132,14 @@ def services(stmts):
     return rows, errs
 
 
-def build(stored_pkgs):
+def build(stored_pkgs, with_upstream):
     pkgs = closure(stored_pkgs)
     rows, errs = services(go_statements(pkgs))
     if errs:
         for e in errs:
             print(f"tcb-manifest: {e}", file=sys.stderr)
         die("runtime services do not match the enumerated list")
-    fl = files(pkgs)
+    fl = files(pkgs, with_upstream)
     return {
         "schema_version": 1,
         "clause": "SGO-TCB-002",
@@ -155,7 +157,7 @@ def build(stored_pkgs):
         "primitives": PRIMITIVES,
         "services": rows,
         "summary": {"packages": len(pkgs), "files": len(fl),
-                    "files_changed_from_upstream": sum(1 for f in fl if not f["upstream_identical"]),
+                    "files_changed_from_upstream": sum(1 for f in fl if not f.get("upstream_identical", True)),
                     "services": {s: sum(1 for r in rows if r["status"] == s) for s in ("active", "dormant", "not-built")}},
         "files": fl,
     }
@@ -163,8 +165,9 @@ def build(stored_pkgs):
 
 def main():
     stored = json.load(open(MANIFEST)) if os.path.exists(MANIFEST) else None
-    new = build(stored["packages"] if stored else None)
-    if "--write" in sys.argv:
+    write = "--write" in sys.argv
+    new = build(stored["packages"] if stored else None, write)
+    if write:
         with open(MANIFEST, "w") as f:
             json.dump(new, f, indent=1)
             f.write("\n")
@@ -183,7 +186,7 @@ def main():
         for p in problems[:50]:
             print(f"tcb-manifest: {p}", file=sys.stderr)
         die(f"{len(problems)} runtime TCB difference(s) (SGO_E_TCB_DIGEST); review and run --write")
-    print(f"tcb-manifest: ok: {new['summary']}")
+    print(f"tcb-manifest: ok: {stored['summary']}")
 
 
 if __name__ == "__main__":
