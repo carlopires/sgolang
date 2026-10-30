@@ -1,0 +1,20 @@
+step(T0)
+  T0 opens S0
+step(T0)
+  T0 spawns T1 into S0
+step(T0)
+  T0 spawns T2 into S0
+step(T0)
+  T0 joins S0 (JOINING)
+step(T1)
+step(T1)
+  T1 ends Failed
+  S0 CANCELLING (child 1 failed)
+step(T2)
+step(T2)
+  T2 ends Failed
+step(T0)
+  T0 closes S0
+step(T0)
+  process exit 2 Panic: first
+outcome: exit=2 Panic: first

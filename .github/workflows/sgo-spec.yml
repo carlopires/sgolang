@@ -21,3 +21,22 @@ jobs:
         run: sgo/scripts/inventory-check.py
       - name: Runtime TCB manifest (SGO-TCB-002)
         run: sgo/scripts/tcb-manifest.py
+
+  model:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Executable model (W01 step 5)
+        run: sgo/scripts/test-model.sh
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: w01-model-${{ matrix.runner }}
+          path: sgo/evidence/w01/
+          retention-days: 90

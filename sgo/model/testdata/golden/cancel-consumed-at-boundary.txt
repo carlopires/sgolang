@@ -1,0 +1,22 @@
+step(T0)
+  T0 opens S0
+step(T0)
+  T0 spawns T1 into S0
+step(T0)
+  S0 CANCELLING (Cancel by task 0)
+step(T0)
+  T0 observed cancellation
+step(T0)
+  T0 joins S0 (CANCELLING)
+step(T1)
+  T1 observed cancellation
+step(T1)
+  T1 ends Cancelled
+step(T0)
+  T0 closes S0
+step(T0)
+  T0 checkpoint ok
+step(T0)
+step(T0)
+  process exit 0
+outcome: exit=0

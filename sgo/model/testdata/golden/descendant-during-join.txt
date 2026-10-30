@@ -1,0 +1,22 @@
+step(T0)
+  T0 opens S0
+step(T0)
+  T0 spawns T1 into S0
+step(T0)
+  T0 joins S0 (JOINING)
+step(T1)
+  T1 spawns T2 into S0
+step(T1)
+step(T1)
+  T1 ends Succeeded
+step(T2)
+  mark T2 grandchild
+step(T2)
+step(T2)
+  T2 ends Succeeded
+step(T0)
+  T0 closes S0
+step(T0)
+step(T0)
+  process exit 0
+outcome: exit=0
