@@ -56,7 +56,9 @@ def main():
     clean, spurious = [], []
     with tempfile.TemporaryDirectory() as tmp:
         sgo_o = os.path.join(tmp, "sgo.o")
-        subprocess.check_call([COMPILE, "-p", "sgo", "-std", "-o", sgo_o, os.path.join(ROOT, "src", "sgo", "sgo.go")])
+        sgo_dir = os.path.join(ROOT, "src", "sgo")
+        sgo_files = sorted(os.path.join(sgo_dir, f) for f in os.listdir(sgo_dir) if f.endswith(".go") and not f.endswith("_test.go"))
+        subprocess.check_call([COMPILE, "-p", "sgo", "-std", "-o", sgo_o] + sgo_files)
         cfg = os.path.join(tmp, "importcfg")
         open(cfg, "w").write(f"packagefile sgo={sgo_o}\n")
         for name, d in cases.items():
