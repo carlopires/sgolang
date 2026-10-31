@@ -58,6 +58,13 @@ def main():
         open(os.path.join(mod, "main.sgo"), "w").write(MAIN)
         # The driver builds the target TCB into the cache; this test reuses those archives.
         run([os.path.join(TOOLS, "sgo"), "build", "-o", os.path.join(tmp, "prog")], mod, env)
+        # 0. The binary records its build metadata (SGO-BUILD-001) as its build ID.
+        prog = open(os.path.join(tmp, "prog"), "rb").read()
+        version = run([os.path.join(TOOLS, "sgo"), "version"], mod, env).stdout.split()
+        want = (f"sgo1/spec={version[3]}/admission={version[5]}/target={GOOS}-{GOARCH}/"
+                f"toolchain={version[1]}/upstream={version[7]}").encode()
+        if b'Go build ID: "' + want + b'"' not in prog:
+            sys.exit(f"test-identity: binary does not record its build metadata {want!r}")
         tcb = glob.glob(os.path.join(tmp, "cache", "sgo-driver", "tcb", "*", "complete"))
         if len(tcb) != 1:
             sys.exit("test-identity: TCB cache not found")
@@ -144,7 +151,7 @@ def main():
         r = link(other, main_a)
         if r.returncode == 0 or "SGO_E_SPEC_MISMATCH" not in r.stdout + r.stderr:
             sys.exit(f"test-identity: linker accepted another spec version:\n{r.stdout}{r.stderr}")
-    print("test-identity: ok: stale contract (exported/unexported change, recorded contract), "
+    print("test-identity: ok: build metadata, stale contract (exported/unexported change, recorded contract), "
           "foreign export data and object, spec mismatch in export data and object")
     return 0
 

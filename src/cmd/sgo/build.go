@@ -134,7 +134,7 @@ func buildProgram(arg, target string, output func(*module, *pkg) string) (string
 		archives[p.path] = a
 	}
 	exe := filepath.Join(work, "prog")
-	if err := t.link(archives, archives[main.path], exe, env); err != nil {
+	if err := t.link(archives, archives[main.path], exe, t.buildInfo(goos, goarch), env); err != nil {
 		return "", err
 	}
 	out := output(m, main)
@@ -175,12 +175,21 @@ func (t *toolchain) compileUser(m *module, p *pkg, isMain bool, archives map[str
 	return archive, t.runTool(m.root, env, "compile", args...)
 }
 
-func (t *toolchain) link(archives map[string]string, main, exe string, env []string) error {
+// buildInfo is the build metadata recorded in every binary (SGO-BUILD-001, SGO-TOOL-001): spec
+// version, admission digest, target, toolchain identity, and upstream base commit. It is the
+// binary's build ID, which the linker writes verbatim in every executable format.
+func (t *toolchain) buildInfo(goos, goarch string) string {
+	return fmt.Sprintf("sgo1/spec=%s/admission=%s/target=%s-%s/toolchain=%s/upstream=%s",
+		t.specVersion, t.admission, goos, goarch, t.version, t.upstream)
+}
+
+func (t *toolchain) link(archives map[string]string, main, exe, buildInfo string, env []string) error {
 	importcfg := exe + ".importcfg"
 	if err := writeImportcfg(importcfg, archives); err != nil {
 		return err
 	}
-	return t.runTool(filepath.Dir(exe), env, "link", "-o", exe, "-importcfg", importcfg, "-buildmode=exe", main)
+	return t.runTool(filepath.Dir(exe), env, "link", "-o", exe, "-importcfg", importcfg, "-buildmode=exe",
+		"-buildid="+buildInfo, main)
 }
 
 // moveFile moves src to dst, copying across file systems; dst appears only when complete.
