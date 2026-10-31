@@ -29,6 +29,12 @@ func runtime_write(s string) (int, bool)
 func runtime_violation(msg string)
 func runtime_fail(kind, msg string) // unwinds with a checked failure of the kind (SGO-DEF-003)
 
+// Implemented in the runtime (sgo_cancel.go).
+func runtime_cancel(scope unsafe.Pointer)
+func runtime_checkpoint(task unsafe.Pointer) error
+func runtime_sleep(task unsafe.Pointer, ms int) error
+func runtime_isCancelled(err error) bool
+
 // Spawn admits f as a child of n (SGO-SPAWN-001..004). A refused admission is a
 // SpawnContractViolation that unwinds the caller (SGO-SPAWN-002).
 func (n *Nursery) Spawn(f func(*Context) error) {
@@ -40,27 +46,30 @@ func (n *Nursery) Spawn(f func(*Context) error) {
 	}
 }
 
-// Cancel requests cancellation of n (SGO-CANCEL-001). Implemented in W04.
+// Cancel requests cancellation of n (SGO-CANCEL-001). The caller must be able to spawn into n;
+// otherwise the call is a SpawnContractViolation and has no effect.
 func (n *Nursery) Cancel() {
-	runtime_violation("Nursery.Cancel is not implemented yet (S-Go W04)")
+	if n == nil {
+		runtime_violation("cancel with a nil nursery handle")
+	}
+	runtime_cancel(n.s)
 }
 
-// Checkpoint reports cancellation (SGO-CANCEL-002). Until W04 implements cancellation no scope can
-// be cancelled, so it only checks that the context belongs to the calling task.
+// Checkpoint returns nil, or a cancellation error if a scope linked to the calling task is
+// CANCELLING (SGO-CANCEL-002).
 func (c *Context) Checkpoint() error {
 	c.own()
-	return nil
+	return runtime_checkpoint(c.t)
 }
 
-// Sleep blocks for at least ms milliseconds (SGO-WAIT-001). Cancellation-aware waiting is W04; until
-// then Sleep is refused rather than implemented without its cancellation contract.
+// Sleep blocks for at least ms milliseconds of monotonic time, or returns a cancellation error as
+// soon as a scope linked to the calling task is CANCELLING (SGO-WAIT-001).
 func (c *Context) Sleep(ms int) error {
 	c.own()
 	if ms < 0 {
 		runtime_fail("InvalidArgument", "Sleep with a negative duration")
 	}
-	runtime_violation("Context.Sleep is not implemented yet (S-Go W04)")
-	return nil
+	return runtime_sleep(c.t, ms)
 }
 
 // Stdout returns the stdout capability; only the root context holds it (SGO-PROC-003).
@@ -94,9 +103,9 @@ type errorString struct{ s string }
 
 func (e *errorString) Error() string { return e.s }
 
-// IsCancelled reports whether err is a cancellation error (SGO-CANCEL-003). Cancellation errors are
-// produced from W04; until then none exist.
-func IsCancelled(err error) bool { return false }
+// IsCancelled reports whether err is a cancellation error produced by Checkpoint or Sleep
+// (SGO-CANCEL-003).
+func IsCancelled(err error) bool { return runtime_isCancelled(err) }
 
 func itoa(n int) string {
 	if n == 0 {

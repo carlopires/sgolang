@@ -27,6 +27,36 @@ func sgo_isCurrent(task unsafe.Pointer) bool {
 	return task != nil && getg().sgo == (*sgoTask)(task)
 }
 
+// sgo_cancel is n.Cancel() (SGO-CANCEL-001).
+//
+//go:linkname sgo_cancel sgo.runtime_cancel
+func sgo_cancel(scope unsafe.Pointer) {
+	if err := sgoNurseryCancel((*sgoScope)(scope)); err != nil {
+		panic(err)
+	}
+}
+
+// sgo_checkpoint is task.Checkpoint() after the context-ownership check (SGO-CANCEL-002).
+//
+//go:linkname sgo_checkpoint sgo.runtime_checkpoint
+func sgo_checkpoint(task unsafe.Pointer) error {
+	return sgoTaskCancellation((*sgoTask)(task))
+}
+
+// sgo_sleep is task.Sleep(ms) after the argument and ownership checks (SGO-WAIT-001).
+//
+//go:linkname sgo_sleep sgo.runtime_sleep
+func sgo_sleep(task unsafe.Pointer, ms int) error {
+	return sgoSleepFor((*sgoTask)(task), int64(ms))
+}
+
+// sgo_isCancelled is sgo.IsCancelled (SGO-CANCEL-003).
+//
+//go:linkname sgo_isCancelled sgo.runtime_isCancelled
+func sgo_isCancelled(err error) bool {
+	return sgoIsCancelled(err)
+}
+
 //go:linkname sgo_violation sgo.runtime_violation
 func sgo_violation(msg string) {
 	panic(error(&sgoViolation{msg}))

@@ -42,6 +42,20 @@ func (ctxt *Link) sgoCheckConfig() {
 // sgoXFlags counts -X flags on the command line (main.go).
 var sgoXFlags int
 
+// sgoSetDrainBudget handles -sgodrainbudget=ms: it sets runtime.sgoDrainBudget, which the runtime
+// reads when the program starts (SGO-DRAIN-002). Only positive decimal integers are accepted, as
+// the driver writes them.
+func sgoSetDrainBudget(ctxt *Link, s string) {
+	ok := s != "" && len(s) <= 12 && s[0] != '0'
+	for _, c := range s {
+		ok = ok && c >= '0' && c <= '9'
+	}
+	if !ok {
+		Exitf("sgo:1:1: SGO_E_USAGE: -sgodrainbudget must be a positive number of milliseconds, not %q (SGO-DRAIN-002)", s)
+	}
+	addstrdata1(ctxt, "runtime.sgoDrainBudget="+s)
+}
+
 // sgoCheckIdentity verifies the S-Go identity of every linked package (SGO-IMP-002). Each package
 // compiled by the S-Go compiler defines go:sgoid.<path>: the line
 //

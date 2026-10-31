@@ -18,6 +18,11 @@ func main(root *sgo.Context) error {
 			}
 			return nil
 		})
+		// Give the child time to open b and spawn the grandchild: a task that opens a nursery
+		// after a is cancelled opens it CANCELLING, and spawning into it creates no child (R5).
+		if err := root.Sleep(200); err != nil {
+			return err
+		}
 		a.Cancel()
 	}
 	return out.WriteString("after\n")

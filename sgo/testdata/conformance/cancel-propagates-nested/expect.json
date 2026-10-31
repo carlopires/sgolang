@@ -5,5 +5,6 @@
   "SGO-NUR-001"
  ],
  "exit": 0,
- "stdout": "grandchild cancelled\nafter\n"
+ "stdout": "grandchild cancelled\nafter\n",
+ "note": "Cancellation of a reaches the grandchild through b (cause Ancestor). The 200 ms sleep orders the grandchild's spawn before the cancellation; TestSGoCancelPropagatesNested checks the same with exact synchronization, and that a nursery opened after the cancellation admits no child."
 }

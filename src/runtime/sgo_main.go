@@ -28,6 +28,7 @@ type sgoFailureInfo struct{ kind, msg, pos string }
 // enforcement (sgo_service.go), and returns the root *sgo.Context.
 func sgoEnterMain() unsafe.Pointer {
 	sgoProgram = true
+	sgoDrainInit() // drain budget recorded in the binary (SGO-DRAIN-002)
 	sgoEnforce.Store(true)
 	t := sgoEnterRoot()
 	return unsafe.Pointer(&sgoContext{t: unsafe.Pointer(t)})

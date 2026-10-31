@@ -62,6 +62,24 @@ func SGoJoin(s *SGoScope) (SGoResult, error) {
 	return SGoResult{sgoOutcomeName(r.Outcome), r.Primary, r.Err, r.Panic, r.Children, r.Failures, r.Cancelled}, err
 }
 
+// W04 cancellation hooks (sgo_cancel.go).
+
+func SGoCancel(s *SGoScope) error   { return sgoNurseryCancel(s) }
+func SGoCheckpoint() error          { return sgoTaskCancellation(sgoCurrent()) }
+func SGoSleep(ms int64) error       { return sgoSleepFor(sgoCurrent(), ms) }
+func SGoIsCancelled(err error) bool { return sgoIsCancelled(err) }
+
+// SGoSleepers reports how many Sleep calls are registered.
+func SGoSleepers() int {
+	n := 0
+	lock(&sgoSleepLock)
+	for r := sgoSleepers; r != nil; r = r.next {
+		n++
+	}
+	unlock(&sgoSleepLock)
+	return n
+}
+
 // SGoCurrentTaskID reports the calling goroutine's task ID, if it is an S-Go task.
 func SGoCurrentTaskID() (uint64, bool) {
 	t := sgoCurrent()

@@ -213,6 +213,10 @@ func Main(arch *sys.Arch, theArch Arch) {
 		sgoXFlags++ // S-Go: refused by sgoCheckConfig (sgoid.go)
 		addstrdata1(ctxt, s)
 	})
+	// S-Go: the drain budget of SGO-DRAIN-002, written by the sgo driver from -drain-budget.
+	objabi.Flagfn1("sgodrainbudget", "set the S-Go drain budget to `ms` milliseconds", func(s string) {
+		sgoSetDrainBudget(ctxt, s)
+	})
 	objabi.Flagcount("v", "print link trace", &ctxt.Debugvlog)
 	objabi.Flagfn1("importcfg", "read import configuration from `file`", ctxt.readImportCfg)
 

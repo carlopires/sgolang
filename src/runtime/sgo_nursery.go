@@ -69,9 +69,9 @@ func sgoNurseryExit(p unsafe.Pointer) {
 // sgoUnwindNurseries completes, innermost first, the calling task's open nurseries that were
 // opened in frames the unwinding is leaving: those at stack offset >= off (the frame whose
 // deferred calls run next, or deeper), or all of them if all is set (no frame with deferred calls
-// remains). The failure being unwound stays primary (SGO-NUR-004 rule 1); join results do not
-// raise. Cancelling the scope before joining is W04 (SGO-DEF-005); until then unwinding waits for
-// the children to finish.
+// remains). Each is cancelled with cause Unwind before it is joined (SGO-DEF-005,
+// SGO-CANCEL-001). The failure being unwound stays primary (SGO-NUR-004 rule 1); join results do
+// not raise.
 func sgoUnwindNurseries(off uintptr, all bool) {
 	t := getg().sgo
 	if t == nil {
@@ -82,6 +82,7 @@ func sgoUnwindNurseries(off uintptr, all bool) {
 		if !all && s.frame < off {
 			return
 		}
+		sgoCancel(s, sgoCause{kind: sgoCauseUnwind})
 		_, bad, err := sgoNurseryJoin(s)
 		if err != nil {
 			throw("sgo: unwinding join failed") // the innermost scope is the caller's own: a defect

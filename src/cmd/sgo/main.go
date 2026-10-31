@@ -79,6 +79,7 @@ func run(args []string) error {
 type buildFlags struct {
 	out    string
 	target string
+	drain  int64    // drain budget in ms (SGO-DRAIN-002); 0: none
 	args   []string // positional arguments
 }
 
@@ -113,12 +114,38 @@ func parseBuildFlags(cmd string, args []string) (*buildFlags, error) {
 			}
 			f.target = val
 		case name == "drain-budget":
-			return nil, usage("-drain-budget is not implemented yet (S-Go W04)")
+			if !hasVal {
+				if i+1 >= len(args) {
+					return nil, usage("flag -drain-budget needs a value")
+				}
+				i++
+				val = args[i]
+			}
+			d, ok := parseBudget(val)
+			if !ok {
+				return nil, usage("-drain-budget must be a positive number of milliseconds, not %q (SGO-DRAIN-002)", val)
+			}
+			f.drain = d
 		default:
 			return nil, usage("unknown flag %s for sgo %s", a, cmd)
 		}
 	}
 	return f, nil
+}
+
+// parseBudget accepts a positive decimal integer of at most 12 digits (about 31 years).
+func parseBudget(s string) (int64, bool) {
+	if s == "" || len(s) > 12 {
+		return 0, false
+	}
+	var v int64
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return 0, false
+		}
+		v = v*10 + int64(c-'0')
+	}
+	return v, v > 0
 }
 
 func cmdVersion() error {

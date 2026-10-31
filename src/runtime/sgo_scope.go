@@ -73,6 +73,12 @@ type sgoScope struct {
 	// sgoNurseryEnter). It is an offset, not an address, so it survives stack copying (§2.4);
 	// unwinding uses it to complete the nurseries of the frames it leaves (SGO-DEF-005).
 	frame uintptr
+	// Own cancellation (sgo_cancel.go): cause and sequence number of the scope's own transition to
+	// CANCELLING (cancelSeq 0: none; read without the lock along parent chains), and the drain
+	// budget timer it started.
+	cause     sgoCause
+	cancelSeq atomic.Uint64
+	drain     *timer
 }
 
 // sgoTask is the record of an S-Go task: the root task or a child admitted by sgoSpawn.
@@ -183,6 +189,11 @@ func sgoSpawn(s *sgoScope, fn func(*sgoTask) error) error {
 	lock(&s.lock)
 	switch s.state {
 	case sgoOpen, sgoJoining:
+		// CANCELLING in effect through an ancestor (cause Ancestor, SGO-CANCEL-001) is CANCELLING.
+		if sgoCancelledFrom(s.parent) != nil {
+			unlock(&s.lock)
+			return nil
+		}
 	case sgoCancelling:
 		unlock(&s.lock)
 		return nil // R5: no child; cancellation is observed at the caller's next cancellation point
@@ -263,16 +274,17 @@ func sgoTaskMain(c *sgoTask, fn func(*sgoTask) error) {
 	}
 }
 
-// sgoIsCancelled reports whether err is a cancellation error (SGO-CANCEL-003). Cancellation errors
-// are produced by W04; until then none exist.
-func sgoIsCancelled(err error) bool { return false }
-
 // sgoTaskExit publishes the child's outcome and wakes the joining owner if it was the last child.
 func sgoTaskExit(c *sgoTask) {
 	if len(c.nest) != 0 {
 		throw("sgo: task finished with an open nursery") // RuntimeDefect (SGO-ERR-003)
 	}
 	s := c.scope
+	// A child that ended Errored or Failed cancels its scope when the outcome is published, before
+	// the scope's join can complete (SGO-SPAWN-004, SGO-CANCEL-001).
+	if c.outcome == sgoErrored || c.outcome == sgoFailed {
+		sgoCancel(s, sgoCause{sgoCauseChildFailed, c.id})
+	}
 	if raceenabled {
 		racereleasemerge(unsafe.Pointer(s))
 	}
@@ -318,6 +330,8 @@ func sgoNurseryJoin(s *sgoScope) (sgoScopeResult, []*sgoTask, error) {
 		raceacquire(unsafe.Pointer(s))
 	}
 	s.state = sgoFinalizing
+	drain := s.drain // stopped below, outside the lock
+	s.drain = nil
 	r := sgoScopeResult{Outcome: sgoSucceeded, Children: s.nchild}
 	for c := s.first; c != nil; c = c.sibling {
 		switch c.outcome {
@@ -344,6 +358,9 @@ func sgoNurseryJoin(s *sgoScope) (sgoScopeResult, []*sgoTask, error) {
 	first := s.first
 	s.first, s.last = nil, nil
 	unlock(&s.lock)
+	if drain != nil {
+		drain.stop()
+	}
 	t.nest[len(t.nest)-1] = nil
 	t.nest = t.nest[:len(t.nest)-1]
 	// The children are finished and no longer change; collect the failed ones outside the lock.
