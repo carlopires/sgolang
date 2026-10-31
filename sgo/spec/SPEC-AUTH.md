@@ -7,7 +7,7 @@ Capabilities for effects other than stdout (D24, D25; plan §8). Draft for spec 
 - **status:** draft
 - **reference_closure:** SGO-CAP-001, SGO-SPAWN-002, SGO-PROC-003, SGO-AUTH-002; D24; plan §8.2.
 - **grammar_and_types:** Each effect kind `K` (SGO-AUTH-003) has an opaque handle type `*sgo.K` (for example `*sgo.Clock`). Handles have no exported fields and no public constructor; they are obtained only from the root context (`root.K(...)`, SGO-AUTH-002) or by attenuating another handle. They compare by identity only, like `*sgo.Nursery` (SGO-CAP-001).
-- **preconditions:** PENDING: the exact attenuation methods per kind (SGO-AUTH-003).
+- **preconditions:** Attenuation methods per kind are those of SGO-AUTH-003. A spawner narrows a child's ceiling with `n.SpawnWithout(kind string, f)`, where `kind` is a constant naming an SGO-AUTH-003 kind; the child's ceiling is the spawner's minus that kind (repeated narrowing removes several kinds). There is no operation that adds a kind to a ceiling.
 - **evaluation_and_value_semantics:** Every task has a *ceiling*: the set of effect kinds it may exercise. The root task's ceiling is the program's root grants (SGO-AUTH-002). A spawned or started child inherits its spawner's ceiling unless the spawn narrows it; a ceiling is never widened. An effect operation succeeds only if both hold: the handle permits it, and the calling task's ceiling contains its kind. Attenuation returns a new handle that permits a subset of what the original permits; it never permits more.
 - **ownership_and_lifecycle:** A handle may be passed to other tasks as a value; possession alone does not grant the effect (the ceiling check above).
 - **effect_and_capability_requirements:** This clause defines them.
