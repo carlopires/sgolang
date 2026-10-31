@@ -190,3 +190,20 @@ func SGoCommitPtr(p *SGoPermit, v unsafe.Pointer) error { return sgoChanCommit(p
 func SGoReceivePtr(c *SGoChan) (unsafe.Pointer, bool, error) {
 	return sgoChanReceive(c, sgoCurrent())
 }
+
+// W05 readiness hooks (sgo_ready.go).
+func SGoStart(s *SGoScope, fn func(*SGoTask) error) error { return sgoStart(s, fn) }
+
+// SGoReadySignal is ready.Signal() for the calling task's readiness record.
+func SGoReadySignal() { sgoReadySignal(sgoCurrent().ready) }
+
+// SGoReadyWaiters reports how many starters are parked waiting for readiness.
+func SGoReadyWaiters() int {
+	n := 0
+	lock(&sgoSleepLock)
+	for r := sgoReadyWaiters; r != nil; r = r.next {
+		n++
+	}
+	unlock(&sgoSleepLock)
+	return n
+}

@@ -1,0 +1,23 @@
+package main
+
+import "sgo"
+
+// R03: only the started child may signal; a Signal by another task (here a grandchild that
+// captured the handle) is a contract violation, and the child ends before ready.
+func main(root *sgo.Context) error {
+	nursery (n) {
+		err := n.Start(func(task *sgo.Context, ready *sgo.Ready) error {
+			nursery (m) {
+				m.Spawn(func(grandchild *sgo.Context) error {
+					ready.Signal()
+					return nil
+				})
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

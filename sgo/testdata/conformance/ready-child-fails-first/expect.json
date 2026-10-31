@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-READY-002",
+  "SGO-NUR-004"
+ ],
+ "exit": 1,
+ "stdout": "start: not ready\n",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"ChildError\",\"message\":\"not ready\",\"position\":null,\"task_id\":1,\"scope_id\":1,\"chain\":[]}\n",
+ "note": "R02: the child errors before signalling; Start returns its error and the child's outcome is published to the nursery, which ends with ChildError."
+}

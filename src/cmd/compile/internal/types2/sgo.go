@@ -103,7 +103,7 @@ func isSgoHandle(T Type) bool {
 		return false
 	}
 	switch n.obj.name {
-	case "Context", "Nursery", "Writer", "Channel", "SendPermit":
+	case "Context", "Nursery", "Writer", "Channel", "SendPermit", "Ready":
 		return true
 	}
 	return false

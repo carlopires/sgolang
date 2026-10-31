@@ -1,0 +1,13 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		n.Start(func(task *sgo.Context, ready *sgo.Ready) error {
+			ready.Signal()
+			return nil
+		})
+	}
+	return nil
+}

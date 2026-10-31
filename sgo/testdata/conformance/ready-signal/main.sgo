@@ -1,0 +1,37 @@
+package main
+
+import "sgo"
+
+// R01: Start waits for the ready signal; the child keeps running in the nursery afterwards.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	proceed := sgo.NewChannel[bool](1)
+	nursery (n) {
+		err := n.Start(func(task *sgo.Context, ready *sgo.Ready) error {
+			if serr := task.Sleep(20); serr != nil {
+				return serr
+			}
+			_ = out.WriteString("child ready\n")
+			ready.Signal()
+			_, _, rerr := proceed.Receive(task)
+			if rerr != nil {
+				return rerr
+			}
+			return out.WriteString("child still running\n")
+		})
+		if err != nil {
+			return err
+		}
+		if werr := out.WriteString("started\n"); werr != nil {
+			return werr
+		}
+		p, perr := proceed.Reserve(root)
+		if perr != nil {
+			return perr
+		}
+		if cerr := p.Commit(true); cerr != nil {
+			return cerr
+		}
+	}
+	return out.WriteString("joined\n")
+}

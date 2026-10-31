@@ -1,0 +1,27 @@
+package main
+
+import "sgo"
+
+// R03: a second Signal through an alias is a contract violation in the child; the accepted
+// readiness is unchanged (Start already returned nil).
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		err := n.Start(func(task *sgo.Context, ready *sgo.Ready) error {
+			alias := ready
+			ready.Signal()
+			if serr := task.Sleep(50); serr != nil {
+				return serr
+			}
+			alias.Signal()
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+		if werr := out.WriteString("started\n"); werr != nil {
+			return werr
+		}
+	}
+	return nil
+}

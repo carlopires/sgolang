@@ -109,6 +109,9 @@ type sgoTask struct {
 	// task), and how many the runtime aborted because the task left them unresolved.
 	permits   *sgoPermit
 	abandoned int64
+
+	// ready is the readiness record of a child started by n.Start (sgo_ready.go), nil otherwise.
+	ready *sgoReady
 }
 
 // sgoScopeResult is the immutable outcome of a closed scope (SGO-NUR-004 rules 2-4; rule 1, the
@@ -179,34 +182,45 @@ func sgoNurseryOpen() (*sgoScope, error) {
 // sgoSpawn admits fn as a child of s (SGO-SPAWN-002/003). It returns a *sgoViolation if admission
 // is refused, and nil if the child was admitted or silently not created because s is CANCELLING (R5).
 func sgoSpawn(s *sgoScope, fn func(*sgoTask) error) error {
+	_, err := sgoAdmit(s, fn, nil)
+	return err
+}
+
+// sgoAdmit is sgoSpawn that also reports the created child (nil if none was created because s is
+// CANCELLING) and attaches the readiness record r, if any, before the child can run (n.Start,
+// sgo_ready.go).
+func sgoAdmit(s *sgoScope, fn func(*sgoTask) error, r *sgoReady) (*sgoTask, error) {
 	t := sgoCurrent()
 	switch {
 	case s == nil:
-		return &sgoViolation{"spawn with a nil nursery handle"}
+		return nil, &sgoViolation{"spawn with a nil nursery handle"}
 	case fn == nil:
-		return &sgoViolation{"spawn with a nil callback"}
+		return nil, &sgoViolation{"spawn with a nil callback"}
 	case t == nil:
-		return &sgoViolation{"spawn from a goroutine that is not an S-Go task"}
+		return nil, &sgoViolation{"spawn from a goroutine that is not an S-Go task"}
 	case t.currentScope() != s:
-		return &sgoViolation{"spawn into a nursery that is not the caller's current scope"}
+		return nil, &sgoViolation{"spawn into a nursery that is not the caller's current scope"}
 	}
 	// Allocate before taking the scope lock (no allocation under runtime locks).
-	c := &sgoTask{scope: s, fn: fn}
+	c := &sgoTask{scope: s, fn: fn, ready: r}
 	lock(&s.lock)
 	switch s.state {
 	case sgoOpen, sgoJoining:
 		// CANCELLING in effect through an ancestor (cause Ancestor, SGO-CANCEL-001) is CANCELLING.
 		if sgoCancelledFrom(s.parent) != nil {
 			unlock(&s.lock)
-			return nil
+			return nil, nil
 		}
 	case sgoCancelling:
 		unlock(&s.lock)
-		return nil // R5: no child; cancellation is observed at the caller's next cancellation point
+		return nil, nil // R5: no child; cancellation is observed at the caller's next cancellation point
 	default:
 		st := s.state
 		unlock(&s.lock)
-		return &sgoViolation{"spawn into a nursery in state " + st.String()}
+		return nil, &sgoViolation{"spawn into a nursery in state " + st.String()}
+	}
+	if r != nil {
+		r.child = c
 	}
 	// Register before the child can run (OWN-2).
 	c.id = sgoNextTaskID.Add(1)
@@ -233,7 +247,7 @@ func sgoSpawn(s *sgoScope, fn func(*sgoTask) error) error {
 			wakep()
 		}
 	})
-	return nil
+	return c, nil
 }
 
 // sgoTaskStart is the entry point of every child goroutine. Its task record was attached to the g
@@ -278,7 +292,7 @@ func sgoTaskMain(c *sgoTask, fn func(*sgoTask) error) {
 	case err == nil:
 		c.outcome = sgoSucceeded
 	case sgoIsCancelled(err):
-		c.outcome = sgoCancelled
+		c.outcome, c.err = sgoCancelled, err // kept for n.Start (sgo_ready.go); not a failure
 	default:
 		c.outcome, c.err, c.origin = sgoErrored, err, sgoOriginOf(c)
 		// An errored child's chain holds the permits it abandoned (only failures run deferred
@@ -297,6 +311,10 @@ func sgoTaskExit(c *sgoTask) {
 	}
 	// Unresolved permits are aborted before the outcome is published (SGO-PERMIT-002, H09).
 	sgoPermitsResolve(c, nil, true)
+	// A started child that ends before signalling readiness wakes its starter (SGO-READY-002).
+	if c.ready != nil {
+		sgoReadyChildEnded(c)
+	}
 	s := c.scope
 	// A child that ended Errored or Failed cancels its scope when the outcome is published, before
 	// the scope's join can complete (SGO-SPAWN-004, SGO-CANCEL-001).

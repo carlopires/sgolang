@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-READY-002"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"SpawnContractViolation\",\"message\":\"ready signal by a task that was not started with this readiness handle\",\"position\":null,\"task_id\":2,\"scope_id\":2,\"chain\":[]}\n",
+ "note": "R03: a grandchild that captured the handle cannot signal; its violation propagates and the child ends before ready."
+}

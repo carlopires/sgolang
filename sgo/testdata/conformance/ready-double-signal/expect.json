@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-READY-002"
+ ],
+ "exit": 2,
+ "stdout": "started\n",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"SpawnContractViolation\",\"message\":\"ready signalled twice\",\"position\":null,\"task_id\":1,\"scope_id\":1,\"chain\":[]}\n",
+ "note": "R03: the second Signal, through an alias, fails the child; the accepted readiness (Start returned nil) is unchanged."
+}

@@ -79,6 +79,12 @@ A commit happens-before the receive that returns its value: both take the channe
 
 **Selection decisions.** Which waiting receiver a C = 0 reservation is matched to, and which woken sender wins freed capacity, are the allowed nondeterminism of SGO-PERMIT-002; the model explores every choice and the runtime picks the first Waiting receiver in FIFO order and lets woken senders race for the lock.
 
-## 11. Not yet
+## 11. Start with a readiness handshake (W05)
 
-Lab scheduling (W08). Cleanup contexts with quotas, scope finalizers, readiness handshakes, receive permits, native `chan`/`select` (W07), `recover`, and `sgo.ExitTask` are not admitted.
+Code: `src/runtime/sgo_ready.go`, `src/sgo/ready.go`; `sgoAdmit` (the admission and registration of `Spawn`, which also returns the created child and attaches its readiness record before the child can run); a hook in `sgoTaskExit` and in `sgoWakeCancelled`; tests: `src/runtime/sgo_ready_test.go`.
+
+A readiness record has a state with one terminal decision (Waiting → Signalled | Ended | Cancelled), made by a CAS under `sgoSleepLock`. The starter registers in `sgoReadyWaiters` and parks releasing `sgoSleepLock`, so a signaller, the exiting child, or the canceller cannot ready a starter that is not parked; the winner of the decision unregisters the starter and readies it. The losers change nothing: a Signal after cancellation won is accepted with no effect; the child's end after it signalled is an ordinary outcome of its nursery. The child is registered in its nursery before it can run, whatever the decision, so a successful Start always names a running, owned child and a cancelled Start never leaves an unregistered one (R04). Only the started child may signal, once; a second Signal or a Signal by another task is a `SpawnContractViolation`. A child that ends before signalling makes Start return its returned error, or an error naming the child if it failed or returned `nil`.
+
+## 12. Not yet
+
+Lab scheduling (W08). Cleanup contexts with quotas, scope finalizers, receive permits, native `chan`/`select` (W07), `recover`, and `sgo.ExitTask` are not admitted.

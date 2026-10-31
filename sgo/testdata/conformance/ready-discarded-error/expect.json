@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-READY-002",
+  "SGO-CTL-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_DISCARDED_ERROR",
+   "at": "n.Start("
+  }
+ ]
+}

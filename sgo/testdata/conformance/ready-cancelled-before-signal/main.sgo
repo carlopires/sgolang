@@ -1,0 +1,36 @@
+package main
+
+import "sgo"
+
+// R02, R04: the starter's scope is cancelled while it waits; Start returns a cancellation error,
+// and the started child stays registered, is cancelled with its nursery, and is joined.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	admitted := sgo.NewChannel[bool](1)
+	nursery (a) {
+		a.Spawn(func(task *sgo.Context) error {
+			nursery (n) {
+				err := n.Start(func(child *sgo.Context, ready *sgo.Ready) error {
+					p, perr := admitted.Reserve(child)
+					if perr != nil {
+						return perr
+					}
+					if cerr := p.Commit(true); cerr != nil {
+						return cerr
+					}
+					return child.Sleep(60000)
+				})
+				if sgo.IsCancelled(err) {
+					_ = out.WriteString("start cancelled\n")
+				}
+			}
+			return nil
+		})
+		_, _, rerr := admitted.Receive(root)
+		if rerr != nil {
+			return rerr
+		}
+		a.Cancel()
+	}
+	return out.WriteString("joined\n")
+}

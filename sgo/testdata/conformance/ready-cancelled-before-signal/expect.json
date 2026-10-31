@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-READY-002",
+  "SGO-CANCEL-001"
+ ],
+ "exit": 0,
+ "stdout": "start cancelled\njoined\n",
+ "note": "R02, R04: cancellation of the starter's scope wakes the waiting Start with a cancellation error; the started child stays registered, is cancelled with its nursery, and is joined."
+}

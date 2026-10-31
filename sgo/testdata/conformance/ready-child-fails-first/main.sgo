@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+// R02: the child returns an error before signalling; Start returns that error, and the child's
+// outcome is published to the nursery as usual (it cancels the nursery and is its primary).
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		err := n.Start(func(task *sgo.Context, ready *sgo.Ready) error {
+			return sgo.NewError("not ready")
+		})
+		if err != nil {
+			if werr := out.WriteString("start: " + err.Error() + "\n"); werr != nil {
+				return werr
+			}
+		}
+	}
+	return out.WriteString("unreachable\n")
+}

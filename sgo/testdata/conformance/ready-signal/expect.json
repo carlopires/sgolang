@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-READY-002"
+ ],
+ "exit": 0,
+ "stdout": "child ready\nstarted\nchild still running\njoined\n",
+ "note": "R01: Start returns only after the signal; the child keeps running in the nursery (a channel orders its last line after the starter's)."
+}
