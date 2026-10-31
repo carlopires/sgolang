@@ -11,6 +11,7 @@
 //	sgo build [-o out] [-target=<os>/<arch>] [package]
 //	sgo run <main package>
 //	sgo version
+//	sgo fmt [files]
 //
 // Any other command or flag is rejected with SGO_E_USAGE. There is no flag, environment variable,
 // file name, build tag, or pragma that changes the language or disables a check.
@@ -68,7 +69,7 @@ func run(args []string) error {
 		}
 		return cmdVersion()
 	case "fmt":
-		return usage("sgo fmt is not implemented yet (S-Go W03)")
+		return cmdFmt(rest)
 	default:
 		return usage("unknown command %q", cmd)
 	}
