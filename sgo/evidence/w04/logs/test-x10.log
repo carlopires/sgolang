@@ -1,0 +1,1 @@
+test-x10: ok: cross-package nurseries behave identically with default optimization (nursery functions not inlined, spawned closures inlinable), with -l, and as built by the driver

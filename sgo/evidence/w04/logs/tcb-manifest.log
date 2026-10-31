@@ -1,0 +1,1 @@
+tcb-manifest: ok: {'packages': 31, 'files': 1029, 'files_changed_from_upstream': 13, 'services': {'active': 5, 'dormant': 5, 'not-built': 1}}

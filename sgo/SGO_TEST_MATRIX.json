@@ -601,10 +601,11 @@
       ],
       "scenario": "A child panics with a distinguishable payload and siblings have cleanup.",
       "expected": "Siblings are cancelled and drained; their defers complete; parent join re-panics with the original payload.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W03: W03 part passed (original payload re-raised after siblings complete); sibling cancellation W04 (pending fixture) - nur-child-error-exit-1, err-chain-*, def-child-panic-cancels-siblings (sgo/evidence/w03/README.md)"
+        "W03: W03 part passed (original payload re-raised after siblings complete); sibling cancellation W04 (pending fixture) - nur-child-error-exit-1, err-chain-*, def-child-panic-cancels-siblings (sgo/evidence/w03/README.md)",
+        "W04: passed (sibling cancelled, its defers run, original payload primary) - def-child-panic-sibling-cleanup, def-child-panic-cancels-siblings, err-chain-* (sgo/evidence/w04/README.md)"
       ]
     },
     {
@@ -620,10 +621,11 @@
       ],
       "scenario": "A child helper recovers a panic before it escapes the task.",
       "expected": "No false nursery failure/cancellation is published for that recovered panic.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W03: W03 part passed: `recover` denied in subset 0; the runtime's own recovery in task entry publishes no false failure (TestSGo* lane) - def-recover (sgo/evidence/w03/README.md)"
+        "W03: W03 part passed: `recover` denied in subset 0; the runtime's own recovery in task entry publishes no false failure (TestSGo* lane) - def-recover (sgo/evidence/w03/README.md)",
+        "W04: passed for subset 0 (`recover` denied; no user recovery exists) - def-recover (sgo/evidence/w04/README.md)"
       ]
     },
     {
@@ -639,10 +641,11 @@
       ],
       "scenario": "Make multiple children panic before drain completes.",
       "expected": "All outcomes are retained; primary selection follows stable task creation ID, not host timestamp.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W03: W03 part passed; drain under cancellation W04 - nur-two-failures-lowest-id, nur-primary-not-by-time, err-chain-nested-child (sgo/evidence/w03/README.md)"
+        "W03: W03 part passed; drain under cancellation W04 - nur-two-failures-lowest-id, nur-primary-not-by-time, err-chain-nested-child (sgo/evidence/w03/README.md)",
+        "W04: passed - nur-two-failures-lowest-id, nur-primary-not-by-time, err-chain-nested-child, TestSGoOutcomes (sgo/evidence/w04/README.md)"
       ]
     },
     {
@@ -658,10 +661,11 @@
       ],
       "scenario": "The owner panics while children also fail during drain.",
       "expected": "The original owner panic remains primary; child/finalizer failures are secondary diagnostics.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W03: W03 part passed; finalizer failures subset-0 scope - err-chain-owner-and-children (sgo/evidence/w03/README.md)"
+        "W03: W03 part passed; finalizer failures subset-0 scope - err-chain-owner-and-children (sgo/evidence/w03/README.md)",
+        "W04: passed (finalizer failures: subset 0, finalizers denied) - def-unwind-cancels-children, err-chain-owner-and-children (sgo/evidence/w04/README.md)"
       ]
     },
     {
@@ -677,10 +681,11 @@
       ],
       "scenario": "Exercise panic(nil), panic during defer, and recover followed by another panic.",
       "expected": "Normal completion is not inferred from recover returning nil; final escaping outcome is classified correctly.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W03: W03 part passed: `panic` takes a string (no `panic(nil)`), `recover` denied - def-panic-in-defer, def-panic-int, def-recover (sgo/evidence/w03/README.md)"
+        "W03: W03 part passed: `panic` takes a string (no `panic(nil)`), `recover` denied - def-panic-in-defer, def-panic-int, def-recover (sgo/evidence/w03/README.md)",
+        "W04: passed for subset 0 - def-panic-in-defer, def-panic-int, def-recover (sgo/evidence/w04/README.md)"
       ]
     },
     {
@@ -696,10 +701,11 @@
       ],
       "scenario": "Call sgo.ExitTask inside owned work; exercise a contracted test-runner failure path; separately attempt raw runtime.Goexit.",
       "expected": "Scopes drain before the specified task exit; failure remains failure. Raw unadmitted runtime.Goexit is rejected, not treated as automatically available.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W03: W03 part passed; `sgo.ExitTask` and the test runner are not in spec 0.1.0 - proc-raw-goexit, TestSGoGoexitIsDefect (sgo/evidence/w03/README.md)"
+        "W03: W03 part passed; `sgo.ExitTask` and the test runner are not in spec 0.1.0 - proc-raw-goexit, TestSGoGoexitIsDefect (sgo/evidence/w03/README.md)",
+        "W04: passed for subset 0 (`sgo.ExitTask` and the test runner are not in spec 0.1.0) - proc-raw-goexit, TestSGoGoexitIsDefect (sgo/evidence/w04/README.md)"
       ]
     },
     {
@@ -715,10 +721,11 @@
       ],
       "scenario": "The owner waits inside the nursery body while a child fails.",
       "expected": "Cancellation reaches the active nursery of the owner as well as siblings; the owner does not wait forever because only ownerScope was checked.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W03: W04 (pending; needs cancellation) - cancel-owner-woken-by-child-failure (sgo/evidence/w03/README.md)"
+        "W03: W04 (pending; needs cancellation) - cancel-owner-woken-by-child-failure (sgo/evidence/w03/README.md)",
+        "W04: passed - cancel-owner-woken-by-child-failure, TestSGoOwnerWokenByChildFailure (sgo/evidence/w04/README.md)"
       ]
     },
     {
@@ -734,10 +741,11 @@
       ],
       "scenario": "An enclosing function defer recovers a panic after nursery cleanup.",
       "expected": "Affected nurseries are already drained; defer order and recovery semantics match the chosen language contract.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W03: W03 part passed: `recover` denied; recovery of runtime-internal unwinding drops its chain entries (sgo_record.go) - def-recover (sgo/evidence/w03/README.md)"
+        "W03: W03 part passed: `recover` denied; recovery of runtime-internal unwinding drops its chain entries (sgo_record.go) - def-recover (sgo/evidence/w03/README.md)",
+        "W04: passed for subset 0 (nurseries drain before defers; `recover` denied) - def-unwind-cancels-children, def-after-nursery, def-recover (sgo/evidence/w04/README.md)"
       ]
     },
     {
@@ -753,9 +761,11 @@
       ],
       "scenario": "Request cancellation before a managed operation registers a waiter.",
       "expected": "Operation reports cancellation without a wait registration or effect.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W04: passed - TestSGoCancelBeforeRegistration, spawn-cancelling-no-child (sgo/evidence/w04/README.md)"
+      ]
     },
     {
       "id": "C02",
@@ -770,9 +780,11 @@
       ],
       "scenario": "Inject cancellation between the initial check, registration, and atomic park handshake.",
       "expected": "No lost wakeup; exactly one terminal waiter disposition.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W04: passed - TestSGoCancelBeforePark (2000 races), cancel-wakes-sleep (sgo/evidence/w04/README.md)"
+      ]
     },
     {
       "id": "C03",
@@ -787,9 +799,11 @@
       ],
       "scenario": "Race cancellation against operation completion/readiness.",
       "expected": "One terminal winner, no duplicate wake, and returned progress matches the winner.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W04: passed for subset 0 (readiness denied, SGO-READY-001; timer expiry is the only readiness) - TestSGoCancelVersusTimer (3000 races, both sides won) (sgo/evidence/w04/README.md)"
+      ]
     },
     {
       "id": "C04",
@@ -804,9 +818,11 @@
       ],
       "scenario": "Issue duplicate requests with different later causes.",
       "expected": "Cancellation is idempotent; original cause identity and budget remain intact.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W04: passed - TestSGoCancelFirstCauseSticks, cancel-idempotent (sgo/evidence/w04/README.md)"
+      ]
     },
     {
       "id": "C05",
@@ -821,9 +837,11 @@
       ],
       "scenario": "Cancel an outer scope while execution is inside an inner nursery.",
       "expected": "Inner cleanup runs but cannot consume the ancestor-targeted signal; propagation remains sticky.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W04: passed - TestSGoCancelNestedInherited, TestSGoCancelPropagatesNested, cancel-consumed-at-boundary, nur-inner-cancel-not-outer, cancel-propagates-nested, cancel-error-messages (sgo/evidence/w04/README.md)"
+      ]
     },
     {
       "id": "C06",
@@ -838,9 +856,11 @@
       ],
       "scenario": "A child attempts to start new children after cancellation is published.",
       "expected": "Admission is rejected before the new child becomes runnable.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W04: passed - TestSGoCancelledAdmission, spawn-cancelling-no-child (sgo/evidence/w04/README.md)"
+      ]
     },
     {
       "id": "C07",
@@ -855,9 +875,11 @@
       ],
       "scenario": "A scope finalizer uses a cleanup context and attempts to reset budget or spawn.",
       "expected": "Necessary cleanup may proceed within remaining allowance; reset/escalation/spawn is denied.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W04: passed for subset 0 (cleanup contexts and quotas are not in spec 0.1.0) - def-scope-finalizer; R5 refuses spawns into cancelled scopes (C06) (sgo/evidence/w04/README.md)"
+      ]
     },
     {
       "id": "C08",
@@ -872,9 +894,11 @@
       ],
       "scenario": "Cancel/reset/expire managed sleep/deadline operations under repeated races.",
       "expected": "No stale timer wakes a completed or recycled task; terminal timer records are removed.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W04: passed - TestSGoTimerLifecycle, TestSGoSleepDuration (sgo/evidence/w04/README.md)"
+      ]
     },
     {
       "id": "C09",
@@ -889,9 +913,11 @@
       ],
       "scenario": "Run an owned infinite loop or uninterruptible test operation under the host runner.",
       "expected": "A non-success watchdog/contract result terminates the process; the program never reports successful nursery closure.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W04: passed - drain-noncooperative-budget (exit 3, DrainBudgetExceeded), drain-noncooperative-no-budget (watchdog), drain-cooperative-child, drain-budget-env-ignored (sgo/evidence/w04/README.md)"
+      ]
     },
     {
       "id": "C10",
@@ -906,9 +932,11 @@
       ],
       "scenario": "Recover cancellation and attempt another supported blocking effect or new task.",
       "expected": "Cancellation remains effective; no new authority/admission is created by recovery.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W04: passed for subset 0 (`recover` denied; cancellation stays effective) - TestSGoCancelFirstCauseSticks, TestSGoCancelNestedInherited (sgo/evidence/w04/README.md)"
+      ]
     },
     {
       "id": "C11",
@@ -923,9 +951,11 @@
       ],
       "scenario": "Make cleanup fail while a primary child/owner failure is pending.",
       "expected": "The primary is retained and cleanup failure is recorded; all resolvable obligations are finalized.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W04: passed - def-unwind-cancels-children, err-chain-owner-and-children (sgo/evidence/w04/README.md)"
+      ]
     },
     {
       "id": "A01",
@@ -2296,10 +2326,11 @@
       ],
       "scenario": "Capture an outer nursery handle, enter an inner nursery, and try to spawn into the outer scope; also try during cleanup and after close.",
       "expected": "Misuse is rejected before registration; inner-scope lifetime, cleanup no-spawn rule, and closed-scope terminal state cannot be bypassed.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W02 part passed: sgo/evidence/w02/README.md"
+        "W02 part passed: sgo/evidence/w02/README.md",
+        "W04: passed (cleanup no-spawn rule: finalizers denied in subset 0) - cancel-unrelated-task, TestSGoCancelMembership, spawn-after-close, TestSGoInvalidHandles (W02) (sgo/evidence/w04/README.md)"
       ]
     },
     {
@@ -2315,10 +2346,11 @@
       ],
       "scenario": "Return a non-nil error from a spawned callback while siblings hold cleanup obligations; also test nil callback and caller-side expression effects.",
       "expected": "Child error triggers the specified nursery failure/drain; nil callback admits no child. Already evaluated caller effects are neither repeated nor falsely rolled back.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W03: W03 part passed; drain of siblings W04 - nur-child-error-exit-1, err-chain-child-errors, spawn-nil-callback, val-eval-order (sgo/evidence/w03/README.md)"
+        "W03: W03 part passed; drain of siblings W04 - nur-child-error-exit-1, err-chain-child-errors, spawn-nil-callback, val-eval-order (sgo/evidence/w03/README.md)",
+        "W04: passed - nur-child-error-exit-1, def-child-panic-sibling-cleanup, err-chain-child-errors, spawn-nil-callback (sgo/evidence/w04/README.md)"
       ]
     },
     {

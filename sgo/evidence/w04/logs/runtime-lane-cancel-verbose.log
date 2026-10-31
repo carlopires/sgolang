@@ -1,0 +1,28 @@
+sgo: runtime lane: upstream tools at 2aae1000ea1d, fork TCB overlay digest ac7e610ecca69322
+=== RUN   TestSGoCancelBeforeRegistration
+--- PASS: TestSGoCancelBeforeRegistration (0.00s)
+=== RUN   TestSGoCancelBeforePark
+--- PASS: TestSGoCancelBeforePark (0.01s)
+=== RUN   TestSGoCancelVersusTimer
+    sgo_cancel_test.go:119: timer won 428, cancellation won 2572
+--- PASS: TestSGoCancelVersusTimer (1.30s)
+=== RUN   TestSGoCancelFirstCauseSticks
+--- PASS: TestSGoCancelFirstCauseSticks (0.01s)
+=== RUN   TestSGoCancelNestedInherited
+--- PASS: TestSGoCancelNestedInherited (0.00s)
+=== RUN   TestSGoCancelPropagatesNested
+--- PASS: TestSGoCancelPropagatesNested (0.00s)
+=== RUN   TestSGoCancelledAdmission
+--- PASS: TestSGoCancelledAdmission (0.00s)
+=== RUN   TestSGoTimerLifecycle
+--- PASS: TestSGoTimerLifecycle (0.42s)
+=== RUN   TestSGoSleepDuration
+--- PASS: TestSGoSleepDuration (0.03s)
+=== RUN   TestSGoOwnerWokenByChildFailure
+--- PASS: TestSGoOwnerWokenByChildFailure (0.00s)
+=== RUN   TestSGoCancelMembership
+--- PASS: TestSGoCancelMembership (0.00s)
+=== RUN   TestSGoGoexitIsDefect
+--- PASS: TestSGoGoexitIsDefect (0.01s)
+PASS
+ok  	runtime	2.007s

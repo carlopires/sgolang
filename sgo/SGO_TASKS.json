@@ -327,7 +327,7 @@
         "W03"
       ],
       "risk": "very_high",
-      "status": "pending",
+      "status": "passed",
       "plan_section": "11/W04",
       "deliverables": [
         "Cancellation-aware waits/timers",
@@ -357,10 +357,39 @@
         "S07",
         "S08"
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "record": "sgo/evidence/w04/README.md",
+          "recorded_at": "2026-10-31",
+          "platforms": "darwin/arm64 local (logs in sgo/evidence/w04/logs); linux/amd64, linux/arm64 CI sgo-runtime run 41217543649 at 1b2779e5cb, sgo-w00 run 41217878447 at ad60fbe22d",
+          "cases": {
+            "P01": "passed (sibling cancelled, its defers run, original payload primary)",
+            "P02": "passed for subset 0 (`recover` denied; no user recovery exists)",
+            "P03": "passed",
+            "P04": "passed (finalizer failures: subset 0, finalizers denied)",
+            "P05": "passed for subset 0",
+            "P06": "passed for subset 0 (`sgo.ExitTask` and the test runner are not in spec 0.1.0)",
+            "P07": "passed",
+            "P08": "passed for subset 0 (nurseries drain before defers; `recover` denied)",
+            "C01": "passed",
+            "C02": "passed",
+            "C03": "passed for subset 0 (readiness denied, SGO-READY-001; timer expiry is the only readiness)",
+            "C04": "passed",
+            "C05": "passed",
+            "C06": "passed",
+            "C07": "passed for subset 0 (cleanup contexts and quotas are not in spec 0.1.0)",
+            "C08": "passed",
+            "C09": "passed",
+            "C10": "passed for subset 0 (`recover` denied; cancellation stays effective)",
+            "C11": "passed",
+            "S07": "passed (cleanup no-spawn rule: finalizers denied in subset 0)",
+            "S08": "passed"
+          }
+        }
+      ],
       "blockers": [],
-      "commit": null,
-      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+      "commit": "ad60fbe22d",
+      "completion_note": "Cancellation (Cancel, child failure, unwind), computed propagation along scope chains, Checkpoint and Sleep with a one-winner wait protocol, cancellation errors, and the drain budget (driver flag, linker path, build ID, exit status 3) are implemented and tested on all three targets; all 194 conformance cases pass and the pending list is empty. Cases that need constructs spec 0.1.0 denies (recover, readiness, cleanup contexts, ExitTask) pass their subset-0 parts. W05 and W06 are dependency-ready."
     },
     {
       "id": "W05",
