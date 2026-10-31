@@ -1,0 +1,10 @@
+runtime-lane-cpu exit=0
+runtime-lane-race exit=0
+runtime-lane-chan-v exit=0
+runtime-lane-short exit=0
+model exit=0
+conformance-validate exit=0
+conformance-run exit=0
+conformance-compile exit=0
+conformance-permit-x25 exit=0
+checks exit=0

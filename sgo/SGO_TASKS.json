@@ -438,7 +438,7 @@
         "W04"
       ],
       "risk": "high",
-      "status": "pending",
+      "status": "passed",
       "plan_section": "11/W06",
       "deliverables": [
         "Channel state model",
@@ -459,10 +459,30 @@
         "H11",
         "H12"
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "record": "sgo/evidence/w06/README.md",
+          "recorded_at": "2026-10-31",
+          "platforms": "darwin/arm64 local (logs in sgo/evidence/w06/logs); linux/amd64, linux/arm64 CI at 1158afe4ad (run IDs in the record)",
+          "cases": {
+            "H01": "passed (model, typed_channel lanes; strict_native: W07)",
+            "H02": "passed (model, typed_channel lanes; strict_native: W07)",
+            "H03": "passed (model, typed_channel lanes; strict_native: W07)",
+            "H04": "passed (model, typed_channel lanes; strict_native: W07)",
+            "H05": "passed (model, typed_channel lanes; strict_native: W07)",
+            "H06": "passed (model, typed_channel lanes; strict_native: W07)",
+            "H07": "passed (model, typed_channel lanes; strict_native: W07)",
+            "H08": "passed (model, typed_channel lanes; strict_native: W07)",
+            "H09": "passed (model, typed_channel lanes; strict_native: W07)",
+            "H10": "passed (model, typed_channel lanes; strict_native: W07)",
+            "H11": "passed (model, typed_channel lanes; strict_native: W07)",
+            "H12": "passed (model, typed_channel lanes; strict_native: W07)"
+          }
+        }
+      ],
       "blockers": [],
-      "commit": null,
-      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+      "commit": "1158afe4ad",
+      "completion_note": "Executable channel/permit model with bounded exploration and pinned outcome sets; runtime managed channels (TCB-P12) checked against the model's outcome sets with and without fault injection; typed sgo.Channel[T] API with admission limited to int/bool/string/error; obligation resolution at body exit, task end, and main return with PermitAbandoned diagnostics; 16 conformance fixtures. SGO-PERMIT-002 stays draft until spec 0.2.0 is frozen."
     },
     {
       "id": "W07",

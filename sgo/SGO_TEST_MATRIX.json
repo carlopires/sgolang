@@ -1195,9 +1195,11 @@
       ],
       "scenario": "Enumerate sends/receives/reservations with capacities one and two.",
       "expected": "Queued plus reserved send capacity never exceeds capacity and visible FIFO order is preserved.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model capacity/FIFO invariants; sgoChanCheck; TestSGoChanFIFO; permit-buffered-fifo (sgo/evidence/w06/README.md)"
+      ]
     },
     {
       "id": "H02",
@@ -1213,9 +1215,11 @@
       ],
       "scenario": "Pair and cancel unbuffered send/receive operations.",
       "expected": "A separate handshake arbitrates both peers; no modulo-zero path or unmatched successful publication occurs.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model rendezvous scenarios; receiver matching before reservation; permit-rendezvous (sgo/evidence/w06/README.md)"
+      ]
     },
     {
       "id": "H03",
@@ -1231,9 +1235,11 @@
       ],
       "scenario": "Reserve capacity, abort, and immediately attempt another send.",
       "expected": "Capacity is restored exactly once and no value was published.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model buffered-abort; permit-reserve-abort (sgo/evidence/w06/README.md)"
+      ]
     },
     {
       "id": "H04",
@@ -1249,9 +1255,11 @@
       ],
       "scenario": "Copy/alias a permit and attempt duplicate commit, double abort, and commit-after-abort.",
       "expected": "Aliases share one terminal state and no duplicate effect/capacity change occurs.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model SendAliasDouble; permit-double-commit (sgo/evidence/w06/README.md)"
+      ]
     },
     {
       "id": "H05",
@@ -1267,9 +1275,11 @@
       ],
       "scenario": "Another task attempts to use a task-affine permit.",
       "expected": "Misuse is rejected; ownership is not silently transferred.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - TestSGoChanTaskAffinity; permit-foreign-task (sgo/evidence/w06/README.md)"
+      ]
     },
     {
       "id": "H06",
@@ -1285,9 +1295,11 @@
       ],
       "scenario": "Inject cancellation after reserve but before commit arbitration.",
       "expected": "Abort wins when ordered first; the explicit result reports no effect and retains publication responsibility.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model SendCancelRace; permit-cancel-before-commit (sgo/evidence/w06/README.md)"
+      ]
     },
     {
       "id": "H07",
@@ -1303,9 +1315,11 @@
       ],
       "scenario": "Inject cancellation immediately after publication linearizes.",
       "expected": "The send is still reported successful and the published value appears exactly once.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model SendCancelRace (commit not retroactive); permit-cancel-after-commit (sgo/evidence/w06/README.md)"
+      ]
     },
     {
       "id": "H08",
@@ -1321,9 +1335,11 @@
       ],
       "scenario": "Explore both orderings of close and send publication.",
       "expected": "Close-first has the specified no-effect/closed outcome; commit-first retains the published item.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model buffered-close-race (the three outcomes of plan section 7.3); permit-close-versus-commit (sgo/evidence/w06/README.md)"
+      ]
     },
     {
       "id": "H09",
@@ -1339,9 +1355,11 @@
       ],
       "scenario": "Panic after reserving but before committing.",
       "expected": "Reservation is released before task completion; no capacity or GC reference leak remains.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - TestSGoChanPanicWithPermit; permit-panic-with-permit (PermitAbandoned in the chain) (sgo/evidence/w06/README.md)"
+      ]
     },
     {
       "id": "H10",
@@ -1357,9 +1375,11 @@
       ],
       "scenario": "Owner finishes its body while retaining an unused reservation needed by a child.",
       "expected": "The exiting body reservation is aborted before join, allowing the child to make progress.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - TestSGoChanTaskAffinity (body-exit abort); permit-owner-exits (sgo/evidence/w06/README.md)"
+      ]
     },
     {
       "id": "H11",
@@ -1375,9 +1395,11 @@
       ],
       "scenario": "Send pointer-rich values under GC pressure and abort competing reservations.",
       "expected": "Live values survive until delivery; aborted/consumed references are cleared at the right time.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - TestSGoChanValueLifetime; permit-error-values (sgo/evidence/w06/README.md)"
+      ]
     },
     {
       "id": "H12",
@@ -1393,9 +1415,11 @@
       ],
       "scenario": "Record unique payload IDs across concurrent send/receive/close/cancel histories.",
       "expected": "Each successful publication is accounted for exactly once; no-effect outcomes do not appear in the receive history.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model conservation invariant; TestSGoChanConservation (sgo/evidence/w06/README.md)"
+      ]
     },
     {
       "id": "N01",

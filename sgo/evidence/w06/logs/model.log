@@ -1,0 +1,103 @@
+=== RUN   TestChanGoldenOutcomes
+--- PASS: TestChanGoldenOutcomes (0.02s)
+=== RUN   TestChanModelInvariants
+    chanmodel_test.go:23: {Cap:1 Senders:[0 0] Receivers:2 Close:false}: 21 states, 4 complete histories, 0 blocked, 2 distinct outcomes
+    chanmodel_test.go:23: {Cap:2 Senders:[0 1 0] Receivers:2 Close:false}: 1079 states, 316 complete histories, 0 blocked, 2 distinct outcomes
+    chanmodel_test.go:23: {Cap:1 Senders:[0 0] Receivers:1 Close:true}: 65 states, 22 complete histories, 0 blocked, 9 distinct outcomes
+    chanmodel_test.go:23: {Cap:0 Senders:[0 0] Receivers:2 Close:false}: 133 states, 40 complete histories, 0 blocked, 2 distinct outcomes
+    chanmodel_test.go:23: {Cap:0 Senders:[0 1] Receivers:1 Close:true}: 88 states, 29 complete histories, 0 blocked, 6 distinct outcomes
+    chanmodel_test.go:23: {Cap:3 Senders:[0 0 0] Receivers:3 Close:true}: 71549 states, 24480 complete histories, 0 blocked, 38 distinct outcomes
+--- PASS: TestChanModelInvariants (0.05s)
+=== RUN   TestChanModelCloseVersusCommit
+--- PASS: TestChanModelCloseVersusCommit (0.00s)
+=== RUN   TestChanModelObligations
+    chanmodel_test.go:66: {Cap:1 Senders:[2 0] Receivers:2 Close:false}: 42 states, 4 complete histories, 12 blocked, 4 outcomes
+    chanmodel_test.go:66: {Cap:0 Senders:[2 0] Receivers:2 Close:true}: 5684 states, 2032 complete histories, 0 blocked, 16 outcomes
+    chanmodel_test.go:66: {Cap:1 Senders:[3 0] Receivers:1 Close:false}: 11 states, 2 complete histories, 0 blocked, 1 outcomes
+    chanmodel_test.go:66: {Cap:0 Senders:[3 0] Receivers:1 Close:false}: 8 states, 1 complete histories, 1 blocked, 2 outcomes
+    chanmodel_test.go:66: {Cap:2 Senders:[4 0] Receivers:2 Close:true}: 1740 states, 608 complete histories, 0 blocked, 10 outcomes
+    chanmodel_test.go:66: {Cap:1 Senders:[2 3 4] Receivers:2 Close:true}: 7544 states, 2820 complete histories, 0 blocked, 30 outcomes
+--- PASS: TestChanModelObligations (0.01s)
+=== RUN   TestChanModelCancelVersusCommit
+    chanmodel_test.go:87: outcomes: map[permits=[aborted] received=[] queued=[]:true permits=[cancelled] received=[] queued=[]:true permits=[committed] received=[1] queued=[]:true] (blocked histories, a receiver waiting for a value that was never sent: 2)
+--- PASS: TestChanModelCancelVersusCommit (0.00s)
+=== RUN   TestChanModelDetectsLostValue
+--- PASS: TestChanModelDetectsLostValue (0.00s)
+=== RUN   TestMutationsDetected
+    oracle_test.go:57: mutation "child completion published twice" detected by 13 scenario(s), e.g. normal-join (invariant: M04: completion of T1 published 2 times)
+    oracle_test.go:57: mutation "join ignores live children" detected by 15 scenario(s), e.g. normal-join (invariant: OWN-3: S0 CLOSED with live children map[1:true 2:true])
+    oracle_test.go:57: mutation "child registered after publication" detected by 15 scenario(s), e.g. normal-join (invariant: OWN-2: T1 exists but is not registered live in S0)
+    oracle_test.go:57: mutation "failing child does not cancel its scope" detected by 2 scenario(s), e.g. child-panic-cancels-sibling (property: S0 was not cancelled by its failing child (SGO-SPAWN-004))
+    oracle_test.go:57: mutation "cancellation sticky per task" detected by 1 scenario(s), e.g. cancel-consumed-at-boundary (outcome: exit=1 MainError: cancelled)
+    oracle_test.go:57: mutation "nursery outcome picks latest failure" detected by 1 scenario(s), e.g. two-failures-lowest-id (outcome: exit=2 Panic: first|exit=2 Panic: second)
+    oracle_test.go:57: mutation "spawn into a non-current scope allowed" detected by 1 scenario(s), e.g. spawn-into-outer-from-inner (outcome: exit=0)
+    oracle_test.go:57: mutation "sleep resolved twice" detected by 7 scenario(s), e.g. child-panic-cancels-sibling (invariant: CAN-2: wait 1 resolved 2 times)
+--- PASS: TestMutationsDetected (0.02s)
+=== RUN   TestGoldenHistories
+--- PASS: TestGoldenHistories (0.00s)
+=== RUN   TestCheckRejectsInvalidHistories
+    oracle_test.go:110: scope state went backwards: rejected (CAN-1: S0 went from CLOSED back to OPEN)
+    oracle_test.go:110: wait resolved twice: rejected (CAN-2: wait 99 resolved 2 times)
+    oracle_test.go:110: task missing from its scope: rejected (OWN-1: T1 missing from S0)
+    oracle_test.go:110: completion published twice: rejected (M04: completion of T1 published 2 times)
+    oracle_test.go:110: closed scope with live child: rejected (OWN-3: S0 CLOSED with live children map[1:true])
+--- PASS: TestCheckRejectsInvalidHistories (0.00s)
+=== RUN   TestScenarios
+=== RUN   TestScenarios/normal-join
+    scenarios_test.go:119: 41 states, 1 terminal states, outcomes ["exit=0"]
+=== RUN   TestScenarios/descendant-during-join
+    scenarios_test.go:119: 31 states, 1 terminal states, outcomes ["exit=0"]
+=== RUN   TestScenarios/child-error-exit-1
+    scenarios_test.go:119: 10 states, 1 terminal states, outcomes ["exit=1 ChildError: boom"]
+=== RUN   TestScenarios/main-error-exit-1
+    scenarios_test.go:119: 3 states, 1 terminal states, outcomes ["exit=1 MainError: bad"]
+=== RUN   TestScenarios/child-panic-cancels-sibling
+    scenarios_test.go:119: 47 states, 3 terminal states, outcomes ["exit=2 Panic: p1"]
+=== RUN   TestScenarios/two-failures-lowest-id
+    scenarios_test.go:119: 33 states, 3 terminal states, outcomes ["exit=2 Panic: first"]
+=== RUN   TestScenarios/owner-failure-primary
+    scenarios_test.go:119: 16 states, 2 terminal states, outcomes ["exit=2 Panic: owner"]
+=== RUN   TestScenarios/cancel-propagates
+    scenarios_test.go:119: 27 states, 2 terminal states, outcomes ["exit=0"]
+=== RUN   TestScenarios/cancel-consumed-at-boundary
+    scenarios_test.go:119: 36 states, 2 terminal states, outcomes ["exit=0"]
+=== RUN   TestScenarios/inner-cancel-not-outer
+    scenarios_test.go:119: 66 states, 2 terminal states, outcomes ["exit=0"]
+=== RUN   TestScenarios/outer-cancel-reaches-inner
+    scenarios_test.go:119: 104 states, 5 terminal states, outcomes ["exit=0"]
+=== RUN   TestScenarios/spawn-into-outer-from-inner
+    scenarios_test.go:119: 9 states, 1 terminal states, outcomes ["exit=2 SpawnContractViolation: T0 spawn into S0 (OPEN)"]
+=== RUN   TestScenarios/spawn-when-cancelling
+    scenarios_test.go:119: 8 states, 1 terminal states, outcomes ["exit=0"]
+=== RUN   TestScenarios/return-crossing-nursery
+    scenarios_test.go:119: 19 states, 1 terminal states, outcomes ["exit=1 MainError: early"]
+=== RUN   TestScenarios/noncooperative-budget
+    scenarios_test.go:119: 12 states, 4 terminal states, outcomes ["exit=3 DrainBudgetExceeded: S0"]
+=== RUN   TestScenarios/noncooperative-no-budget
+    scenarios_test.go:119: 8 states, 1 terminal states, outcomes ["stuck"]
+=== RUN   TestScenarios/sleep-cancel-race
+    scenarios_test.go:119: 23 states, 1 terminal states, outcomes ["exit=0"]
+=== RUN   TestScenarios/owner-woken-by-child-failure
+    scenarios_test.go:119: 21 states, 1 terminal states, outcomes ["exit=1 ChildError: x"]
+--- PASS: TestScenarios (0.00s)
+    --- PASS: TestScenarios/normal-join (0.00s)
+    --- PASS: TestScenarios/descendant-during-join (0.00s)
+    --- PASS: TestScenarios/child-error-exit-1 (0.00s)
+    --- PASS: TestScenarios/main-error-exit-1 (0.00s)
+    --- PASS: TestScenarios/child-panic-cancels-sibling (0.00s)
+    --- PASS: TestScenarios/two-failures-lowest-id (0.00s)
+    --- PASS: TestScenarios/owner-failure-primary (0.00s)
+    --- PASS: TestScenarios/cancel-propagates (0.00s)
+    --- PASS: TestScenarios/cancel-consumed-at-boundary (0.00s)
+    --- PASS: TestScenarios/inner-cancel-not-outer (0.00s)
+    --- PASS: TestScenarios/outer-cancel-reaches-inner (0.00s)
+    --- PASS: TestScenarios/spawn-into-outer-from-inner (0.00s)
+    --- PASS: TestScenarios/spawn-when-cancelling (0.00s)
+    --- PASS: TestScenarios/return-crossing-nursery (0.00s)
+    --- PASS: TestScenarios/noncooperative-budget (0.00s)
+    --- PASS: TestScenarios/noncooperative-no-budget (0.00s)
+    --- PASS: TestScenarios/sleep-cancel-race (0.00s)
+    --- PASS: TestScenarios/owner-woken-by-child-failure (0.00s)
+PASS
+ok  	sgolang.dev/sgo/model	0.247s
+sgo: model tests passed (darwin-arm64)
