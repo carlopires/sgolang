@@ -20,6 +20,11 @@ const (
 	PermitCancelledBeforeReserve
 )
 
+// PermitName is the stable name of a permit state used in reference outcomes.
+func PermitName(p int) string {
+	return [...]string{"none", "reserved", "committed", "failed-closed", "aborted", "refused-closed", "cancelled"}[p]
+}
+
 // Sender scripts: what a sender does after its reservation.
 const (
 	SendCommit = iota // Reserve, Commit(v)
@@ -46,19 +51,19 @@ type ChanScenario struct {
 }
 
 type chanState struct {
-	queue    []int // committed, not yet received (C > 0)
-	reserved int   // reservations not yet terminal
-	closed   bool
-	permit   []int // per sender
-	spc      []int // sender program counter: 0 reserve, 1 resolve, 2 done
-	match    []int // C == 0: receiver matched to sender i (-1: none)
-	rpc      []int // receiver program counter: 0 start, 1 waiting (C == 0), 2 done
-	rmatched []int // C == 0: sender matched to receiver j (-1: none)
-	received []int // values in receive order
-	recvOK   []bool
-	commits  []int // values in commit order
+	queue     []int // committed, not yet received (C > 0)
+	reserved  int   // reservations not yet terminal
+	closed    bool
+	permit    []int // per sender
+	spc       []int // sender program counter: 0 reserve, 1 resolve, 2 done
+	match     []int // C == 0: receiver matched to sender i (-1: none)
+	rpc       []int // receiver program counter: 0 start, 1 waiting (C == 0), 2 done
+	rmatched  []int // C == 0: sender matched to receiver j (-1: none)
+	received  []int // values in receive order
+	recvOK    []bool
+	commits   []int // values in commit order
 	closeDone bool
-	trace    []string
+	trace     []string
 	cancelled []bool // SendCancelRace: the task has been cancelled
 	aliasDone []bool // SendAliasDouble: the second alias has acted
 	diags     int    // diagnostics recorded by the runtime (abandoned permits, misuse)
@@ -287,9 +292,9 @@ func chanCheck(sc ChanScenario, s *chanState, final bool) string {
 // ChanResult summarizes an exploration.
 type ChanResult struct {
 	States, Terminal, Deadlocked int
-	Violation             string
-	Trace                 string
-	Outcomes              map[string]bool
+	Violation                    string
+	Trace                        string
+	Outcomes                     map[string]bool
 }
 
 // ExploreChan enumerates every interleaving of sc and checks the invariants after each step.
@@ -332,7 +337,11 @@ func ExploreChan(sc ChanScenario) *ChanResult {
 				r.Violation, r.Trace = v, strings.Join(s.trace, "; ")
 				return
 			}
-			r.Outcomes[fmt.Sprintf("permits=%v received=%v queued=%v", s.permit, s.received, s.queue)] = true
+			names := make([]string, len(s.permit))
+			for i, p := range s.permit {
+				names[i] = PermitName(p)
+			}
+			r.Outcomes[fmt.Sprintf("permits=%v received=%v queued=%v", names, s.received, s.queue)] = true
 			return
 		}
 		for _, t := range next {

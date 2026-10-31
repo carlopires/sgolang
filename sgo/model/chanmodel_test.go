@@ -29,9 +29,9 @@ func TestChanModelInvariants(t *testing.T) {
 func TestChanModelCloseVersusCommit(t *testing.T) {
 	r := ExploreChan(ChanScenario{Cap: 1, Senders: []int{SendCommit}, Receivers: 1, Close: true})
 	want := map[string]bool{
-		"permits=[2] received=[1] queued=[]": true, // commit before close, then received
-		"permits=[3] received=[] queued=[]":  true, // close before commit: no effect
-		"permits=[5] received=[] queued=[]":  true, // close before reserve: no permit
+		"permits=[committed] received=[1] queued=[]":     true, // commit before close, then received
+		"permits=[failed-closed] received=[] queued=[]":  true, // close before commit: no effect
+		"permits=[refused-closed] received=[] queued=[]": true, // close before reserve: no permit
 	}
 	for o := range want {
 		if !r.Outcomes[o] {
@@ -72,9 +72,9 @@ func TestChanModelObligations(t *testing.T) {
 func TestChanModelCancelVersusCommit(t *testing.T) {
 	r := ExploreChan(ChanScenario{Cap: 1, Senders: []int{SendCancelRace}, Receivers: 1})
 	want := map[string]bool{
-		"permits=[2] received=[1] queued=[]": true,
-		"permits=[4] received=[] queued=[]":  true,
-		"permits=[6] received=[] queued=[]":  true,
+		"permits=[committed] received=[1] queued=[]": true,
+		"permits=[aborted] received=[] queued=[]":    true,
+		"permits=[cancelled] received=[] queued=[]":  true,
 	}
 	for o := range r.Outcomes {
 		if !want[o] {
