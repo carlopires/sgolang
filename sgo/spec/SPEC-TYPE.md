@@ -3,10 +3,10 @@
 Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 
 ### SGO-TYPE-001 — Admitted types
-- **version:** 1
+- **version:** 2
 - **status:** frozen
-- **reference_closure:** SGO-TYPE-003, SGO-TYPE-005, SGO-TYPE-006; D04, D05, D06.
-- **grammar_and_types:** The admitted types are exactly: `bool`; `int`, a 64-bit two's-complement signed integer on every target; `string`, an immutable sequence of bytes; function types `func(P1, …, Pn) R` or `func(P1, …, Pn) (R1, …, Rm)` whose parameter and result types are admitted (SGO-TYPE-003); `error` (SGO-TYPE-006); and the pointer types `*sgo.Context`, `*sgo.Nursery`, `*sgo.Writer` (SGO-TYPE-005). Any other type name, type literal (array, slice, map, struct, pointer, channel, interface), type parameter, or type declaration is denied. Other integer widths, floating-point, complex, `byte`, `rune`, `uintptr`, and `any` are denied.
+- **reference_closure:** SGO-TYPE-003, SGO-TYPE-005, SGO-TYPE-006, SGO-PERMIT-002, SGO-READY-002, SGO-AUTH-003; D04, D05, D06, D28, D29.
+- **grammar_and_types:** The admitted types are exactly: `bool`; `int`, a 64-bit two's-complement signed integer on every target; `string`, an immutable sequence of bytes; function types `func(P1, …, Pn) R` or `func(P1, …, Pn) (R1, …, Rm)` whose parameter and result types are admitted (SGO-TYPE-003); `error` (SGO-TYPE-006); and the pointer types of the capability types of SGO-TYPE-005 (`*sgo.Context`, `*sgo.Nursery`, `*sgo.Writer`, `*sgo.Ready`, `*sgo.Clock`, `*sgo.WallClock`, `*sgo.Random`, `*sgo.Entropy`, `*sgo.SimStore`, and `*sgo.Channel[T]`, `*sgo.SendPermit[T]` for the element types of SGO-PERMIT-002). Any other type name, type literal (array, slice, map, struct, pointer, channel, interface), type parameter, or type declaration is denied. Other integer widths, floating-point, complex, `byte`, `rune`, `uintptr`, and `any` are denied.
 - **preconditions:** n/a — static rule.
 - **evaluation_and_value_semantics:** `int` arithmetic is defined by SGO-VAL-001, strings by SGO-VAL-002, booleans by SGO-VAL-003.
 - **ownership_and_lifecycle:** Values of all admitted types are copied by assignment; `string` and function values may share immutable backing storage, which is never observable.
@@ -91,12 +91,12 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-TYPE-005 — Opaque capability types
-- **version:** 1
+- **version:** 2
 - **status:** frozen
-- **reference_closure:** SGO-CAP-001, SGO-PROC-001, SGO-NUR-001, SGO-SPAWN-003, SGO-PROC-003.
-- **grammar_and_types:** `sgo.Context`, `sgo.Nursery`, and `sgo.Writer` are opaque types usable only as `*sgo.Context`, `*sgo.Nursery`, `*sgo.Writer`. User code may declare variables and parameters of these types, pass and capture them, and call their methods (SGO-CAP-001). It may not write the type without `*`, construct values, dereference, take addresses, compare (including with `nil`), or use them in any expression other than method calls, assignment, argument passing, and capture.
+- **reference_closure:** SGO-CAP-001, SGO-PROC-001, SGO-NUR-001, SGO-SPAWN-003, SGO-PROC-003, SGO-READY-002, SGO-PERMIT-002, SGO-AUTH-001, SGO-AUTH-003.
+- **grammar_and_types:** `sgo.Context`, `sgo.Nursery`, `sgo.Writer`, `sgo.Ready` (SGO-READY-002), the effect handles `sgo.Clock`, `sgo.WallClock`, `sgo.Random`, `sgo.Entropy`, `sgo.SimStore` (SGO-AUTH-003), and the instances `sgo.Channel[T]`, `sgo.SendPermit[T]` (SGO-PERMIT-002) are opaque types usable only behind `*` (for example `*sgo.Context`). User code may declare variables and parameters of these types, pass and capture them, and call their methods (SGO-CAP-001). It may not write the type without `*`, construct values, dereference, take addresses, compare (including with `nil`), or use them in any expression other than method calls, assignment, argument passing, and capture.
 - **preconditions:** n/a — static rule.
-- **evaluation_and_value_semantics:** Values come only from the runtime: `root` (SGO-PROC-001), the nursery binder (SGO-NUR-001), the `Spawn` callback parameter (SGO-SPAWN-003), and `Context.Stdout` (SGO-PROC-003). Copies refer to the same underlying object.
+- **evaluation_and_value_semantics:** Values come only from the runtime: `root` (SGO-PROC-001), the nursery binder (SGO-NUR-001), the `Spawn` callback parameter (SGO-SPAWN-003), `Context.Stdout` (SGO-PROC-003), the `Start` callback parameters (SGO-READY-002), the root accessors, attenuation, and `LendTo` of the effect handles (SGO-AUTH-002, SGO-AUTH-003), and `sgo.NewChannel` and `Reserve` (SGO-PERMIT-002). Copies refer to the same underlying object.
 - **ownership_and_lifecycle:** The runtime owns the underlying objects. A handle may outlive the object's active period (for example a nursery after it closes); using it then is checked at run time by the method's clause.
 - **effect_and_capability_requirements:** Holding a handle is the authority to use it (SGO-CAP-001).
 - **concurrency_and_memory_order:** Handles are internally synchronized (SGO-TCB-001).

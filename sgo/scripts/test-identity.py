@@ -27,6 +27,7 @@ import sys
 import tempfile
 
 ROOT = subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip()
+SPEC_VERSION = open(os.path.join(ROOT, "sgo", "spec", "VERSION")).read().strip()
 PLAT = {"Darwin": "darwin", "Linux": "linux"}[os.uname().sysname] + "_" + \
     {"arm64": "arm64", "aarch64": "arm64", "x86_64": "amd64"}[os.uname().machine]
 TOOLS = os.path.join(ROOT, "pkg", "tool", PLAT)
@@ -54,7 +55,7 @@ def main():
                "GOEXPERIMENT": "", "GODEBUG": ""}
         mod = os.path.join(tmp, "idt")
         os.makedirs(os.path.join(mod, "lib"))
-        open(os.path.join(mod, "sgo.mod"), "w").write("module example.com/idt\n\nsgo 0.1.0\n")
+        open(os.path.join(mod, "sgo.mod"), "w").write("module example.com/idt\n\nsgo " + SPEC_VERSION + "\n")
         open(os.path.join(mod, "lib", "lib.sgo"), "w").write(LIB_V1)
         open(os.path.join(mod, "main.sgo"), "w").write(MAIN)
         # The driver builds the target TCB into the cache; this test reuses those archives.
@@ -150,9 +151,9 @@ def main():
 
         # 5. lib compiled for another spec version.
         other = os.path.join(tmp, "lib-other-spec.a")
-        if data.count(b"sgo1 0.1.0 ") != 2:
+        if data.count(("sgo1 " + SPEC_VERSION + " ").encode()) != 2:
             sys.exit("test-identity: expected lib's identity line in its export data and its object")
-        open(other, "wb").write(data.replace(b"sgo1 0.1.0 ", b"sgo1 0.9.9 "))
+        open(other, "wb").write(data.replace(("sgo1 " + SPEC_VERSION + " ").encode(), b"sgo1 0.9.9 "))
         r = compile_main(other, os.path.join(tmp, "main3.a"), expect_ok=False)
         if r.returncode == 0 or "SGO_E_SPEC_MISMATCH" not in r.stdout + r.stderr:
             sys.exit(f"test-identity: compiler accepted another spec version:\n{r.stdout}{r.stderr}")

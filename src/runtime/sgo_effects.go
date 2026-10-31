@@ -78,13 +78,13 @@ func sgo_wallMS() int {
 }
 
 // sgo_entropy is Entropy.Bytes(k): k bytes from the OS cryptographic source, never from a seeded
-// generator (A08). A short read is ResourceExhausted.
+// generator (A08). A short read ends the program as ResourceExhausted (SGO-ERR-003).
 //
 //go:linkname sgo_entropy sgo.runtime_entropy
 func sgo_entropy(k int) string {
 	b := make([]byte, k)
 	if readRandom(b) != k {
-		panic(error(&sgoFailure{"ResourceExhausted", "the OS entropy source failed", ""}))
+		sgoExhausted("entropy: the OS cryptographic source failed")
 	}
 	return string(b)
 }

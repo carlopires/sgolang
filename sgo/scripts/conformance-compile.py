@@ -43,6 +43,9 @@ def eligible(d, e, kind="reject"):
     # Diagnostics in non-source files (sgo.mod, .s files) come from the sgo driver (W03 layer 5).
     if any(not conf.position(d, dg).split(":")[0].endswith(".sgo") for dg in e.get("diagnostics", [])):
         return False
+    # Import cycles are found in the driver's module graph (SGO-IMP-001), which knows the module path.
+    if any(dg.get("code") == "SGO_E_IMPORT_CYCLE" for dg in e.get("diagnostics", [])):
+        return False
     return any(f.endswith(".sgo") for f in os.listdir(d))
 
 

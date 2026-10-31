@@ -4341,12 +4341,12 @@
   },
   {
    "path": "src/runtime/sgo_effects.go",
-   "sha256": "42ca41f7e39f18a5b1dd4f053ccf6eb2940aa0b1c51887b7c5faa8af957073ba",
+   "sha256": "78a46d403d51fc67e7e6b2568533299dcf25539a5c60acf1887f838ae6315b44",
    "upstream_identical": false
   },
   {
    "path": "src/runtime/sgo_main.go",
-   "sha256": "9ddadf20c90c3d4582703bc87220bd77e8acd2d35ee3c81477c1006a553c1463",
+   "sha256": "25978cf3a537788915518eabc02623604c0b45550aee98cacb835bdcc06f4455",
    "upstream_identical": false
   },
   {

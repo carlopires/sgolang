@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": "0.1.0",
-  "admission_digest": "aa692e6c58b4f9bdb6a24cb4a237f6dc125882a9960d646cb37335b97b6a9e4a",
+  "spec_version": "0.2.0",
+  "admission_digest": "d1ecf78b6f825e3f58f83fbc8e0f8ff2fdf231ec4d396cc50b749337df9df211",
   "status": "subset0_frozen_not_admitted",
   "warning": "Spec 0.1.0 is frozen: every row's clauses are fixed by digest. No row is admitted: admission requires implementation, enforcement, and executed evidence (constitution §6), starting in W03.",
   "default_decision": "reject",
@@ -152,7 +152,7 @@
         "SGO-TYPE-005",
         "SGO-TYPE-006"
       ],
-      "normative_text_digest": "ec857ea587e8c66102c480767ce7a8f8bea2b64dd76bf7eb7008597230b304e6",
+      "normative_text_digest": "ef0eaa3a2bd110694f703b8a971c7977f6daaa676487a010cdceba45edaad0eb",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X10",
@@ -162,11 +162,11 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-TYPE-001": "e8b7576d40c1130276fd3f5917cacb6005ced6d8957a0f0b166e371ba6f4c481",
+        "SGO-TYPE-001": "228a9ea32ee76c42c61c2c6665334bb8ec8e09160ba7ce27661a71fc6d7932eb",
         "SGO-TYPE-002": "8f0be92070475862d6095c90b28a2b0e63d24f6a3f9062b278fed9f01b61d1e2",
         "SGO-TYPE-003": "a1e06f6a06fccd6bc4d5a83ecf208d1a612639b582bf70abef98331e8b841343",
         "SGO-TYPE-004": "ed7f04b19e34d997c1d626f4056021977c51e644d9adc52207ca5a149f9d4819",
-        "SGO-TYPE-005": "765d5ca37e3d0face6b3d7512bd179e7d6831ed7b645bb9141003a0d497f5936",
+        "SGO-TYPE-005": "b0aff5b9cce6856dffb5f008aede1271020144f7739b6f8492eafad8010e6379",
         "SGO-TYPE-006": "782ac892c2affcdc43a6c63e4007c4e2bf47c7f98583e0f194194c9b7febc992"
       },
       "clause_status": {
@@ -178,11 +178,11 @@
         "SGO-TYPE-006": "frozen"
       },
       "clause_versions": {
-        "SGO-TYPE-001": 1,
+        "SGO-TYPE-001": 2,
         "SGO-TYPE-002": 1,
         "SGO-TYPE-003": 1,
         "SGO-TYPE-004": 1,
-        "SGO-TYPE-005": 1,
+        "SGO-TYPE-005": 2,
         "SGO-TYPE-006": 1
       }
     },
@@ -596,12 +596,12 @@
       "surface_family": "Permit alias/lifetime/affinity and abandoned obligation resolution",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W06",
-      "status": "denied",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-PERMIT-001",
         "SGO-PERMIT-002"
       ],
-      "normative_text_digest": "8cf44bfda3353f0f56bfcf15ce11a6b908bc7426c18cc8385c5279ebdf13f118",
+      "normative_text_digest": "86e550069c6c9a002f02086b1d5cc5c94782ddb6b71c935c610257875f6662cd",
       "admitted_in": [],
       "acceptance_case_ids": [
         "H03",
@@ -612,15 +612,15 @@
       "evidence": [],
       "subset0": "denied",
       "clause_digests": {
-        "SGO-PERMIT-001": "d58855ece11c8b1df21ffebabd57714013ab0c75f601ae15960b8e0424510f9b",
+        "SGO-PERMIT-001": "f6f24b113297a1786346e6e26c76941319c7e5408199c9c597c899936f00ab71",
         "SGO-PERMIT-002": "31b61a23472708f92b44c5804b47e32478c29733b09568d7de3f9d0f6c4aa57a"
       },
       "clause_status": {
-        "SGO-PERMIT-001": "frozen",
-        "SGO-PERMIT-002": "draft"
+        "SGO-PERMIT-001": "superseded",
+        "SGO-PERMIT-002": "frozen"
       },
       "clause_versions": {
-        "SGO-PERMIT-001": 1,
+        "SGO-PERMIT-001": 2,
         "SGO-PERMIT-002": 1
       }
     },
@@ -629,12 +629,12 @@
       "surface_family": "Explicit nursery-authorized readiness handshake",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W05",
-      "status": "denied",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-READY-001",
         "SGO-READY-002"
       ],
-      "normative_text_digest": "008b89ea1234dcd27ed174e53cf861e353b0af0980f261d1aef2532f0ff84258",
+      "normative_text_digest": "09c62f9934b39cb62027310580e68e4642642a741248dfa5643dc0ef4cadbe8a",
       "admitted_in": [],
       "acceptance_case_ids": [
         "R01",
@@ -645,15 +645,15 @@
       "evidence": [],
       "subset0": "denied",
       "clause_digests": {
-        "SGO-READY-001": "debf73d66c2c54c39b48d39db1ba10ec92ba55a1e63a3d1eca9f9ac9b9bddd58",
+        "SGO-READY-001": "fd0830cea1901043ab5d7648879d5a4d0ed252aaf286888bc61aec62fe6bd8f6",
         "SGO-READY-002": "f1343f57d720d4da9fae94e131890fbd2f10023f0ed321943d7ef4dd59f2cd63"
       },
       "clause_status": {
-        "SGO-READY-001": "frozen",
-        "SGO-READY-002": "draft"
+        "SGO-READY-001": "superseded",
+        "SGO-READY-002": "frozen"
       },
       "clause_versions": {
-        "SGO-READY-001": 1,
+        "SGO-READY-001": 2,
         "SGO-READY-002": 1
       }
     },
@@ -662,13 +662,13 @@
       "surface_family": "Effect authority: capability handles, task ceilings, root grants, subset-1 effect kinds (D24-D26)",
       "specification_work_package": "W05",
       "implementation_owner_work_package": "W05",
-      "status": "denied",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-AUTH-001",
         "SGO-AUTH-002",
         "SGO-AUTH-003"
       ],
-      "normative_text_digest": "3fd1ed0d56fd0f812dd03d702d2324afb8f1db7a08f5c8fcc3ee9cd656f31241",
+      "normative_text_digest": "a89afabbb1828b0036790d15ae0684a4d38bb097f1bdf91666aa2e9180969208",
       "admitted_in": [],
       "acceptance_case_ids": [
         "A01",
@@ -687,12 +687,12 @@
       "clause_digests": {
         "SGO-AUTH-001": "d672d6e298826ed13c783ed0487106f8262f42bace3410719fec1373b53e5c4b",
         "SGO-AUTH-002": "4f780a1e3afc03cf72efa3d429eae558223f2b7185687f19eb39182e928e289a",
-        "SGO-AUTH-003": "547686534a7349dc1953e7a9dc855078888cf37516399c81bb8d8d4939ef621e"
+        "SGO-AUTH-003": "2080d71ac2cd51b955ed6c02ffdcc471ecd939aa80522ebc3b95baf0941fb36a"
       },
       "clause_status": {
-        "SGO-AUTH-001": "draft",
-        "SGO-AUTH-002": "draft",
-        "SGO-AUTH-003": "draft"
+        "SGO-AUTH-001": "frozen",
+        "SGO-AUTH-002": "frozen",
+        "SGO-AUTH-003": "frozen"
       },
       "clause_versions": {
         "SGO-AUTH-001": 1,
@@ -709,7 +709,7 @@
       "clause_ids": [
         "SGO-CAP-001"
       ],
-      "normative_text_digest": "85a3a172179e4a357f1b11ea29df9b8df228990c96ff234694b7b8806e5b070d",
+      "normative_text_digest": "7746a17154f675419f2923e2fabd6edf4c9c238ea91463bd29b9a5e2573e0f61",
       "admitted_in": [],
       "acceptance_case_ids": [
         "A01",
@@ -721,13 +721,13 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-CAP-001": "e811f7cd10fa39f4d2f29f7f4cfd7f50bcf54fab402f5c70d5c6ef2d03fcb649"
+        "SGO-CAP-001": "5b3a0680c2cf2945b58f541053d2af6855149150f63aa3a4c0e1c37e8d7f5483"
       },
       "clause_status": {
         "SGO-CAP-001": "frozen"
       },
       "clause_versions": {
-        "SGO-CAP-001": 1
+        "SGO-CAP-001": 2
       }
     },
     {
@@ -1187,7 +1187,7 @@
       "clause_ids": [
         "SGO-GEN-001"
       ],
-      "normative_text_digest": "5baa1024ffd4f62e3cc5d9bee83b0527cbafe90dbfc06f111303ac870264b44c",
+      "normative_text_digest": "d7374f8c1cc7a30b0d1168d42780c17b4cec7a7b84fc886449fcd1f8196a1653",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X10",
@@ -1198,13 +1198,13 @@
       "decision_refs": "D05",
       "subset0": "denied",
       "clause_digests": {
-        "SGO-GEN-001": "4c5394c0aaa2ecf204ee92391a4bb62c4b2387c628dc02ce35c9c180acd35f4b"
+        "SGO-GEN-001": "8e10dacc918ea844be3322476470195e304b84f4cbc95564142bd00dedcec6c4"
       },
       "clause_status": {
         "SGO-GEN-001": "frozen"
       },
       "clause_versions": {
-        "SGO-GEN-001": 1
+        "SGO-GEN-001": 2
       }
     },
     {

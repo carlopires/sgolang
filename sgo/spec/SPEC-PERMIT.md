@@ -1,12 +1,12 @@
 # SPEC-PERMIT — Reserve/commit permits
 
-Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-PERMIT`: `subset0` = `denied`).
+Denied in subset 0 (spec 0.1.0, `SGO_SPEC_ADMISSION.json` row `SPEC-PERMIT`: `subset0` = `denied`). Spec 0.2.0 admits typed channels with send permits (SGO-PERMIT-002), which supersedes SGO-PERMIT-001.
 
 ### SGO-PERMIT-001 — Reserve/commit permits are denied in subset 0
-- **version:** 1
-- **status:** frozen
-- **reference_closure:** SGO-ERR-001; plan §7.2.
-- **grammar_and_types:** Denied: reserve/commit/abort permits and any permit or obligation API. No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
+- **version:** 2
+- **status:** superseded
+- **reference_closure:** SGO-ERR-001, SGO-PERMIT-002; plan §7.2.
+- **grammar_and_types:** Superseded in spec 0.2.0 by SGO-PERMIT-002, which admits send permits of `sgo.Channel[T]`. Still denied: every other reserve/commit/abort permit and permit or obligation API (for example a package-level `sgo.Reserve`). No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
 - **preconditions:** n/a — denial clause; there is nothing to use.
 - **evaluation_and_value_semantics:** n/a — denied constructs never execute.
 - **ownership_and_lifecycle:** n/a — denied constructs never execute.
@@ -26,7 +26,7 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-PERMIT`: `subset0
 
 ### SGO-PERMIT-002 — Typed managed channels with send permits (subset 1)
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-CAP-001, SGO-CANCEL-001, SGO-CANCEL-002, SGO-SPAWN-004, SGO-NUR-003, SGO-MEM-002; D28, D29, D30; plan §7.
 - **grammar_and_types:** `sgo.Channel[T]` is the only parameterized type admitted in subset 1; `T` must be a subset-1 sendable type (int, bool, string, error, D29). `ch := sgo.NewChannel[T](capacity int) *sgo.Channel[T]`; `p, err := ch.Reserve(task *sgo.Context) (*sgo.SendPermit[T], error)`; `err := p.Commit(v T) error`; `p.Abort()`; `v, ok, err := ch.Receive(task *sgo.Context) (T, bool, error)`; `ch.Close()`. User-defined type parameters stay denied (SGO-GEN-001).
 - **preconditions:** `capacity >= 0`. `Reserve`/`Receive` take the calling task's own context. A permit may be committed or aborted only by the task that reserved it.

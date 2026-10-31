@@ -1,10 +1,10 @@
 # SPEC-AUTH — Effect authority (subset 1)
 
-Capabilities for effects other than stdout (D24, D25; plan §8). Draft for spec 0.2.0; denied until frozen, implemented, enforced, and evidenced (README, status rules).
+Capabilities for effects other than stdout (D24, D25; plan §8). Part of spec 0.2.0.
 
 ### SGO-AUTH-001 — Capability handles and task ceilings
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-CAP-001, SGO-SPAWN-002, SGO-PROC-003, SGO-AUTH-002; D24; plan §8.2.
 - **grammar_and_types:** Each effect kind `K` (SGO-AUTH-003) has an opaque handle type `*sgo.K` (for example `*sgo.Clock`). Handles have no exported fields and no public constructor; they are obtained only from the root context (`root.K(...)`, SGO-AUTH-002) or by attenuating another handle. They compare by identity only, like `*sgo.Nursery` (SGO-CAP-001).
 - **preconditions:** Attenuation methods per kind are those of SGO-AUTH-003. A spawner narrows a child's ceiling with `n.SpawnWithout(kind string, f)`, where `kind` is a string naming an SGO-AUTH-003 kind (any other string is `InvalidArgument` at run time); the child's ceiling is the spawner's minus that kind (repeated narrowing removes several kinds). There is no operation that adds a kind to a ceiling.
@@ -26,7 +26,7 @@ Capabilities for effects other than stdout (D24, D25; plan §8). Draft for spec 
 
 ### SGO-AUTH-002 — Root grants declared in sgo.mod
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-001, SGO-TOOL-001, SGO-BUILD-001, SGO-AUTH-001; D25.
 - **grammar_and_types:** `sgo.mod` may contain lines `grant <kind>` for the kinds of SGO-AUTH-003, each at most once. `root.K(...)` on the root context returns the root handle of kind `K`.
 - **preconditions:** Only the root context provides root handles, as `Stdout` (SGO-PROC-003).
@@ -48,9 +48,9 @@ Capabilities for effects other than stdout (D24, D25; plan §8). Draft for spec 
 
 ### SGO-AUTH-003 — Effect kinds of subset 1
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-AUTH-001, SGO-AUTH-002, SGO-TIMER-001; D26; plan §8.3.
-- **grammar_and_types:** Kinds and root accessors (each available only if granted, SGO-AUTH-002): `root.Clock() *sgo.Clock` with `c.Since() int` (ms of monotonic time since program start); `root.WallClock() *sgo.WallClock` with `w.Now() int` (UTC ms since 1970-01-01); `root.Random(seed int) *sgo.Random` with `r.Intn(n int) int`, `r.Split() *sgo.Random`; `root.Entropy() *sgo.Entropy` with `e.Bytes(k int) string`; `root.SimStore() *sgo.SimStore` with `s.Get(key string) (string, bool, error)`, `s.Put(key, value string) error`, `s.ReadOnly() *sgo.SimStore`, `s.Prefix(p string) *sgo.SimStore`. Every handle type `*sgo.K` has `h.LendTo(n *sgo.Nursery) *sgo.K` (revocable copy). `simnet` (loopback endpoint) is PENDING and stays denied until specified.
+- **grammar_and_types:** Kinds and root accessors (each available only if granted, SGO-AUTH-002): `root.Clock() *sgo.Clock` with `c.Since() int` (ms of monotonic time since program start); `root.WallClock() *sgo.WallClock` with `w.Now() int` (UTC ms since 1970-01-01); `root.Random(seed int) *sgo.Random` with `r.Intn(n int) int`, `r.Split() *sgo.Random`; `root.Entropy() *sgo.Entropy` with `e.Bytes(k int) string`; `root.SimStore() *sgo.SimStore` with `s.Get(key string) (string, bool, error)`, `s.Put(key, value string) error`, `s.ReadOnly() *sgo.SimStore`, `s.Prefix(p string) *sgo.SimStore`. Every handle type `*sgo.K` has `h.LendTo(n *sgo.Nursery) *sgo.K` (revocable copy). `simnet` (a loopback endpoint) is not part of spec 0.2.0 and stays denied (SGO-NET-001).
 - **preconditions:** `Intn` requires `n > 0`; `Bytes` requires `1 <= k <= 1024`; `Prefix` requires a non-empty prefix. `LendTo(n)` requires that the caller can spawn into `n` (SGO-SPAWN-002).
 - **evaluation_and_value_semantics:** `Since` and `Now` read the target's monotonic and wall clocks (SGO-TIMER-001); `Since` never decreases within a program. `Random(seed)` starts the PCG-DXSM generator with 128-bit state, the algorithm of Go's `math/rand/v2` `PCG`, seeded with `(seed, 0)`; `Intn` returns a uniform value in `[0, n)` by the unbiased method of that package, so a seed produces the same sequence on every target. `Split` returns a new generator seeded from the next two outputs of the current one, so derived streams are deterministic too. The seeded generator never draws from the OS; `Entropy` always does and is never replaced by a seeded generator (A08). `Get`/`Put` act on one in-memory string map per program; `ReadOnly` permits only `Get`; `Prefix(p)` permits only keys beginning with `p` (concatenated for nested prefixes). A lent handle permits what the original permits while `n` is not CLOSED, and nothing afterwards.
 - **ownership_and_lifecycle:** Root handles live for the program. A lent handle is revoked when its nursery closes (A03). A `*sgo.Random` is task-affine: only the task that obtained it (by `Random` or `Split`) may call its methods; other handles may be used by any task whose ceiling permits the kind.

@@ -125,6 +125,21 @@ func sgoDefect(msg string) {
 	exit(4)
 }
 
+// sgoExhausted ends an S-Go program with a ResourceExhausted record naming the resource and
+// status 4 (SGO-ERR-003): not a failure of the task, so deferred calls do not run. Outside an S-Go
+// program (the runtime's own tests) it throws.
+func sgoExhausted(msg string) {
+	if !sgoProgram {
+		throw(msg)
+	}
+	var o sgoOrigin
+	if t := getg().sgo; t != nil {
+		o = sgoOriginOf(t)
+	}
+	sgoWriteRecord(sgoFailureInfo{"ResourceExhausted", msg, ""}, nil, o)
+	exit(4)
+}
+
 // sgoThrowExit ends an S-Go program on a runtime throw (SGO-ERR-003): exhausted resources are
 // ResourceExhausted, every other throw is a violated invariant, RuntimeDefect. Status 4; deferred
 // calls do not run. It runs on the system stack and does not allocate.

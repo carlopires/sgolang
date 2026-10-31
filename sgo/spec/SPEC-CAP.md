@@ -2,11 +2,11 @@
 
 Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §13, decision D09, invariants CAP-1, CAP-2.
 
-### SGO-CAP-001 — Capability model in subset 0
-- **version:** 1
+### SGO-CAP-001 — Capability model
+- **version:** 2
 - **status:** frozen
-- **reference_closure:** SGO-TYPE-005, SGO-PROC-003, SGO-SPAWN-003, SGO-NUR-001, SGO-MEM-002; CAP-1, CAP-2.
-- **grammar_and_types:** The capabilities of subset 0 are the three handle kinds: `*sgo.Nursery` (admit children into and cancel one scope), `*sgo.Context` (cancellation queries and sleeping for one task; on `root` also obtaining the writer), and `*sgo.Writer` (write to stdout). There is no ambient authority: no package, global, or runtime state grants any of these operations.
+- **reference_closure:** SGO-TYPE-005, SGO-PROC-003, SGO-SPAWN-003, SGO-NUR-001, SGO-MEM-002, SGO-READY-002, SGO-PERMIT-002, SGO-AUTH-001; CAP-1, CAP-2.
+- **grammar_and_types:** The capabilities of subset 0 are the three handle kinds: `*sgo.Nursery` (admit children into and cancel one scope), `*sgo.Context` (cancellation queries and sleeping for one task; on `root` also obtaining the writer), and `*sgo.Writer` (write to stdout). Spec 0.2.0 adds `*sgo.Ready` (signal one started child's readiness, SGO-READY-002), `*sgo.Channel[T]` and `*sgo.SendPermit[T]` (SGO-PERMIT-002), and the effect handles of SGO-AUTH-003, whose operations also require the effect kind in the calling task's ceiling (SGO-AUTH-001). There is no ambient authority: no package, global, or runtime state grants any of these operations.
 - **preconditions:** n/a — model clause.
 - **evaluation_and_value_semantics:** Authority is exercised only by calling a handle's method. Passing or capturing a handle delegates its full authority; subset 0 has no attenuation or revocation operations. A child's own context carries no capability beyond cancellation and sleeping (CAP-1).
 - **ownership_and_lifecycle:** Handles are runtime objects; their validity periods are defined by their clauses (nursery: SGO-SPAWN-002; context: SGO-CANCEL-002; writer: process lifetime).

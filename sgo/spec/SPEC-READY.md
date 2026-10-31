@@ -1,12 +1,12 @@
 # SPEC-READY — Readiness handshake
 
-Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-READY`: `subset0` = `denied`).
+Denied in subset 0 (spec 0.1.0, `SGO_SPEC_ADMISSION.json` row `SPEC-READY`: `subset0` = `denied`). Spec 0.2.0 admits `n.Start` with a readiness handshake (SGO-READY-002), which supersedes SGO-READY-001.
 
-### SGO-READY-001 — Readiness handshake are denied in subset 0
-- **version:** 1
-- **status:** frozen
-- **reference_closure:** SGO-ERR-001; plan §4.3.
-- **grammar_and_types:** Denied: nursery-authorized readiness APIs (`n.SpawnReady` or similar). No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
+### SGO-READY-001 — Readiness handshakes are denied in subset 0
+- **version:** 2
+- **status:** superseded
+- **reference_closure:** SGO-ERR-001, SGO-READY-002; plan §4.3.
+- **grammar_and_types:** Superseded in spec 0.2.0 by SGO-READY-002, which admits `n.Start`. Still denied: every other nursery-authorized readiness API (`n.SpawnReady` or similar). No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
 - **preconditions:** n/a — denial clause; there is nothing to use.
 - **evaluation_and_value_semantics:** n/a — denied constructs never execute.
 - **ownership_and_lifecycle:** n/a — denied constructs never execute.
@@ -26,7 +26,7 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-READY`: `subset0`
 
 ### SGO-READY-002 — Start with a readiness handshake (subset 1)
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-SPAWN-002, SGO-SPAWN-003, SGO-SPAWN-004, SGO-CANCEL-001, SGO-CANCEL-002, SGO-WAIT-002, SGO-NUR-004; D27; plan W05.
 - **grammar_and_types:** `err := n.Start(f)` where `n` has type `*sgo.Nursery` and `f` has type `func(task *sgo.Context, ready *sgo.Ready) error`; `Start` returns `error`. `ready.Signal()` has no result. `*sgo.Ready` is an opaque capability (comparable only as SGO-CAP-001 allows; no public constructor).
 - **preconditions:** As `Spawn` (SGO-SPAWN-002): the caller can spawn into `n`. `ready.Signal()` may only be called by the task started with it.

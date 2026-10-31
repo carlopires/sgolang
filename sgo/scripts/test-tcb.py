@@ -18,6 +18,7 @@ import sys
 import tempfile
 
 ROOT = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+SPEC_VERSION = open(os.path.join(ROOT, "sgo", "spec", "VERSION")).read().strip()
 GOOS = {"Darwin": "darwin", "Linux": "linux"}[platform.system()]
 GOARCH = {"arm64": "arm64", "aarch64": "arm64", "x86_64": "amd64"}[platform.machine()]
 HOST = f"{GOOS}_{GOARCH}"
@@ -44,7 +45,7 @@ def main():
         sgo = os.path.join(root, "pkg", "tool", HOST, "sgo")
         mod = os.path.join(tmp, "prog")
         os.makedirs(mod)
-        open(os.path.join(mod, "sgo.mod"), "w").write("module example.com/prog\n\nsgo 0.1.0\n")
+        open(os.path.join(mod, "sgo.mod"), "w").write("module example.com/prog\n\nsgo " + SPEC_VERSION + "\n")
         open(os.path.join(mod, "main.sgo"), "w").write(MAIN)
         env = {"HOME": tmp, "PATH": "/usr/bin:/bin", "SGO_CACHE": os.path.join(tmp, "cache")}
 
