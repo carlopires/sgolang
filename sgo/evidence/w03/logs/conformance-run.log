@@ -1,0 +1,19 @@
+FAIL cancel-basic: exit 2, want 0; stderr {"sgo_diagnostic":1,"kind":"SpawnContractViolation","message":"Nursery.Cancel is not implemented yet (S-Go W04)","position":null,"task_id":0,"scope_id":null,"chain":[{"kind":"SpawnContractViolation","
+FAIL cancel-checkpoint-loop: watchdog: killed after timeout
+FAIL cancel-consumed-at-boundary: exit 2, want 0; stderr {"sgo_diagnostic":1,"kind":"SpawnContractViolation","message":"Nursery.Cancel is not implemented yet (S-Go W04)","position":null,"task_id":0,"scope_id":null,"chain":[{"kind":"SpawnContractViolation","
+FAIL cancel-idempotent: exit 2, want 0; stderr {"sgo_diagnostic":1,"kind":"SpawnContractViolation","message":"Nursery.Cancel is not implemented yet (S-Go W04)","position":null,"task_id":0,"scope_id":null,"chain":[{"kind":"SpawnContractViolation","
+FAIL cancel-owner-woken-by-child-failure: exit 2, want 1; stderr {"sgo_diagnostic":1,"kind":"SpawnContractViolation","message":"Context.Sleep is not implemented yet (S-Go W04)","position":null,"task_id":0,"scope_id":null,"chain":[{"kind":"ChildError","message":"chi
+FAIL cancel-propagates-nested: exit 2, want 0; stderr {"sgo_diagnostic":1,"kind":"SpawnContractViolation","message":"Nursery.Cancel is not implemented yet (S-Go W04)","position":null,"task_id":0,"scope_id":null,"chain":[{"kind":"SpawnContractViolation","
+FAIL cancel-wakes-sleep: exit 2, want 0; stderr {"sgo_diagnostic":1,"kind":"SpawnContractViolation","message":"Nursery.Cancel is not implemented yet (S-Go W04)","position":null,"task_id":0,"scope_id":null,"chain":[{"kind":"SpawnContractViolation","
+FAIL def-child-panic-cancels-siblings: diagnostic kind 'SpawnContractViolation', want 'Panic'
+FAIL drain-cooperative-child: build failed: sgo:1:1: SGO_E_USAGE: -drain-budget is not implemented yet (S-Go W04)
+FAIL drain-noncooperative-budget: build failed: sgo:1:1: SGO_E_USAGE: -drain-budget is not implemented yet (S-Go W04)
+FAIL mem-join-visibility: exit 2, want 0; stderr {"sgo_diagnostic":1,"kind":"SpawnContractViolation","message":"Context.Sleep is not implemented yet (S-Go W04)","position":null,"task_id":1,"scope_id":1,"chain":[]}
+FAIL nur-child-spawns-during-join: exit 2, want 0; stderr {"sgo_diagnostic":1,"kind":"SpawnContractViolation","message":"Context.Sleep is not implemented yet (S-Go W04)","position":null,"task_id":1,"scope_id":1,"chain":[]}
+FAIL nur-inner-cancel-not-outer: exit 2, want 0; stderr {"sgo_diagnostic":1,"kind":"SpawnContractViolation","message":"Nursery.Cancel is not implemented yet (S-Go W04)","position":null,"task_id":0,"scope_id":null,"chain":[{"kind":"SpawnContractViolation","
+FAIL nur-join-all: exit 2, want 0; stderr {"sgo_diagnostic":1,"kind":"SpawnContractViolation","message":"Context.Sleep is not implemented yet (S-Go W04)","position":null,"task_id":1,"scope_id":1,"chain":[{"kind":"SpawnContractViolation","mess
+FAIL spawn-cancelled-outcome: exit 2, want 0; stderr {"sgo_diagnostic":1,"kind":"SpawnContractViolation","message":"Nursery.Cancel is not implemented yet (S-Go W04)","position":null,"task_id":0,"scope_id":null,"chain":[{"kind":"SpawnContractViolation","
+FAIL spawn-cancelling-no-child: exit 2, want 0; stderr {"sgo_diagnostic":1,"kind":"SpawnContractViolation","message":"Nursery.Cancel is not implemented yet (S-Go W04)","position":null,"task_id":0,"scope_id":null,"chain":[]}
+FAIL wait-sleep: exit 2, want 0; stderr {"sgo_diagnostic":1,"kind":"SpawnContractViolation","message":"Context.Sleep is not implemented yet (S-Go W04)","position":null,"task_id":0,"scope_id":null,"chain":[]}
+conformance: 174 passed, 17 failed of 191
+conformance: 17 pending (listed in --pending), 0 unexpected result(s)

@@ -384,9 +384,11 @@
       ],
       "scenario": "Parse admitted nursery forms; attempt a legacy keyword mode, bare go inside/outside a nursery, and unadmitted inherited constructs.",
       "expected": "Nursery keyword/token metadata is coherent. Bare go is rejected with SGO_E_UNSTRUCTURED_SPAWN; no compatibility parser mode or unregistered accepted node exists.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W03: passed - lex-* fixtures (keywords, `nursery` reserved, bare go, Go extensions, legacy octal, UTF-8); syntax `TestNurseryParse/Branches/Reserved`, `TestKeyword*`; tool-compat-flag (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "X02",
@@ -400,9 +402,11 @@
       ],
       "scenario": "Test named/anonymous nursery, missing/aliased import, shadowing, invalid expressions, reassignment, and passing a task Context where a Nursery is required.",
       "expected": "The named binding has the distinct opaque nursery capability type. Invalid forms and context-to-nursery conversions fail with source-positioned diagnostics; import/binding rules match frozen clauses.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W03: passed - nur-anonymous, nur-assign-binder, nur-pass-handle, cap-compare-nursery, cap-nil-context, cap-context-as-nursery, bind-import-alias/sgo, spawn-helper-with-handle (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "X03",
@@ -416,9 +420,11 @@
       ],
       "scenario": "Round-trip a nursery file through fork parser/AST/printer/formatter/type-checker APIs.",
       "expected": "The construct, contract identity, and source positions survive. Shipped build-facing source tools agree on S-Go acceptance and reject legacy/unadmitted forms.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W03: passed - syntax print/position round trip; `sgo fmt` over every fixture (test-fmt); Unified IR export/import (imp-user-package, test-x10, test-identity); one parser/type checker for build and fmt (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "X04",
@@ -432,9 +438,11 @@
       ],
       "scenario": "Execute statements after a nursery in the same function.",
       "expected": "Children and scope finalizers finish before the first following statement.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W03: passed (scope finalizers: subset-0 scope, def-scope-finalizer rejects `n.Defer`) - nur-basic, nur-nested, def-after-nursery, spawn-into-outer-from-inner (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "X05",
@@ -448,9 +456,11 @@
       ],
       "scenario": "Use side-effecting multiple return operands, named results, and enclosing function defers across a nursery exit.",
       "expected": "Operands evaluate once in the frozen S-Go evaluation order; joins occur before return completion; defers can modify named results as specified.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W03: passed; defers cannot assign named results in S-Go (captures final, SGO-MEM-002) - ctl-return-operands-nursery, ctl-return-from-nursery, val-eval-order; ctl-defer-assigns-named-result (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "X06",
@@ -464,9 +474,11 @@
       ],
       "scenario": "Return across two nested nurseries.",
       "expected": "The inner nursery closes before the outer; each scope closes once.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W03: passed - test-x10 (`Nested`), ctl-return-from-nursery; join of a non-innermost scope is a runtime violation (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "X07",
@@ -480,9 +492,11 @@
       ],
       "scenario": "Exercise inward-staying and outward labeled loop transfers.",
       "expected": "Only the scopes exited by the selected transfer are joined, in inside-out order.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W03: passed - ctl-labeled-nursery-exits, ctl-break-out-of-nursery, ctl-nursery-in-loop, ctl-labeled-loops (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "X08",
@@ -496,9 +510,11 @@
       ],
       "scenario": "Attempt goto into a nursery; also execute legal outward gotos and re-entry through loops.",
       "expected": "Inward entry is rejected; outward edges close exactly once; each re-entered nursery has a new identity.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W03: passed for subset 0 (`goto` denied, so no inward or outward edge exists) - ctl-goto (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "X09",
@@ -512,9 +528,11 @@
       ],
       "scenario": "Register ordinary defers and scope finalizers inside nested nurseries.",
       "expected": "Scope finalizers run LIFO after child join; ordinary defers remain function-scoped and retain relative LIFO order.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W03: passed for subset 0 (finalizers denied; defers stay function-scoped, LIFO) - def-lifo, def-after-nursery, def-scope-finalizer (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "X10",
@@ -528,9 +546,11 @@
       ],
       "scenario": "Export generic functions containing nurseries and call them across packages with normal optimization and disabled inlining.",
       "expected": "Both configurations agree; Unified IR import/export and source positions remain valid.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W03: passed; generics half subset-0 scope (type-generic rejects) - test-x10 (default and `-l` agree; nursery functions not inlined, spawned closures inlinable) (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "X11",
@@ -544,9 +564,11 @@
       ],
       "scenario": "Capture nursery-visible variables in child closures, including values that must escape.",
       "expected": "Lifetime/escape analysis is correct; compiler-generated temporaries do not collide or force unsafe stack residence.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W03: passed - mem-capture-escapes-frame, mem-capture-final/-loop-var/-mutated/-assigned-in-literal, mem-locals (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "X12",
@@ -560,9 +582,11 @@
       ],
       "scenario": "Grow the stack with active nursery unwind markers and then panic or the specified task-exit operation.",
       "expected": "The correct lexical scopes are found and drained; relocation metadata is valid.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W03: passed; task-exit operation not in spec 0.1.0 - def-unwind-deep-nurseries(-child): 3001 open nurseries on a growing stack, root and child (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "P01",
@@ -579,7 +603,9 @@
       "expected": "Siblings are cancelled and drained; their defers complete; parent join re-panics with the original payload.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W03: W03 part passed (original payload re-raised after siblings complete); sibling cancellation W04 (pending fixture) - nur-child-error-exit-1, err-chain-*, def-child-panic-cancels-siblings (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "P02",
@@ -596,7 +622,9 @@
       "expected": "No false nursery failure/cancellation is published for that recovered panic.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W03: W03 part passed: `recover` denied in subset 0; the runtime's own recovery in task entry publishes no false failure (TestSGo* lane) - def-recover (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "P03",
@@ -613,7 +641,9 @@
       "expected": "All outcomes are retained; primary selection follows stable task creation ID, not host timestamp.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W03: W03 part passed; drain under cancellation W04 - nur-two-failures-lowest-id, nur-primary-not-by-time, err-chain-nested-child (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "P04",
@@ -630,7 +660,9 @@
       "expected": "The original owner panic remains primary; child/finalizer failures are secondary diagnostics.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W03: W03 part passed; finalizer failures subset-0 scope - err-chain-owner-and-children (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "P05",
@@ -647,7 +679,9 @@
       "expected": "Normal completion is not inferred from recover returning nil; final escaping outcome is classified correctly.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W03: W03 part passed: `panic` takes a string (no `panic(nil)`), `recover` denied - def-panic-in-defer, def-panic-int, def-recover (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "P06",
@@ -664,7 +698,9 @@
       "expected": "Scopes drain before the specified task exit; failure remains failure. Raw unadmitted runtime.Goexit is rejected, not treated as automatically available.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W03: W03 part passed; `sgo.ExitTask` and the test runner are not in spec 0.1.0 - proc-raw-goexit, TestSGoGoexitIsDefect (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "P07",
@@ -681,7 +717,9 @@
       "expected": "Cancellation reaches the active nursery of the owner as well as siblings; the owner does not wait forever because only ownerScope was checked.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W03: W04 (pending; needs cancellation) - cancel-owner-woken-by-child-failure (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "P08",
@@ -698,7 +736,9 @@
       "expected": "Affected nurseries are already drained; defer order and recovery semantics match the chosen language contract.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W03: W03 part passed: `recover` denied; recovery of runtime-internal unwinding drops its chain entries (sgo_record.go) - def-recover (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "C01",
@@ -2141,7 +2181,8 @@
       "implementation_status": "pending",
       "execution_status": "unrun",
       "evidence": [
-        "W00 gate-level checks passed on all three targets (sgo/evidence/w00/checks-*.json); compiler/linker-level part unrun until W03"
+        "W00 gate-level checks passed on all three targets (sgo/evidence/w00/checks-*.json); compiler/linker-level part unrun until W03",
+        "W03: W03 part passed (W10: release tooling) - test-flags, err-no-suppression-flag, tool-compat-flag, lab-flag, proc-godebug-ignored (sgo/evidence/w03/README.md)"
       ]
     },
     {
@@ -2157,10 +2198,11 @@
       ],
       "scenario": "Compare the admission registry against actual expression/statement/type/IR dispatch, builtins, exports, and intrinsic entry points; add an unregistered feature in a mutation.",
       "expected": "Every accepted surface maps to frozen clauses and enforcement; the mutated omission blocks admission. Inventory is not a manually selected examples-only list.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages"
+        "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages",
+        "W03: W03 part passed - inventory-check; test-mutations (2 mutations) (sgo/evidence/w03/README.md)"
       ]
     },
     {
@@ -2176,10 +2218,11 @@
       ],
       "scenario": "Remove a normative clause, leave a TODO, create conflicting versions, or reference an unresolved clause dependency.",
       "expected": "Affected syntax/import/intrinsic is rejected with the exact missing/conflicting clause identity; upstream behavior is not used as a fallback.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages"
+        "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages",
+        "W03: W03 part passed - spec-tool check; test-mutations (4 mutations) (sgo/evidence/w03/README.md)"
       ]
     },
     {
@@ -2216,7 +2259,9 @@
       "expected": "All target source paths reject SGO_E_UNSTRUCTURED_SPAWN. No runtime interception silently turns legacy go into structured spawning.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W03: W03 part passed (W05: ported packages) - lex-bare-go, spawn-go-unreachable, spawn-go-in-dependency, spawn-go-generated-file, bind-init-func (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "S06",
@@ -2231,10 +2276,11 @@
       ],
       "scenario": "Call a helper without a nursery handle, derive a nursery from a task Context, or request CurrentNursery through a public API.",
       "expected": "Missing authority is rejected. Valid delegated handles work, but ambient runtime state cannot supply a handle or authorize a spawn.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W02 part passed: sgo/evidence/w02/README.md"
+        "W02 part passed: sgo/evidence/w02/README.md",
+        "W03: passed (runtime part in W02) - cap-context-as-nursery, cap-nil-context, spawn-unrelated-task, spawn-helper-with-handle (sgo/evidence/w03/README.md)"
       ]
     },
     {
@@ -2271,7 +2317,9 @@
       "expected": "Child error triggers the specified nursery failure/drain; nil callback admits no child. Already evaluated caller effects are neither repeated nor falsely rolled back.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W03: W03 part passed; drain of siblings W04 - nur-child-error-exit-1, err-chain-child-errors, spawn-nil-callback, val-eval-order (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "S09",
@@ -2289,7 +2337,9 @@
       "expected": "Only checked source and matching contract/export identities are admitted. Labels, declared purity, names, and recompilation alone do not authorize execution.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W03: W03 part passed; effect annotations do not exist in subset 0 (W05/W10) - test-identity, test-tcb, imp-stale-contract, imp-stock-object (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "S10",
@@ -2306,7 +2356,9 @@
       "expected": "Checked signatures/effect summaries preserve the closed admitted set; unsupported summary/dispatch cases are rejected rather than trusted.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W03: W03 part passed (W05: summaries for ported packages) - admission is syntactic over all target source, so function values, closures, and interfaces reach only admitted code; type-generic, reflect-import, spawn-helper-with-handle (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "S11",
@@ -2346,7 +2398,9 @@
       "expected": "Not-yet-implemented native operations are rejected; admitted ones use the sole S-Go contract. No legacy channel fallback exists.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W03: W03 part passed (W07: channel admission) - chan-type, chan-select, reflect-import, sync-mutex (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "S13",
@@ -2400,7 +2454,8 @@
       "implementation_status": "pending",
       "execution_status": "unrun",
       "evidence": [
-        "W00 gate-level checks passed on all three targets (sgo/evidence/w00/checks-*.json); compiler/linker-level part unrun until W03"
+        "W00 gate-level checks passed on all three targets (sgo/evidence/w00/checks-*.json); compiler/linker-level part unrun until W03",
+        "W03: W03 part passed (W10) - imp-stock-object, test-identity (foreign objects), test-tcb, test-flags, tool-go-file-input (sgo/evidence/w03/README.md)"
       ]
     },
     {
@@ -2421,7 +2476,8 @@
       "implementation_status": "pending",
       "execution_status": "unrun",
       "evidence": [
-        "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages"
+        "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages",
+        "W03: W03 part passed; shared mutation and atomics do not exist in subset 0 (W07) - val-* (overflow, division, shifts, conversions, strings), err-stack-overflow-exit-4, mem-* (sgo/evidence/w03/README.md)"
       ]
     },
     {
@@ -2441,7 +2497,9 @@
       "expected": "The negative fixture fails release qualification until the path rejects. Documentation and experimental labels cannot waive admission.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W03: W03 part passed (W09/W12 release qualification) - every subset-0 denial has a reject fixture; admitted-but-unimplemented W04 operations fail closed with SpawnContractViolation (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "S18",
@@ -2460,7 +2518,9 @@
       "expected": "Consistency/identity checks reject stale artifacts and block the release until specification, enforcement, and evidence are reconciled.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W03: W03 part passed (W10/W12) - test-mutations (frozen clause change; amended registry refused by the toolchain); identity in packages, binaries, driver (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "S19",
@@ -2477,7 +2537,9 @@
       "expected": "Tools may inspect invalid source for diagnostics, but no recovery AST or alternate parser becomes a buildable accepted target path.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W03: W03 part passed (W10) - `sgo fmt` refuses unparsable S-Go and builds nothing; the driver accepts only `.sgo` through the one admission path (tool-go-file-input, test-flags) (sgo/evidence/w03/README.md)"
+      ]
     },
     {
       "id": "S20",

@@ -1,0 +1,2 @@
+sgo: testing cmd/compile/internal/syntax with go version go1.26.10 darwin/arm64 (testenv shim: error_test.go parser_test.go; excluded: none)
+ok  	sgohosttest/syntax	1.224s
