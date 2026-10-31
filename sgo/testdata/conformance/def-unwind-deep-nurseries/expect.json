@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-DEF-005",
+  "SGO-STACK-001"
+ ],
+ "exit": 2,
+ "stdout": "d0\nd1\nd2\nd3\n",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"Panic\",\"message\":\"bottom\",\"position\":\"main.sgo:36:4\",\"task_id\":0,\"scope_id\":null,\"chain\":[]}\n",
+ "note": "X12: 3001 frames each with an open nursery (the stack grows and moves); the panic completes every nursery, innermost first, before each frame's deferred call."
+}

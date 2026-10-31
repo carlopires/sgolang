@@ -1,0 +1,12 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-DEF-005",
+  "SGO-STACK-001",
+  "SGO-NUR-004"
+ ],
+ "exit": 2,
+ "stdout": "d0\nd1\nd2\nd3\n",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"Panic\",\"message\":\"bottom\",\"position\":\"main.sgo:36:4\",\"task_id\":1,\"scope_id\":1,\"chain\":[]}\n",
+ "note": "X12 on a child task: its moved stack's nurseries complete; the failure keeps the child's origin."
+}

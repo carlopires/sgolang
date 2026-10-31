@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			x := 0
+			for i := 0; i < 20000000; i++ {
+				x = (x + i) % 1000
+			}
+			if x >= 0 {
+				panic("late, lowest id")
+			}
+			return nil
+		})
+		n.Spawn(func(task *sgo.Context) error { panic("early, higher id") })
+	}
+	return nil
+}

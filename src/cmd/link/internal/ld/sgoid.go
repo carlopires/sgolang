@@ -5,11 +5,42 @@
 package ld
 
 import (
+	"internal/buildcfg"
+	"internal/platform"
 	"sort"
 	"strings"
 
 	"cmd/internal/objabi"
 )
+
+// sgoCheckConfig refuses link configurations that the S-Go toolchain does not build (S01, S15;
+// SGO-TOOL-001, SGO-BUILD-001). This linker links only S-Go programs (sgoCheckIdentity refuses
+// any package without an S-Go identity), and an S-Go program is an executable, linked
+// internally, with the linkname check on and without -X string overrides: those would change
+// trusted runtime data or bypass a check that the driver never exposes. It runs after loadlib,
+// when the link mode is known.
+func (ctxt *Link) sgoCheckConfig() {
+	// The linker's own string data (runtime.buildVersion and the like) is not an override; only
+	// -X flags are counted.
+
+	// An executable is PIE where that is the platform's default (darwin), and only there.
+	pie := ctxt.BuildMode == BuildModePIE && platform.DefaultPIE(buildcfg.GOOS, buildcfg.GOARCH, false)
+	if ctxt.BuildMode != BuildModeExe && !pie {
+		Errorf("sgo:1:1: SGO_E_USAGE: build mode %s is not admitted; S-Go programs are executables (SGO-BUILD-001)", ctxt.BuildMode)
+	}
+	if ctxt.LinkMode != LinkInternal {
+		Errorf("sgo:1:1: SGO_E_USAGE: link mode %s is not admitted; S-Go programs link internally (SGO-BUILD-001)", ctxt.LinkMode)
+	}
+	if sgoXFlags != 0 {
+		Errorf("sgo:1:1: SGO_E_USAGE: -X string overrides are not admitted (SGO-TOOL-001)")
+	}
+	if !*flagCheckLinkname {
+		Errorf("sgo:1:1: SGO_E_USAGE: -checklinkname=0 is not admitted (SGO-TOOL-001)")
+	}
+}
+
+// sgoXFlags counts -X flags on the command line (main.go).
+var sgoXFlags int
 
 // sgoCheckIdentity verifies the S-Go identity of every linked package (SGO-IMP-002). Each package
 // compiled by the S-Go compiler defines go:sgoid.<path>: the line

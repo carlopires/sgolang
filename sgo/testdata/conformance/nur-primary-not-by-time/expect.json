@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-NUR-004",
+  "SGO-ERR-002"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"Panic\",\"message\":\"late, lowest id\",\"position\":\"main.sgo:13:5\",\"task_id\":1,\"scope_id\":1,\"chain\":[{\"kind\":\"Panic\",\"message\":\"early, higher id\",\"position\":\"main.sgo:17:43\"}]}\n",
+ "note": "P03: the child with the smallest creation ID fails last in time and is still primary; the earlier failure is chained."
+}

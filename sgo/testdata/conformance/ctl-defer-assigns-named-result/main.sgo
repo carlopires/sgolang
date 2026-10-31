@@ -1,0 +1,16 @@
+package main
+
+import "sgo"
+
+func pair() (a int, b int) {
+	defer func() { b = b + 5 }()
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error { return nil })
+		return 1, 2
+	}
+}
+
+func main(root *sgo.Context) error {
+	_, _ = pair()
+	return nil
+}

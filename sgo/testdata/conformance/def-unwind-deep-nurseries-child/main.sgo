@@ -1,0 +1,51 @@
+package main
+
+import "sgo"
+
+func digit(i int) string {
+	switch i {
+	case 0:
+		return "0"
+	case 1:
+		return "1"
+	case 2:
+		return "2"
+	case 3:
+		return "3"
+	case 4:
+		return "4"
+	case 5:
+		return "5"
+	case 6:
+		return "6"
+	case 7:
+		return "7"
+	}
+	return "?"
+}
+
+func down(out *sgo.Writer, depth int) {
+	defer func() {
+		if depth%1000 == 0 {
+			_ = out.WriteString("d" + digit(depth/1000) + "\n")
+		}
+	}()
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error { return nil })
+		if depth == 0 {
+			panic("bottom")
+		}
+		down(out, depth-1)
+	}
+}
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			down(out, 3000)
+			return nil
+		})
+	}
+	return nil
+}

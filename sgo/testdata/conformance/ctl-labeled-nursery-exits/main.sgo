@@ -1,0 +1,57 @@
+package main
+
+import "sgo"
+
+func digit(i int) string {
+	switch i {
+	case 0:
+		return "0"
+	case 1:
+		return "1"
+	case 2:
+		return "2"
+	case 3:
+		return "3"
+	case 4:
+		return "4"
+	case 5:
+		return "5"
+	case 6:
+		return "6"
+	case 7:
+		return "7"
+	}
+	return "?"
+}
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+outer:
+	for i := 0; i < 3; i++ {
+		nursery (a) {
+			a.Spawn(func(task *sgo.Context) error { return nil })
+			for j := 0; j < 3; j++ {
+				nursery (b) {
+					label := "b" + digit(i) + digit(j) + "\n"
+					b.Spawn(func(task *sgo.Context) error { return out.WriteString(label) })
+					for k := 0; k < 3; k++ {
+						if k == 0 {
+							continue
+						}
+						break
+					}
+					if j == 1 {
+						continue outer
+					}
+					if i == 2 {
+						break outer
+					}
+				}
+				if err := out.WriteString("after b\n"); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return out.WriteString("end\n")
+}

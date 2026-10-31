@@ -63,6 +63,15 @@ func findToolchain() (*toolchain, error) {
 	}
 	sum := sha256.Sum256(adm)
 	t.admission = hex.EncodeToString(sum[:])[:16]
+	// The compiler, the linker checks, and this driver were built for one specification (identity.go,
+	// generated with the compiler's): a GOROOT whose spec or admission registry was amended since is
+	// refused, so an amendment cannot take effect without rebuilding and re-verifying the toolchain
+	// (S18, SGO-IMP-002).
+	if t.specVersion != SpecVersion || t.admission != AdmissionDigest {
+		return nil, &toolErr{"sgo:1:1", "SGO_E_SPEC_MISMATCH", fmt.Sprintf(
+			"%s has spec %s with admission %s, but this toolchain was built for spec %s with admission %s; rebuild the toolchain (SGO-IMP-002)",
+			t.goroot, t.specVersion, t.admission, SpecVersion, AdmissionDigest), 1}
+	}
 	var lock struct {
 		Upstream struct{ Commit string } `json:"upstream"`
 	}

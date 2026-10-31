@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CTL-004",
+  "SGO-NUR-003"
+ ],
+ "exit": 0,
+ "stdout": "b00\nafter b\nb01\nb10\nafter b\nb11\nb20\nend\n",
+ "note": "X07: labeled continue/break leave both nurseries (inside out) and are joined before the loop continues or ends; the k loop stays inside its nursery."
+}

@@ -1,0 +1,12 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CTL-004",
+  "SGO-NUR-004",
+  "SGO-VAL-003"
+ ],
+ "exit": 1,
+ "stdout": "op1\nop2\ndeferred in pair\npair 1 2\nop3\nop4\ndeferred in failing\n",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"ChildError\",\"message\":\"child failed\",\"position\":null,\"task_id\":2,\"scope_id\":2,\"chain\":[]}\n",
+ "note": "X05: return operands evaluate once, in order, before the join; the join completes before the return and the deferred calls; a child error replaces the return (ChildError, exit 1)."
+}

@@ -67,6 +67,9 @@ jobs:
       - name: Cross-package nurseries with and without inlining (X10)
         run: sgo/scripts/test-x10.py
 
+      - name: No flag, mode, or environment reopens stock Go (S01, S15)
+        run: sgo/scripts/test-flags.py
+
       - name: Every admitted target builds from this host (sgo build -target)
         run: |
           plat="$(uname -s | tr A-Z a-z)_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"

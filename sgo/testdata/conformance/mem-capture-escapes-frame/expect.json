@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-MEM-001",
+  "SGO-MEM-002"
+ ],
+ "exit": 0,
+ "stdout": "value 7\nend\n",
+ "note": "X11: a value captured by a child spawned into an outer nursery outlives the helper frame that declared it, after that stack was overwritten."
+}

@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-SPAWN-002",
+  "SGO-TYPE-002"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_TYPE_MISMATCH",
+   "at": "nil)"
+  }
+ ],
+ "note": "S08: a nil callback admits no child; in subset 0 nil is only an error value, so it is rejected at compile time."
+}

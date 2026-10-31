@@ -209,7 +209,10 @@ func Main(arch *sys.Arch, theArch Arch) {
 	flag.BoolVar(&ctxt.compressDWARF, "compressdwarf", true, "compress DWARF if possible")
 	objabi.Flagfn1("L", "add specified `directory` to library path", func(a string) { Lflag(ctxt, a) })
 	objabi.AddVersionFlag() // -V
-	objabi.Flagfn1("X", "add string value `definition` of the form importpath.name=value", func(s string) { addstrdata1(ctxt, s) })
+	objabi.Flagfn1("X", "add string value `definition` of the form importpath.name=value", func(s string) {
+		sgoXFlags++ // S-Go: refused by sgoCheckConfig (sgoid.go)
+		addstrdata1(ctxt, s)
+	})
 	objabi.Flagcount("v", "print link trace", &ctxt.Debugvlog)
 	objabi.Flagfn1("importcfg", "read import configuration from `file`", ctxt.readImportCfg)
 
@@ -368,6 +371,7 @@ func Main(arch *sys.Arch, theArch Arch) {
 	ctxt.loadlib()
 
 	bench.Start("sgoid")
+	ctxt.sgoCheckConfig()   // only S-Go program configurations (sgoid.go)
 	ctxt.sgoCheckIdentity() // S-Go identity of every linked package (sgoid.go)
 	exitIfErrors()
 
