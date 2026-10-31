@@ -7,6 +7,7 @@ package ld
 import (
 	"internal/buildcfg"
 	"internal/platform"
+	"slices"
 	"sort"
 	"strings"
 
@@ -54,6 +55,23 @@ func sgoSetDrainBudget(ctxt *Link, s string) {
 		Exitf("sgo:1:1: SGO_E_USAGE: -sgodrainbudget must be a positive number of milliseconds, not %q (SGO-DRAIN-002)", s)
 	}
 	addstrdata1(ctxt, "runtime.sgoDrainBudget="+s)
+}
+
+// sgoGrantKinds are the effect kinds a grant may name (SGO-AUTH-003), in the runtime's order.
+var sgoGrantKinds = []string{"clock", "wallclock", "random", "entropy", "simstore"}
+
+// sgoSetGrants handles -sgogrants=kinds: it sets runtime.sgoGrants, the root task's ceiling
+// (SGO-AUTH-002). Only known kinds, each once, in the driver's canonical order are accepted.
+func sgoSetGrants(ctxt *Link, s string) {
+	next := 0
+	for _, k := range strings.Split(s, ",") {
+		i := slices.Index(sgoGrantKinds, k)
+		if i < next {
+			Exitf("sgo:1:1: SGO_E_USAGE: -sgogrants must list known effect kinds once each in canonical order, not %q (SGO-AUTH-002)", s)
+		}
+		next = i + 1
+	}
+	addstrdata1(ctxt, "runtime.sgoGrants="+s)
 }
 
 // sgoCheckIdentity verifies the S-Go identity of every linked package (SGO-IMP-002). Each package

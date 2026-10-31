@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+// A generator is task-affine: another task's use is a contract violation.
+func main(root *sgo.Context) error {
+	r := root.Random(1)
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			_ = r.Intn(10)
+			return nil
+		})
+	}
+	return nil
+}

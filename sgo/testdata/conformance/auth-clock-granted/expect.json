@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-AUTH-002",
+  "SGO-AUTH-003"
+ ],
+ "exit": 0,
+ "stdout": "monotonic\n",
+ "note": "Clock.Since never decreases and advances by at least the Sleep duration."
+}

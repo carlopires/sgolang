@@ -112,6 +112,9 @@ type sgoTask struct {
 
 	// ready is the readiness record of a child started by n.Start (sgo_ready.go), nil otherwise.
 	ready *sgoReady
+
+	// ceiling is the set of effect kinds the task may exercise (sgo_auth.go), fixed at creation.
+	ceiling uint8
 }
 
 // sgoScopeResult is the immutable outcome of a closed scope (SGO-NUR-004 rules 2-4; rule 1, the
@@ -154,7 +157,9 @@ func sgoEnterRoot() *sgoTask {
 	if gp.sgo != nil {
 		throw("sgo: goroutine is already an S-Go task")
 	}
-	gp.sgo = &sgoTask{id: 0}
+	// The root of a program gets the granted kinds (sgoEnterMain); a root entered by the runtime's
+	// own tests gets every kind and narrows it through SpawnWithout.
+	gp.sgo = &sgoTask{id: 0, ceiling: sgoKindAll}
 	return gp.sgo
 }
 
@@ -182,14 +187,15 @@ func sgoNurseryOpen() (*sgoScope, error) {
 // sgoSpawn admits fn as a child of s (SGO-SPAWN-002/003). It returns a *sgoViolation if admission
 // is refused, and nil if the child was admitted or silently not created because s is CANCELLING (R5).
 func sgoSpawn(s *sgoScope, fn func(*sgoTask) error) error {
-	_, err := sgoAdmit(s, fn, nil)
+	_, err := sgoAdmit(s, fn, nil, 0)
 	return err
 }
 
 // sgoAdmit is sgoSpawn that also reports the created child (nil if none was created because s is
-// CANCELLING) and attaches the readiness record r, if any, before the child can run (n.Start,
-// sgo_ready.go).
-func sgoAdmit(s *sgoScope, fn func(*sgoTask) error, r *sgoReady) (*sgoTask, error) {
+// CANCELLING), attaches the readiness record r, if any, before the child can run (n.Start,
+// sgo_ready.go), and removes the kinds in without from the child's ceiling (n.SpawnWithout,
+// sgo_auth.go).
+func sgoAdmit(s *sgoScope, fn func(*sgoTask) error, r *sgoReady, without uint8) (*sgoTask, error) {
 	t := sgoCurrent()
 	switch {
 	case s == nil:
@@ -202,7 +208,7 @@ func sgoAdmit(s *sgoScope, fn func(*sgoTask) error, r *sgoReady) (*sgoTask, erro
 		return nil, &sgoViolation{"spawn into a nursery that is not the caller's current scope"}
 	}
 	// Allocate before taking the scope lock (no allocation under runtime locks).
-	c := &sgoTask{scope: s, fn: fn, ready: r}
+	c := &sgoTask{scope: s, fn: fn, ready: r, ceiling: t.ceiling &^ without}
 	lock(&s.lock)
 	switch s.state {
 	case sgoOpen, sgoJoining:

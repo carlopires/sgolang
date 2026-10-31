@@ -1,0 +1,13 @@
+package main
+
+import "sgo"
+
+// WallClock.Now is UTC milliseconds since 1970 (after 2020-01-01 on any test host).
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	w := root.WallClock()
+	if w.Now() < 1577836800000 {
+		return sgo.NewError("wall clock before 2020")
+	}
+	return out.WriteString("plausible\n")
+}

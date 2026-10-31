@@ -217,6 +217,10 @@ func Main(arch *sys.Arch, theArch Arch) {
 	objabi.Flagfn1("sgodrainbudget", "set the S-Go drain budget to `ms` milliseconds", func(s string) {
 		sgoSetDrainBudget(ctxt, s)
 	})
+	// S-Go: the root grants of SGO-AUTH-002, written by the sgo driver from the main sgo.mod.
+	objabi.Flagfn1("sgogrants", "set the S-Go root grants to the comma-separated `kinds`", func(s string) {
+		sgoSetGrants(ctxt, s)
+	})
 	objabi.Flagcount("v", "print link trace", &ctxt.Debugvlog)
 	objabi.Flagfn1("importcfg", "read import configuration from `file`", ctxt.readImportCfg)
 

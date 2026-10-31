@@ -1,0 +1,30 @@
+package main
+
+import "sgo"
+
+// A03: a handle lent to a nursery works while the nursery is open and is revoked when it closes;
+// the original handle keeps working.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	s := root.SimStore()
+	held := s
+	nursery (n) {
+		held = s.LendTo(n)
+		lentCopy := held
+		n.Spawn(func(task *sgo.Context) error {
+			return lentCopy.Put("k", "from child")
+		})
+	}
+	v, ok, err := s.Get("k")
+	if err != nil || !ok {
+		return sgo.NewError("value lost")
+	}
+	if werr := out.WriteString(v + "\n"); werr != nil {
+		return werr
+	}
+	_, _, gerr := held.Get("k")
+	if gerr != nil {
+		return gerr
+	}
+	return out.WriteString("unreachable\n")
+}

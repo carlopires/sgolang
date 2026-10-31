@@ -7,7 +7,7 @@ Capabilities for effects other than stdout (D24, D25; plan §8). Draft for spec 
 - **status:** draft
 - **reference_closure:** SGO-CAP-001, SGO-SPAWN-002, SGO-PROC-003, SGO-AUTH-002; D24; plan §8.2.
 - **grammar_and_types:** Each effect kind `K` (SGO-AUTH-003) has an opaque handle type `*sgo.K` (for example `*sgo.Clock`). Handles have no exported fields and no public constructor; they are obtained only from the root context (`root.K(...)`, SGO-AUTH-002) or by attenuating another handle. They compare by identity only, like `*sgo.Nursery` (SGO-CAP-001).
-- **preconditions:** Attenuation methods per kind are those of SGO-AUTH-003. A spawner narrows a child's ceiling with `n.SpawnWithout(kind string, f)`, where `kind` is a constant naming an SGO-AUTH-003 kind; the child's ceiling is the spawner's minus that kind (repeated narrowing removes several kinds). There is no operation that adds a kind to a ceiling.
+- **preconditions:** Attenuation methods per kind are those of SGO-AUTH-003. A spawner narrows a child's ceiling with `n.SpawnWithout(kind string, f)`, where `kind` is a string naming an SGO-AUTH-003 kind (any other string is `InvalidArgument` at run time); the child's ceiling is the spawner's minus that kind (repeated narrowing removes several kinds). There is no operation that adds a kind to a ceiling.
 - **evaluation_and_value_semantics:** Every task has a *ceiling*: the set of effect kinds it may exercise. The root task's ceiling is the program's root grants (SGO-AUTH-002). A spawned or started child inherits its spawner's ceiling unless the spawn narrows it; a ceiling is never widened. An effect operation succeeds only if both hold: the handle permits it, and the calling task's ceiling contains its kind. Attenuation returns a new handle that permits a subset of what the original permits; it never permits more.
 - **ownership_and_lifecycle:** A handle may be passed to other tasks as a value; possession alone does not grant the effect (the ceiling check above).
 - **effect_and_capability_requirements:** This clause defines them.
@@ -17,11 +17,11 @@ Capabilities for effects other than stdout (D24, D25; plan §8). Draft for spec 
 - **cancellation_and_cleanup:** n/a — authority rule.
 - **compile_link_checks:** `SGO_E_TYPE_MISMATCH` for a handle of the wrong kind; no other static check.
 - **runtime_guards:** Handle and ceiling checks at every effect entry point.
-- **tcb_assumptions:** PENDING: the runtime primitive holding task ceilings (TCB-P10 or new).
-- **positive_tests:** A02, A10; PENDING: fixtures.
-- **negative_tests:** A01, A02, A09; PENDING: fixtures.
-- **implementation_coverage:** none yet — W05.
-- **executed_evidence:** none yet.
+- **tcb_assumptions:** Task ceilings are part of the task record, fixed at creation by `sgoAdmit` (TCB-P01; `src/runtime/sgo_auth.go`).
+- **positive_tests:** A02, A10; fixture:auth-simstore-attenuation, fixture:auth-spawn-without.
+- **negative_tests:** A01, A02, A09; fixture:auth-spawn-without, fixture:auth-spawn-without-unknown, fixture:auth-handle-compare-denied.
+- **implementation_coverage:** W05: runtime `src/runtime/sgo_auth.go` (ceilings, `sgoRequire`, `SpawnWithout`); handles `src/sgo/effects.go`, `src/sgo/auth.go`; handle types in `types2/sgo.go` and `sgoadmit`.
+- **executed_evidence:** `sgo/evidence/w05/README.md` (pending W05 closure).
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-AUTH-002 — Root grants declared in sgo.mod
@@ -39,11 +39,11 @@ Capabilities for effects other than stdout (D24, D25; plan §8). Draft for spec 
 - **cancellation_and_cleanup:** n/a — grants are fixed at build time; nothing runs.
 - **compile_link_checks:** The driver records the granted kinds in the build ID (`grants=<kind,kind|none>`); no flag, environment variable, or run-time setting changes them.
 - **runtime_guards:** Root-context check; grant check.
-- **tcb_assumptions:** PENDING: how the linker passes the grant set to the runtime (as for the drain budget).
-- **positive_tests:** A01; PENDING: fixtures.
-- **negative_tests:** A01, A06; PENDING: fixtures.
-- **implementation_coverage:** none yet — W05.
-- **executed_evidence:** none yet.
+- **tcb_assumptions:** The driver passes the grant set to the linker with `-sgogrants` (known kinds once each, canonical order), which sets `runtime.sgoGrants`, parsed when the program starts (as for the drain budget; `-X` stays refused).
+- **positive_tests:** A01; fixture:auth-clock-granted, fixture:auth-wallclock.
+- **negative_tests:** A01, A06; fixture:auth-missing-grant, fixture:auth-root-only, fixture:auth-grant-unknown, fixture:auth-grant-duplicate.
+- **implementation_coverage:** W05: driver `src/cmd/sgo/module.go` (`grant` lines), `build.go` (build ID `grants=`), linker `ld/sgoid.go` (`-sgogrants`), runtime `sgo_auth.go`, `sgo_effects.go` (`sgo_rootGrant`).
+- **executed_evidence:** `sgo/evidence/w05/README.md` (pending W05 closure).
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-AUTH-003 — Effect kinds of subset 1
@@ -59,11 +59,11 @@ Capabilities for effects other than stdout (D24, D25; plan §8). Draft for spec 
 - **allowed_nondeterminism:** `clock`, `wallclock`, `entropy` values; `random` is deterministic given its seed.
 - **failure_and_partial_progress:** A precondition violation fails with `InvalidArgument`; a missing grant, a ceiling without the kind, a handle that does not permit the operation (read-only, outside its prefix), or a revoked handle fail with `MissingCapability`; use of a `*sgo.Random` by another task fails with `SpawnContractViolation`. Every failure happens before any effect. `Entropy` failure of the OS source is `ResourceExhausted` (SGO-ERR-003).
 - **cancellation_and_cleanup:** n/a — none of these operations waits; cancellation is observed at Checkpoint/Sleep as before.
-- **compile_link_checks:** `SGO_E_UNADMITTED` for `simnet` and for any clock, random, or I/O API outside this clause; `SGO_E_DISCARDED_ERROR` for unused `Get`/`Put` errors; a negative constant `Intn`/`Bytes` argument is `SGO_E_INVALID_ARGUMENT`.
+- **compile_link_checks:** `SGO_E_UNADMITTED` for `simnet` and for any clock, random, or I/O API outside this clause; `SGO_E_DISCARDED_ERROR` for unused `Get`/`Put` errors. Argument preconditions are checked at run time (`InvalidArgument`), as for `Sleep`.
 - **runtime_guards:** As SGO-AUTH-001.
-- **tcb_assumptions:** Monotonic clock (TCB-P05); PENDING: wall-clock read and OS CSPRNG primitives (new TCB entries with callers).
-- **positive_tests:** A03, A04, A05, A08; PENDING: fixtures.
-- **negative_tests:** A03, A04, A07; PENDING: fixtures.
-- **implementation_coverage:** none yet — W05.
-- **executed_evidence:** none yet.
+- **tcb_assumptions:** Monotonic clock (TCB-P05); TCB-P13 monotonic and wall-clock reads (`nanotime`, `time_now`), TCB-P14 OS cryptographic randomness (`readRandom`), TCB-P15 the per-program simulated store (copy-on-write map); callers only `src/sgo/effects.go` (`src/runtime/sgo_effects.go`).
+- **positive_tests:** A03, A04, A05, A08; fixture:auth-clock-granted, fixture:auth-wallclock, fixture:auth-random-deterministic, fixture:auth-entropy, fixture:auth-simstore-attenuation, fixture:auth-lend-revoked.
+- **negative_tests:** A03, A04, A07; fixture:auth-lend-revoked, fixture:auth-simstore-prefix-denied, fixture:auth-random-other-task, fixture:auth-entropy-invalid.
+- **implementation_coverage:** W05: handles `src/sgo/effects.go` (PCG-DXSM matches math/rand/v2, `TestRandomMatchesMathRandV2`); primitives `src/runtime/sgo_effects.go`.
+- **executed_evidence:** `sgo/evidence/w05/README.md` (pending W05 closure).
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

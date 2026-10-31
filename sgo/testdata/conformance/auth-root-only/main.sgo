@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+// Root handles come only from the root context, even when the kind is granted.
+func main(root *sgo.Context) error {
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			c := task.Clock()
+			_ = c.Since()
+			return nil
+		})
+	}
+	return nil
+}

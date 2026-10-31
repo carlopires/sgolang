@@ -147,7 +147,7 @@ func buildProgram(arg, target string, drain int64, output func(*module, *pkg) st
 		archives[p.path] = a
 	}
 	exe := filepath.Join(work, "prog")
-	if err := t.link(archives, archives[main.path], exe, t.buildInfo(goos, goarch, drain), drain, env); err != nil {
+	if err := t.link(archives, archives[main.path], exe, t.buildInfo(goos, goarch, drain, m.grants), drain, m.grants, env); err != nil {
 		return "", err
 	}
 	out := output(m, main)
@@ -189,20 +189,25 @@ func (t *toolchain) compileUser(m *module, p *pkg, isMain bool, archives map[str
 }
 
 // buildInfo is the build metadata recorded in every binary (SGO-BUILD-001, SGO-TOOL-001): spec
-// version, admission digest, drain budget, target, toolchain identity, and upstream base commit.
-// It is the binary's build ID, which the linker writes verbatim in every executable format.
-func (t *toolchain) buildInfo(goos, goarch string, drain int64) string {
+// version, admission digest, drain budget, root grants (SGO-AUTH-002), target, toolchain
+// identity, and upstream base commit. It is the binary's build ID, which the linker writes
+// verbatim in every executable format.
+func (t *toolchain) buildInfo(goos, goarch string, drain int64, grants []string) string {
 	budget := "none"
 	if drain > 0 {
 		budget = fmt.Sprint(drain)
 	}
-	return fmt.Sprintf("sgo1/spec=%s/admission=%s/drain=%s/target=%s-%s/toolchain=%s/upstream=%s",
-		t.specVersion, t.admission, budget, goos, goarch, t.version, t.upstream)
+	g := "none"
+	if len(grants) > 0 {
+		g = strings.Join(grants, ",")
+	}
+	return fmt.Sprintf("sgo1/spec=%s/admission=%s/drain=%s/grants=%s/target=%s-%s/toolchain=%s/upstream=%s",
+		t.specVersion, t.admission, budget, g, goos, goarch, t.version, t.upstream)
 }
 
 // link links the program; a drain budget is passed with the linker's dedicated -sgodrainbudget
 // flag, which sets the runtime's budget (-X is refused for S-Go programs).
-func (t *toolchain) link(archives map[string]string, main, exe, buildInfo string, drain int64, env []string) error {
+func (t *toolchain) link(archives map[string]string, main, exe, buildInfo string, drain int64, grants []string, env []string) error {
 	importcfg := exe + ".importcfg"
 	if err := writeImportcfg(importcfg, archives); err != nil {
 		return err
@@ -210,6 +215,9 @@ func (t *toolchain) link(archives map[string]string, main, exe, buildInfo string
 	args := []string{"-o", exe, "-importcfg", importcfg, "-buildmode=exe", "-buildid=" + buildInfo}
 	if drain > 0 {
 		args = append(args, fmt.Sprintf("-sgodrainbudget=%d", drain))
+	}
+	if len(grants) > 0 {
+		args = append(args, "-sgogrants="+strings.Join(grants, ","))
 	}
 	return t.runTool(filepath.Dir(exe), env, "link", append(args, main)...)
 }

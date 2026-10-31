@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-AUTH-003"
+ ],
+ "exit": 2,
+ "stdout": "from child\n",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"MissingCapability\",\"message\":\"SimStore.Get: the handle was lent to a nursery that has closed\",\"position\":null,\"task_id\":0,\"scope_id\":null,\"chain\":[]}\n",
+ "note": "A03: the lent handle works while its nursery is open (the child's Put), is revoked when the nursery closes, and the original keeps working."
+}

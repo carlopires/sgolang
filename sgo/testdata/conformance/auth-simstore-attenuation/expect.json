@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-AUTH-001",
+  "SGO-AUTH-003"
+ ],
+ "exit": 2,
+ "stdout": "read 1\nnested prefix ok\n",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"MissingCapability\",\"message\":\"SimStore.Put on a read-only handle\",\"position\":null,\"task_id\":0,\"scope_id\":null,\"chain\":[]}\n",
+ "note": "A02: Prefix and ReadOnly narrow a handle; nested prefixes concatenate; a read-only handle cannot write."
+}

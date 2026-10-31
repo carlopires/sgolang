@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-AUTH-003"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"InvalidArgument\",\"message\":\"Entropy.Bytes requires 1 <= k <= 1024\",\"position\":null,\"task_id\":0,\"scope_id\":null,\"chain\":[]}\n"
+}

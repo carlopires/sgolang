@@ -320,8 +320,8 @@
  ],
  "summary": {
   "packages": 31,
-  "files": 1033,
-  "files_changed_from_upstream": 17,
+  "files": 1037,
+  "files_changed_from_upstream": 21,
   "services": {
    "active": 5,
    "dormant": 5,
@@ -4325,6 +4325,11 @@
    "upstream_identical": false
   },
   {
+   "path": "src/runtime/sgo_auth.go",
+   "sha256": "bebd9ccf234ec2df71136068b42e243b07eda0e8225c5e20c4d3c502e6a6dcfd",
+   "upstream_identical": false
+  },
+  {
    "path": "src/runtime/sgo_cancel.go",
    "sha256": "4dde8f9d3ccde827eac3453e4665db1835cac693bb2ceb172fa88b06e8c15c0e",
    "upstream_identical": false
@@ -4335,8 +4340,13 @@
    "upstream_identical": false
   },
   {
+   "path": "src/runtime/sgo_effects.go",
+   "sha256": "42ca41f7e39f18a5b1dd4f053ccf6eb2940aa0b1c51887b7c5faa8af957073ba",
+   "upstream_identical": false
+  },
+  {
    "path": "src/runtime/sgo_main.go",
-   "sha256": "a6feed2b3c81ab1bb1d9fd30b72db86880fbe467ef83d05ceebd2d2b050049ed",
+   "sha256": "9ddadf20c90c3d4582703bc87220bd77e8acd2d35ee3c81477c1006a553c1463",
    "upstream_identical": false
   },
   {
@@ -4346,7 +4356,7 @@
   },
   {
    "path": "src/runtime/sgo_ready.go",
-   "sha256": "04fee2033dd3861f61c04ed5ab8b500afd43f6a1e6580d35a88c739362e0eeea",
+   "sha256": "95bbcc261c61e07b601fa95eef339c99b48c523504bbcc776ef8d60e178ad7eb",
    "upstream_identical": false
   },
   {
@@ -4356,7 +4366,7 @@
   },
   {
    "path": "src/runtime/sgo_scope.go",
-   "sha256": "e6433292c5f0a75f98d64ce8ca5bf7696c1bac08559135f7498f628df093d282",
+   "sha256": "3276c1932c3738581c6a6fa0bc99610223e98f367f57b3ec180ae826e6eaf49e",
    "upstream_identical": false
   },
   {
@@ -5470,8 +5480,18 @@
    "upstream_identical": true
   },
   {
+   "path": "src/sgo/auth.go",
+   "sha256": "ade61328118a4610e867a2bfedc5f01562ecd8a139adef0dbffc6a4050814cfd",
+   "upstream_identical": false
+  },
+  {
    "path": "src/sgo/chan.go",
    "sha256": "5828b1488a2df23317d92ae20c876a7fd5272cae36ad29f4c2f053abac33e5ee",
+   "upstream_identical": false
+  },
+  {
+   "path": "src/sgo/effects.go",
+   "sha256": "ef6e9b2e2e7767902dda5ca2610748b7af26edb6d4d3760d2a8a59e4e27c866f",
    "upstream_identical": false
   },
   {

@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-AUTH-003"
+ ],
+ "exit": 0,
+ "stdout": "32 bytes, distinct\n",
+ "note": "A08: Entropy reads the OS cryptographic source (two 32-byte reads differ); it is never the seeded generator."
+}

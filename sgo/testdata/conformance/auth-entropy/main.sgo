@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+// A08: Entropy reads the OS cryptographic source; it is never the seeded generator.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	e := root.Entropy()
+	a := e.Bytes(32)
+	b := e.Bytes(32)
+	if len(a) != 32 || len(b) != 32 {
+		return sgo.NewError("wrong length")
+	}
+	if a == b {
+		return sgo.NewError("two 32-byte reads were equal")
+	}
+	return out.WriteString("32 bytes, distinct\n")
+}

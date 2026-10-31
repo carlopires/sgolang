@@ -12,6 +12,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -19,9 +20,13 @@ import (
 
 // module is the module containing the working directory (SGO-IMP-001).
 type module struct {
-	root string // absolute directory containing sgo.mod
-	path string // module path
+	root   string   // absolute directory containing sgo.mod
+	path   string   // module path
+	grants []string // granted effect kinds, in canonical order (SGO-AUTH-002)
 }
+
+// grantKinds are the effect kinds a grant line may name (SGO-AUTH-003), in canonical order.
+var grantKinds = []string{"clock", "wallclock", "random", "entropy", "simstore"}
 
 // pkg is one package of the module: the .sgo files of one directory.
 type pkg struct {
@@ -62,7 +67,8 @@ func findModule(dir string, t *toolchain) (*module, error) {
 	}
 }
 
-// parseMod reads sgo.mod: exactly the directives "module <path>" and "sgo <spec-version>".
+// parseMod reads sgo.mod: the directives "module <path>" and "sgo <spec-version>", once each,
+// and "grant <kind>" lines naming effect kinds once each (SGO-AUTH-002).
 func (m *module) parseMod(t *toolchain) error {
 	f, err := os.Open(filepath.Join(m.root, "sgo.mod"))
 	if err != nil {
@@ -71,6 +77,7 @@ func (m *module) parseMod(t *toolchain) error {
 	defer f.Close()
 	sc := bufio.NewScanner(f)
 	sawSgo := false
+	granted := map[string]bool{}
 	for line := 1; sc.Scan(); line++ {
 		text := strings.TrimSpace(sc.Text())
 		if i := strings.Index(text, "//"); i >= 0 {
@@ -89,8 +96,21 @@ func (m *module) parseMod(t *toolchain) error {
 			if fields[1] != t.specVersion {
 				return &toolErr{at, "SGO_E_SPEC_VERSION", fmt.Sprintf("module requires S-Go spec %s; this toolchain implements %s", fields[1], t.specVersion), 1}
 			}
+		case fields[0] == "grant":
+			if len(fields) != 2 || !slices.Contains(grantKinds, fields[1]) {
+				return &toolErr{at, "SGO_E_USAGE", fmt.Sprintf("%q does not grant an effect kind (grant one of %s) (SGO-AUTH-002)", text, strings.Join(grantKinds, ", ")), 2}
+			}
+			if granted[fields[1]] {
+				return &toolErr{at, "SGO_E_USAGE", fmt.Sprintf("%s is granted twice (SGO-AUTH-002)", fields[1]), 2}
+			}
+			granted[fields[1]] = true
 		default:
-			return &toolErr{at, "SGO_E_UNADMITTED", fmt.Sprintf("sgo.mod directive %q is not admitted (module and sgo only)", text), 1}
+			return &toolErr{at, "SGO_E_UNADMITTED", fmt.Sprintf("sgo.mod directive %q is not admitted (module, sgo, and grant only)", text), 1}
+		}
+	}
+	for _, k := range grantKinds {
+		if granted[k] {
+			m.grants = append(m.grants, k)
 		}
 	}
 	if m.path == "" {

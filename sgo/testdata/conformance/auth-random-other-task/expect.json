@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-AUTH-003"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"SpawnContractViolation\",\"message\":\"Random.Intn on a generator that belongs to another task\",\"position\":null,\"task_id\":1,\"scope_id\":1,\"chain\":[]}\n"
+}

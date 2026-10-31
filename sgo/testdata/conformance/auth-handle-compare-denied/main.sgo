@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	a := root.Clock()
+	b := root.Clock()
+	if a == b {
+		return nil
+	}
+	return nil
+}

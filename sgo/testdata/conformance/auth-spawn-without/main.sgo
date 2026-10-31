@@ -1,0 +1,24 @@
+package main
+
+import "sgo"
+
+// A02, A10: a child spawned without clock cannot use a clock handle it captured: possession does
+// not grant the effect, and the narrowed ceiling is inherited by its own children.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := root.Clock()
+	_ = c.Since()
+	nursery (n) {
+		n.SpawnWithout("clock", func(task *sgo.Context) error {
+			nursery (m) {
+				m.Spawn(func(grandchild *sgo.Context) error {
+					_ = out.WriteString("grandchild tries the clock\n")
+					_ = c.Since()
+					return nil
+				})
+			}
+			return nil
+		})
+	}
+	return out.WriteString("unreachable\n")
+}

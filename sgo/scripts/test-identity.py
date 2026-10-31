@@ -62,7 +62,7 @@ def main():
         # 0. The binary records its build metadata (SGO-BUILD-001) as its build ID.
         prog = open(os.path.join(tmp, "prog"), "rb").read()
         version = run([os.path.join(TOOLS, "sgo"), "version"], mod, env).stdout.split()
-        want = (f"sgo1/spec={version[3]}/admission={version[5]}/drain=none/target={GOOS}-{GOARCH}/"
+        want = (f"sgo1/spec={version[3]}/admission={version[5]}/drain=none/grants=none/target={GOOS}-{GOARCH}/"
                 f"toolchain={version[1]}/upstream={version[7]}").encode()
         # Mach-O and PE carry it as the text-segment marker; ELF only in the .note.go.buildid
         # note (namesz 4, descsz, type 4 = Go build ID, name "Go\0\0", desc; little-endian

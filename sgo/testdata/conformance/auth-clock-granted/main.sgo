@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+// Clock.Since is monotonic and advances with Sleep (SGO-AUTH-003).
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := root.Clock()
+	a := c.Since()
+	if err := root.Sleep(30); err != nil {
+		return err
+	}
+	b := c.Since()
+	if b < a+30 {
+		return sgo.NewError("clock did not advance across Sleep")
+	}
+	return out.WriteString("monotonic\n")
+}

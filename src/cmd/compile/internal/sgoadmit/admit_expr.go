@@ -12,7 +12,8 @@ import (
 
 // sgoMembers are the admitted members of package sgo (SGO_SPEC_SUBSET0.md §0.2).
 var sgoMembers = map[string]bool{"Context": true, "Nursery": true, "Writer": true, "NewError": true, "IsCancelled": true,
-	"Channel": true, "SendPermit": true, "NewChannel": true, "Ready": true}
+	"Channel": true, "SendPermit": true, "NewChannel": true, "Ready": true,
+	"Clock": true, "WallClock": true, "Random": true, "Entropy": true, "SimStore": true}
 
 // sgoGeneric are the parameterized members of package sgo, admitted only instantiated with one
 // channel element type (SGO-PERMIT-002); user-declared type parameters stay denied (SGO-GEN-001).
@@ -22,7 +23,8 @@ var sgoGeneric = map[string]bool{"Channel": true, "SendPermit": true, "NewChanne
 var chanElemTypes = map[string]bool{"int": true, "bool": true, "string": true, "error": true}
 
 // sgoHandleTypes may appear behind a pointer in types (SGO-TYPE-005).
-var sgoHandleTypes = map[string]bool{"Context": true, "Nursery": true, "Writer": true, "Ready": true}
+var sgoHandleTypes = map[string]bool{"Context": true, "Nursery": true, "Writer": true, "Ready": true,
+	"Clock": true, "WallClock": true, "Random": true, "Entropy": true, "SimStore": true}
 
 // deniedNames are predeclared identifiers denied in subset 0 (sgo/spec/INVENTORY.map "universe").
 // Predeclared names cannot be redeclared (SGO-BIND-004), so every use refers to the predeclared one.

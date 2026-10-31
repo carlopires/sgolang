@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-AUTH-003"
+ ],
+ "exit": 0,
+ "stdout": "match\n",
+ "note": "A08: seed 42 yields math/rand/v2 rand.New(rand.NewPCG(42, 0)).IntN(1000) = 857 960 136 88 185, and the split generator IntN(100) = 73 96 67, on every target."
+}

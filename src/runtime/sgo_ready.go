@@ -47,7 +47,7 @@ var sgoReadyWaiters *sgoReady
 func sgoStart(s *sgoScope, fn func(*sgoTask) error) error {
 	t := sgoCurrent()
 	r := &sgoReady{starter: t}
-	c, err := sgoAdmit(s, fn, r)
+	c, err := sgoAdmit(s, fn, r, 0)
 	if err != nil {
 		// A refused admission is a SpawnContractViolation that unwinds the caller, as for Spawn.
 		panic(err)

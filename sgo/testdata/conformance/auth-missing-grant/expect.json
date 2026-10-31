@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-AUTH-002"
+ ],
+ "exit": 2,
+ "stdout": "before\n",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"MissingCapability\",\"message\":\"Clock: clock is not granted in sgo.mod (SGO-AUTH-002)\",\"position\":null,\"task_id\":0,\"scope_id\":null,\"chain\":[]}\n",
+ "note": "A01: without a grant line the root accessor fails before any effect."
+}

@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-AUTH-001"
+ ],
+ "exit": 2,
+ "stdout": "grandchild tries the clock\n",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"MissingCapability\",\"message\":\"Clock.Since: the task's ceiling does not include clock\",\"position\":null,\"task_id\":2,\"scope_id\":2,\"chain\":[]}\n",
+ "note": "A02, A10: possession of a captured handle does not grant the effect; the ceiling narrowed by SpawnWithout is inherited by the child's children."
+}

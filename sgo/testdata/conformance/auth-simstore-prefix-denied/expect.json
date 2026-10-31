@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-AUTH-003"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"MissingCapability\",\"message\":\"SimStore.Put: key outside the handle's prefix\",\"position\":null,\"task_id\":0,\"scope_id\":null,\"chain\":[]}\n"
+}

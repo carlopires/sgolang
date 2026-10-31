@@ -1,0 +1,29 @@
+package main
+
+import "sgo"
+
+// A02: Prefix and ReadOnly narrow a store handle; nothing widens it again.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	s := root.SimStore()
+	users := s.Prefix("user/")
+	if err := users.Put("user/ana", "1"); err != nil {
+		return err
+	}
+	reader := users.ReadOnly()
+	v, ok, err := reader.Get("user/ana")
+	if err != nil || !ok {
+		return sgo.NewError("lost")
+	}
+	if werr := out.WriteString("read " + v + "\n"); werr != nil {
+		return werr
+	}
+	nested := users.Prefix("ana/")
+	if perr := nested.Put("user/ana/x", "2"); perr != nil {
+		return perr
+	}
+	if werr := out.WriteString("nested prefix ok\n"); werr != nil {
+		return werr
+	}
+	return reader.Put("user/ana", "2")
+}

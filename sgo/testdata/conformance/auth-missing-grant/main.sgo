@@ -1,0 +1,14 @@
+package main
+
+import "sgo"
+
+// A01: without a grant line for clock, the root accessor fails before any effect.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	if err := out.WriteString("before\n"); err != nil {
+		return err
+	}
+	c := root.Clock()
+	_ = c.Since()
+	return out.WriteString("unreachable\n")
+}

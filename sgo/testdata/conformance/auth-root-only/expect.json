@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-AUTH-002"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"MissingCapability\",\"message\":\"Clock called on a context that is not the root context\",\"position\":null,\"task_id\":1,\"scope_id\":1,\"chain\":[]}\n",
+ "note": "Root handles come only from the root context, even for a granted kind."
+}
