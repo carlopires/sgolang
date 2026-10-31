@@ -14,7 +14,12 @@ func inner() {
 func main(root *sgo.Context) error {
 	nursery (n) {
 		n.Spawn(func(task *sgo.Context) error { inner(); return nil })
-		n.Spawn(func(task *sgo.Context) error { panic("sib") })
+		n.Spawn(func(task *sgo.Context) error {
+			// Fail after the grandchild exists: a nursery opened after its ancestor was cancelled
+			// admits no child (R5). The failure of the first child cuts this sleep short.
+			_ = task.Sleep(200)
+			panic("sib")
+		})
 	}
 	return nil
 }
