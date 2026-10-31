@@ -1,6 +1,6 @@
 # S-Go open design decisions
 
-**Version:** 1 · **Date:** 2026-10-30 · **Status:** D01–D22 APPROVED by the user on 2026-10-30 (D01–D21 as recommended; D22 as the user specified).
+**Version:** 1 · **Date:** 2026-10-30 · **Status:** D01–D22 APPROVED by the user on 2026-10-30 (D01–D21 as recommended; D22 as the user specified); D23–D30 APPROVED on 2026-10-31 as recommended.
 
 ## Purpose and precedence
 
@@ -219,15 +219,15 @@ Rules that follow:
 
 ---
 
-# Subset 1 (W05, W06) — PROPOSED 2026-10-31, awaiting user approval
+# Subset 1 (W05, W06) — APPROVED 2026-10-31 as recommended
 
-Spec 0.1.0 (subset 0) denies the features W05 and W06 implement: readiness handshakes (SGO-READY-001), reserve/commit permits (SGO-PERMIT-001), every clock and timer API but `Sleep` (SGO-TIMER-001), randomness (SPEC-RANDOM), generics (SGO-GEN-001), and slices, composite literals, `&`, and package variables (SGO-COMP-001, SGO-BIND-003). W05/W06 therefore start with a specification amendment, and new user-visible API is a language change that needs approval (plan §13: major changes "cannot be slipped into a patch without an explicit decision"; D01–D22 precedent). Nothing below is implemented until approved.
+Spec 0.1.0 (subset 0) denies the features W05 and W06 implement: readiness handshakes (SGO-READY-001), reserve/commit permits (SGO-PERMIT-001), every clock and timer API but `Sleep` (SGO-TIMER-001), randomness (SPEC-RANDOM), generics (SGO-GEN-001), and slices, composite literals, `&`, and package variables (SGO-COMP-001, SGO-BIND-003). W05/W06 therefore start with a specification amendment, and new user-visible API is a language change that needs approval (plan §13: major changes "cannot be slipped into a patch without an explicit decision"; D01–D22 precedent). Approved by the user on 2026-10-31 as recommended.
 
-## D23 — Spec version and subset 1 **[DEFAULT]** · PROPOSED
+## D23 — Spec version and subset 1 **[DEFAULT]** · APPROVED 2026-10-31
 
 **Recommendation.** Subset 1 is spec **0.2.0**, a strict superset of 0.1.0: every 0.1.0 program keeps its meaning (the 194 conformance cases stay valid, reject cases whose construct becomes admitted move to positive cases with a recorded reason). Denial clauses that 0.2.0 admits are replaced by new clauses with a version bump and a CHANGELOG entry (spec-tool's frozen-clause rule). The toolchain identity changes with the admission digest, so 0.1.0 objects are refused by a 0.2.0 toolchain (SGO-IMP-002), as designed. One spec version covers W05 and W06; W07 (native channels) gets 0.3.0.
 
-## D24 — Authority representation **[USER]** · PROPOSED
+## D24 — Authority representation **[USER]** · APPROVED 2026-10-31
 
 **Why it matters.** This is the user-visible capability model (plan §8.2) and constrains every later effect (files, network in W09).
 
@@ -238,13 +238,13 @@ Spec 0.1.0 (subset 0) denies the features W05 and W06 implement: readiness hands
 
 **Recommendation: (c), with (a) as the source-level shape.** Handles keep authority visible in signatures (least privilege is checkable by reading code); the per-task ceiling, inherited at spawn and only narrowed, makes a handle smuggled to a task that was spawned without that grant fail before its effect (A02, A10). Root grants come from the program's `sgo.mod` (D25), never from a public constructor; handles are opaque, cannot be forged, compare by identity only (like `*sgo.Nursery`, SGO-CAP-001), and have a stable trace ID.
 
-## D25 — Root grant policy **[USER]** · PROPOSED
+## D25 — Root grant policy **[USER]** · APPROVED 2026-10-31
 
 **Options.** (a) every program gets every subset-1 effect; (b) the program declares the effects it may use in `sgo.mod` (`grant clock`, `grant random`, …), the driver records them in the build ID, and `root.X()` for an undeclared grant fails with `MissingCapability`; (c) a separate runner policy file supplied at run time.
 
 **Recommendation: (b).** The policy is reviewable with the source, fixed per binary (like the drain budget), and needs no run-time configuration (no environment variable or flag may widen it, consistent with SGO-TOOL-001). (c) can be added later for deployment policies without changing programs.
 
-## D26 — First effects **[USER]** · PROPOSED
+## D26 — First effects **[USER]** · APPROVED 2026-10-31
 
 **Recommendation (plan §8.3 order):**
 1. **Clock:** monotonic time in ms since program start (`clk.Since()`), and a separate wall-clock grant (`clk.Wall()`, UTC ms since the epoch). Monotonic and wall are distinct grants so code can be given one without the other.
@@ -253,11 +253,11 @@ Spec 0.1.0 (subset 0) denies the features W05 and W06 implement: readiness hands
 
 This needs ints and strings only (D29); values like random bytes are returned as strings.
 
-## D27 — Readiness handshake **[USER]** · PROPOSED
+## D27 — Readiness handshake **[USER]** · APPROVED 2026-10-31
 
 **Recommendation (Trio's `start`, plan W05):** `err := n.Start(func(task *sgo.Context, ready *sgo.Ready) error)`. The child is registered in `n` before it runs; the caller waits (a managed wait, cancellation point) until the child calls `ready.Signal()` exactly once (R01), or ends/fails/is cancelled first, in which case `Start` returns that child's error or a cancellation error and the child's outcome is still published to `n` normally (R02, R04: no detached or unaccounted child). A second `Signal` is a `SpawnContractViolation` diagnostic in the child and does not change the accepted readiness (R03). Ready signalling after the waiter was cancelled is accepted and ignored.
 
-## D28 — Typed permit channels without general generics **[USER]** · PROPOSED
+## D28 — Typed permit channels without general generics **[USER]** · APPROVED 2026-10-31
 
 **Why it matters.** Plan §7.1 wants a typed managed-channel API before native `chan` (W07); subset 0 has no generics, so "typed" needs a decision.
 
@@ -268,13 +268,13 @@ This needs ints and strings only (D29); values like random bytes are returned as
 
 **Recommendation: (b).** It gives the plan's typed oracle with the native-channel element typing W07 will need, without opening user generics. Permits follow plan §7.2/7.3 exactly (task-affine, aliases share one terminal state, abandoned permits aborted at task end with a diagnostic, body-exit abort before join, close-vs-commit linearization). Receive permits stay internal (plan §7.4).
 
-## D29 — Value types in subset 1 **[USER]** · PROPOSED
+## D29 — Value types in subset 1 **[USER]** · APPROVED 2026-10-31
 
 **Options.** (a) no new value types: subset-1 APIs use ints, bools, strings, errors, and the new handles; (b) also admit immutable structs and slices of sendable types (requires D01's sharing rules to be extended to aggregates and a copy/immutability story); (c) full Go value types.
 
 **Recommendation: (a) for 0.2.0, (b) as its own decision before W07/W09.** W05/W06's acceptance cases need only scalars and strings. Aggregates change the data-race exclusion of D01 (subset 0 is race-free because every admitted type is immutable or a capability), so they deserve their own design pass rather than riding along.
 
-## D30 — Model first, then runtime **[DEFAULT]** · PROPOSED
+## D30 — Model first, then runtime **[DEFAULT]** · APPROVED 2026-10-31
 
 **Recommendation.** W06 extends the executable model (`sgo/model`) with channels, permits, close, and cancellation, explores bounded histories, and the runtime implementation is checked against the model's reference histories (plan §7.1, W06 gate) before any public permit is admitted. W05's readiness protocol gets the same treatment for R01–R04 races. Neither work package changes subset-0 behavior.
 
@@ -285,3 +285,4 @@ This needs ints and strings only (D29); values like random bytes are returned as
 - 2026-10-30: user approved D01–D21 as recommended ("decision approved").
 - 2026-10-30: user approved D22 (darwin/arm64 first; linux/amd64 real target; linux/arm64 first-class).
 - Follow-up applied: execution plan amended (§1.2, §4.2, §4.5, §4.6, §15.1), start prompt reading order and pin updated, missing inventory families added to `SGO_SPEC_ADMISSION.json` as denied in subset 0, `SGO_SPEC_SUBSET0.md` drafted.
+- 2026-10-31: user approved D23–D30 as recommended ("recommendations are good enough"). Follow-up: spec 0.2.0 clauses for capabilities, root grants, first effects, readiness, and sgo.Channel permits; W05 and W06 implementation starts after those clauses are frozen.
