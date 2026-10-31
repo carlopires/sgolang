@@ -27,6 +27,8 @@ jobs:
         run: sgo/scripts/generated-twin-check.py
       - name: Clause adoption ledger (S04)
         run: sgo/scripts/adoption-check.py
+      - name: Target policy report (W05; effect kinds, handle types, denied routes agree)
+        run: sgo/scripts/policy-report.py
       - name: Conformance cases (validate + runner self-test)
         run: |
           sgo/scripts/conformance.py validate

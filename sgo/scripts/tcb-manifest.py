@@ -29,7 +29,7 @@ EXTS = (".go", ".s", ".h")
 # Trusted primitives relied on by subset 0 (SGO-TCB-001). "upstream" names the current implementation
 # symbols in go1.27.3; "sgo" is the S-Go entry point added by the named work package.
 PRIMITIVES = [
-    {"id": "TCB-P01", "name": "task creation and registration", "clauses": ["SGO-SPAWN-003"], "upstream": ["newproc", "newproc1"], "sgo": "W02: sgoSpawn, sgoTaskStart, sgoTaskMain, sgoTaskExit (sgo_scope.go)", "callers": ["sgo package (Nursery.Spawn)"]},
+    {"id": "TCB-P01", "name": "task creation and registration", "clauses": ["SGO-SPAWN-003"], "upstream": ["newproc", "newproc1"], "sgo": "W02: sgoSpawn/sgoAdmit, sgoTaskStart, sgoTaskMain, sgoTaskExit (sgo_scope.go); W05: Start (sgo_ready.go), SpawnWithout (sgo_auth.go)", "callers": ["sgo package (Nursery.Spawn, Start, SpawnWithout)"]},
     {"id": "TCB-P02", "name": "park and unpark", "clauses": ["SGO-WAIT-001", "SGO-WAIT-002", "SGO-NUR-003"], "upstream": ["gopark", "goready"], "sgo": "W02: goparkunlock/goready in sgoNurseryJoin, sgoTaskExit", "callers": ["TCB-P01", "TCB-P03", "TCB-P05"]},
     {"id": "TCB-P03", "name": "scope state machine and join", "clauses": ["SGO-NUR-002", "SGO-NUR-003", "SGO-NUR-004"], "upstream": [], "sgo": "W02: sgoNurseryOpen, sgoNurseryJoin (sgo_scope.go)", "callers": ["compiler-generated nursery barriers", "sgo package"]},
     {"id": "TCB-P04", "name": "cancellation propagation and query", "clauses": ["SGO-CANCEL-001", "SGO-CANCEL-002", "SGO-CANCEL-004"], "upstream": [], "sgo": "W04", "callers": ["sgo package (Cancel, Checkpoint, Sleep)", "TCB-P03"]},
@@ -40,6 +40,11 @@ PRIMITIVES = [
     {"id": "TCB-P09", "name": "allocation and garbage collection", "clauses": ["SGO-MEM-001", "SGO-TCB-001"], "upstream": ["mallocgc", "newobject", "typedmemmove", "gcStart"], "sgo": "upstream", "callers": ["compiler-generated code", "runtime"]},
     {"id": "TCB-P10", "name": "stack growth and overflow detection", "clauses": ["SGO-STACK-001", "SGO-ERR-003"], "upstream": ["morestack", "newstack"], "sgo": "upstream", "callers": ["function prologues (stacksplit)"]},
     {"id": "TCB-P11", "name": "runtime service goroutines", "clauses": ["SGO-TCB-001"], "upstream": ["see services"], "sgo": "W02: sgoServiceStart/sgoServiceExit classify every newproc creation; enforcement fail-stops unenumerated creation (sgo_service.go)", "callers": ["runtime only"]},
+    {"id": "TCB-P12", "name": "managed channels with send permits", "clauses": ["SGO-PERMIT-002"], "upstream": ["gopark", "goready"], "sgo": "W06: sgoChanReserve/Commit/Abort/Receive/Close, obligation resolution (sgo_chan.go)", "callers": ["sgo package (Channel, SendPermit)", "TCB-P01 (task end)", "TCB-P03 (body exit)"]},
+    {"id": "TCB-P13", "name": "monotonic and wall-clock reads", "clauses": ["SGO-AUTH-003"], "upstream": ["nanotime", "time_now"], "sgo": "W05: sgo_sinceMS, sgo_wallMS (sgo_effects.go)", "callers": ["sgo package (Clock.Since, WallClock.Now)"]},
+    {"id": "TCB-P14", "name": "OS cryptographic randomness", "clauses": ["SGO-AUTH-003"], "upstream": ["readRandom"], "sgo": "W05: sgo_entropy (sgo_effects.go)", "callers": ["sgo package (Entropy.Bytes)"]},
+    {"id": "TCB-P15", "name": "simulated key-value store", "clauses": ["SGO-AUTH-003"], "upstream": [], "sgo": "W05: copy-on-write map, sgo_storeGet/sgo_storePut (sgo_effects.go)", "callers": ["sgo package (SimStore)"]},
+    {"id": "TCB-P16", "name": "task ceilings and root grants", "clauses": ["SGO-AUTH-001", "SGO-AUTH-002"], "upstream": [], "sgo": "W05: ceiling fixed by sgoAdmit, sgoRequire, sgoGrantsInit from the linker's -sgogrants (sgo_auth.go)", "callers": ["sgo package (every effect operation, SpawnWithout, root accessors)", "TCB-P01"]},
 ]
 
 # Every go statement in the runtime closure (OWN-6), keyed by callee and file.
@@ -143,9 +148,14 @@ def build(stored_pkgs, with_upstream):
             print(f"tcb-manifest: {e}", file=sys.stderr)
         die("runtime services do not match the enumerated list")
     fl = files(pkgs, with_upstream)
+    # The allowlist is versioned by the spec it belongs to and identified by its content: a digest
+    # over every listed path and file digest, so any change to the TCB is a new allowlist.
+    allow = hashlib.sha256("".join(f'{f["path"]} {f["sha256"]}\n' for f in sorted(fl, key=lambda f: f["path"])).encode()).hexdigest()
     return {
         "schema_version": 1,
         "clause": "SGO-TCB-002",
+        "spec_version": open(os.path.join(SGO, "spec", "VERSION")).read().strip(),
+        "allowlist_digest": allow,
         "approval": {"decision": "Runtime admitted as trusted target code by exact source identity",
                      "approved_by": "user", "approved_at": "2026-10-30"},
         "upstream_commit": LOCK["upstream"]["commit"],
