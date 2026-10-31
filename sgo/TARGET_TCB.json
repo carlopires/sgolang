@@ -320,8 +320,8 @@
  ],
  "summary": {
   "packages": 31,
-  "files": 1030,
-  "files_changed_from_upstream": 14,
+  "files": 1031,
+  "files_changed_from_upstream": 15,
   "services": {
    "active": 5,
    "dormant": 5,
@@ -4331,7 +4331,7 @@
   },
   {
    "path": "src/runtime/sgo_chan.go",
-   "sha256": "6a7589800ec2c7299c5ff00b7ba4f39ae9f747568a6261bb0bc9db6d34eb44dd",
+   "sha256": "6cafca4e0c13d2723e0b3ee25fc2c501f988ef488c81445258883e78c49b2cd4",
    "upstream_identical": false
   },
   {
@@ -4351,7 +4351,7 @@
   },
   {
    "path": "src/runtime/sgo_scope.go",
-   "sha256": "e5cbe457da1f6338697bbb2ab3588b0e5c83df1e750ba279a4e74d2b86cdef7d",
+   "sha256": "333c6643bed73836909285b16d06f073d40e1e6573111a96d10c7e8180d6bd99",
    "upstream_identical": false
   },
   {
@@ -5463,6 +5463,11 @@
    "path": "src/runtime/zcallback_windows_arm64.s",
    "sha256": "0ebb13b131a7d52571d57de3504c05fd2e533512e29cd2d72db859f27490eba3",
    "upstream_identical": true
+  },
+  {
+   "path": "src/sgo/chan.go",
+   "sha256": "5828b1488a2df23317d92ae20c876a7fd5272cae36ad29f4c2f053abac33e5ee",
+   "upstream_identical": false
   },
   {
    "path": "src/sgo/sgo.go",

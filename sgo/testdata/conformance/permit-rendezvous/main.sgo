@@ -1,0 +1,37 @@
+package main
+
+import "sgo"
+
+// H02: capacity 0; each commit hands its value to a waiting receiver.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	ch := sgo.NewChannel[string](0)
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			p, err := ch.Reserve(task)
+			if err != nil {
+				return err
+			}
+			if ferr := p.Commit("ping"); ferr != nil {
+				return ferr
+			}
+			q, err := ch.Reserve(task)
+			if err != nil {
+				return err
+			}
+			return q.Commit("pong")
+		})
+		v, ok, err := ch.Receive(root)
+		if err != nil || !ok {
+			return sgo.NewError("first receive failed")
+		}
+		w, ok, err := ch.Receive(root)
+		if err != nil || !ok {
+			return sgo.NewError("second receive failed")
+		}
+		if werr := out.WriteString(v + " " + w + "\n"); werr != nil {
+			return werr
+		}
+	}
+	return nil
+}

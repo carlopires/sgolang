@@ -1,0 +1,33 @@
+package main
+
+import "sgo"
+
+// H03: abort restores the reservation exactly once; the aborted permit's value is never
+// published. With capacity 1, the second Reserve would wait forever if the capacity leaked.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	ch := sgo.NewChannel[string](1)
+	p, err := ch.Reserve(root)
+	if err != nil {
+		return err
+	}
+	p.Abort()
+	p.Abort()
+	q, err := ch.Reserve(root)
+	if err != nil {
+		return err
+	}
+	if ferr := q.Commit("kept"); ferr != nil {
+		return ferr
+	}
+	ch.Close()
+	v, ok, err := ch.Receive(root)
+	if err != nil || !ok {
+		return sgo.NewError("receive failed")
+	}
+	_, ok, err = ch.Receive(root)
+	if err != nil || ok {
+		return sgo.NewError("a second value was published")
+	}
+	return out.WriteString(v + "\n")
+}

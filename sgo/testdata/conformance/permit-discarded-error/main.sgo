@@ -1,0 +1,13 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	ch := sgo.NewChannel[string](1)
+	p, err := ch.Reserve(root)
+	if err != nil {
+		return err
+	}
+	p.Commit("x")
+	return nil
+}

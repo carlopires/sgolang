@@ -91,7 +91,8 @@ func isFuncType(T Type) bool {
 	return ok
 }
 
-// isSgoHandle reports whether T is *sgo.Context, *sgo.Nursery, or *sgo.Writer (SGO-TYPE-005).
+// isSgoHandle reports whether T is *sgo.Context, *sgo.Nursery, *sgo.Writer, or an instance of
+// *sgo.Channel[T] or *sgo.SendPermit[T] (SGO-TYPE-005, SGO-PERMIT-002).
 func isSgoHandle(T Type) bool {
 	p, ok := Unalias(T).(*Pointer)
 	if !ok {
@@ -102,7 +103,7 @@ func isSgoHandle(T Type) bool {
 		return false
 	}
 	switch n.obj.name {
-	case "Context", "Nursery", "Writer":
+	case "Context", "Nursery", "Writer", "Channel", "SendPermit":
 		return true
 	}
 	return false

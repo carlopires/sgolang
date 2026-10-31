@@ -1,0 +1,44 @@
+package main
+
+import "sgo"
+
+// H08: close before commit: the commit has no effect and reports closed; a value committed before
+// close stays receivable; Reserve after close is refused.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	ch := sgo.NewChannel[string](2)
+	first, err := ch.Reserve(root)
+	if err != nil {
+		return err
+	}
+	second, err := ch.Reserve(root)
+	if err != nil {
+		return err
+	}
+	if ferr := first.Commit("before close"); ferr != nil {
+		return ferr
+	}
+	ch.Close()
+	if ferr := second.Commit("after close"); ferr != nil {
+		if werr := out.WriteString(ferr.Error() + "\n"); werr != nil {
+			return werr
+		}
+	}
+	if _, ferr := ch.Reserve(root); ferr != nil {
+		if werr := out.WriteString(ferr.Error() + "\n"); werr != nil {
+			return werr
+		}
+	}
+	v, ok, err := ch.Receive(root)
+	if err != nil || !ok {
+		return sgo.NewError("committed value lost")
+	}
+	if werr := out.WriteString(v + "\n"); werr != nil {
+		return werr
+	}
+	_, ok, err = ch.Receive(root)
+	if err != nil || ok {
+		return sgo.NewError("no-effect value was received")
+	}
+	return out.WriteString("closed and empty\n")
+}

@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PERMIT-002"
+ ],
+ "exit": 0,
+ "stdout": "ping pong\n",
+ "note": "H02: capacity 0; each Reserve waits for the receiver and each commit hands the value to it."
+}

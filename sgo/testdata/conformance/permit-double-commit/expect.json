@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PERMIT-002"
+ ],
+ "exit": 2,
+ "stdout": "first commit\n",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"SpawnContractViolation\",\"message\":\"commit of a permit that is already committed\",\"position\":null,\"task_id\":0,\"scope_id\":null,\"chain\":[]}\n",
+ "note": "H04: an alias shares the permit's terminal state; its commit is a contract violation with no second effect."
+}

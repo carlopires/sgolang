@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PERMIT-002"
+ ],
+ "exit": 0,
+ "stdout": "kept\n",
+ "note": "H03: abort restores the capacity exactly once (the second abort has no effect); the next Reserve on the capacity-1 channel succeeds and only the committed value is published."
+}

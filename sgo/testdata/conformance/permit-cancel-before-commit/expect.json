@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PERMIT-002",
+  "SGO-CANCEL-001"
+ ],
+ "exit": 0,
+ "stdout": "aborted on cancellation\nafter\n",
+ "note": "H06: the child reserves, signals readiness on a second channel, and is cancelled while sleeping; it aborts its permit, nothing is published, and the capacity is restored for the owner."
+}

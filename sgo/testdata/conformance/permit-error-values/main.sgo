@@ -1,0 +1,44 @@
+package main
+
+import "sgo"
+
+// H11 (typed lane): values that refer to heap objects (strings built at run time, error values)
+// survive until delivery, through a full buffer and an aborted competing reservation.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	ch := sgo.NewChannel[error](2)
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			s := "e"
+			for i := 0; i < 6; i++ {
+				s = s + "!"
+				p, err := ch.Reserve(task)
+				if err != nil {
+					return err
+				}
+				if i == 2 {
+					p.Abort()
+					continue
+				}
+				if ferr := p.Commit(sgo.NewError(s)); ferr != nil {
+					return ferr
+				}
+			}
+			ch.Close()
+			return nil
+		})
+		for {
+			v, ok, err := ch.Receive(root)
+			if err != nil {
+				return err
+			}
+			if !ok {
+				break
+			}
+			if werr := out.WriteString(v.Error() + "\n"); werr != nil {
+				return werr
+			}
+		}
+	}
+	return nil
+}

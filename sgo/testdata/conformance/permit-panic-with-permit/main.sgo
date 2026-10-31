@@ -1,0 +1,19 @@
+package main
+
+import "sgo"
+
+// H09: a task that fails holding a permit has it aborted before its outcome is published; the
+// diagnostic record's chain names the abandoned permit.
+func main(root *sgo.Context) error {
+	ch := sgo.NewChannel[string](1)
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			_, err := ch.Reserve(task)
+			if err != nil {
+				return err
+			}
+			panic("failed holding a permit")
+		})
+	}
+	return nil
+}

@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PERMIT-002"
+ ],
+ "exit": 0,
+ "stdout": "ChannelClosed: commit after close, no effect\nChannelClosed: reserve on a closed channel\nbefore close\nclosed and empty\n",
+ "note": "H08: close before commit: the commit reports closed with no effect; the value committed before close stays receivable; Reserve after close is refused."
+}

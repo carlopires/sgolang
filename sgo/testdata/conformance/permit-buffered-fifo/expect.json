@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PERMIT-002"
+ ],
+ "exit": 0,
+ "stdout": "a\nb\nc\nd\ne\nclosed\n",
+ "note": "H01, H12: capacity 2; five values received in commit order, each exactly once, then closed and empty."
+}

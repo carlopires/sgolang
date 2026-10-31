@@ -255,6 +255,9 @@ func sgoTaskMain(c *sgoTask, fn func(*sgoTask) error) {
 			// Its chain and origin are taken before recover ends the unwinding (sgo_record.go).
 			var primary any
 			c.origin = sgoOriginOf(c)
+			// Unresolved permits are aborted first, so their PermitAbandoned entries are in the
+			// chain (SGO-PERMIT-002, H09).
+			sgoPermitsResolve(c, nil, true)
 			if p := getg()._panic; p != nil {
 				primary, _ = sgoUnwound(p)
 				c.chain, c.origin = sgoChain(c, p), sgoPrimaryOrigin(p)
@@ -270,6 +273,7 @@ func sgoTaskMain(c *sgoTask, fn func(*sgoTask) error) {
 	}()
 	err := fn(c)
 	normal = true
+	sgoPermitsResolve(c, nil, true)
 	switch {
 	case err == nil:
 		c.outcome = sgoSucceeded
@@ -277,7 +281,13 @@ func sgoTaskMain(c *sgoTask, fn func(*sgoTask) error) {
 		c.outcome = sgoCancelled
 	default:
 		c.outcome, c.err, c.origin = sgoErrored, err, sgoOriginOf(c)
+		// An errored child's chain holds the permits it abandoned (only failures run deferred
+		// panics, so these are its only entries).
+		for _, e := range c.entries {
+			c.chain = append(c.chain, e.info)
+		}
 	}
+	c.entries = nil
 }
 
 // sgoTaskExit publishes the child's outcome and wakes the joining owner if it was the last child.

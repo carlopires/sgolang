@@ -2,7 +2,7 @@
   "schema_version": 1,
   "plan_version": "2.0",
   "spec_version": "0.1.0",
-  "admission_digest": "55d724b874748bfa8b5ee99a126c92335fa9f85863f233772bb86dbfcbdfd547",
+  "admission_digest": "f024ab9487ade5c1c5f645e4dc4360cf77685db5444a681a14ee13f632472162",
   "status": "subset0_frozen_not_admitted",
   "warning": "Spec 0.1.0 is frozen: every row's clauses are fixed by digest. No row is admitted: admission requires implementation, enforcement, and executed evidence (constitution §6), starting in W03.",
   "default_decision": "reject",
@@ -601,7 +601,7 @@
         "SGO-PERMIT-001",
         "SGO-PERMIT-002"
       ],
-      "normative_text_digest": "64f73f6bef93b0656a7bae382bc80d75ba329c6679334dbc05006c85e2989da8",
+      "normative_text_digest": "8cf44bfda3353f0f56bfcf15ce11a6b908bc7426c18cc8385c5279ebdf13f118",
       "admitted_in": [],
       "acceptance_case_ids": [
         "H03",
@@ -613,7 +613,7 @@
       "subset0": "denied",
       "clause_digests": {
         "SGO-PERMIT-001": "d58855ece11c8b1df21ffebabd57714013ab0c75f601ae15960b8e0424510f9b",
-        "SGO-PERMIT-002": "719e0a1161731823c4204988e3d1bde18106a7e1f5aad031de14fbfccacc4714"
+        "SGO-PERMIT-002": "31b61a23472708f92b44c5804b47e32478c29733b09568d7de3f9d0f6c4aa57a"
       },
       "clause_status": {
         "SGO-PERMIT-001": "frozen",

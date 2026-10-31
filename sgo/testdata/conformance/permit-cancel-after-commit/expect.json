@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PERMIT-002",
+  "SGO-CANCEL-001"
+ ],
+ "exit": 0,
+ "stdout": "commit ok\nsent\nonce\n",
+ "note": "H07: cancellation after the commit is not retroactive; the value is received exactly once."
+}

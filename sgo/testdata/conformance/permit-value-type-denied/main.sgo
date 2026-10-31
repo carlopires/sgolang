@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+func use(ch sgo.Channel[int]) {
+}
+
+func main(root *sgo.Context) error {
+	return nil
+}

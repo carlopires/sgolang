@@ -1,0 +1,51 @@
+package main
+
+import "sgo"
+
+func send(task *sgo.Context, ch *sgo.Channel[string], v string) error {
+	p, err := ch.Reserve(task)
+	if err != nil {
+		return err
+	}
+	return p.Commit(v)
+}
+
+// H01, H12: capacity 2; five values arrive in commit order, each exactly once, then closed.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	ch := sgo.NewChannel[string](2)
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			if ferr := send(task, ch, "a"); ferr != nil {
+				return ferr
+			}
+			if ferr := send(task, ch, "b"); ferr != nil {
+				return ferr
+			}
+			if ferr := send(task, ch, "c"); ferr != nil {
+				return ferr
+			}
+			if ferr := send(task, ch, "d"); ferr != nil {
+				return ferr
+			}
+			if ferr := send(task, ch, "e"); ferr != nil {
+				return ferr
+			}
+			ch.Close()
+			return nil
+		})
+		for {
+			v, ok, err := ch.Receive(root)
+			if err != nil {
+				return err
+			}
+			if !ok {
+				break
+			}
+			if werr := out.WriteString(v + "\n"); werr != nil {
+				return werr
+			}
+		}
+	}
+	return out.WriteString("closed\n")
+}

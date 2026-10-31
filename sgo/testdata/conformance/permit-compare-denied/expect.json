@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-PERMIT-002",
+  "SGO-TYPE-005"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_CAPABILITY_MISUSE",
+   "at": "a == b"
+  }
+ ]
+}

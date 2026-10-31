@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PERMIT-002",
+  "SGO-NUR-004"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"Panic\",\"message\":\"failed holding a permit\",\"position\":\"main.sgo:15:4\",\"task_id\":1,\"scope_id\":1,\"chain\":[{\"kind\":\"PermitAbandoned\",\"message\":\"send permit reserved by task 1 was neither committed nor aborted; the runtime aborted it\",\"position\":null}]}\n",
+ "note": "H09: the task fails holding a permit; the runtime aborts it before publishing the outcome, and the record's chain names the abandoned permit."
+}

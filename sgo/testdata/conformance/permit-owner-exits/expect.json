@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PERMIT-002",
+  "SGO-NUR-003"
+ ],
+ "exit": 0,
+ "stdout": "child\n",
+ "note": "H10: the owner's body ends holding the only unit of capacity; it is aborted before the join, so the child's Reserve proceeds and the nursery completes."
+}

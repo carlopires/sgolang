@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PERMIT-002"
+ ],
+ "exit": 0,
+ "stdout": "e!\ne!!\ne!!!!\ne!!!!!\ne!!!!!!\n",
+ "note": "H11 (typed lane): error values built at run time survive until delivery through a full buffer; the aborted third reservation publishes nothing. GC-pressure lifetime is checked by TestSGoChanValueLifetime."
+}

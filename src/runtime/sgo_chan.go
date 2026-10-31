@@ -223,8 +223,10 @@ func sgoChanReserve(c *sgoChan, t *sgoTask) (*sgoPermit, error) {
 		p := &sgoPermit{ch: c, owner: t, scope: t.currentScope(), state: sgoPermitReserved}
 		if c.cap > 0 && int64(len(c.queue))+c.reserved < c.cap {
 			c.reserved++
+			sgoChanCheck(c)
 			unlock(&c.lock)
 			sgoPermitLink(p)
+			sgoChanInject(sgoFaultAfterReserve)
 			return p, nil
 		}
 		if c.cap == 0 {
@@ -237,8 +239,10 @@ func sgoChanReserve(c *sgoChan, t *sgoTask) (*sgoPermit, error) {
 			}
 			if matched {
 				c.reserved++
+				sgoChanCheck(c)
 				unlock(&c.lock)
 				sgoPermitLink(p)
+				sgoChanInject(sgoFaultAfterReserve)
 				return p, nil
 			}
 		}
@@ -255,6 +259,7 @@ func sgoChanCommit(p *sgoPermit, v unsafe.Pointer) error {
 	if p.state != sgoPermitReserved {
 		panic(&sgoViolation{"commit of a permit that is already " + sgoPermitName(p.state)})
 	}
+	sgoChanInject(sgoFaultBeforeCommit)
 	c := p.ch
 	var wake *sgoChanWait
 	var err error
@@ -280,9 +285,11 @@ func sgoChanCommit(p *sgoPermit, v unsafe.Pointer) error {
 	if p.state == sgoPermitFailedClosed {
 		wake = sgoChanClaimAll(&c.senders, wake)
 	}
+	sgoChanCheck(c)
 	unlock(&c.lock)
 	sgoPermitUnlink(p)
 	sgoChanReady(wake)
+	sgoChanInject(sgoFaultAfterCommit)
 	return err
 }
 
@@ -296,15 +303,18 @@ func sgoChanAbort(p *sgoPermit) {
 }
 
 func sgoPermitAbort(p *sgoPermit) {
+	sgoChanInject(sgoFaultBeforeAbort)
 	c := p.ch
 	lock(&c.lock)
 	c.reserved--
 	p.state = sgoPermitAborted
 	wake := sgoPermitReleasePeer(p, nil)
 	wake = sgoChanClaimAll(&c.senders, wake)
+	sgoChanCheck(c)
 	unlock(&c.lock)
 	sgoPermitUnlink(p)
 	sgoChanReady(wake)
+	sgoChanInject(sgoFaultAfterAbort)
 }
 
 // sgoPermitReleasePeer returns a matched receiver to waiting (or to cancelled, if its task was
@@ -342,8 +352,10 @@ func sgoChanReceive(c *sgoChan, t *sgoTask) (unsafe.Pointer, bool, error) {
 			c.queue[0] = nil
 			c.queue = c.queue[1:]
 			wake := sgoChanClaimAll(&c.senders, nil)
+			sgoChanCheck(c)
 			unlock(&c.lock)
 			sgoChanReady(wake)
+			sgoChanInject(sgoFaultAfterReceive)
 			return v, true, nil
 		}
 		if c.closed {
@@ -366,6 +378,7 @@ func sgoChanReceive(c *sgoChan, t *sgoTask) (unsafe.Pointer, bool, error) {
 
 // sgoChanClose is ch.Close(); closing a closed channel has no effect.
 func sgoChanClose(c *sgoChan) {
+	sgoChanInject(sgoFaultBeforeClose)
 	lock(&c.lock)
 	if c.closed {
 		unlock(&c.lock)
@@ -374,8 +387,47 @@ func sgoChanClose(c *sgoChan) {
 	c.closed = true
 	wake := sgoChanClaimAll(&c.senders, nil)
 	wake = sgoChanClaimAll(&c.recvs, wake) // matched receivers stay until their permit resolves
+	sgoChanCheck(c)
 	unlock(&c.lock)
 	sgoChanReady(wake)
+	sgoChanInject(sgoFaultAfterClose)
+}
+
+// sgoChanCheck asserts the channel invariants under c.lock (W06 debug assertions): reservations
+// are not negative and, for C > 0, queued plus reserved never exceeds the capacity. A violation
+// is a runtime defect (SGO-ERR-003), not a program failure.
+func sgoChanCheck(c *sgoChan) {
+	if c.reserved < 0 {
+		throw("sgo: negative channel reservation count")
+	}
+	if c.cap > 0 && int64(len(c.queue))+c.reserved > c.cap {
+		throw("sgo: channel capacity exceeded")
+	}
+	if c.cap == 0 && len(c.queue) != 0 {
+		throw("sgo: rendezvous channel holds a queued value")
+	}
+}
+
+// Fault-injection points before and after each terminal transition (W06). sgoChanFault is set
+// only by the runtime's own tests (export_sgo_test.go); it runs with no lock held.
+const (
+	sgoFaultAfterReserve = iota
+	sgoFaultBeforeCommit
+	sgoFaultAfterCommit
+	sgoFaultBeforeAbort
+	sgoFaultAfterAbort
+	sgoFaultAfterReceive
+	sgoFaultBeforeClose
+	sgoFaultAfterClose
+	sgoFaultPoints
+)
+
+var sgoChanFault func(point int)
+
+func sgoChanInject(point int) {
+	if f := sgoChanFault; f != nil {
+		f(point)
+	}
 }
 
 func sgoPermitOwned(p *sgoPermit, op string) {
@@ -414,15 +466,53 @@ func sgoPermitUnlink(p *sgoPermit) {
 }
 
 // sgoPermitsResolve aborts the calling task's unresolved permits reserved inside scope s (all of
-// them when s is nil: task end), and counts each as abandoned (plan §7.2, H09, H10). It runs at
-// owner-body exit before the join and before a task's outcome is published.
+// them when all is set: task end), and records each as abandoned (plan §7.2, H09, H10): a
+// PermitAbandoned entry in the task's failure sequence, which appears in the diagnostic record's
+// chain if the task fails or returns an error. It runs at owner-body exit before the join and
+// before a task's outcome is published.
 func sgoPermitsResolve(t *sgoTask, s *sgoScope, all bool) {
 	for p := t.permits; p != nil; {
 		next := p.next
 		if all || p.scope == s {
 			t.abandoned++
+			t.seq++
+			t.entries = append(t.entries, sgoEntry{t.seq, sgoFailureInfo{"PermitAbandoned",
+				"send permit reserved by task " + sgoItoa(t.id) + " was neither committed nor aborted; the runtime aborted it", ""}})
 			sgoPermitAbort(p)
 		}
 		p = next
 	}
+}
+
+// Package sgo entry points (src/sgo/chan.go). Values are boxes allocated by package sgo.
+
+//go:linkname sgo_chanNew sgo.runtime_chanNew
+func sgo_chanNew(capacity int) unsafe.Pointer {
+	return unsafe.Pointer(sgoChanNew(int64(capacity)))
+}
+
+//go:linkname sgo_chanReserve sgo.runtime_chanReserve
+func sgo_chanReserve(ch, task unsafe.Pointer) (unsafe.Pointer, error) {
+	p, err := sgoChanReserve((*sgoChan)(ch), (*sgoTask)(task))
+	return unsafe.Pointer(p), err
+}
+
+//go:linkname sgo_chanCommit sgo.runtime_chanCommit
+func sgo_chanCommit(p, v unsafe.Pointer) error {
+	return sgoChanCommit((*sgoPermit)(p), v)
+}
+
+//go:linkname sgo_chanAbort sgo.runtime_chanAbort
+func sgo_chanAbort(p unsafe.Pointer) {
+	sgoChanAbort((*sgoPermit)(p))
+}
+
+//go:linkname sgo_chanReceive sgo.runtime_chanReceive
+func sgo_chanReceive(ch, task unsafe.Pointer) (unsafe.Pointer, bool, error) {
+	return sgoChanReceive((*sgoChan)(ch), (*sgoTask)(task))
+}
+
+//go:linkname sgo_chanClose sgo.runtime_chanClose
+func sgo_chanClose(ch unsafe.Pointer) {
+	sgoChanClose((*sgoChan)(ch))
 }

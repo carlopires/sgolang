@@ -39,9 +39,9 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-PERMIT`: `subset0
 - **cancellation_and_cleanup:** Cancellation before reserve: no permit; after reserve and before commit: the waiting operation returns cancellation and the reservation is aborted; after commit: not retroactive (plan §7.3). For capacity 0, a receive takes effect when a reservation is matched to it: a matched receiver whose task is cancelled completes when that permit resolves (the value on commit; on abort it waits again, or returns cancellation; `ok = false` if the channel was closed); its wait is bounded by the sender's task, whose unresolved permits are aborted at task end. Unmatched waiting senders and receivers return cancellation promptly.
 - **compile_link_checks:** `SGO_E_UNADMITTED` for other type arguments, user generics, native `chan`/`select` (until W07); `SGO_E_DISCARDED_ERROR` for unused `Reserve`/`Commit`/`Receive` errors.
 - **runtime_guards:** Capacity invariant, single terminal state, task affinity, obligation resolution at body exit and task end.
-- **tcb_assumptions:** Park/unpark and cancellation query (TCB-P02, P04); PENDING: the channel primitive's TCB entry.
-- **positive_tests:** H01, H02, H03, H06, H07, H08, H10, H11, H12; PENDING: fixtures and the model's bounded histories (D30).
-- **negative_tests:** H04, H05, H09; PENDING: fixtures.
-- **implementation_coverage:** none yet — W06.
-- **executed_evidence:** none yet.
+- **tcb_assumptions:** Park/unpark and cancellation query (TCB-P02, P04); the managed-channel primitive TCB-P12 (`src/runtime/sgo_chan.go`, linearization notes in `sgo/docs/runtime-design.md` §10).
+- **positive_tests:** H01, H02, H03, H06, H07, H08, H10, H11, H12; fixture:permit-buffered-fifo, fixture:permit-rendezvous, fixture:permit-reserve-abort, fixture:permit-cancel-before-commit, fixture:permit-cancel-after-commit, fixture:permit-close-versus-commit, fixture:permit-owner-exits, fixture:permit-error-values; the model's bounded histories (`sgo/model/chanmodel.go`, D30).
+- **negative_tests:** H04, H05, H09; fixture:permit-double-commit, fixture:permit-foreign-task, fixture:permit-panic-with-permit, fixture:permit-negative-capacity, fixture:permit-elem-denied, fixture:permit-value-type-denied, fixture:permit-discarded-error, fixture:permit-compare-denied.
+- **implementation_coverage:** W06: model `sgo/model/chanmodel.go`; runtime `src/runtime/sgo_chan.go`; API `src/sgo/chan.go`; admission `sgoadmit/admit_expr.go` (`sgoInstance`), handle rules `types2/sgo.go` (`isSgoHandle`).
+- **executed_evidence:** `sgo/evidence/w06/README.md` (model lane, runtime lane against the model's outcome sets with fault injection, typed-channel conformance fixtures).
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

@@ -11,7 +11,15 @@ import (
 )
 
 // sgoMembers are the admitted members of package sgo (SGO_SPEC_SUBSET0.md §0.2).
-var sgoMembers = map[string]bool{"Context": true, "Nursery": true, "Writer": true, "NewError": true, "IsCancelled": true}
+var sgoMembers = map[string]bool{"Context": true, "Nursery": true, "Writer": true, "NewError": true, "IsCancelled": true,
+	"Channel": true, "SendPermit": true, "NewChannel": true}
+
+// sgoGeneric are the parameterized members of package sgo, admitted only instantiated with one
+// channel element type (SGO-PERMIT-002); user-declared type parameters stay denied (SGO-GEN-001).
+var sgoGeneric = map[string]bool{"Channel": true, "SendPermit": true, "NewChannel": true}
+
+// chanElemTypes are the admitted channel element types (D29).
+var chanElemTypes = map[string]bool{"int": true, "bool": true, "string": true, "error": true}
 
 // sgoHandleTypes may appear behind a pointer in types (SGO-TYPE-005).
 var sgoHandleTypes = map[string]bool{"Context": true, "Nursery": true, "Writer": true}
@@ -153,6 +161,9 @@ func (a *admitter) typ(e syntax.Expr) {
 			if sel, ok := e.X.(*syntax.SelectorExpr); ok && isSgo(sel) && sgoHandleTypes[sel.Sel.Value] {
 				return
 			}
+			if ix, ok := e.X.(*syntax.IndexExpr); ok && a.sgoInstance(ix, "Channel", "SendPermit") {
+				return
+			}
 			a.deny(e.Pos(), "pointer type", "SGO-COMP-001")
 			return
 		}
@@ -172,10 +183,35 @@ func (a *admitter) typ(e syntax.Expr) {
 	case *syntax.InterfaceType:
 		a.deny(e.Pos(), "interface type", "SGO-IFACE-001")
 	case *syntax.IndexExpr:
+		if sel, ok := e.X.(*syntax.SelectorExpr); ok && isSgo(sel) && sgoGeneric[sel.Sel.Value] {
+			a.deny(e.Pos(), "sgo."+sel.Sel.Value+"[T] as a non-pointer type", "SGO-TYPE-005")
+			return
+		}
 		a.deny(e.Pos(), "generic type instantiation", "SGO-GEN-001")
 	default:
 		a.deny(e.Pos(), "type expression", "SGO-TYPE-001")
 	}
+}
+
+// sgoInstance reports whether e is sgo.M[T] for one of the members ms; it reports a denial and
+// returns true (the instance is handled) when T is not an admitted channel element type.
+func (a *admitter) sgoInstance(e *syntax.IndexExpr, ms ...string) bool {
+	sel, ok := e.X.(*syntax.SelectorExpr)
+	if !ok || !isSgo(sel) {
+		return false
+	}
+	found := false
+	for _, m := range ms {
+		found = found || sel.Sel.Value == m
+	}
+	if !found {
+		return false
+	}
+	if n, ok := e.Index.(*syntax.Name); ok && chanElemTypes[n.Value] {
+		return true
+	}
+	a.deny(e.Index.Pos(), "channel element type "+syntax.String(e.Index)+" (admitted: int, bool, string, error)", "SGO-PERMIT-002")
+	return true
 }
 
 func isSgo(sel *syntax.SelectorExpr) bool {
@@ -220,6 +256,9 @@ func (a *admitter) expr(e syntax.Expr) {
 	case *syntax.SelectorExpr:
 		a.sgoSelector(e)
 	case *syntax.IndexExpr:
+		if a.sgoInstance(e, "NewChannel") {
+			return
+		}
 		a.deny(e.Pos(), "index expression", "SGO-COMP-001")
 	case *syntax.SliceExpr:
 		a.deny(e.Pos(), "slice expression", "SGO-COMP-001")

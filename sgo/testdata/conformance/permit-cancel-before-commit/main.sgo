@@ -1,0 +1,48 @@
+package main
+
+import "sgo"
+
+// H06: cancellation after Reserve and before Commit: the task aborts its reservation, no value is
+// published, and the capacity is restored.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	ch := sgo.NewChannel[string](1)
+	ready := sgo.NewChannel[bool](1) // orders the reservation before the cancellation
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			p, err := ch.Reserve(task)
+			if err != nil {
+				return err
+			}
+			r, rerr := ready.Reserve(task)
+			if rerr != nil {
+				return rerr
+			}
+			if cerr := r.Commit(true); cerr != nil {
+				return cerr
+			}
+			if ferr := task.Sleep(60000); ferr != nil {
+				p.Abort()
+				_ = out.WriteString("aborted on cancellation\n")
+				return ferr
+			}
+			return p.Commit("late")
+		})
+		if _, _, ferr := ready.Receive(root); ferr != nil {
+			return ferr
+		}
+		n.Cancel()
+	}
+	q, err := ch.Reserve(root)
+	if err != nil {
+		return err
+	}
+	if ferr := q.Commit("after"); ferr != nil {
+		return ferr
+	}
+	v, ok, err := ch.Receive(root)
+	if err != nil || !ok {
+		return sgo.NewError("receive failed")
+	}
+	return out.WriteString(v + "\n")
+}

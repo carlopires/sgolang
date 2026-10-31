@@ -28,7 +28,7 @@ The owner sets `s.joiner` and parks with `goparkunlock(&s.lock, waitReasonSGoJoi
 
 ## 5. Lock order
 
-The scope lock is a leaf: it is never held while calling user code, allocating, acquiring another scope lock, or parking (except through `goparkunlock`, which releases it). W04 kept that property instead of taking scope locks along a scope chain (§9 explains how propagation avoids it), so the complete order is: scope lock → stdout lock (only in the drain-budget decision, which never releases the stdout lock); `sgoSleepLock` alone (runtime timer locks are taken only after it is released, and timer callbacks run with no timer lock held, `unlockAndRun`). The graph is acyclic and no static rank is needed; the locks use the runtime's default rank.
+The scope lock is a leaf: it is never held while calling user code, allocating, acquiring another scope lock, or parking (except through `goparkunlock`, which releases it). W04 kept that property instead of taking scope locks along a scope chain (§9 explains how propagation avoids it), so the complete order is: scope lock → stdout lock (only in the drain-budget decision, which never releases the stdout lock); `sgoSleepLock` alone (runtime timer locks are taken only after it is released, and timer callbacks run with no timer lock held, `unlockAndRun`); channel lock → `sgoSleepLock` (W06, §10: a channel lock is never held while taking another channel's lock, a scope lock, or the stdout lock, and the canceller holds only `sgoSleepLock`). The graph is acyclic and no static rank is needed; the locks use the runtime's default rank.
 
 ## 6. Sealed runtime services (OWN-6, TCB-P11)
 
@@ -56,6 +56,29 @@ Code: `src/runtime/sgo_cancel.go` (TCB-P04, TCB-P05); hooks in `sgoTaskExit` (Ch
 
 *Drain budget.* `sgo build -drain-budget=<ms>` reaches the runtime through the linker's dedicated `-sgodrainbudget` flag (it sets `runtime.sgoDrainBudget`; `-X` stays refused) and is recorded in the build ID. Each own transition starts a monotonic timer; if the scope has not reached FINALIZING when it fires, the runtime takes the stdout lock (a write in progress completes, none starts), writes one `DrainBudgetExceeded` record without allocating, and exits with status 3. Scopes cancelled only in effect need no timer: their ancestor cannot finalize before they close.
 
-## 10. Not yet
+## 10. Managed channels with send permits (W06, TCB-P12)
 
-Lab scheduling (W08). Cleanup contexts with quotas, scope finalizers, readiness handshakes, permits, `recover`, and `sgo.ExitTask` are denied by spec 0.1.0.
+Code: `src/runtime/sgo_chan.go` (protocol), `src/sgo/chan.go` (typed API: boxes values of `T`, checks context ownership); hooks in `sgoTaskMain` and `sgoTaskExit` (task-end resolution), `sgoNurseryJoin` (body-exit resolution), `sgoLeaveRoot`, and `sgoWakeCancelled` (channel waiters); tests: `src/runtime/sgo_chan_test.go`. The executable reference model is `sgo/model/chanmodel.go`; the runtime is checked against its outcome sets (`src/runtime/testdata/sgo-chan-outcomes.json`, a copy kept identical to `sgo/model/testdata/chan-outcomes.json`).
+
+**State.** A channel holds its capacity, the queue of committed values not yet received (C > 0), the count of non-terminal reservations, the closed flag, and FIFO lists of parked senders and receivers, all under the channel lock. A permit holds its channel, owner task, the owner's innermost nursery at Reserve, its state (RESERVED → COMMITTED | FAILED_CLOSED | ABORTED), and for C = 0 the receiver it is matched to. Unresolved permits are on the owner's list, touched only by the owner.
+
+**Linearization points** (all under the channel lock):
+- Reserve: `reserved++` when `len(queue) + reserved < C`, or (C = 0) when a waiting receiver is moved Waiting → Matched; Reserve on a closed channel returns the closed error.
+- Commit: if closed, FAILED_CLOSED with no effect (and a matched receiver is released to see the close); else for C > 0 the value is appended to the queue, and for C = 0 it is handed to the matched receiver, whose state becomes Done. Either way `reserved--`.
+- Abort: ABORTED and `reserved--`; a matched receiver returns to Waiting (or to Cancelled if its task was cancelled meanwhile). Aborting a terminal permit has no effect.
+- Receive: C > 0 dequeues the head (and clears the slot, so the channel holds no reference to a consumed value); C = 0 completes when its matched permit commits. Closed and empty returns `ok = false`.
+- Close: sets closed and wakes every waiting sender and unmatched receiver; matched receivers complete when their permit resolves.
+
+A commit happens-before the receive that returns its value: both take the channel lock.
+
+**Waiting and cancellation.** Waiters share the cancellation registry lock `sgoSleepLock` with Sleep. Order: channel lock, then `sgoSleepLock`; `sgoWakeCancelled` takes only `sgoSleepLock`, channel operations take only the channel lock when they wake a waiter. A waiter registers under both locks and parks releasing both, so neither kind of waker can ready a goroutine that is not parked yet. Waiter states: Waiting (any waker may claim it, by CAS), Done (claimed by a channel operation), Cancelled (claimed by the canceller), Matched (C = 0 receiver bound to a reservation; only that permit resolves it, so the canceller skips it). A C = 0 receiver claims the parked senders after listing itself, so a sender that retries finds it, and readies them only after it has parked (from the park unlock function), which closes the lost-wakeup window where both sides could park.
+
+**Obligations.** Unresolved permits are aborted at owner-body exit before the join (permits whose nursery is the one being joined), at task end before the outcome is published (in `sgoTaskMain`, before the chain is taken), and when main returns. Each is recorded as a `PermitAbandoned` entry in the task's failure sequence, so it appears in the diagnostic record's chain when the task fails or returns an error.
+
+**Guards.** `sgoChanCheck` asserts, after every transition, that reservations are not negative, that `len(queue) + reserved <= C` for C > 0, and that a C = 0 channel queues nothing; a violation is a RuntimeDefect. Commit/abort by a task other than the owner, double commit, and commit after abort are `SpawnContractViolation` with no effect. Fault-injection points before and after each terminal transition (`sgoChanFault`, set only by the runtime's tests) let `TestSGoChanModelFaults` rerun the reference scenarios with yields at every point.
+
+**Selection decisions.** Which waiting receiver a C = 0 reservation is matched to, and which woken sender wins freed capacity, are the allowed nondeterminism of SGO-PERMIT-002; the model explores every choice and the runtime picks the first Waiting receiver in FIFO order and lets woken senders race for the lock.
+
+## 11. Not yet
+
+Lab scheduling (W08). Cleanup contexts with quotas, scope finalizers, readiness handshakes, receive permits, native `chan`/`select` (W07), `recover`, and `sgo.ExitTask` are not admitted.

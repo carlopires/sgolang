@@ -179,3 +179,14 @@ func SGoChanState(c *SGoChan) (reserved int64, senders, recvs int) {
 
 // SGoAbandoned reports how many permits the runtime aborted for the calling task.
 func SGoAbandoned() int64 { return sgoCurrent().abandoned }
+
+// SGoSetChanFault installs f at the channel fault-injection points (nil removes it).
+func SGoSetChanFault(f func(point int)) { sgoChanFault = f }
+
+const SGoChanFaultPoints = sgoFaultPoints
+
+// SGoCommitPtr and SGoReceivePtr send and receive an arbitrary pointer (H11 lifetime tests).
+func SGoCommitPtr(p *SGoPermit, v unsafe.Pointer) error { return sgoChanCommit(p, v) }
+func SGoReceivePtr(c *SGoChan) (unsafe.Pointer, bool, error) {
+	return sgoChanReceive(c, sgoCurrent())
+}

@@ -15,6 +15,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"unsafe"
 )
 
 // Sender scripts, as in sgo/model/chanmodel.go.
@@ -199,6 +200,34 @@ func runChanScenario(t *testing.T, sc chanScenario, rng *rand.Rand) string {
 // TestSGoChanModel checks the runtime channel against the model's outcome sets (D30): every
 // outcome of every run must be an outcome the model admits for the same scenario.
 func TestSGoChanModel(t *testing.T) {
+	runs := 300
+	if testing.Short() {
+		runs = 50
+	}
+	checkChanModel(t, runs)
+}
+
+// TestSGoChanModelFaults reruns the reference scenarios with a yield injected, at random, before
+// and after every terminal transition (W06 fault injection); every outcome must stay admitted.
+func TestSGoChanModelFaults(t *testing.T) {
+	var n atomic.Uint64
+	hits := make([]atomic.Int64, runtime.SGoChanFaultPoints)
+	runtime.SGoSetChanFault(func(point int) {
+		hits[point].Add(1)
+		if x := n.Add(1) * 0x9e3779b97f4a7c15; x>>62 != 0 {
+			runtime.Gosched()
+		}
+	})
+	defer runtime.SGoSetChanFault(nil)
+	checkChanModel(t, 150)
+	for i := range hits {
+		if hits[i].Load() == 0 {
+			t.Errorf("fault point %d never reached", i)
+		}
+	}
+}
+
+func checkChanModel(t *testing.T, runs int) {
 	// A copy of sgo/model/testdata/chan-outcomes.json; the model's tests keep the two identical.
 	data, err := os.ReadFile("testdata/sgo-chan-outcomes.json")
 	if err != nil {
@@ -207,10 +236,6 @@ func TestSGoChanModel(t *testing.T) {
 	var golden map[string]chanGolden
 	if err := json.Unmarshal(data, &golden); err != nil {
 		t.Fatal(err)
-	}
-	runs := 300
-	if testing.Short() {
-		runs = 50
 	}
 	names := make([]string, 0, len(golden))
 	for name := range golden {
@@ -320,4 +345,174 @@ func TestSGoChanTaskAffinity(t *testing.T) {
 			t.Fatalf("reservation leaked: %d", r)
 		}
 	})
+}
+
+// TestSGoChanPanicWithPermit: a task that panics holding a permit has the reservation released
+// before its outcome is published; no capacity leaks (H09).
+func TestSGoChanPanicWithPermit(t *testing.T) {
+	root(t, func() {
+		ch := runtime.SGoChanNew(1)
+		s := mustOpen(t)
+		mustSpawn(t, s, func(*runtime.SGoTask) error {
+			if _, err := runtime.SGoReserve(ch); err != nil {
+				return err
+			}
+			panic("boom")
+		})
+		if r := mustJoin(t, s); r.Outcome != "Failed" {
+			t.Fatalf("outcome %+v", r)
+		}
+		if reserved, _, _ := runtime.SGoChanState(ch); reserved != 0 {
+			t.Fatalf("reservation leaked after the task failed: %d", reserved)
+		}
+		p, err := runtime.SGoReserve(ch) // the capacity is available again
+		if err != nil {
+			t.Fatal(err)
+		}
+		runtime.SGoAbort(p)
+	})
+}
+
+// TestSGoChanValueLifetime: a queued value stays live under GC until it is received, and the
+// channel drops its reference once the value is consumed (H11).
+func TestSGoChanValueLifetime(t *testing.T) {
+	type payload struct {
+		id  int
+		buf [256]byte
+	}
+	var freed atomic.Int64
+	root(t, func() {
+		ch := runtime.SGoChanNew(4)
+		// A competing reservation is aborted before any value is sent: it holds no value and its
+		// capacity is restored.
+		if p, err := runtime.SGoReserve(ch); err != nil {
+			t.Fatal(err)
+		} else {
+			runtime.SGoAbort(p)
+		}
+		for id := range 4 {
+			p, err := runtime.SGoReserve(ch)
+			if err != nil {
+				t.Fatal(err)
+			}
+			v := &payload{id: id}
+			runtime.SetFinalizer(v, func(*payload) { freed.Add(1) })
+			if err := runtime.SGoCommitPtr(p, unsafe.Pointer(v)); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if reserved, _, _ := runtime.SGoChanState(ch); reserved != 0 || len(runtime.SGoChanQueued(ch)) != 4 {
+			t.Fatalf("reserved=%d queued=%v", reserved, runtime.SGoChanQueued(ch))
+		}
+		for range 5 {
+			runtime.GC()
+		}
+		if n := freed.Load(); n != 0 {
+			t.Fatalf("%d queued values were collected before delivery", n)
+		}
+		for id := range 4 {
+			v, ok, err := runtime.SGoReceivePtr(ch)
+			if !ok || err != nil || (*payload)(v).id != id {
+				t.Fatalf("receive %d: ok=%v err=%v", id, ok, err)
+			}
+		}
+	})
+	waitFor(t, "consumed values to be collected", func() bool {
+		runtime.GC()
+		return freed.Load() == 4
+	})
+}
+
+// TestSGoChanConservation: unique payload IDs across concurrent send, receive, close, abort, and
+// cancellation; each successful commit is received or still queued exactly once, and no-effect
+// outcomes never appear in the receive history (H12).
+func TestSGoChanConservation(t *testing.T) {
+	for round := range 20 {
+		for _, capacity := range []int64{0, 1, 3} {
+			conservationRound(t, capacity, int64(round))
+		}
+	}
+}
+
+func conservationRound(t *testing.T, capacity, seed int64) {
+	const senders, perSender, receivers = 6, 20, 3
+	rng := rand.New(rand.NewSource(seed*31 + capacity))
+	closeAfter := rng.Intn(senders * perSender)
+	var (
+		mu        sync.Mutex
+		committed = map[int]bool{}
+		noEffect  = map[int]bool{}
+		received  = map[int]int{}
+		attempts  atomic.Int64
+		done      atomic.Int64 // senders that have finished
+	)
+	ch := runtime.SGoChanNew(capacity)
+	root(t, func() {
+		s := mustOpen(t)
+		for i := range senders {
+			mustSpawn(t, s, func(*runtime.SGoTask) error {
+				defer done.Add(1)
+				for k := range perSender {
+					id := i*perSender + k
+					if attempts.Add(1) == int64(closeAfter) {
+						runtime.SGoClose(ch)
+					}
+					p, err := runtime.SGoReserve(ch)
+					if err != nil {
+						return nil // closed or cancelled: no permit
+					}
+					if id%7 == 3 {
+						runtime.SGoAbort(p)
+						mu.Lock()
+						noEffect[id] = true
+						mu.Unlock()
+						continue
+					}
+					err = runtime.SGoCommit(p, id)
+					mu.Lock()
+					if err == nil {
+						committed[id] = true
+					} else {
+						noEffect[id] = true
+					}
+					mu.Unlock()
+				}
+				return nil
+			})
+		}
+		for range receivers {
+			mustSpawn(t, s, func(*runtime.SGoTask) error {
+				for {
+					v, ok, err := runtime.SGoReceive(ch)
+					if !ok {
+						return err
+					}
+					mu.Lock()
+					received[v]++
+					mu.Unlock()
+				}
+			})
+		}
+		// Close once the senders finish (no effect if already closed) to end the receivers.
+		waitFor(t, "senders", func() bool { return done.Load() == senders })
+		runtime.SGoClose(ch)
+		mustJoin(t, s)
+	})
+	queued := runtime.SGoChanQueued(ch)
+	for _, v := range queued {
+		received[v]++
+	}
+	for id, n := range received {
+		if n != 1 || !committed[id] {
+			t.Fatalf("cap %d: payload %d received %d times (committed %v, no-effect %v)", capacity, id, n, committed[id], noEffect[id])
+		}
+	}
+	for id := range committed {
+		if received[id] != 1 {
+			t.Fatalf("cap %d: committed payload %d was lost", capacity, id)
+		}
+	}
+	if reserved, s, r := runtime.SGoChanState(ch); reserved != 0 || s != 0 || r != 0 {
+		t.Fatalf("cap %d: not quiescent: reserved=%d senders=%d receivers=%d", capacity, reserved, s, r)
+	}
 }

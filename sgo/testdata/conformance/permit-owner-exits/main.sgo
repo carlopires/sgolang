@@ -1,0 +1,28 @@
+package main
+
+import "sgo"
+
+// H10: the owner's body ends holding an unused reservation that a child needs; it is aborted
+// before the join, so the child can reserve and the nursery completes.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	ch := sgo.NewChannel[string](1)
+	nursery (n) {
+		_, err := ch.Reserve(root)
+		if err != nil {
+			return err
+		}
+		n.Spawn(func(task *sgo.Context) error {
+			p, err := ch.Reserve(task)
+			if err != nil {
+				return err
+			}
+			return p.Commit("child")
+		})
+	}
+	v, ok, err := ch.Receive(root)
+	if err != nil || !ok {
+		return sgo.NewError("receive failed")
+	}
+	return out.WriteString(v + "\n")
+}

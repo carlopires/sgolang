@@ -1,0 +1,9 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	ch := sgo.NewChannel[int](-1)
+	ch.Close()
+	return nil
+}

@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	a := sgo.NewChannel[int](1)
+	b := sgo.NewChannel[int](1)
+	if a == b {
+		return sgo.NewError("same")
+	}
+	return nil
+}
