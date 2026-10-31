@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-ERR-002",
+  "SGO-NUR-004"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"Panic\",\"message\":\"owner\",\"position\":\"main.sgo:9:3\",\"task_id\":0,\"scope_id\":null,\"chain\":[{\"kind\":\"Panic\",\"message\":\"c1\",\"position\":\"main.sgo:7:43\"},{\"kind\":\"ChildError\",\"message\":\"c2 err\",\"position\":null}]}\n",
+ "note": "Rule 1: the owner's panic stays primary; every child failure and error joins its chain in creation order."
+}

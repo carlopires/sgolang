@@ -847,6 +847,9 @@ func gopanic(e any) {
 
 	var p _panic
 	p.arg = e
+	if gp.sgo != nil {
+		sgoPanicStart(gp.sgo, &p) // S-Go: failure sequence and origin (SGO-ERR-002)
+	}
 
 	runningPanicDefers.Add(1)
 
@@ -1329,6 +1332,7 @@ func recovery(gp *g) {
 	p := gp._panic
 	pc, sp, fp := p.retpc, uintptr(p.sp), uintptr(p.fp)
 	p0, saveOpenDeferState := p, p.deferBitsPtr != nil && *p.deferBitsPtr != 0
+	var gone uint64 // S-Go: sequence number of the oldest panic this recovery discards
 
 	// The linker records the f-relative address of a call to deferreturn in f's funcInfo.
 	// Assuming a "normal" call to recover() inside one of f's deferred functions
@@ -1367,8 +1371,12 @@ func recovery(gp *g) {
 		}
 
 		runningPanicDefers.Add(-1)
+		gone = p.sgoSeq
 	}
 	gp._panic = p
+	if gp.sgo != nil && gone != 0 {
+		sgoRecovered(gp.sgo, gone) // S-Go: drop chain entries of the recovered unwinding
+	}
 
 	if p == nil { // must be done with signal
 		gp.sig = 0

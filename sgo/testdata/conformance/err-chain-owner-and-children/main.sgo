@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error { panic("c1") })
+		n.Spawn(func(task *sgo.Context) error { return sgo.NewError("c2 err") })
+		panic("owner")
+	}
+	return nil
+}

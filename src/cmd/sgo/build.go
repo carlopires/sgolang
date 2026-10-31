@@ -89,6 +89,12 @@ func buildProgram(arg, target string, output func(*module, *pkg) string) (string
 	if err != nil {
 		return "", err
 	}
+	// The compiler records file positions under its own resolved working directory, so the module
+	// root used for -trimpath must be symlink-free too (e.g. /tmp -> /private/tmp on darwin);
+	// otherwise runtime-record positions would be absolute (SGO-ERR-002).
+	if r, err := filepath.EvalSymlinks(cwd); err == nil {
+		cwd = r
+	}
 	dir := cwd
 	if arg != "" {
 		st, err := os.Stat(arg)
@@ -100,7 +106,14 @@ func buildProgram(arg, target string, output func(*module, *pkg) string) (string
 		case !st.IsDir():
 			arg = filepath.Dir(arg)
 		}
-		dir = filepath.Join(cwd, arg)
+		if filepath.IsAbs(arg) {
+			dir = filepath.Clean(arg)
+		} else {
+			dir = filepath.Join(cwd, arg)
+		}
+		if r, err := filepath.EvalSymlinks(dir); err == nil {
+			dir = r
+		}
 	}
 	m, err := findModule(dir, t)
 	if err != nil {

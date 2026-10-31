@@ -1200,6 +1200,10 @@ type _panic struct {
 	repanicked  bool // whether this panic repanicked
 	goexit      bool
 	deferreturn bool
+
+	// S-Go (sgo_main.go): the panic's position in its task's failure sequence, and the task
+	// and scope where the failure was raised (scope 0 means none) for the diagnostic record.
+	sgoSeq, sgoTask, sgoScope uint64
 }
 
 // savedOpenDeferState tracks the extra state from _panic that's

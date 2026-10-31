@@ -47,7 +47,7 @@ func sgoExitMain(v any) {
 	if !ok {
 		sgoDefect("main returned a non-error value")
 	}
-	sgoWriteRecord(sgoFailureInfo{"MainError", err.Error(), ""}, nil, 0)
+	sgoWriteRecord(sgoFailureInfo{"MainError", err.Error(), ""}, nil, sgoOrigin{})
 	exit(1)
 }
 
@@ -78,13 +78,9 @@ func sgoUnwoundOut(p *_panic) {
 	if !sgoProgram || p.goexit || t == nil || t.id != 0 {
 		return
 	}
-	primary, later := sgoUnwound(p)
+	primary, _ := sgoUnwound(p)
 	f := sgoFailureOf(primary)
-	chain := make([]sgoFailureInfo, len(later))
-	for i, v := range later {
-		chain[i] = sgoFailureOf(v)
-	}
-	sgoWriteRecord(f, chain, 0)
+	sgoWriteRecord(f, sgoChain(t, p), sgoPrimaryOrigin(p))
 	switch f.kind {
 	case "ChildError":
 		exit(1)
@@ -117,7 +113,7 @@ func sgoFailureOf(v any) sgoFailureInfo {
 
 // sgoDefect ends an S-Go program with a RuntimeDefect record and status 4 (SGO-ERR-003).
 func sgoDefect(msg string) {
-	sgoWriteRecord(sgoFailureInfo{"RuntimeDefect", msg, ""}, nil, 0)
+	sgoWriteRecord(sgoFailureInfo{"RuntimeDefect", msg, ""}, nil, sgoOrigin{})
 	exit(4)
 }
 
@@ -130,18 +126,24 @@ func sgoThrowExit(s string) {
 	case "stack overflow", "out of memory":
 		kind = "ResourceExhausted"
 	}
-	var task uint64
+	var o sgoOrigin
 	if gp := getg().m.curg; gp != nil && gp.sgo != nil {
-		task = gp.sgo.id
+		o.task = gp.sgo.id
+		if gp.sgo.scope != nil {
+			o.scope = gp.sgo.scope.id
+		}
 	}
-	sgoWriteRecord(sgoFailureInfo{kind, s, ""}, nil, task)
+	sgoWriteRecord(sgoFailureInfo{kind, s, ""}, nil, o)
 	exit(4)
 }
 
 // sgoWriteRecord writes the single-line diagnostic record of SGO-ERR-002 to stderr. It does not
 // allocate, so it can run on the system stack. Positions come from the compiler (checked
 // arithmetic, panic); failures raised inside the runtime or package sgo have none yet (null).
-func sgoWriteRecord(f sgoFailureInfo, chain []sgoFailureInfo, task uint64) {
+//
+// task_id and scope_id name where the primary failure was raised: the task, and the scope that
+// task was spawned into (null for the root task) (sgo_record.go).
+func sgoWriteRecord(f sgoFailureInfo, chain []sgoFailureInfo, o sgoOrigin) {
 	var w sgoRecordWriter
 	w.str(`{"sgo_diagnostic":1,"kind":`)
 	w.json(f.kind)
@@ -150,8 +152,14 @@ func sgoWriteRecord(f sgoFailureInfo, chain []sgoFailureInfo, task uint64) {
 	w.str(`,"position":`)
 	w.pos(f.pos)
 	w.str(`,"task_id":`)
-	w.uint(task)
-	w.str(`,"scope_id":null,"chain":[`)
+	w.uint(o.task)
+	w.str(`,"scope_id":`)
+	if o.scope == 0 {
+		w.str("null")
+	} else {
+		w.uint(o.scope)
+	}
+	w.str(`,"chain":[`)
 	for i, c := range chain {
 		if i > 0 {
 			w.byte(',')

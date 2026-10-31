@@ -58,7 +58,7 @@ func SGoScopeOf(p unsafe.Pointer) *SGoScope { return (*sgoScope)(p) }
 func SGoNest() int { return len(sgoCurrent().nest) }
 
 func SGoJoin(s *SGoScope) (SGoResult, error) {
-	r, err := sgoNurseryJoin(s)
+	r, _, err := sgoNurseryJoin(s)
 	return SGoResult{sgoOutcomeName(r.Outcome), r.Primary, r.Err, r.Panic, r.Children, r.Failures, r.Cancelled}, err
 }
 

@@ -43,19 +43,27 @@ func sgoNurseryEnter() unsafe.Pointer {
 // sgoNurseryExit completes a nursery on a normal exit (end of block, or an exit crossing it):
 // wait for its children, close it, and apply its outcome (SGO-NUR-003, SGO-NUR-004 rules 2-4).
 func sgoNurseryExit(p unsafe.Pointer) {
-	r, err := sgoNurseryJoin((*sgoScope)(p))
+	r, bad, err := sgoNurseryJoin((*sgoScope)(p))
 	if err != nil {
 		panic(err)
 	}
-	switch r.Outcome {
-	case sgoFailed:
+	if r.Outcome == sgoSucceeded {
+		return // Rule 4: normal completion.
+	}
+	// The primary keeps its origin; its chain and the other children's failures follow it in the
+	// diagnostic chain (SGO-ERR-002).
+	t := getg().sgo
+	for _, c := range bad {
+		if c.id == r.Primary {
+			sgoPropagate(t, bad, c)
+		}
+	}
+	if r.Outcome == sgoFailed {
 		// Rule 2: unwind with the failure of the failed child with the smallest creation ID.
 		panic(r.Panic)
-	case sgoErrored:
-		// Rule 3: unwind with ChildError carrying the errored child's message.
-		panic(error(&sgoFailure{"ChildError", r.Err.Error(), ""}))
 	}
-	// Rule 4: normal completion. (Non-primary child failures go to the diagnostic chain, W03 ERR.)
+	// Rule 3: unwind with ChildError carrying the errored child's message.
+	panic(error(&sgoFailure{"ChildError", r.Err.Error(), ""}))
 }
 
 // sgoUnwindNurseries completes, innermost first, the calling task's open nurseries that were
@@ -74,8 +82,11 @@ func sgoUnwindNurseries(off uintptr, all bool) {
 		if !all && s.frame < off {
 			return
 		}
-		if _, err := sgoNurseryJoin(s); err != nil {
+		_, bad, err := sgoNurseryJoin(s)
+		if err != nil {
 			throw("sgo: unwinding join failed") // the innermost scope is the caller's own: a defect
 		}
+		// Rule 1: the owner's failure stays primary; every child failure joins its chain.
+		sgoRecord(t, bad, nil)
 	}
 }

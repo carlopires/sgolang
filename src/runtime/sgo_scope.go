@@ -85,6 +85,19 @@ type sgoTask struct {
 	outcome sgoOutcome
 	err     error // Errored: the returned error
 	panic   any   // Failed: the panic value
+
+	// Diagnostic record state (sgo_record.go). seq numbers the task's failures; pend is the
+	// origin for the panic a nursery is about to propagate; entries are chain entries recorded by
+	// joins during the current unwinding. Once Failed or Errored, chain is the task's own chain
+	// and origin is where its primary failure was raised.
+	seq  uint64
+	pend struct {
+		seq    uint64
+		origin sgoOrigin
+	}
+	entries []sgoEntry
+	chain   []sgoFailureInfo
+	origin  sgoOrigin
 }
 
 // sgoScopeResult is the immutable outcome of a closed scope (SGO-NUR-004 rules 2-4; rule 1, the
@@ -222,15 +235,19 @@ func sgoTaskMain(c *sgoTask, fn func(*sgoTask) error) {
 		if !normal {
 			// The child's failure is the first one of its unwinding (SGO-DEF-004), not a later
 			// failure raised by a deferred call, which is what recover would return.
+			// Its chain and origin are taken before recover ends the unwinding (sgo_record.go).
 			var primary any
+			c.origin = sgoOriginOf(c)
 			if p := getg()._panic; p != nil {
 				primary, _ = sgoUnwound(p)
+				c.chain, c.origin = sgoChain(c, p), sgoPrimaryOrigin(p)
 			}
 			v := recover()
 			if primary == nil {
 				primary = v
 			}
 			c.outcome, c.panic = sgoFailed, primary
+			c.entries = nil
 		}
 		sgoTaskExit(c)
 	}()
@@ -242,7 +259,7 @@ func sgoTaskMain(c *sgoTask, fn func(*sgoTask) error) {
 	case sgoIsCancelled(err):
 		c.outcome = sgoCancelled
 	default:
-		c.outcome, c.err = sgoErrored, err
+		c.outcome, c.err, c.origin = sgoErrored, err, sgoOriginOf(c)
 	}
 }
 
@@ -281,11 +298,12 @@ func sgoTaskExit(c *sgoTask) {
 }
 
 // sgoNurseryJoin completes the calling task's innermost nursery s: it waits until no registered child
-// is live, closes s, and returns its outcome (SGO-NUR-003, SGO-NUR-004).
-func sgoNurseryJoin(s *sgoScope) (sgoScopeResult, error) {
+// is live, closes s, and returns its outcome (SGO-NUR-003, SGO-NUR-004) and its children that
+// ended Failed or Errored, in creation order (for the diagnostic chain, sgo_record.go).
+func sgoNurseryJoin(s *sgoScope) (sgoScopeResult, []*sgoTask, error) {
 	t := sgoCurrent()
 	if t == nil || s == nil || s.owner != t || t.currentScope() != s {
-		return sgoScopeResult{}, &sgoViolation{"join of a nursery that is not the caller's innermost nursery"}
+		return sgoScopeResult{}, nil, &sgoViolation{"join of a nursery that is not the caller's innermost nursery"}
 	}
 	lock(&s.lock)
 	if s.state == sgoOpen {
@@ -323,9 +341,17 @@ func sgoNurseryJoin(s *sgoScope) (sgoScopeResult, error) {
 	s.snapshot = r
 	s.state = sgoClosed
 	// Drop child records so a retained handle keeps only the snapshot alive (plan §5.2).
+	first := s.first
 	s.first, s.last = nil, nil
 	unlock(&s.lock)
 	t.nest[len(t.nest)-1] = nil
 	t.nest = t.nest[:len(t.nest)-1]
-	return r, nil
+	// The children are finished and no longer change; collect the failed ones outside the lock.
+	var bad []*sgoTask
+	for c := first; c != nil; c = c.sibling {
+		if c.outcome == sgoFailed || c.outcome == sgoErrored {
+			bad = append(bad, c)
+		}
+	}
+	return r, bad, nil
 }

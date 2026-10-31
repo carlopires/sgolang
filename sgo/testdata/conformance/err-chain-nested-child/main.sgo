@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+func inner() {
+	nursery (m) {
+		m.Spawn(func(task *sgo.Context) error {
+			defer func() { panic("deferred in c") }()
+			panic("deep")
+		})
+	}
+}
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error { inner(); return nil })
+		n.Spawn(func(task *sgo.Context) error { panic("sib") })
+	}
+	return nil
+}

@@ -1,0 +1,12 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-ERR-002",
+  "SGO-NUR-004",
+  "SGO-DEF-004"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"Panic\",\"message\":\"deep\",\"position\":\"main.sgo:9:4\",\"task_id\":3,\"scope_id\":2,\"chain\":[{\"kind\":\"Panic\",\"message\":\"deferred in c\",\"position\":\"main.sgo:8:19\"},{\"kind\":\"Panic\",\"message\":\"sib\",\"position\":\"main.sgo:17:43\"}]}\n",
+ "note": "A propagated failure keeps its origin (task 3 in scope 2) and its own chain, followed by the sibling's failure."
+}
