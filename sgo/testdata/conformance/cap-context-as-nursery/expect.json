@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-CAP-001",
+  "SGO-TYPE-002"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_TYPE_MISMATCH",
+   "at": "root)"
+  }
+ ],
+ "note": "X02/S06: a task Context is not a nursery capability; passing one where a *sgo.Nursery is required is rejected at the argument."
+}

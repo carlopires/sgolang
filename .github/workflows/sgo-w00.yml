@@ -70,6 +70,9 @@ jobs:
       - name: No flag, mode, or environment reopens stock Go (S01, S15)
         run: sgo/scripts/test-flags.py
 
+      - name: Spec and inventory gates reject mutations (S02, S03, S18)
+        run: sgo/scripts/test-mutations.py
+
       - name: Every admitted target builds from this host (sgo build -target)
         run: |
           plat="$(uname -s | tr A-Z a-z)_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"

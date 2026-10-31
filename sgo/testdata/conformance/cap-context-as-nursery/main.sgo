@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+func spawnOne(n *sgo.Nursery) {
+	n.Spawn(func(task *sgo.Context) error { return nil })
+}
+
+func main(root *sgo.Context) error {
+	spawnOne(root)
+	return nil
+}
