@@ -367,6 +367,10 @@ func Main(arch *sys.Arch, theArch Arch) {
 	bench.Start("loadlib")
 	ctxt.loadlib()
 
+	bench.Start("sgoid")
+	ctxt.sgoCheckIdentity() // S-Go identity of every linked package (sgoid.go)
+	exitIfErrors()
+
 	bench.Start("inittasks")
 	ctxt.inittasks()
 

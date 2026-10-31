@@ -59,11 +59,18 @@ func ReadPackage(ctxt *types2.Context, imports map[string]*types2.Package, input
 		assert(r.Len() == 0)
 	}
 
+	// S-Go identity line of the imported package (SGO-IMP-002), checked by the noder.
+	SGoIdentities[pkg.Path()] = r.String()
+
 	r.Sync(pkgbits.SyncEOF)
 
 	pkg.MarkComplete()
 	return pkg
 }
+
+// SGoIdentities maps the path of every imported package to the S-Go identity line recorded in its
+// export data (cmd/compile/internal/noder/sgo_identity.go).
+var SGoIdentities = map[string]string{}
 
 type reader struct {
 	pkgbits.Decoder

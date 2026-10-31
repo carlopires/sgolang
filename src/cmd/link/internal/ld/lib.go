@@ -2521,7 +2521,12 @@ func ldobj(ctxt *Link, f *bio.Reader, lib *sym.Library, length int64, pn string,
 
 	// First, check that the basic GOOS, GOARCH, and Version match.
 	if line != wantHdr && !*flagF {
-		Errorf("%s: linked object header mismatch:\nhave %q\nwant %q\n", pn, line, wantHdr)
+		if !objabi.IsSGoHeader(line) {
+			// SGO-IMP-002: every linked object must carry S-Go identity; stock Go objects do not.
+			Errorf("sgo:1:1: SGO_E_FOREIGN_OBJECT: %s (package %s) has no S-Go identity: %q", pn, lib.Pkg, strings.TrimSpace(line))
+		} else {
+			Errorf("%s: linked object header mismatch:\nhave %q\nwant %q\n", pn, line, wantHdr)
+		}
 	}
 
 	// Skip over exports and other info -- ends with \n!\n.
@@ -2639,7 +2644,10 @@ func hostObject(ctxt *Link, objname string, path string) {
 
 func checkFingerprint(lib *sym.Library, libfp goobj.FingerprintType, src string, srcfp goobj.FingerprintType) {
 	if libfp != srcfp {
-		Exitf("fingerprint mismatch: %s has %x, import from %s expecting %x", lib, libfp, src, srcfp)
+		// S-Go (SGO-IMP-002): the importer was compiled against a different build of lib. This is
+		// stricter than the contract digest (an importer may contain inlined bodies of lib), so any
+		// change of lib requires rebuilding its importers.
+		Exitf("sgo:1:1: SGO_E_STALE_CONTRACT: %s changed after %s was compiled against it (fingerprint %x, expected %x); rebuild %s", lib, src, libfp, srcfp, src)
 	}
 }
 

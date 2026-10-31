@@ -245,6 +245,11 @@ func readExportData(f *os.File) (data string, err error) {
 	}
 
 	if expect := objabi.HeaderString(); abihdr != expect {
+		if !objabi.IsSGoHeader(abihdr) {
+			// SGO-IMP-002: export data without S-Go identity (e.g. written by a stock Go compiler).
+			err = fmt.Errorf("SGO_E_FOREIGN_OBJECT: export data has no S-Go identity: [%s]", strings.TrimSpace(abihdr))
+			return
+		}
 		err = fmt.Errorf("object is [%s] expected [%s]", abihdr, expect)
 		return
 	}

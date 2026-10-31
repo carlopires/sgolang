@@ -350,6 +350,11 @@ func writePkgStub(m posMap, noders []*noder) string {
 			w.obj(scope.Lookup(name), nil)
 		}
 
+		// S-Go identity (SGO-IMP-002, sgo_identity.go).
+		contract := sgoContract(pkg)
+		w.String(sgoIdentityLine(contract))
+		sgoEmitIdentity(base.Ctxt.Pkgpath, contract, sgoCheckImports(m, noders, pkg))
+
 		w.Sync(pkgbits.SyncEOF)
 		w.Flush()
 	}
@@ -440,6 +445,8 @@ func readPackage(pr *pkgReader, importpkg *types.Pkg, localStub bool) {
 			}
 		}
 
+		r.String() // S-Go identity; verified on import by the types2 importer (sgo_identity.go)
+
 		r.Sync(pkgbits.SyncEOF)
 	}
 
@@ -485,6 +492,7 @@ func writeUnifiedExport(out io.Writer) {
 	assert(privateRootWriter.Idx == pkgbits.PrivateRootIdx)
 
 	var selfPkgIdx index
+	var sgoIdentity string
 
 	{
 		pr := localPkgReader
@@ -520,6 +528,8 @@ func writeUnifiedExport(out io.Writer) {
 			}
 		}
 
+		sgoIdentity = r.String() // copied into the export data below (SGO-IMP-002)
+
 		r.Sync(pkgbits.SyncEOF)
 	}
 
@@ -548,6 +558,8 @@ func writeUnifiedExport(out io.Writer) {
 			w.Reloc(pkgbits.SectionObj, idx)
 			w.Len(0)
 		}
+
+		w.String(sgoIdentity)
 
 		w.Sync(pkgbits.SyncEOF)
 		w.Flush()

@@ -55,6 +55,9 @@ jobs:
           plat="$(uname -s | tr A-Z a-z)_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
           sgo/scripts/conformance.py run --sgo "pkg/tool/$plat/sgo" --pending sgo/testdata/conformance-pending.json
 
+      - name: Package identity checks (SGO-IMP-002; stale and foreign objects)
+        run: sgo/scripts/test-identity.py
+
       - name: Every admitted target builds from this host (sgo build -target)
         run: |
           plat="$(uname -s | tr A-Z a-z)_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
