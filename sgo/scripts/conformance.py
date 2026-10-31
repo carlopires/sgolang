@@ -250,9 +250,13 @@ if e["kind"] == "reject":
         print(f"{pos}: {d['code'] if mode == 'good' else 'SGO_E_WRONG'}: fake", file=sys.stderr)
     sys.exit(1)
 stdout = e.get("stdout", (e.get("stdout_any_of") or [""])[0])
+stderr = e.get("stderr_exact", "")
+if not stderr and ("stderr_kind" in e or "stderr_message" in e):
+    stderr = json.dumps({"sgo_diagnostic": 1, "kind": e.get("stderr_kind", "Panic"), "message": e.get("stderr_message", ""),
+                         "position": None, "task_id": 0, "scope_id": None, "chain": []}) + "\n"
 code = e.get("exit", 0) if mode == "good" else 99
 with open(out, "w") as f:
-    f.write("#!/usr/bin/env python3\nimport sys\nsys.stdout.write(" + repr(stdout) + ")\nsys.exit(" + str(code) + ")\n")
+    f.write("#!/usr/bin/env python3\nimport sys\nsys.stdout.write(" + repr(stdout) + ")\nsys.stderr.write(" + repr(stderr) + ")\nsys.exit(" + str(code) + ")\n")
 os.chmod(out, 0o755)
 '''
 
