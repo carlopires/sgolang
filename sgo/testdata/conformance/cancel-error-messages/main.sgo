@@ -1,0 +1,35 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	owner := ""
+	nursery (a) {
+		a.Spawn(func(task *sgo.Context) error {
+			nursery (b) {
+				b.Spawn(func(t2 *sgo.Context) error {
+					err := t2.Sleep(60000)
+					_ = out.WriteString("grandchild: " + err.Error() + "\n")
+					return err
+				})
+			}
+			err := task.Checkpoint()
+			_ = out.WriteString("child: " + err.Error() + "\n")
+			return err
+		})
+		if err := root.Sleep(100); err != nil {
+			return err
+		}
+		a.Cancel()
+		owner = "owner inside: " + root.Checkpoint().Error() + "\n"
+	}
+	if werr := out.WriteString(owner); werr != nil {
+		return werr
+	}
+	err := root.Checkpoint()
+	if err == nil {
+		return out.WriteString("after: not cancelled\n")
+	}
+	return err
+}

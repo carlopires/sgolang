@@ -28,7 +28,7 @@ The owner sets `s.joiner` and parks with `goparkunlock(&s.lock, waitReasonSGoJoi
 
 ## 5. Lock order
 
-The scope lock is a leaf: it is never held while calling user code, allocating, acquiring another scope lock, or parking (except through `goparkunlock`, which releases it). It currently uses the runtime's default (unranked) lock rank; when cancellation (W04) needs to take scope locks along a scope chain, the order will be parent before child and a static lock rank will be added to `mklockrank.go`.
+The scope lock is a leaf: it is never held while calling user code, allocating, acquiring another scope lock, or parking (except through `goparkunlock`, which releases it). W04 kept that property instead of taking scope locks along a scope chain (§9 explains how propagation avoids it), so the complete order is: scope lock → stdout lock (only in the drain-budget decision, which never releases the stdout lock); `sgoSleepLock` alone (runtime timer locks are taken only after it is released, and timer callbacks run with no timer lock held, `unlockAndRun`). The graph is acyclic and no static rank is needed; the locks use the runtime's default rank.
 
 ## 6. Sealed runtime services (OWN-6, TCB-P11)
 
@@ -44,6 +44,18 @@ Code: `src/runtime/sgo_nursery.go`, one hook in `panic.go` (`(*_panic).nextFrame
 
 Unwinding does not run that code. `sgoNurseryEnter` records `stack.hi − SP` of the executing frame in `sgoScope.frame` (an offset, so stack copying does not invalidate it, §2.4). After `nextFrame` finds the next frame with deferred calls, and only for real unwinding (not `deferreturn`), `sgoUnwindNurseries` joins the task's open nurseries whose offset is at least that frame's offset (that frame and the frames already left), innermost first; when no frame is left it joins all of them. So in every frame the active nurseries complete before the frame's deferred calls run (SGO-DEF-005), and outer frames' nurseries stay open until unwinding reaches them. The join cannot raise during unwinding (rule 1: the unwinding failure stays primary). Not yet: cancelling the scope before the unwinding join (W04), and recording non-primary child failures in the diagnostic chain (SGO-ERR-002, W03 diagnostics).
 
-## 9. Not in W02
+## 9. Cancellation, Sleep, and the drain budget (W04)
 
-Cancellation (W04), owner-unwinding barriers and nursery syntax (W03), the public `sgo` package (W03), lab scheduling (W08). `sgoIsCancelled` returns false until W04 creates cancellation errors.
+Code: `src/runtime/sgo_cancel.go` (TCB-P04, TCB-P05); hooks in `sgoTaskExit` (ChildFailed), `sgoUnwindNurseries` (Unwind), `sgoSpawn` (R5), the join (drain timer stop); tests: `src/runtime/sgo_cancel_test.go`.
+
+*Own transitions.* `n.Cancel()`, a child ending Errored/Failed (before its outcome is published), and the owner's body unwinding through the nursery move the scope OPEN/JOINING → CANCELLING under its lock and record the cause; later requests have no effect. The transition stores the next value of a process-wide sequence in `s.cancelSeq` (atomic; read without the lock).
+
+*Propagation is computed.* A scope's `parent` is the owner's current scope when it was opened, so a task's linked scopes (its current scope up to its spawn scope) and everything that transitively cancels them lie on one parent chain. A scope is CANCELLING in effect if it or a scope above it on the chain cancelled on its own (cause Ancestor otherwise). Nothing is written into inner scopes, so no second scope lock is ever taken; inner cancellation never reaches outer scopes and stops affecting a task once its nursery closes and leaves the chain; nurseries opened inside a cancelled scope are cancelling in effect and admit no child (R5). The cause a task reports is that of the outermost linked scope cancelled in effect: its own cause if its own transition has the smallest sequence number on the chain from it upward, else "ancestor scope <id> cancelled" for the scope that has.
+
+*Sleep.* A sleeping task registers a fresh record in `sgoSleepers` under `sgoSleepLock`, after re-checking cancellation under that lock, and parks with an unlock function that releases the lock and only then arms the record's timer (so the timer can never ready a goroutine that is not parked). A canceller makes its transition visible before scanning the registry under the same lock, so a wake-up cannot be lost. The timer and a canceller race on the record's state word; exactly one wins and readies the goroutine. A stale timer of a finished record fails that CAS and does nothing; records are never reused.
+
+*Drain budget.* `sgo build -drain-budget=<ms>` reaches the runtime through the linker's dedicated `-sgodrainbudget` flag (it sets `runtime.sgoDrainBudget`; `-X` stays refused) and is recorded in the build ID. Each own transition starts a monotonic timer; if the scope has not reached FINALIZING when it fires, the runtime takes the stdout lock (a write in progress completes, none starts), writes one `DrainBudgetExceeded` record without allocating, and exits with status 3. Scopes cancelled only in effect need no timer: their ancestor cannot finalize before they close.
+
+## 10. Not yet
+
+Lab scheduling (W08). Cleanup contexts with quotas, scope finalizers, readiness handshakes, permits, `recover`, and `sgo.ExitTask` are denied by spec 0.1.0.

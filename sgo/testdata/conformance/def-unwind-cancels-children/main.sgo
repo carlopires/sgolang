@@ -1,0 +1,26 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			err := task.Sleep(60000)
+			if err != nil {
+				_ = out.WriteString("child saw: " + err.Error() + "\n")
+			}
+			return err
+		})
+		n.Spawn(func(task *sgo.Context) error {
+			if err := task.Sleep(60000); err != nil {
+				panic("cleanup failed")
+			}
+			return nil
+		})
+		if err := root.Sleep(50); err != nil {
+			return err
+		}
+		panic("owner")
+	}
+}

@@ -1,0 +1,13 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-DEF-005",
+  "SGO-CANCEL-001",
+  "SGO-NUR-004",
+  "SGO-ERR-002"
+ ],
+ "exit": 2,
+ "stdout": "child saw: cancelled: unwind\n",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"Panic\",\"message\":\"owner\",\"position\":\"main.sgo:24:3\",\"task_id\":0,\"scope_id\":null,\"chain\":[{\"kind\":\"Panic\",\"message\":\"cleanup failed\",\"position\":\"main.sgo:17:5\"}]}\n",
+ "note": "C11/P04: the owner's panic cancels the nursery (cause unwind) before its join; the owner's failure stays primary and a child's failure during cleanup is chained."
+}

@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CANCEL-003",
+  "SGO-CANCEL-002",
+  "SGO-CANCEL-004"
+ ],
+ "exit": 0,
+ "stdout": "grandchild: cancelled: ancestor scope 1 cancelled\nchild: cancelled: Cancel by task 0\nowner inside: cancelled: Cancel by task 0\nafter: not cancelled\n",
+ "note": "Exact cancellation errors: own cause (Cancel by task 0) in the cancelled scope, 'ancestor scope 1 cancelled' for a task whose outermost linked scope is cancelled through an ancestor; consumed after the nursery closes."
+}

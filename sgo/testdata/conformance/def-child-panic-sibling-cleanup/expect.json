@@ -1,0 +1,12 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-004",
+  "SGO-CANCEL-001",
+  "SGO-NUR-004"
+ ],
+ "exit": 2,
+ "stdout": "sibling saw: cancelled: child 2 failed\nsibling cleanup ran\n",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"Panic\",\"message\":\"p1\",\"position\":\"main.sgo:17:43\",\"task_id\":2,\"scope_id\":1,\"chain\":[]}\n",
+ "note": "P01: a child's panic cancels its scope; the sibling sees 'cancelled: child 2 failed', its deferred cleanup runs, and the original payload is primary."
+}
