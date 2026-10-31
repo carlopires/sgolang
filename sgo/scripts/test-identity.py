@@ -21,6 +21,7 @@ Mutations keep every byte length, so stored fingerprints stay valid.
 """
 import glob
 import os
+import struct
 import subprocess
 import sys
 import tempfile
@@ -63,7 +64,14 @@ def main():
         version = run([os.path.join(TOOLS, "sgo"), "version"], mod, env).stdout.split()
         want = (f"sgo1/spec={version[3]}/admission={version[5]}/target={GOOS}-{GOARCH}/"
                 f"toolchain={version[1]}/upstream={version[7]}").encode()
-        if b'Go build ID: "' + want + b'"' not in prog:
+        # Mach-O and PE carry it as the text-segment marker; ELF only in the .note.go.buildid
+        # note (namesz 4, descsz, type 4 = Go build ID, name "Go\0\0", desc; little-endian
+        # on the admitted targets).
+        if prog[:4] == b"\x7fELF":
+            found = struct.pack("<III", 4, len(want), 4) + b"Go\x00\x00" + want in prog
+        else:
+            found = b'Go build ID: "' + want + b'"' in prog
+        if not found:
             sys.exit(f"test-identity: binary does not record its build metadata {want!r}")
         tcb = glob.glob(os.path.join(tmp, "cache", "sgo-driver", "tcb", "*", "complete"))
         if len(tcb) != 1:
