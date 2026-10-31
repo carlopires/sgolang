@@ -1,0 +1,16 @@
+package main
+
+import (
+	"runtime"
+	"sgo"
+)
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			runtime.Goexit()
+			return nil
+		})
+	}
+	return nil
+}

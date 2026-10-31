@@ -439,3 +439,57 @@ func TestSGoServiceEnforcement(t *testing.T) {
 		}
 	}
 }
+
+// P06 / SGO-ERR-003: raw runtime.Goexit is no task outcome. On the root task or a child it is a
+// fail-stop RuntimeDefect (status 4, one record naming the task, no deferred calls); on a
+// goroutine that is not an S-Go task it keeps its upstream behavior.
+func TestSGoGoexitIsDefect(t *testing.T) {
+	if mode := os.Getenv("SGO_GOEXIT_CHILD"); mode != "" {
+		switch mode {
+		case "root":
+			runtime.SGoEnterRoot()
+			defer println("DEFER-RAN")
+			runtime.Goexit()
+		case "child":
+			runtime.SGoEnterRoot()
+			s, _ := runtime.SGoOpen()
+			runtime.SGoSpawn(s, func(*runtime.SGoTask) error {
+				defer println("DEFER-RAN")
+				runtime.Goexit()
+				return nil
+			})
+			runtime.SGoJoin(s)
+		case "plain":
+			done := make(chan bool)
+			go func() {
+				defer func() { done <- true }()
+				runtime.Goexit()
+			}()
+			<-done
+			os.Exit(0)
+		}
+		os.Exit(7) // not reached when the guard fires
+	}
+	for _, c := range []struct{ mode, record string }{
+		{"root", `{"sgo_diagnostic":1,"kind":"RuntimeDefect","message":"runtime.Goexit called on an S-Go task","position":null,"task_id":0,"scope_id":null,"chain":[]}`},
+		{"child", `{"sgo_diagnostic":1,"kind":"RuntimeDefect","message":"runtime.Goexit called on an S-Go task","position":null,"task_id":1,"scope_id":1,"chain":[]}`},
+		{"plain", ""},
+	} {
+		cmd := exec.Command(os.Args[0], "-test.run=^TestSGoGoexitIsDefect$")
+		cmd.Env = append(os.Environ(), "SGO_GOEXIT_CHILD="+c.mode)
+		out, err := cmd.CombinedOutput()
+		code := 0
+		if ee, ok := err.(*exec.ExitError); ok {
+			code = ee.ExitCode()
+		} else if err != nil {
+			t.Fatalf("mode %s: %v", c.mode, err)
+		}
+		s := string(out)
+		switch {
+		case c.record == "" && code != 0:
+			t.Errorf("mode %s: exit %d, want 0:\n%s", c.mode, code, s)
+		case c.record != "" && (code != 4 || !strings.Contains(s, c.record) || strings.Contains(s, "DEFER-RAN")):
+			t.Errorf("mode %s: exit %d, want 4 with record %s and no deferred call:\n%s", c.mode, code, c.record, s)
+		}
+	}
+}

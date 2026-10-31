@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-BIND-002",
+  "SGO-NUR-004"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNADMITTED",
+   "at": "\"runtime\""
+  }
+ ],
+ "note": "P06: raw runtime.Goexit is no task outcome and is unreachable from S-Go source (runtime is not importable); if anything reached it on a task the runtime fail-stops with RuntimeDefect (TestSGoGoexitIsDefect)."
+}

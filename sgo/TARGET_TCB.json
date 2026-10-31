@@ -3801,7 +3801,7 @@
   },
   {
    "path": "src/runtime/panic.go",
-   "sha256": "41f418d61a30c57e0bcec896256a3ff69d2c0128ce25ae7f093b2006d921aae2",
+   "sha256": "8db97101fb0039d98d9ebe4043edd060f9e7b06b798b13d1985729133cbb76d6",
    "upstream_identical": false
   },
   {
@@ -4326,7 +4326,7 @@
   },
   {
    "path": "src/runtime/sgo_main.go",
-   "sha256": "7ca25482274231254be29ebcbb59becb9829ef2d79c414054e857654a6426cab",
+   "sha256": "cd31191f0a977fbe4336c7238dbb2adde1aca508fecb1c20c4eb144bbe689d0a",
    "upstream_identical": false
   },
   {

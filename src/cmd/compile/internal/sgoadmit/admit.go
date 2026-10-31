@@ -14,6 +14,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"os"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -35,6 +36,38 @@ func Trusted(filenames []string) bool {
 		}
 	}
 	return true
+}
+
+// CheckTCB verifies the files of a TCB package against the manifest (SGO-TCB-002): if pkgpath is
+// the import path of a TCB package, every file must be one of its manifest files with the pinned
+// digest. It returns the first file that is not, with the SGO_E_TCB_DIGEST message, else "". Other
+// packages are not TCB packages and are checked by admission. A TCB package path is never
+// compiled as ordinary S-Go code: nothing is built from unreviewed runtime source.
+func CheckTCB(pkgpath string, filenames []string) (file, msg string) {
+	if !slices.Contains(strings.Fields(tcbPackageList), pkgpath) {
+		return "", ""
+	}
+	tcbFiles := map[string]string{}
+	for _, line := range strings.Split(strings.TrimSpace(tcbFileList), "\n") {
+		if name, digest, ok := strings.Cut(line, " "); ok {
+			tcbFiles[name] = digest
+		}
+	}
+	for _, f := range filenames {
+		name := pkgpath + "/" + f[strings.LastIndexAny(f, `/\`)+1:]
+		want, ok := tcbFiles[name]
+		if !ok {
+			return f, "TCB package " + pkgpath + ": file " + name + " is not in sgo/TARGET_TCB.json"
+		}
+		data, err := os.ReadFile(f)
+		if err != nil {
+			return f, "TCB package " + pkgpath + ": " + err.Error()
+		}
+		if sum := sha256.Sum256(data); hex.EncodeToString(sum[:]) != want {
+			return f, "TCB package " + pkgpath + ": file " + name + " differs from its digest in sgo/TARGET_TCB.json"
+		}
+	}
+	return "", ""
 }
 
 // Diag is one admission diagnostic.

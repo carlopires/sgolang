@@ -112,8 +112,13 @@ func sgoFailureOf(v any) sgoFailureInfo {
 }
 
 // sgoDefect ends an S-Go program with a RuntimeDefect record and status 4 (SGO-ERR-003).
+// The record names the task that hit the defect.
 func sgoDefect(msg string) {
-	sgoWriteRecord(sgoFailureInfo{"RuntimeDefect", msg, ""}, nil, sgoOrigin{})
+	var o sgoOrigin
+	if t := getg().sgo; t != nil {
+		o = sgoOriginOf(t)
+	}
+	sgoWriteRecord(sgoFailureInfo{"RuntimeDefect", msg, ""}, nil, o)
 	exit(4)
 }
 

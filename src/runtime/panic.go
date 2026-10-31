@@ -680,6 +680,14 @@ func deferreturn() {
 //
 // It crashes if called from a thread not created by the Go runtime.
 func Goexit() {
+	// S-Go: a task ends only by returning or failing (SGO-NUR-004, SGO-DEF-003); Goexit is no
+	// task outcome, and S-Go code cannot reach it (runtime is not importable, linkname is
+	// denied). Reaching it on a task is a violated invariant: fail-stop, no deferred calls
+	// (SGO-ERR-003).
+	if getg().sgo != nil {
+		sgoDefect("runtime.Goexit called on an S-Go task")
+	}
+
 	// Create a panic object for Goexit, so we can recognize when it might be
 	// bypassed by a recover().
 	var p _panic

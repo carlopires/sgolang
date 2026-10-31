@@ -175,6 +175,18 @@ def table_source(manifest):
     for d in sorted({f["sha256"] for f in manifest["files"]}):
         lines.append(f'\t"{d}": true,')
     lines.append("}")
+    lines += ["",
+              "// tcbFileList lists every trusted Go file as \"import path/file name digest\", one per line; a",
+              "// package whose import path is in tcbPackages must be compiled from exactly such files",
+              "// (SGO_E_TCB_DIGEST otherwise).",
+              "const tcbFileList = `"]
+    for f in sorted(manifest["files"], key=lambda f: f["path"]):
+        if f["path"].endswith(".go"):
+            lines.append(f'{f["path"][len("src/"):]} {f["sha256"]}')
+    lines.append("`")
+    pkgs = sorted({os.path.dirname(f["path"])[len("src/"):] for f in manifest["files"]} | {"unsafe"})
+    lines += ["", "// tcbPackageList lists the import paths of the TCB packages, one per line.",
+              "const tcbPackageList = `"] + pkgs + ["`"]
     return "\n".join(lines) + "\n"
 
 
