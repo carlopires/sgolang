@@ -128,3 +128,54 @@ func SGoServiceCensus() (unclassified []string, services map[string]int) {
 	})
 	return
 }
+
+// W06 channel hooks (sgo_chan.go). Values are ints boxed by the test, as package sgo boxes T.
+type SGoChan = sgoChan
+type SGoPermit = sgoPermit
+
+func SGoChanNew(capacity int64) *SGoChan { return sgoChanNew(capacity) }
+func SGoReserve(c *SGoChan) (*SGoPermit, error) {
+	return sgoChanReserve(c, sgoCurrent())
+}
+func SGoCommit(p *SGoPermit, v int) error {
+	b := new(int)
+	*b = v
+	return sgoChanCommit(p, unsafe.Pointer(b))
+}
+func SGoAbort(p *SGoPermit) { sgoChanAbort(p) }
+func SGoReceive(c *SGoChan) (int, bool, error) {
+	v, ok, err := sgoChanReceive(c, sgoCurrent())
+	if !ok {
+		return 0, false, err
+	}
+	return *(*int)(v), true, nil
+}
+func SGoClose(c *SGoChan)                { sgoChanClose(c) }
+func SGoPermitState(p *SGoPermit) string { return sgoPermitName(p.state) }
+
+// SGoChanQueued reports the values committed and not yet received.
+func SGoChanQueued(c *SGoChan) []int {
+	lock(&c.lock)
+	defer unlock(&c.lock)
+	out := []int{}
+	for _, v := range c.queue {
+		out = append(out, *(*int)(v))
+	}
+	return out
+}
+
+// SGoChanState reports the reservation count and the parked waiters of c.
+func SGoChanState(c *SGoChan) (reserved int64, senders, recvs int) {
+	lock(&c.lock)
+	defer unlock(&c.lock)
+	for w := c.senders.first; w != nil; w = w.next {
+		senders++
+	}
+	for w := c.recvs.first; w != nil; w = w.next {
+		recvs++
+	}
+	return c.reserved, senders, recvs
+}
+
+// SGoAbandoned reports how many permits the runtime aborted for the calling task.
+func SGoAbandoned() int64 { return sgoCurrent().abandoned }

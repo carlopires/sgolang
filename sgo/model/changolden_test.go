@@ -51,11 +51,19 @@ func TestChanGoldenOutcomes(t *testing.T) {
 	}
 	data = append(data, '\n')
 	path := filepath.Join("testdata", "chan-outcomes.json")
+	// The runtime lane (src/runtime/sgo_chan_test.go) reads a copy that is overlaid with the
+	// runtime package; it must be identical.
+	runtimeCopy := filepath.Join("..", "..", "src", "runtime", "testdata", "sgo-chan-outcomes.json")
 	if *update {
-		if err := os.WriteFile(path, data, 0o644); err != nil {
-			t.Fatal(err)
+		for _, p := range []string{path, runtimeCopy} {
+			if err := os.WriteFile(p, data, 0o644); err != nil {
+				t.Fatal(err)
+			}
 		}
 		return
+	}
+	if rc, err := os.ReadFile(runtimeCopy); err != nil || string(rc) != string(data) {
+		t.Fatalf("runtime copy %s is missing or stale (rerun with -update): %v", runtimeCopy, err)
 	}
 	want, err := os.ReadFile(path)
 	if err != nil {

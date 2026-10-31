@@ -104,6 +104,11 @@ type sgoTask struct {
 	entries []sgoEntry
 	chain   []sgoFailureInfo
 	origin  sgoOrigin
+
+	// Channel permits (sgo_chan.go): unresolved permits the task reserved (touched only by the
+	// task), and how many the runtime aborted because the task left them unresolved.
+	permits   *sgoPermit
+	abandoned int64
 }
 
 // sgoScopeResult is the immutable outcome of a closed scope (SGO-NUR-004 rules 2-4; rule 1, the
@@ -156,6 +161,7 @@ func sgoLeaveRoot() {
 	if gp.sgo == nil || len(gp.sgo.nest) != 0 {
 		throw("sgo: leaving root with open nurseries")
 	}
+	sgoPermitsResolve(gp.sgo, nil, true)
 	gp.sgo = nil
 }
 
@@ -279,6 +285,8 @@ func sgoTaskExit(c *sgoTask) {
 	if len(c.nest) != 0 {
 		throw("sgo: task finished with an open nursery") // RuntimeDefect (SGO-ERR-003)
 	}
+	// Unresolved permits are aborted before the outcome is published (SGO-PERMIT-002, H09).
+	sgoPermitsResolve(c, nil, true)
 	s := c.scope
 	// A child that ended Errored or Failed cancels its scope when the outcome is published, before
 	// the scope's join can complete (SGO-SPAWN-004, SGO-CANCEL-001).
@@ -317,6 +325,8 @@ func sgoNurseryJoin(s *sgoScope) (sgoScopeResult, []*sgoTask, error) {
 	if t == nil || s == nil || s.owner != t || t.currentScope() != s {
 		return sgoScopeResult{}, nil, &sgoViolation{"join of a nursery that is not the caller's innermost nursery"}
 	}
+	// The body's unresolved permits are aborted before the join (SGO-PERMIT-002, H10).
+	sgoPermitsResolve(t, s, false)
 	lock(&s.lock)
 	if s.state == sgoOpen {
 		s.state = sgoJoining

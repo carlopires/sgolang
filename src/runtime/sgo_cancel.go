@@ -281,7 +281,9 @@ func sgoWakeCancelled() {
 			r.wake, wake = wake, r
 		}
 	}
+	chanWake := sgoChanWakeCancelled() // channel waiters (sgo_chan.go)
 	unlock(&sgoSleepLock)
+	sgoChanReady(chanWake)
 	// A stale timer fire for these records fails its state CAS and does nothing.
 	for wake != nil {
 		r := wake

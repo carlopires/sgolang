@@ -1,0 +1,217 @@
+{
+  "buffered-abort": {
+    "scenario": {
+      "Cap": 2,
+      "Senders": [
+        0,
+        1,
+        0
+      ],
+      "Receivers": 2,
+      "Close": false
+    },
+    "outcomes": [
+      "permits=[committed aborted committed] received=[1 3] queued=[]",
+      "permits=[committed aborted committed] received=[3 1] queued=[]"
+    ],
+    "blocked_histories": false
+  },
+  "buffered-alias-double": {
+    "scenario": {
+      "Cap": 2,
+      "Senders": [
+        4,
+        0
+      ],
+      "Receivers": 2,
+      "Close": true
+    },
+    "outcomes": [
+      "permits=[committed committed] received=[1 2] queued=[]",
+      "permits=[committed committed] received=[2 1] queued=[]",
+      "permits=[committed failed-closed] received=[1] queued=[]",
+      "permits=[committed refused-closed] received=[1] queued=[]",
+      "permits=[failed-closed committed] received=[2] queued=[]",
+      "permits=[failed-closed failed-closed] received=[] queued=[]",
+      "permits=[failed-closed refused-closed] received=[] queued=[]",
+      "permits=[refused-closed committed] received=[2] queued=[]",
+      "permits=[refused-closed failed-closed] received=[] queued=[]",
+      "permits=[refused-closed refused-closed] received=[] queued=[]"
+    ],
+    "blocked_histories": false
+  },
+  "buffered-cancel-race": {
+    "scenario": {
+      "Cap": 1,
+      "Senders": [
+        2
+      ],
+      "Receivers": 1,
+      "Close": false
+    },
+    "outcomes": [
+      "permits=[aborted] received=[] queued=[]",
+      "permits=[cancelled] received=[] queued=[]",
+      "permits=[committed] received=[1] queued=[]"
+    ],
+    "blocked_histories": true
+  },
+  "buffered-close-race": {
+    "scenario": {
+      "Cap": 1,
+      "Senders": [
+        0
+      ],
+      "Receivers": 1,
+      "Close": true
+    },
+    "outcomes": [
+      "permits=[committed] received=[1] queued=[]",
+      "permits=[failed-closed] received=[] queued=[]",
+      "permits=[refused-closed] received=[] queued=[]"
+    ],
+    "blocked_histories": false
+  },
+  "buffered-task-end": {
+    "scenario": {
+      "Cap": 1,
+      "Senders": [
+        3,
+        0
+      ],
+      "Receivers": 1,
+      "Close": false
+    },
+    "outcomes": [
+      "permits=[aborted committed] received=[2] queued=[]"
+    ],
+    "blocked_histories": false
+  },
+  "buffered-two-senders": {
+    "scenario": {
+      "Cap": 1,
+      "Senders": [
+        0,
+        0
+      ],
+      "Receivers": 2,
+      "Close": false
+    },
+    "outcomes": [
+      "permits=[committed committed] received=[1 2] queued=[]",
+      "permits=[committed committed] received=[2 1] queued=[]"
+    ],
+    "blocked_histories": false
+  },
+  "mixed-cancel-end-alias": {
+    "scenario": {
+      "Cap": 1,
+      "Senders": [
+        2,
+        3,
+        4
+      ],
+      "Receivers": 2,
+      "Close": true
+    },
+    "outcomes": [
+      "permits=[aborted aborted committed] received=[3] queued=[]",
+      "permits=[aborted aborted failed-closed] received=[] queued=[]",
+      "permits=[aborted aborted refused-closed] received=[] queued=[]",
+      "permits=[aborted refused-closed committed] received=[3] queued=[]",
+      "permits=[aborted refused-closed failed-closed] received=[] queued=[]",
+      "permits=[aborted refused-closed refused-closed] received=[] queued=[]",
+      "permits=[cancelled aborted committed] received=[3] queued=[]",
+      "permits=[cancelled aborted failed-closed] received=[] queued=[]",
+      "permits=[cancelled aborted refused-closed] received=[] queued=[]",
+      "permits=[cancelled refused-closed committed] received=[3] queued=[]",
+      "permits=[cancelled refused-closed failed-closed] received=[] queued=[]",
+      "permits=[cancelled refused-closed refused-closed] received=[] queued=[]",
+      "permits=[committed aborted committed] received=[1 3] queued=[]",
+      "permits=[committed aborted committed] received=[3 1] queued=[]",
+      "permits=[committed aborted failed-closed] received=[1] queued=[]",
+      "permits=[committed aborted refused-closed] received=[1] queued=[]",
+      "permits=[committed refused-closed committed] received=[1 3] queued=[]",
+      "permits=[committed refused-closed committed] received=[3 1] queued=[]",
+      "permits=[committed refused-closed failed-closed] received=[1] queued=[]",
+      "permits=[committed refused-closed refused-closed] received=[1] queued=[]",
+      "permits=[failed-closed aborted committed] received=[3] queued=[]",
+      "permits=[failed-closed aborted refused-closed] received=[] queued=[]",
+      "permits=[failed-closed refused-closed committed] received=[3] queued=[]",
+      "permits=[failed-closed refused-closed refused-closed] received=[] queued=[]",
+      "permits=[refused-closed aborted committed] received=[3] queued=[]",
+      "permits=[refused-closed aborted failed-closed] received=[] queued=[]",
+      "permits=[refused-closed aborted refused-closed] received=[] queued=[]",
+      "permits=[refused-closed refused-closed committed] received=[3] queued=[]",
+      "permits=[refused-closed refused-closed failed-closed] received=[] queued=[]",
+      "permits=[refused-closed refused-closed refused-closed] received=[] queued=[]"
+    ],
+    "blocked_histories": false
+  },
+  "rendezvous-abort-close": {
+    "scenario": {
+      "Cap": 0,
+      "Senders": [
+        0,
+        1
+      ],
+      "Receivers": 1,
+      "Close": true
+    },
+    "outcomes": [
+      "permits=[committed aborted] received=[1] queued=[]",
+      "permits=[committed refused-closed] received=[1] queued=[]",
+      "permits=[failed-closed aborted] received=[] queued=[]",
+      "permits=[failed-closed refused-closed] received=[] queued=[]",
+      "permits=[refused-closed aborted] received=[] queued=[]",
+      "permits=[refused-closed refused-closed] received=[] queued=[]"
+    ],
+    "blocked_histories": false
+  },
+  "rendezvous-cancel-close": {
+    "scenario": {
+      "Cap": 0,
+      "Senders": [
+        2,
+        0
+      ],
+      "Receivers": 2,
+      "Close": true
+    },
+    "outcomes": [
+      "permits=[aborted committed] received=[2] queued=[]",
+      "permits=[aborted failed-closed] received=[] queued=[]",
+      "permits=[aborted refused-closed] received=[] queued=[]",
+      "permits=[cancelled committed] received=[2] queued=[]",
+      "permits=[cancelled failed-closed] received=[] queued=[]",
+      "permits=[cancelled refused-closed] received=[] queued=[]",
+      "permits=[committed committed] received=[1 2] queued=[]",
+      "permits=[committed committed] received=[2 1] queued=[]",
+      "permits=[committed failed-closed] received=[1] queued=[]",
+      "permits=[committed refused-closed] received=[1] queued=[]",
+      "permits=[failed-closed committed] received=[2] queued=[]",
+      "permits=[failed-closed failed-closed] received=[] queued=[]",
+      "permits=[failed-closed refused-closed] received=[] queued=[]",
+      "permits=[refused-closed committed] received=[2] queued=[]",
+      "permits=[refused-closed failed-closed] received=[] queued=[]",
+      "permits=[refused-closed refused-closed] received=[] queued=[]"
+    ],
+    "blocked_histories": false
+  },
+  "rendezvous-two-senders": {
+    "scenario": {
+      "Cap": 0,
+      "Senders": [
+        0,
+        0
+      ],
+      "Receivers": 2,
+      "Close": false
+    },
+    "outcomes": [
+      "permits=[committed committed] received=[1 2] queued=[]",
+      "permits=[committed committed] received=[2 1] queued=[]"
+    ],
+    "blocked_histories": false
+  }
+}
