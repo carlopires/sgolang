@@ -1,0 +1,9 @@
+package runtime
+
+import "unsafe"
+
+// A package named like a TCB package gets no privilege: it is user code under the subset.
+func Peek() error {
+	_ = unsafe.Sizeof(0)
+	return nil
+}

@@ -1,0 +1,11 @@
+package main
+
+import (
+	"plugin"
+	"sgo"
+)
+
+func main(root *sgo.Context) error {
+	_, err := plugin.Open("x.so")
+	return err
+}

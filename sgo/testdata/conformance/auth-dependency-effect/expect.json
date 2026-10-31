@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-AUTH-001",
+  "SGO-IMP-001"
+ ],
+ "exit": 2,
+ "stdout": "dependency used the clock in main\n",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"MissingCapability\",\"message\":\"Clock.Since: the task's ceiling does not include clock\",\"position\":null,\"task_id\":1,\"scope_id\":1,\"chain\":[]}\n",
+ "note": "A05: a dependency reaches an effect only through a handle it is given, and only within the calling task's ceiling."
+}

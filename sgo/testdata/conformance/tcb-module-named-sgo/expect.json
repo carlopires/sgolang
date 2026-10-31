@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IMP-001",
+  "SGO-TCB-002"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_IMPORT_CYCLE",
+   "at": "\"sgo\""
+  }
+ ],
+ "note": "A09: a module named sgo cannot shadow the trusted package sgo: import paths of the module are under its path, so import \"sgo\" names the program's own root package (a cycle)."
+}

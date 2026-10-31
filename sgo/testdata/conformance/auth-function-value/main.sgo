@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+// A05, S10: a method value of a handle, passed as a function value, still checks the calling
+// task's ceiling: an indirect call does not bypass the narrowed ceiling.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := root.Clock()
+	since := c.Since
+	_ = since()
+	nursery (n) {
+		n.SpawnWithout("clock", func(task *sgo.Context) error {
+			_ = out.WriteString("calling through a function value\n")
+			_ = since()
+			return nil
+		})
+	}
+	return nil
+}

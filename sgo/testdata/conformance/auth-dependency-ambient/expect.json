@@ -1,0 +1,15 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-BIND-002",
+  "SGO-AUTH-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNADMITTED",
+   "file": "lib/lib.sgo",
+   "at": "\"os\""
+  }
+ ],
+ "note": "A05, S13: an ambient I/O package is rejected in a dependency as in main."
+}

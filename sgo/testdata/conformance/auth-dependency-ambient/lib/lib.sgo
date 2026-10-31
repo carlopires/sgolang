@@ -1,0 +1,7 @@
+package lib
+
+import "os"
+
+func Touch() error {
+	return os.WriteFile("x", nil, 0o644)
+}

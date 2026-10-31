@@ -1,0 +1,11 @@
+package main
+
+import (
+	"sgo"
+	"syscall"
+)
+
+func main(root *sgo.Context) error {
+	_ = syscall.Getpid()
+	return nil
+}

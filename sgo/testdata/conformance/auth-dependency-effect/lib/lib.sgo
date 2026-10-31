@@ -1,0 +1,8 @@
+package lib
+
+import "sgo"
+
+// Elapsed reads the clock it is given; the package has no other way to reach an effect.
+func Elapsed(c *sgo.Clock) int {
+	return c.Since()
+}

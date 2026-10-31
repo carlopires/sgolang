@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-AUTH-001"
+ ],
+ "exit": 2,
+ "stdout": "calling through a function value\n",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"MissingCapability\",\"message\":\"Clock.Since: the task's ceiling does not include clock\",\"position\":null,\"task_id\":1,\"scope_id\":1,\"chain\":[]}\n",
+ "note": "A05, S10: an indirect call through a method value checks the calling task's ceiling like a direct call."
+}

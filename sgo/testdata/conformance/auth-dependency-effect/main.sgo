@@ -1,0 +1,26 @@
+package main
+
+import (
+	"example.com/auth-dependency-effect/lib"
+	"sgo"
+)
+
+// A05: a dependency exercises an effect only through a handle it is given, and only within the
+// calling task's ceiling.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := root.Clock()
+	if lib.Elapsed(c) < 0 {
+		return sgo.NewError("negative")
+	}
+	if err := out.WriteString("dependency used the clock in main\n"); err != nil {
+		return err
+	}
+	nursery (n) {
+		n.SpawnWithout("clock", func(task *sgo.Context) error {
+			_ = lib.Elapsed(c)
+			return nil
+		})
+	}
+	return nil
+}

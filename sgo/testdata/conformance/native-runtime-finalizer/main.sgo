@@ -1,0 +1,11 @@
+package main
+
+import (
+	"runtime"
+	"sgo"
+)
+
+func main(root *sgo.Context) error {
+	runtime.SetFinalizer(root, nil)
+	return nil
+}

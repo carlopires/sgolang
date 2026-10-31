@@ -1,0 +1,10 @@
+package main
+
+import (
+	"example.com/tcb-user-package-named-runtime/runtime"
+	"sgo"
+)
+
+func main(root *sgo.Context) error {
+	return runtime.Peek()
+}

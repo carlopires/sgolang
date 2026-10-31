@@ -1,0 +1,15 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-TCB-002",
+  "SGO-NATIVE-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNADMITTED",
+   "file": "runtime/runtime.sgo",
+   "at": "\"unsafe\""
+  }
+ ],
+ "note": "A09: a user package named like a TCB package is ordinary user code: its name confers no privilege (TCB identity is the import path and file digests, SGO-TCB-002)."
+}
