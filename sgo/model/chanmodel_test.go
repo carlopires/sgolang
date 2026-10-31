@@ -45,6 +45,48 @@ func TestChanModelCloseVersusCommit(t *testing.T) {
 	}
 }
 
+// Cancellation, task-end resolution, and aliases (H04, H06, H07, H09, H10) keep every invariant,
+// alone and mixed with close, abort, and rendezvous.
+func TestChanModelObligations(t *testing.T) {
+	for _, sc := range []ChanScenario{
+		{Cap: 1, Senders: []int{SendCancelRace, SendCommit}, Receivers: 2},
+		{Cap: 0, Senders: []int{SendCancelRace, SendCommit}, Receivers: 2, Close: true},
+		{Cap: 1, Senders: []int{SendTaskEnd, SendCommit}, Receivers: 1},
+		{Cap: 0, Senders: []int{SendTaskEnd, SendCommit}, Receivers: 1},
+		{Cap: 2, Senders: []int{SendAliasDouble, SendCommit}, Receivers: 2, Close: true},
+		{Cap: 1, Senders: []int{SendCancelRace, SendTaskEnd, SendAliasDouble}, Receivers: 2, Close: true},
+	} {
+		r := ExploreChan(sc)
+		if r.Violation != "" {
+			t.Fatalf("%+v: %s\n  trace: %s", sc, r.Violation, r.Trace)
+		}
+		if r.Terminal == 0 {
+			t.Fatalf("%+v: no complete history", sc)
+		}
+		t.Logf("%+v: %d states, %d complete histories, %d blocked, %d outcomes", sc, r.States, r.Terminal, r.Deadlocked, len(r.Outcomes))
+	}
+}
+
+// Cancellation racing commit (plan §7.3): before reserve no permit, after reserve the reservation
+// is aborted, after commit the value is published and received.
+func TestChanModelCancelVersusCommit(t *testing.T) {
+	r := ExploreChan(ChanScenario{Cap: 1, Senders: []int{SendCancelRace}, Receivers: 1})
+	want := map[string]bool{
+		"permits=[2] received=[1] queued=[]": true,
+		"permits=[4] received=[] queued=[]":  true,
+		"permits=[6] received=[] queued=[]":  true,
+	}
+	for o := range r.Outcomes {
+		if !want[o] {
+			t.Errorf("unexpected outcome %s", o)
+		}
+	}
+	if r.Violation != "" || len(r.Outcomes) == 0 {
+		t.Fatalf("violation %q, outcomes %v", r.Violation, r.Outcomes)
+	}
+	t.Logf("outcomes: %v (blocked histories, a receiver waiting for a value that was never sent: %d)", r.Outcomes, r.Deadlocked)
+}
+
 // The checker catches a seeded protocol bug: a commit that publishes after close.
 func TestChanModelDetectsLostValue(t *testing.T) {
 	s := &chanState{permit: []int{PermitCommitted}, spc: []int{2}, commits: []int{1}}

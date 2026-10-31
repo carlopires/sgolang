@@ -17,12 +17,23 @@ const (
 	PermitFailedNoEffect // commit after close: closed result, no effect
 	PermitAborted
 	PermitRefused // reserve on a closed channel: no permit
+	PermitCancelledBeforeReserve
 )
 
 // Sender scripts: what a sender does after its reservation.
 const (
 	SendCommit = iota // Reserve, Commit(v)
 	SendAbort         // Reserve, Abort
+	// SendCancelRace: cancellation of the sender's task races with Reserve and Commit (H06, H07):
+	// before reserve no permit; after reserve and before commit the reservation is aborted; after
+	// commit it is not retroactive.
+	SendCancelRace
+	// SendTaskEnd: the task ends without resolving its permit; the runtime aborts it before the
+	// task's outcome is published and records a diagnostic (H09, H10).
+	SendTaskEnd
+	// SendAliasDouble: two aliases of one permit both commit; the first takes effect, the second
+	// is a misuse with no effect (H04).
+	SendAliasDouble
 )
 
 // ChanScenario is one bounded scenario: a channel of capacity Cap, senders (each sends value i+1
@@ -48,6 +59,9 @@ type chanState struct {
 	commits  []int // values in commit order
 	closeDone bool
 	trace    []string
+	cancelled []bool // SendCancelRace: the task has been cancelled
+	aliasDone []bool // SendAliasDouble: the second alias has acted
+	diags     int    // diagnostics recorded by the runtime (abandoned permits, misuse)
 }
 
 func (s *chanState) clone() *chanState {
@@ -62,7 +76,18 @@ func (s *chanState) clone() *chanState {
 	c.recvOK = append([]bool(nil), s.recvOK...)
 	c.commits = append([]int(nil), s.commits...)
 	c.trace = append([]string(nil), s.trace...)
+	c.cancelled = append([]bool(nil), s.cancelled...)
+	c.aliasDone = append([]bool(nil), s.aliasDone...)
 	return &c
+}
+
+// release ends sender i's reservation and any rendezvous match it holds.
+func (s *chanState) release(sc ChanScenario, i int) {
+	s.reserved--
+	if sc.Cap == 0 && s.match[i] >= 0 {
+		s.rmatched[s.match[i]] = -1
+		s.match[i] = -1
+	}
 }
 
 // chanSteps returns every enabled step from s.
@@ -70,6 +95,27 @@ func chanSteps(sc ChanScenario, s *chanState) []*chanState {
 	var out []*chanState
 	for i, script := range sc.Senders {
 		v := i + 1
+		// Cancellation of the task (SendCancelRace) is an event that races with every step.
+		if script == SendCancelRace && !s.cancelled[i] && s.spc[i] < 2 {
+			n := s.clone()
+			n.cancelled[i] = true
+			if n.spc[i] == 0 {
+				n.permit[i], n.spc[i] = PermitCancelledBeforeReserve, 2
+			} else {
+				n.release(sc, i)
+				n.permit[i], n.spc[i] = PermitAborted, 2
+			}
+			n.trace = append(n.trace, fmt.Sprintf("s%d cancelled", v))
+			out = append(out, n)
+		}
+		// The second alias of a committed or failed permit acts after the first: no effect.
+		if script == SendAliasDouble && s.spc[i] == 2 && !s.aliasDone[i] && s.permit[i] != PermitRefused {
+			n := s.clone()
+			n.aliasDone[i] = true
+			n.diags++
+			n.trace = append(n.trace, fmt.Sprintf("s%d second alias commit: misuse, no effect", v))
+			out = append(out, n)
+		}
 		switch s.spc[i] {
 		case 0: // Reserve
 			switch {
@@ -102,6 +148,14 @@ func chanSteps(sc ChanScenario, s *chanState) []*chanState {
 			n.reserved--
 			n.spc[i] = 2
 			switch {
+			case script == SendTaskEnd:
+				n.permit[i] = PermitAborted
+				n.diags++
+				if sc.Cap == 0 {
+					n.rmatched[n.match[i]] = -1
+					n.match[i] = -1
+				}
+				n.trace = append(n.trace, fmt.Sprintf("s%d task ends: runtime aborts the permit", v))
 			case script == SendAbort:
 				n.permit[i] = PermitAborted
 				if sc.Cap == 0 {
@@ -187,6 +241,13 @@ func chanCheck(sc ChanScenario, s *chanState, final bool) string {
 			return "receive order differs from commit order"
 		}
 	}
+	committed := map[int]bool{}
+	for _, c := range s.commits {
+		if committed[c] {
+			return fmt.Sprintf("value %d committed twice", c)
+		}
+		committed[c] = true
+	}
 	for _, v := range s.received {
 		found := false
 		for _, c := range s.commits {
@@ -200,10 +261,24 @@ func chanCheck(sc ChanScenario, s *chanState, final bool) string {
 		if len(s.received)+len(s.queue) != len(s.commits) {
 			return "a committed value was lost"
 		}
+		wantDiags := 0
 		for i, p := range s.permit {
 			if p == PermitReserved || p == PermitNone && s.spc[i] != 2 {
 				return fmt.Sprintf("sender %d ended without a terminal permit state", i+1)
 			}
+			switch {
+			case sc.Senders[i] == SendTaskEnd && p == PermitAborted:
+				wantDiags++
+			case sc.Senders[i] == SendAliasDouble && p != PermitRefused:
+				wantDiags++
+			}
+			if sc.Senders[i] == SendCancelRace && s.cancelled[i] && p == PermitCommitted {
+				// Allowed: commit won before cancellation, which is not retroactive (H07).
+				continue
+			}
+		}
+		if s.diags != wantDiags {
+			return fmt.Sprintf("%d diagnostics recorded, want %d", s.diags, wantDiags)
 		}
 	}
 	return ""
@@ -224,7 +299,8 @@ type ChanResult struct {
 func ExploreChan(sc ChanScenario) *ChanResult {
 	n := len(sc.Senders)
 	s := &chanState{permit: make([]int, n), spc: make([]int, n), match: make([]int, n),
-		rpc: make([]int, sc.Receivers), rmatched: make([]int, sc.Receivers), recvOK: make([]bool, sc.Receivers)}
+		rpc: make([]int, sc.Receivers), rmatched: make([]int, sc.Receivers), recvOK: make([]bool, sc.Receivers),
+		cancelled: make([]bool, n), aliasDone: make([]bool, n)}
 	for i := range s.match {
 		s.match[i] = -1
 	}
