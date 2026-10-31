@@ -50,18 +50,18 @@ Capabilities for effects other than stdout (D24, D25; plan §8). Draft for spec 
 - **version:** 1
 - **status:** draft
 - **reference_closure:** SGO-AUTH-001, SGO-AUTH-002, SGO-TIMER-001; D26; plan §8.3.
-- **grammar_and_types:** Kinds: `clock` (monotonic time since program start, ms), `wallclock` (UTC ms since the epoch), `random` (seeded PRNG with a fixed algorithm, reproducible on every target), `entropy` (the OS CSPRNG), `simstore` and `simnet` (in-memory store and loopback endpoint used to test authority). PENDING: method signatures; PRNG algorithm choice.
-- **preconditions:** PENDING.
-- **evaluation_and_value_semantics:** PENDING: per kind. The seeded generator never draws from `entropy`, and `entropy` is never replaced by a seeded generator (A08).
-- **ownership_and_lifecycle:** PENDING: revocation by lending a handle for the lifetime of a nursery (D24).
+- **grammar_and_types:** Kinds and root accessors (each available only if granted, SGO-AUTH-002): `root.Clock() *sgo.Clock` with `c.Since() int` (ms of monotonic time since program start); `root.WallClock() *sgo.WallClock` with `w.Now() int` (UTC ms since 1970-01-01); `root.Random(seed int) *sgo.Random` with `r.Intn(n int) int`, `r.Split() *sgo.Random`; `root.Entropy() *sgo.Entropy` with `e.Bytes(k int) string`; `root.SimStore() *sgo.SimStore` with `s.Get(key string) (string, bool, error)`, `s.Put(key, value string) error`, `s.ReadOnly() *sgo.SimStore`, `s.Prefix(p string) *sgo.SimStore`. Every handle type `*sgo.K` has `h.LendTo(n *sgo.Nursery) *sgo.K` (revocable copy). `simnet` (loopback endpoint) is PENDING and stays denied until specified.
+- **preconditions:** `Intn` requires `n > 0`; `Bytes` requires `1 <= k <= 1024`; `Prefix` requires a non-empty prefix. `LendTo(n)` requires that the caller can spawn into `n` (SGO-SPAWN-002).
+- **evaluation_and_value_semantics:** `Since` and `Now` read the target's monotonic and wall clocks (SGO-TIMER-001); `Since` never decreases within a program. `Random(seed)` starts the PCG-DXSM generator with 128-bit state, the algorithm of Go's `math/rand/v2` `PCG`, seeded with `(seed, 0)`; `Intn` returns a uniform value in `[0, n)` by the unbiased method of that package, so a seed produces the same sequence on every target. `Split` returns a new generator seeded from the next two outputs of the current one, so derived streams are deterministic too. The seeded generator never draws from the OS; `Entropy` always does and is never replaced by a seeded generator (A08). `Get`/`Put` act on one in-memory string map per program; `ReadOnly` permits only `Get`; `Prefix(p)` permits only keys beginning with `p` (concatenated for nested prefixes). A lent handle permits what the original permits while `n` is not CLOSED, and nothing afterwards.
+- **ownership_and_lifecycle:** Root handles live for the program. A lent handle is revoked when its nursery closes (A03). A `*sgo.Random` is task-affine: only the task that obtained it (by `Random` or `Split`) may call its methods; other handles may be used by any task whose ceiling permits the kind.
 - **effect_and_capability_requirements:** One kind per handle type.
-- **concurrency_and_memory_order:** PENDING.
+- **concurrency_and_memory_order:** Handles are immutable except the generator state of `*sgo.Random`, which only its owning task can touch (task affinity), so no handle is shared mutable state (D01). SimStore operations are linearizable; a `Put` happens-before every `Get` that returns its value.
 - **allowed_nondeterminism:** `clock`, `wallclock`, `entropy` values; `random` is deterministic given its seed.
-- **failure_and_partial_progress:** PENDING.
-- **cancellation_and_cleanup:** PENDING.
-- **compile_link_checks:** PENDING.
+- **failure_and_partial_progress:** A precondition violation fails with `InvalidArgument`; a missing grant, a ceiling without the kind, a handle that does not permit the operation (read-only, outside its prefix), or a revoked handle fail with `MissingCapability`; use of a `*sgo.Random` by another task fails with `SpawnContractViolation`. Every failure happens before any effect. `Entropy` failure of the OS source is `ResourceExhausted` (SGO-ERR-003).
+- **cancellation_and_cleanup:** n/a — none of these operations waits; cancellation is observed at Checkpoint/Sleep as before.
+- **compile_link_checks:** `SGO_E_UNADMITTED` for `simnet` and for any clock, random, or I/O API outside this clause; `SGO_E_DISCARDED_ERROR` for unused `Get`/`Put` errors; a negative constant `Intn`/`Bytes` argument is `SGO_E_INVALID_ARGUMENT`.
 - **runtime_guards:** As SGO-AUTH-001.
-- **tcb_assumptions:** Monotonic clock (TCB-P05); PENDING: wall clock and CSPRNG primitives.
+- **tcb_assumptions:** Monotonic clock (TCB-P05); PENDING: wall-clock read and OS CSPRNG primitives (new TCB entries with callers).
 - **positive_tests:** A03, A04, A05, A08; PENDING: fixtures.
 - **negative_tests:** A03, A04, A07; PENDING: fixtures.
 - **implementation_coverage:** none yet — W05.
