@@ -64,6 +64,9 @@ jobs:
       - name: TCB admitted only by exact identity (SGO-TCB-002; SGO_E_TCB_DIGEST)
         run: sgo/scripts/test-tcb.py
 
+      - name: Cross-package nurseries with and without inlining (X10)
+        run: sgo/scripts/test-x10.py
+
       - name: Every admitted target builds from this host (sgo build -target)
         run: |
           plat="$(uname -s | tr A-Z a-z)_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
