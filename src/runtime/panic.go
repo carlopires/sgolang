@@ -682,9 +682,10 @@ func deferreturn() {
 func Goexit() {
 	// S-Go: a task ends only by returning or failing (SGO-NUR-004, SGO-DEF-003); Goexit is no
 	// task outcome, and S-Go code cannot reach it (runtime is not importable, linkname is
-	// denied). Reaching it on a task is a violated invariant: fail-stop, no deferred calls
-	// (SGO-ERR-003).
-	if getg().sgo != nil {
+	// denied). Reaching it on a task of an S-Go program is a violated invariant: fail-stop, no
+	// deferred calls (SGO-ERR-003). (Runtime tests that make the test goroutine a task are not
+	// S-Go programs: testing's FailNow uses Goexit.)
+	if sgoProgram && getg().sgo != nil {
 		sgoDefect("runtime.Goexit called on an S-Go task")
 	}
 

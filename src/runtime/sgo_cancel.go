@@ -159,8 +159,12 @@ func sgoAppendUint(b []byte, v uint64) []byte {
 }
 
 // sgoIsCancelled reports whether err is a cancellation error (SGO-CANCEL-003).
+//
+// The assertion goes through any: it then compares type descriptors, which are unique, instead of
+// itab pointers. A test binary of the runtime built by the upstream toolchain was observed to hold
+// two itabs for (*sgoCancelErr, error), which made a direct error-to-concrete assertion fail.
 func sgoIsCancelled(err error) bool {
-	_, ok := err.(*sgoCancelErr)
+	_, ok := any(err).(*sgoCancelErr)
 	return ok
 }
 

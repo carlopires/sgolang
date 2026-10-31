@@ -363,9 +363,13 @@ func TestSGoOutcomes(t *testing.T) {
 	root(t, func() {
 		for iter := 0; iter < 50; iter++ {
 			s := mustOpen(t)
-			mustSpawn(t, s, func(*runtime.SGoTask) error { return errors.New("e1") })
-			mustSpawn(t, s, func(*runtime.SGoTask) error { time.Sleep(time.Microsecond); panic("p2") })
-			mustSpawn(t, s, func(*runtime.SGoTask) error { panic("p3") })
+			// A failing child cancels the scope (W04, SGO-SPAWN-004), after which no more children
+			// are admitted (R5); hold the first child until all three are registered.
+			all := make(chan struct{})
+			mustSpawn(t, s, func(*runtime.SGoTask) error { <-all; return errors.New("e1") })
+			mustSpawn(t, s, func(*runtime.SGoTask) error { <-all; time.Sleep(time.Microsecond); panic("p2") })
+			mustSpawn(t, s, func(*runtime.SGoTask) error { <-all; panic("p3") })
+			close(all)
 			r := mustJoin(t, s)
 			if r.Outcome != "Failed" || r.Panic != "p2" || r.Failures != 3 {
 				t.Fatalf("iteration %d: %+v", iter, r)
@@ -445,6 +449,7 @@ func TestSGoServiceEnforcement(t *testing.T) {
 // goroutine that is not an S-Go task it keeps its upstream behavior.
 func TestSGoGoexitIsDefect(t *testing.T) {
 	if mode := os.Getenv("SGO_GOEXIT_CHILD"); mode != "" {
+		runtime.SGoSetProgram() // the guard applies to S-Go programs
 		switch mode {
 		case "root":
 			runtime.SGoEnterRoot()

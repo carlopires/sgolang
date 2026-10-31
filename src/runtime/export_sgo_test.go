@@ -89,6 +89,9 @@ func SGoCurrentTaskID() (uint64, bool) {
 	return t.id, true
 }
 
+// SGoSetProgram marks the process as an S-Go program, as sgoEnterMain does (child-process tests).
+func SGoSetProgram() { sgoProgram = true }
+
 // SGoSetEnforce switches go-statement enforcement (sgo_service.go) for child-process tests.
 func SGoSetEnforce(on bool) { sgoEnforce.Store(on) }
 
