@@ -85,6 +85,16 @@ Code: `src/runtime/sgo_ready.go`, `src/sgo/ready.go`; `sgoAdmit` (the admission 
 
 A readiness record has a state with one terminal decision (Waiting → Signalled | Ended | Cancelled), made by a CAS under `sgoSleepLock`. The starter registers in `sgoReadyWaiters` and parks releasing `sgoSleepLock`, so a signaller, the exiting child, or the canceller cannot ready a starter that is not parked; the winner of the decision unregisters the starter and readies it. The losers change nothing: a Signal after cancellation won is accepted with no effect; the child's end after it signalled is an ordinary outcome of its nursery. The child is registered in its nursery before it can run, whatever the decision, so a successful Start always names a running, owned child and a cancelled Start never leaves an unregistered one (R04). Only the started child may signal, once; a second Signal or a Signal by another task is a `SpawnContractViolation`. A child that ends before signalling makes Start return its returned error, or an error naming the child if it failed or returned `nil`.
 
-## 12. Not yet
+## 12. Authority and the first effects (W05, TCB-P13..P16)
+
+Code: `src/runtime/sgo_auth.go` (ceilings, grants), `src/runtime/sgo_effects.go` (primitives), `src/sgo/effects.go` and `src/sgo/auth.go` (handles); driver `src/cmd/sgo/module.go` (`grant` lines) and `build.go` (`grants=` in the build ID, `-sgogrants`); linker `ld/sgoid.go`.
+
+**Ceilings.** A task's ceiling is a bit set of effect kinds stored in its record and fixed by `sgoAdmit` when the task is created: the spawner's ceiling minus the kind `SpawnWithout` removes. The root task of a program gets `sgoRootCeiling`, parsed from `runtime.sgoGrants`, which only the linker's `-sgogrants` sets (known kinds, once each, canonical order; `-X` stays refused). No operation widens a ceiling, and nothing but task creation writes it, so it needs no synchronization.
+
+**Checks before effects.** Every effect operation of package `sgo` calls `sgo_require` first (MissingCapability unless the calling task's ceiling has the kind), then checks the handle's lend chain (`sgo_scopeLive` on every nursery it was lent to: CLOSED revokes) and its own permission (read-only, key prefix), and only then calls the primitive. Root accessors also require the root task and a granted kind (`sgo_rootGrant`). Handles are plain structs in package `sgo` without exported fields; only package `sgo` constructs them, and user code sees them only as opaque capability types.
+
+**Primitives.** `Clock.Since` is `nanotime()` since `runtimeInitTime` in ms; `WallClock.Now` is `time_now()` in ms (TCB-P13). `Entropy.Bytes` is `readRandom` (arc4random on darwin, `/dev/urandom` on Linux); a short read ends the program as ResourceExhausted (TCB-P14, SGO-ERR-003). The seeded generator lives entirely in package `sgo` (PCG-DXSM and the unbiased bounded draw of math/rand/v2, checked output-for-output against that package) and is task-affine. The simulated store is one copy-on-write map per program (TCB-P15): Put builds the next map outside `sgoStoreLock` and publishes it only if no other Put published first, Get reads the published map, so nothing allocates under a runtime lock and Put linearizes at publication.
+
+## 13. Not yet
 
 Lab scheduling (W08). Cleanup contexts with quotas, scope finalizers, receive permits, native `chan`/`select` (W07), `recover`, and `sgo.ExitTask` are not admitted.

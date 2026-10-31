@@ -969,9 +969,11 @@
       ],
       "scenario": "Attempt each supported effect without its required grant.",
       "expected": "Denial occurs before a visible effect or resource creation.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W05: passed - auth-missing-grant, auth-root-only, auth-grant-unknown, auth-grant-duplicate (sgo/evidence/w05/README.md)"
+      ]
     },
     {
       "id": "A02",
@@ -985,9 +987,11 @@
       ],
       "scenario": "Give a child a narrower path/operation/endpoint grant and attempt the parent-level effect.",
       "expected": "The child cannot regain the broader authority through a copied context or public constructor.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W05: passed - auth-spawn-without, auth-simstore-attenuation, auth-simstore-prefix-denied (sgo/evidence/w05/README.md)"
+      ]
     },
     {
       "id": "A03",
@@ -1001,9 +1005,11 @@
       ],
       "scenario": "Use a grant after revocation, expiry, or owning scope closure.",
       "expected": "Forbidden effects fail before execution; immutable result inspection remains allowed where specified.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W05: passed - auth-lend-revoked (sgo/evidence/w05/README.md)"
+      ]
     },
     {
       "id": "A04",
@@ -1017,9 +1023,11 @@
       ],
       "scenario": "Pass a capability from another lab/host execution domain.",
       "expected": "Domain mismatch is detected without using the foreign resource.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W05: passed - passed for production (one execution domain; handles opaque, auth-handle-compare-denied); lab domains W08 (sgo/evidence/w05/README.md)"
+      ]
     },
     {
       "id": "A05",
@@ -1033,9 +1041,11 @@
       ],
       "scenario": "Call a forbidden effect through a transitive dependency, callback, function value, or init path.",
       "expected": "Transitive checking/runtime guardrails prevent the bypass; the TCB does not expand implicitly.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W05: passed - auth-dependency-effect, auth-function-value, auth-dependency-ambient, bind-init-func (sgo/evidence/w05/README.md)"
+      ]
     },
     {
       "id": "A06",
@@ -1049,9 +1059,11 @@
       ],
       "scenario": "Build S-Go target code with cgo, assembly, unsafe, linkname, plugin loading, or raw syscall escape paths.",
       "expected": "All uncontracted application escape routes are rejected in production and lab. No flag, package name, unsafe marker, or alternate profile can enable them.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W05: passed - native-unsafe/cgo/asm/linkname, native-syscall-import, native-plugin-import, tool-go-file-input, imp-stock-object, test-flags.py (sgo/evidence/w05/README.md)"
+      ]
     },
     {
       "id": "A07",
@@ -1065,9 +1077,11 @@
       ],
       "scenario": "Register an uncontrolled user runtime finalizer/cleanup in S-Go production or lab execution.",
       "expected": "The uncontracted callback path is rejected. There is no warning-only or outside-guarantees execution within S-Go.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W05: passed - native-runtime-finalizer, def-scope-finalizer (sgo/evidence/w05/README.md)"
+      ]
     },
     {
       "id": "A08",
@@ -1081,9 +1095,11 @@
       ],
       "scenario": "Use test randomness in lab and request cryptographic randomness in production.",
       "expected": "Replayable randomness is deterministic; production security randomness is never silently substituted by the scheduler PRNG.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W05: passed - auth-random-deterministic, auth-entropy, TestRandomMatchesMathRandV2 (sgo/evidence/w05/README.md)"
+      ]
     },
     {
       "id": "A09",
@@ -1097,9 +1113,11 @@
       ],
       "scenario": "Name a user package or symbol like an allowlisted internal entry point.",
       "expected": "Authorization uses verified package/symbol provenance, not a printed name match.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W05: passed - tcb-user-package-named-runtime, tcb-module-named-sgo, test-tcb.py (sgo/evidence/w05/README.md)"
+      ]
     },
     {
       "id": "A10",
@@ -1113,9 +1131,11 @@
       ],
       "scenario": "Retain aliases to a grant/context and attempt to mutate the parent ceiling through child state.",
       "expected": "Authority cannot be escalated and concurrent access is synchronized.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W05: passed - auth-spawn-without, auth-random-other-task; ceilings written only at task creation (sgo/evidence/w05/README.md)"
+      ]
     },
     {
       "id": "R01",
@@ -1129,9 +1149,11 @@
       ],
       "scenario": "Use the explicit nursery-authorized readiness API to start a child, delay its ready notification, then release it.",
       "expected": "Start waits for exactly one ready signal and the child remains registered in its nursery.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W05: passed - TestSGoReadySuccess, ready-signal (sgo/evidence/w05/README.md)"
+      ]
     },
     {
       "id": "R02",
@@ -1145,9 +1167,11 @@
       ],
       "scenario": "Fail or cancel the child before ready.",
       "expected": "The waiting parent wakes with the correct failure/cancellation and no detached child.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W05: passed - TestSGoReadyChildEndsFirst, TestSGoReadyStarterCancelled, ready-child-fails-first, ready-cancelled-before-signal (sgo/evidence/w05/README.md)"
+      ]
     },
     {
       "id": "R03",
@@ -1161,9 +1185,11 @@
       ],
       "scenario": "Notify ready twice through aliases.",
       "expected": "The second notification is diagnosed without changing the accepted readiness outcome.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W05: passed - TestSGoReadyDuplicateSignal, ready-double-signal, ready-signal-other-task (sgo/evidence/w05/README.md)"
+      ]
     },
     {
       "id": "R04",
@@ -1177,9 +1203,11 @@
       ],
       "scenario": "Race parent cancellation with child admission and readiness.",
       "expected": "No successful start is reported for unowned work; every admitted child remains accounted for and drains.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W05: passed - TestSGoReadyCancelRace, ready-cancelled-before-signal (sgo/evidence/w05/README.md)"
+      ]
     },
     {
       "id": "H01",
@@ -2311,10 +2339,11 @@
       ],
       "scenario": "Place bare go in a nursery, helper, init, unused function, generated file, and indirect dependency.",
       "expected": "All target source paths reject SGO_E_UNSTRUCTURED_SPAWN. No runtime interception silently turns legacy go into structured spawning.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W03: W03 part passed (W05: ported packages) - lex-bare-go, spawn-go-unreachable, spawn-go-in-dependency, spawn-go-generated-file, bind-init-func (sgo/evidence/w03/README.md)"
+        "W03: W03 part passed (W05: ported packages) - lex-bare-go, spawn-go-unreachable, spawn-go-in-dependency, spawn-go-generated-file, bind-init-func (sgo/evidence/w03/README.md)",
+        "W05: passed - W05 part: spawn-go-in-dependency, spawn-go-generated-file, spawn-go-unreachable (unchanged at 0.2.0) (sgo/evidence/w05/README.md)"
       ]
     },
     {
@@ -2391,10 +2420,11 @@
       ],
       "scenario": "Import a ported package with valid contracts, then change its code/digest, remove an internal operation contract, or add unchecked effect annotations.",
       "expected": "Only checked source and matching contract/export identities are admitted. Labels, declared purity, names, and recompilation alone do not authorize execution.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W03: W03 part passed; effect annotations do not exist in subset 0 (W05/W10) - test-identity, test-tcb, imp-stale-contract, imp-stock-object (sgo/evidence/w03/README.md)"
+        "W03: W03 part passed; effect annotations do not exist in subset 0 (W05/W10) - test-identity, test-tcb, imp-stale-contract, imp-stock-object (sgo/evidence/w03/README.md)",
+        "W05: passed - W05 part: imp-stale-contract, imp-stock-object, test-identity.py, test-tcb.py (sgo/evidence/w05/README.md)"
       ]
     },
     {
@@ -2410,10 +2440,11 @@
       ],
       "scenario": "Attempt forbidden targets through interfaces, closures, function values, generic instantiation, callbacks, or reflected invocation.",
       "expected": "Checked signatures/effect summaries preserve the closed admitted set; unsupported summary/dispatch cases are rejected rather than trusted.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W03: W03 part passed (W05: summaries for ported packages) - admission is syntactic over all target source, so function values, closures, and interfaces reach only admitted code; type-generic, reflect-import, spawn-helper-with-handle (sgo/evidence/w03/README.md)"
+        "W03: W03 part passed (W05: summaries for ported packages) - admission is syntactic over all target source, so function values, closures, and interfaces reach only admitted code; type-generic, reflect-import, spawn-helper-with-handle (sgo/evidence/w03/README.md)",
+        "W05: passed - W05 part: auth-function-value; interfaces, user generics, reflection denied (sgo/evidence/w05/README.md)"
       ]
     },
     {
@@ -2432,11 +2463,12 @@
       ],
       "scenario": "Remove a runtime-service/intrinsic contract, spoof a trusted package name, or invoke a sealed primitive from application code.",
       "expected": "Missing TCB clauses block the target path and spoofed identity/callers fail. Trust never means unspecified or generally privileged application code.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
         "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages",
-        "W02 part passed: sgo/evidence/w02/README.md"
+        "W02 part passed: sgo/evidence/w02/README.md",
+        "W05: passed - W05 part: TCB-P12..P16 in the versioned manifest, test-tcb.py, native-linkname (sgo/evidence/w05/README.md)"
       ]
     },
     {
@@ -2471,9 +2503,11 @@
       ],
       "scenario": "Import an old ambient I/O API, pure utility with uncontracted behavior, or service package that retains background tasks.",
       "expected": "Each unported surface is rejected. Familiar package names, ecosystem demand, and pure labeling provide no exception.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W05: passed - W05 part: bind-import-fmt, auth-dependency-ambient, timer-time-package, random-import, net-dial, sync-mutex, policy report (sgo/evidence/w05/README.md)"
+      ]
     },
     {
       "id": "S14",

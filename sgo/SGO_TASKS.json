@@ -398,7 +398,7 @@
         "W04"
       ],
       "risk": "high",
-      "status": "pending",
+      "status": "passed",
       "plan_section": "11/W05",
       "deliverables": [
         "Opaque grants and enforcement",
@@ -426,10 +426,37 @@
         "S11",
         "S13"
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "record": "sgo/evidence/w05/README.md",
+          "recorded_at": "2026-11-01",
+          "platforms": "darwin/arm64 local (logs in sgo/evidence/w05/logs); linux/amd64, linux/arm64 CI sgo-runtime run 41251584929 at 984ab21da0, sgo-spec run 41251861849 and sgo-w00 run 41251861844 at 2365302e5e",
+          "cases": {
+            "A01": "passed",
+            "A02": "passed",
+            "A03": "passed",
+            "A04": "passed for production (lab domains W08)",
+            "A05": "passed",
+            "A06": "passed",
+            "A07": "passed",
+            "A08": "passed",
+            "A09": "passed",
+            "A10": "passed",
+            "R01": "passed",
+            "R02": "passed",
+            "R03": "passed",
+            "R04": "passed",
+            "S05": "passed (W05 part)",
+            "S09": "passed (W05 part)",
+            "S10": "passed (W05 part)",
+            "S11": "passed (W05 part)",
+            "S13": "passed (W05 part)"
+          }
+        }
+      ],
       "blockers": [],
-      "commit": null,
-      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+      "commit": "2365302e5e",
+      "completion_note": "Task ceilings, root grants in sgo.mod (driver, linker, runtime), SpawnWithout, effect handles clock/wallclock/random/entropy/simstore with attenuation and revocable LendTo, n.Start with a readiness handshake, versioned TCB allowlist with TCB-P12..P16, generated policy report checked in CI, 30 new conformance cases, and spec 0.2.0 frozen."
     },
     {
       "id": "W06",

@@ -1,0 +1,11 @@
+sgo: runtime lane: upstream tools at 2aae1000ea1d, fork TCB overlay digest d7b91ad36ca82177
+=== RUN   TestRandomMatchesMathRandV2
+--- PASS: TestRandomMatchesMathRandV2 (0.00s)
+=== RUN   TestRandomSplit
+--- PASS: TestRandomSplit (0.00s)
+=== RUN   TestMulAdd64
+--- PASS: TestMulAdd64 (0.00s)
+=== RUN   TestAPIOutsideTask
+--- PASS: TestAPIOutsideTask (0.00s)
+PASS
+ok  	sgo	0.139s
