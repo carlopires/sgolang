@@ -279,6 +279,13 @@ func sgoselectgo(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs in
 			racereleasemerge(boxes[i])
 		}
 	}
+	// The lab names arms by source index (D50): order0 holds each case's index in the select
+	// statement as written (walk/select.go). Allocated before any channel lock is taken.
+	var src, arms []int32
+	if sgoLab != nil {
+		src = sgoSelSourceIndex(order0, len(cas))
+		arms = make([]int32, 0, len(cas))
+	}
 	locks := sgoSelLocks(cas)
 	for _, c := range locks {
 		sgoRaceRendezvousStart(c)
@@ -287,16 +294,22 @@ func sgoselectgo(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs in
 	// Uniform choice among the arms that can proceed (D34), by reservoir sampling.
 	pick, ready := -1, uint32(0)
 	if sgoLab != nil {
-		// The lab records the ready arms and chooses from the sched stream (D34, D43).
-		var buf [16]int32
-		arms := buf[:0]
+		// The lab records the ready arms (source indices, ascending) and chooses from the sched
+		// stream (D34, D43).
 		for i := range cas {
-			if len(arms) < len(buf) && sgoSelCanProceed(cas[i].c, i < nsends) {
-				arms = append(arms, int32(i))
+			if sgoSelCanProceed(cas[i].c, i < nsends) {
+				arms = append(arms, src[i])
 			}
 		}
+		sgoSortInt32(arms)
 		if len(arms) > 0 || !block {
-			pick = sgoLabSelectChoice(arms)
+			if a := sgoLabSelectChoice(arms); a >= 0 {
+				for i := range src {
+					if src[i] == int32(a) {
+						pick = i
+					}
+				}
+			}
 		}
 	} else {
 		for i := range cas {
@@ -338,6 +351,9 @@ func sgoselectgo(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs in
 	for i := range ws {
 		w := &ws[i]
 		w.g, w.task, w.sel, w.arm = gp, t, sel, int32(i)
+		if i < len(src) {
+			w.arm = src[i] // the arm's source index (D50); ws[n] is no arm
+		}
 		if i == n {
 			break
 		}
@@ -443,4 +459,26 @@ func sgoselectnbrecv(elem unsafe.Pointer, c *sgoChan) (selected, received bool) 
 // sgoblock is select {}: it waits until the task is cancelled, then unwinds (D33, D34).
 func sgoblock() {
 	sgoselectgo(nil, nil, nil, 0, 0, true)
+}
+
+// sgoSelSourceIndex is the source index of each of the n cases of a select (D50): order0[k] for
+// compiled S-Go code, k when there is no order array.
+func sgoSelSourceIndex(order0 *uint16, n int) []int32 {
+	src := make([]int32, n)
+	for k := range src {
+		src[k] = int32(k)
+		if order0 != nil {
+			src[k] = int32(*(*uint16)(add(unsafe.Pointer(order0), uintptr(k)*2)))
+		}
+	}
+	return src
+}
+
+// sgoSortInt32 sorts a short slice ascending (insertion sort: it does not allocate).
+func sgoSortInt32(v []int32) {
+	for i := 1; i < len(v); i++ {
+		for j := i; j > 0 && v[j] < v[j-1]; j-- {
+			v[j], v[j-1] = v[j-1], v[j]
+		}
+	}
 }

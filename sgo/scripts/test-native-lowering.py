@@ -10,7 +10,10 @@ single-arm select, select {}, directional parameters, inlined library helpers), 
 function of the module's packages, and requires that they call no Go channel entry point
 (runtime.chansend1, chanrecv1, chanrecv2, closechan, makechan, makechan64, chanlen, chancap,
 selectgo, selectnbsend, selectnbrecv, block, reflect channel entry points) and that they do call
-the S-Go ones (SGO-CHAN-002, SGO-CHAN-004). The program is also run.
+the S-Go ones (SGO-CHAN-002, SGO-CHAN-004). Every select with a communication case, including a
+single-arm select and a one-arm select with default, goes through sgoselectgo, so that a lab build
+records it with source-order arm indices (D50): sgoselectnbsend and sgoselectnbrecv are not called.
+The program is also run.
 """
 
 import os
@@ -169,7 +172,9 @@ def main():
         if bad:
             sys.exit(f"test-native-lowering: S-Go code calls Go channel entry points: {bad}")
         want = {"sgomakechan", "sgochansend1", "sgochanrecv1", "sgochanrecv2", "sgoclosechan", "sgoselectgo",
-                "sgoselectnbsend", "sgoselectnbrecv", "sgoblock"}
+                "sgoblock"}
+        if nb := sorted({"sgoselectnbsend", "sgoselectnbrecv"} & set(good)):
+            sys.exit(f"test-native-lowering: a select bypasses sgoselectgo (D50): {nb}")
         if missing := sorted(want - set(good)):
             sys.exit(f"test-native-lowering: expected calls missing (the sample no longer covers them?): {missing}")
         # Self-test: the same disassembly check on a stock Go program does see Go's entry points.

@@ -1292,6 +1292,274 @@
       "exit=0 kind=\"\" stdout=\"chose\\n\""
     ]
   },
+  "lab-select-mixed": {
+    "scenario": {
+      "Caps": [
+        0,
+        0,
+        1,
+        1
+      ],
+      "Root": [
+        {
+          "Kind": 2,
+          "N": 4,
+          "Ch": 3,
+          "Text": "",
+          "Arms": null,
+          "Default": false
+        },
+        {
+          "Kind": 5,
+          "N": 0,
+          "Ch": 0,
+          "Text": "",
+          "Arms": [
+            {
+              "Send": false,
+              "Ch": 2,
+              "Val": 0
+            },
+            {
+              "Send": true,
+              "Ch": 2,
+              "Val": 9
+            },
+            {
+              "Send": false,
+              "Ch": 3,
+              "Val": 0
+            }
+          ],
+          "Default": false
+        },
+        {
+          "Kind": 5,
+          "N": 0,
+          "Ch": 0,
+          "Text": "",
+          "Arms": [
+            {
+              "Send": true,
+              "Ch": 0,
+              "Val": 1
+            },
+            {
+              "Send": false,
+              "Ch": 1,
+              "Val": 0
+            }
+          ],
+          "Default": false
+        },
+        {
+          "Kind": 5,
+          "N": 0,
+          "Ch": 0,
+          "Text": "",
+          "Arms": [
+            {
+              "Send": true,
+              "Ch": 0,
+              "Val": 1
+            },
+            {
+              "Send": false,
+              "Ch": 1,
+              "Val": 0
+            }
+          ],
+          "Default": false
+        },
+        {
+          "Kind": 6,
+          "N": 0,
+          "Ch": 0,
+          "Text": "done\n",
+          "Arms": null,
+          "Default": false
+        }
+      ],
+      "Tasks": [
+        [
+          {
+            "Kind": 3,
+            "N": 0,
+            "Ch": 0,
+            "Text": "",
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 2,
+            "N": 7,
+            "Ch": 1,
+            "Text": "",
+            "Arms": null,
+            "Default": false
+          }
+        ]
+      ],
+      "K": 1024,
+      "Quota": 100000,
+      "Policy": ""
+    },
+    "runs": [
+      {
+        "seed": 0,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[1,2],\"arm\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[0,1],\"arm\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[0],\"arm\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"done\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"done\\n\""
+      },
+      {
+        "seed": 1,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[1,2],\"arm\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[0],\"arm\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[1],\"arm\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"done\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"done\\n\""
+      },
+      {
+        "seed": 2,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[1,2],\"arm\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[0,1],\"arm\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[1],\"arm\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"done\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"done\\n\""
+      },
+      {
+        "seed": 7,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[1,2],\"arm\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[0,1],\"arm\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[0],\"arm\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"done\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"done\\n\""
+      },
+      {
+        "seed": 42,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[1,2],\"arm\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":2}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[1],\"arm\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[0],\"arm\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"done\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"done\\n\""
+      }
+    ],
+    "outcomes": [
+      "exit=0 kind=\"\" stdout=\"done\\n\""
+    ]
+  },
   "lab-timer-ties": {
     "scenario": {
       "Caps": null,

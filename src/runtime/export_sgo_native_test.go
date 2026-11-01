@@ -30,29 +30,35 @@ type SGoNArm struct {
 	Val  int
 }
 
-// SGoNSelect runs a select over arms (laid out as walk does: sends first). It returns the index of
-// the chosen arm in arms (-1: default), the received value, and ok.
+// SGoNSelect runs a select over arms, laid out as walk does (sends in source order first, then the
+// receives from the end) with the source index of each case in order (D50). It returns the index
+// of the chosen arm in arms (-1: default), the received value, and ok.
 func SGoNSelect(arms []SGoNArm, block bool) (int, int, bool) {
-	var sends, recvs []int
+	n := len(arms)
+	idx := make([]int, n)
+	nsends, nrecvs := 0, 0
 	for i, a := range arms {
 		if a.Send {
-			sends = append(sends, i)
+			idx[nsends] = i
+			nsends++
 		} else {
-			recvs = append(recvs, i)
+			nrecvs++
+			idx[n-nrecvs] = i
 		}
 	}
-	idx := append(sends, recvs...)
-	cas := make([]sgoScase, len(arms))
-	vals := make([]int, len(arms))
+	cas := make([]sgoScase, n)
+	vals := make([]int, n)
+	order := make([]uint16, 2*n+1)
 	for k, i := range idx {
 		vals[k] = arms[i].Val
 		cas[k] = sgoScase{arms[i].Ch, unsafe.Pointer(&vals[k])}
+		order[k] = uint16(i)
 	}
 	var c0 *sgoScase
-	if len(cas) > 0 {
+	if n > 0 {
 		c0 = &cas[0]
 	}
-	k, ok := sgoselectgo(c0, nil, nil, len(sends), len(recvs), block)
+	k, ok := sgoselectgo(c0, &order[0], nil, nsends, nrecvs, block)
 	if k < 0 {
 		return -1, 0, false
 	}

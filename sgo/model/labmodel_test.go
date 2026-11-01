@@ -42,6 +42,16 @@ var labScenarios = map[string]LScenario{
 	"lab-select": {Caps: []int{1, 1}, K: 1024, Quota: 100000,
 		Root: []LOp{{Kind: LSend, Ch: 0, N: 1}, {Kind: LSend, Ch: 1, N: 2},
 			{Kind: LSelect, Arms: []LArm{{Ch: 0}, {Ch: 1}}}, {Kind: LWrite, Text: "chose\n"}}},
+	// D50: mixed send and receive arms are named by source index. The first select has two ready
+	// arms (1 and 2) that the runtime lays out in another order; the next two block until a child
+	// completes one arm each (the waker records the arm).
+	"lab-select-mixed": {Caps: []int{0, 0, 1, 1}, K: 1024, Quota: 100000,
+		Tasks: [][]LOp{{{Kind: LRecv, Ch: 0}}, {{Kind: LSend, Ch: 1, N: 7}}},
+		Root: []LOp{{Kind: LSend, Ch: 3, N: 4},
+			{Kind: LSelect, Arms: []LArm{{Ch: 2}, {Send: true, Ch: 2, Val: 9}, {Ch: 3}}},
+			{Kind: LSelect, Arms: []LArm{{Send: true, Ch: 0, Val: 1}, {Ch: 1}}},
+			{Kind: LSelect, Arms: []LArm{{Send: true, Ch: 0, Val: 1}, {Ch: 1}}},
+			{Kind: LWrite, Text: "done\n"}}},
 	// Cancellation wakes a sleeper; a child that fails cancels its siblings.
 	"lab-cancel": {Caps: []int{0}, K: 1024, Quota: 100000,
 		Tasks: [][]LOp{

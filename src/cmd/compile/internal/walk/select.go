@@ -39,8 +39,9 @@ func walkSelectCases(cases []*ir.CommClause) []ir.Node {
 		return []ir.Node{mkcallstmt("block")}
 	}
 
-	// optimization: one-case select: single op.
-	if ncas == 1 {
+	// optimization: one-case select: single op. In S-Go code every select with a communication
+	// case goes through selectgo, so that a lab build records it (D50, sgo_lab.go).
+	if ncas == 1 && (!base.SGo || cases[0].Comm == nil) {
 		cas := cases[0]
 		ir.SetPos(cas)
 		l := cas.Init()
@@ -96,8 +97,8 @@ func walkSelectCases(cases []*ir.CommClause) []ir.Node {
 		}
 	}
 
-	// optimization: two-case select but one is default: single non-blocking op.
-	if ncas == 2 && dflt != nil {
+	// optimization: two-case select but one is default: single non-blocking op (not in S-Go code).
+	if ncas == 2 && dflt != nil && !base.SGo {
 		cas := cases[0]
 		if cas == dflt {
 			cas = cases[1]
@@ -164,6 +165,7 @@ func walkSelectCases(cases []*ir.CommClause) []ir.Node {
 	}
 
 	// register cases
+	src := 0 // the source index of the next communication case (S-Go: order[i], D50)
 	for _, cas := range cases {
 		ir.SetPos(cas)
 
@@ -195,6 +197,12 @@ func walkSelectCases(cases []*ir.CommClause) []ir.Node {
 		}
 
 		casorder[i] = cas
+		if base.SGo {
+			// S-Go's selectgo does not use order as scratch: it reads each case's source index.
+			r := ir.NewAssignStmt(base.Pos, ir.NewIndexExpr(base.Pos, order, ir.NewInt(base.Pos, int64(i))), ir.NewInt(base.Pos, int64(src)))
+			init = append(init, typecheck.Stmt(r))
+		}
+		src++
 
 		setField := func(f string, val ir.Node) {
 			r := ir.NewAssignStmt(base.Pos, ir.NewSelectorExpr(base.Pos, ir.ODOT, ir.NewIndexExpr(base.Pos, selv, ir.NewInt(base.Pos, int64(i))), typecheck.Lookup(f)), val)
