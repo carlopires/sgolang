@@ -357,6 +357,73 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - **`lim := sgo.NewCapacityLimiter(n)`** (`n >= 1`) with `tok, err := lim.Acquire(task)` (waits in FIFO order for one of `n` slots; a cancellation point; returns a task-affine `*sgo.Token`) and `tok.Release()`. A token is an obligation like a send permit: an unreleased token is released at the owner's nursery-body exit and at task end, with a `TokenAbandoned` diagnostic, so a failing or cancelled task never leaks a slot. Releasing twice, or releasing another task's token, is a `SpawnContractViolation`.
 - **Not added:** `Semaphore` (a limiter without borrower tracking, the property worth having), `Lock` (a limiter of 1 with no shared state to protect), and `Condition` (requires shared state).
 
+
+## D40 — Spec version and scope of the lab **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** The lab is spec **0.4.0**, a strict superset of 0.3.0 (as D23, D31): no program changes meaning and no construct is added. It adds the **lab execution configuration** (plan §1.3: a configuration, not a dialect) with its own clauses: scheduler, virtual time, effect policy, trace and replay, outcomes. A program built for the lab and one built for production are the same source under the same admission; they differ only in the scheduling and effect adapters and in the recorded execution configuration (S14). Lab support is W08 only; simulated network and file fixtures belong with W09.
+
+## D41 — How a lab run is started **[USER]** · PROPOSED 2026-11-02
+
+**Why it matters.** The lab must never activate by accident in production, and an environment variable or flag that changes production behaviour would be a mode the plan forbids (S15).
+
+**Options.**
+- **(a) Separate lab build.** `sgo lab run [-seed N] [-trace FILE] [-sched random|fifo] [-quota N]`, `sgo lab replay FILE`, and `sgo lab sweep -seeds A..B` build the program as a **lab binary**: the execution configuration `lab` is part of the build identity (objects and binaries of the two configurations refuse to mix, SGO-IMP-002), and the run's manifest is passed by the driver. A production binary contains no path that enables the lab scheduler.
+- **(b) Runtime switch.** One binary; the lab is enabled by a manifest file or environment variable at start.
+
+**Recommendation: (a).** It keeps production binaries free of any lab activation path and makes "this trace came from a lab binary of exactly this program" checkable from the identity (D04, S14).
+
+## D42 — Scheduler: single managed user execution **[USER]** · PROPOSED 2026-11-02
+
+**Why it matters.** Replay needs every user-visible decision to come from the trace; Go's scheduler, `GOMAXPROCS`, and GC timing must not change them (plan §9.1, D10).
+
+**Options.**
+- **(a) Baton scheduler over the S-Go runtime.** Exactly one S-Go task holds the baton and runs; every other task is parked by the S-Go runtime. At each **scheduling boundary** (D43) the running task yields; the scheduler computes the canonical ready set (task IDs in creation order), chooses one (seeded generator or the trace), and hands it the baton. Runtime goroutines (GC, services) still run freely; they never hold the baton and never make user-visible decisions. Upstream `synctest` is a source pattern (durable blocking, fake time, idleness detection), not the mechanism, because it has no choice layer.
+- **(b) Extend `testing/synctest` bubbles** with a recorded choice for every runnable goroutine.
+
+**Recommendation: (a).** S-Go already funnels every blocking and wake-up through its own runtime (nurseries, channels, events, sleep, cancellation), so the ready set and every decision are in S-Go code with stable IDs, independent of Go's run queues. (b) would have to intercept Go's scheduler itself.
+
+## D43 — Scheduling boundaries and the step quota **[USER]** · PROPOSED 2026-11-02
+
+**Recommendation.**
+- **Choice points:** spawn, task end, nursery join, every channel operation and `select`, `Event`/`CapacityLimiter` operations, `Sleep`, `Checkpoint`, readiness, effect operations, and `Writer.WriteString`. At each, the ready set and the chosen task are recorded; a `select` also records its ready arms and the chosen arm (D34).
+- **Steps:** a lab build instruments every loop back-edge and function entry of S-Go code with a step counter (a lab-only compiler instrumentation, recorded in the identity). Every `K` steps (manifest, default 1024) the running task reaches a deterministic yield, which is also a choice point, so a busy loop cannot starve others forever. The total steps are bounded by the **quota** (manifest); exhausting it ends the run with `LabQuotaExhausted` (D07, D11).
+- Production builds have no such instrumentation.
+
+## D44 — Generator and streams **[USER]** · PROPOSED 2026-11-02
+
+**Options.**
+- **(a) PCG-DXSM 128** (the algorithm of `sgo.Random`, D26, already checked against `math/rand/v2`'s vectors), with unbiased bounded sampling, and **independent streams** derived from the manifest's master seed by a frozen SplitMix64 step: `sched`, `fault`, and `data`.
+- **(b) PCG32** as named in plan §9.4, a second algorithm with its own vectors.
+
+**Recommendation: (a).** One generator in the TCB instead of two, with reference vectors already in the evidence; stream isolation is tested (D01). The plan accepts PCG32; it does not require it.
+
+## D45 — Effects in the lab **[USER]** · PROPOSED 2026-11-02
+
+**Recommendation.**
+- **Clock:** virtual monotonic time, starting at 0; it advances only when no task is ready, to the next timer deadline (D06, D07). `Sleep` uses virtual time; timers with equal deadlines fire in `(deadline, timer ID)` order.
+- **WallClock:** the manifest's fixed epoch plus virtual time.
+- **Random:** unchanged (it is already seeded by the program).
+- **Entropy:** `UnsupportedLabEffect` (a lab failure kind, status 2) in the default policy; it is unpredictable by definition, and silently substituting a seeded stream would hide that from the program's author. A later manifest option may supply recorded entropy.
+- **SimStore:** the existing in-process store (deterministic), starting empty.
+- **Stdout:** written and also recorded as `write` events in the trace.
+- Anything else effectful is already denied at compile time in 0.3.0, so the lab subset is all of 0.3.0 except Entropy (D09).
+
+## D46 — Trace and replay format **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** Versioned JSONL (plan §9.5): a header with the manifest (identity of binary, spec, admission, configuration, target, sources, seed and streams, scheduler and instrumentation versions, quota, epoch), one line per event (sequence, virtual time, task/scope/operation IDs, kind, ready set, choice, arm set, written text, outcome), and a footer with the event count, completion status, and SHA-256 of the canonical lines. No PIDs, host paths, addresses, or wall-clock durations in canonical lines; host data goes to a sidecar file. `replay` rejects an incompatible manifest before running, replays every choice from the trace (never from the generator), and stops at the first divergence, reporting the expected and actual ready sets and the last matching event (D03, D04, D05, D12).
+
+## D47 — Lab outcomes **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** In addition to every production outcome (unchanged, S14): **`LabDeadlock`** when no task is ready and no timer is pending while a task is live, with the wait graph (each live task, the operation it waits in, the scope chain) in the record (D08); **`LabQuotaExhausted`** when the quota is used up (not a deadlock, D07); **`UnsupportedLabEffect`** (D45). Each is one diagnostic record, status 2. A run that hangs without reaching a boundary (uninstrumented TCB code) is ended by the driver's wall-clock watchdog and reported in the sidecar as a host hang, never as a managed outcome (D11).
+
+## D48 — Sweeps and saved failures **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** `sgo lab sweep -seeds A..B` runs each seed in a fresh process and reports the distinct semantic outcomes (exit status, stdout, diagnostic record). A run **fails** if its exit status is not 0, or, with `-expect FILE`, if its stdout differs from the file. The first failure's trace is saved; `sgo lab replay` reproduces it in a fresh process (D13). A sweep passing means those runs passed, not that every schedule does (plan §9.6); the record says so.
+
+## D49 — Scheduler policies **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** `random` (default): uniform choice from the ready set with the `sched` stream. `fifo`: the longest-ready task runs next (a diagnostic, fair round-robin scheduler). The scheduler policy and version are in the manifest; a random schedule is not assumed fair, and the quota bounds every run.
+
 ---
 
 ## Approval record
