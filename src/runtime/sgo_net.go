@@ -199,6 +199,9 @@ func sgoNetAccept(h *sgoHandle) (*sgoHandle, *sgoIOErr) {
 		return nil, e
 	}
 	defer sgoHandleEnd(h)
+	if h.conn != nil {
+		return sgoFakeAccept(h)
+	}
 	for {
 		fd := sgoAccept(h.fd)
 		switch {
@@ -225,6 +228,9 @@ func sgoConnRead(h *sgoHandle, max int) (string, *sgoIOErr) {
 	defer sgoHandleEnd(h)
 	if max <= 0 {
 		return "", nil
+	}
+	if h.conn != nil {
+		return sgoFakeConnRead(h, max)
 	}
 	buf := make([]byte, min(max, sgoIOChunk))
 	for {
@@ -253,6 +259,9 @@ func sgoConnWrite(h *sgoHandle, s string) (int, *sgoIOErr) {
 		return 0, e
 	}
 	defer sgoHandleEnd(h)
+	if h.conn != nil {
+		return sgoFakeConnWrite(h, s)
+	}
 	done := 0
 	for done < len(s) {
 		chunk := min(len(s)-done, sgoIOChunk)

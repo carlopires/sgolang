@@ -137,10 +137,13 @@ func sgo_dial(addr string) (unsafe.Pointer, error) {
 	if g == nil {
 		panic(error(&sgoFailure{"MissingCapability", "Dial " + quoteKind(addr) + ": no connect grant for this endpoint", ""}))
 	}
+	var h *sgoHandle
+	var e *sgoIOErr
 	if sgoLab != nil {
-		panic(error(&sgoFailure{"Unsupported", "network grants are not yet served in lab runs (W09 step 4)", ""}))
+		h, e = sgoFakeDial(g) // lab runs: the run's loopback network (D58)
+	} else {
+		h, e = sgoNetConnect(g.ip, g.v6, g.port, g.addr)
 	}
-	h, e := sgoNetConnect(g.ip, g.v6, g.port, g.addr)
 	if e != nil {
 		return nil, sgoIOResult(e, "Dial")
 	}
@@ -153,10 +156,13 @@ func sgo_listen(addr string) (unsafe.Pointer, error) {
 	if g == nil {
 		panic(error(&sgoFailure{"MissingCapability", "Listen " + quoteKind(addr) + ": no listen grant for this endpoint", ""}))
 	}
+	var h *sgoHandle
+	var e *sgoIOErr
 	if sgoLab != nil {
-		panic(error(&sgoFailure{"Unsupported", "network grants are not yet served in lab runs (W09 step 4)", ""}))
+		h, e = sgoFakeListen(g)
+	} else {
+		h, e = sgoNetListen(g.ip, g.v6, g.port, g.addr)
 	}
-	h, e := sgoNetListen(g.ip, g.v6, g.port, g.addr)
 	if e != nil {
 		return nil, sgoIOResult(e, "Listen")
 	}

@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.4.0",
- "allowlist_digest": "cf4219735624c2ffca230c9b1bb29996118bc1bb2fb81b0e131d3bd66c7b98ec",
+ "allowlist_digest": "164fbeb9487c74247933231503da62d3640c22d4798c1ae7ee69bdb064da2d4a",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -445,8 +445,8 @@
  ],
  "summary": {
   "packages": 31,
-  "files": 1060,
-  "files_changed_from_upstream": 44,
+  "files": 1062,
+  "files_changed_from_upstream": 46,
   "services": {
    "active": 5,
    "dormant": 5,
@@ -4476,7 +4476,7 @@
   },
   {
    "path": "src/runtime/sgo_io.go",
-   "sha256": "cbe9ef12d017737e82658ab03baac46ffce338b87bdff34063f3654edd186652",
+   "sha256": "7920f996b8ada0c39ef1690461883214c435202836ed2e7cde1c398ec2d99b14",
    "upstream_identical": false
   },
   {
@@ -4511,17 +4511,22 @@
   },
   {
    "path": "src/runtime/sgo_ioapi.go",
-   "sha256": "d9adebb1fc65356df6908d66d53bb6dc3fadd017fa01ececdf6c92fb77f85700",
+   "sha256": "e7f3f0777613d2a9f89afc5b5fd2dde66695612aa6ce97eee5dc57ca71593f74",
    "upstream_identical": false
   },
   {
    "path": "src/runtime/sgo_iodir.go",
-   "sha256": "22d2bcc5d5bbe4655b92fbd07ff50ee18859b210543c5948afa5703c2a0febfd",
+   "sha256": "828b3002845f1b584d54102cf1021252a8212a06559c721c4c2d11adadbd038c",
+   "upstream_identical": false
+  },
+  {
+   "path": "src/runtime/sgo_iofake.go",
+   "sha256": "9567c8a438c07a1dd282e2098b9ebb7b563d0628027343cdfe50bf8493dee246",
    "upstream_identical": false
   },
   {
    "path": "src/runtime/sgo_iogrant.go",
-   "sha256": "afc405cdcba0d62b324c5bd24f50b13a4a0e305c5ab30e09164ae2cd91ff2d64",
+   "sha256": "7ae35d4ad4c472239f28259ef94f36fbb7628fcd63635c93367b7e8580c512f5",
    "upstream_identical": false
   },
   {
@@ -4561,7 +4566,7 @@
   },
   {
    "path": "src/runtime/sgo_net.go",
-   "sha256": "5d6ef9e07473ddc8a571b12034fa15dd04ac07af705b75c334cf48039e6101ea",
+   "sha256": "4409cec0a8176df68a3694c8f9044eaf63a026eae4244506a15575a1f74fcc5e",
    "upstream_identical": false
   },
   {
@@ -4572,6 +4577,11 @@
   {
    "path": "src/runtime/sgo_net_sys_linux.go",
    "sha256": "6856a8a3ade1b350b68faa2308988e5abe3ba7ad93f4e24aa5251e7ec5fe467d",
+   "upstream_identical": false
+  },
+  {
+   "path": "src/runtime/sgo_netfake.go",
+   "sha256": "1ae680f372a28b22173e2812759a5e82d577976f5e81566710e3e239c9010682",
    "upstream_identical": false
   },
   {

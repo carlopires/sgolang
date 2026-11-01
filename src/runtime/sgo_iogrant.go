@@ -25,7 +25,8 @@ type sgoDirGrant struct {
 	ro   bool
 	path string
 	fd   int32
-	err  string // the error kind of the open at start, or ""
+	err  string       // the error kind of the open at start, or ""
+	fake *sgoFakeNode // lab runs: the in-memory tree (sgo_iofake.go)
 }
 
 type sgoNetGrant struct {
@@ -57,7 +58,9 @@ func sgoIOGrantsInit() {
 		switch {
 		case len(f) == 4 && f[0] == "dir" && (f[2] == "ro" || f[2] == "rw"):
 			g := sgoDirGrant{name: f[1], ro: f[2] == "ro", path: f[3], fd: -1}
-			if sgoLab == nil {
+			if sgoLab != nil {
+				g.fake = &sgoFakeNode{dir: true}
+			} else {
 				fd := sgoOpenat(sgoAT_FDCWD, sgoCString(g.path), sgoO_RDONLY|sgoO_DIRECTORY|sgoO_CLOEXEC, 0)
 				if fd < 0 {
 					g.err = sgoErrKind(fd)

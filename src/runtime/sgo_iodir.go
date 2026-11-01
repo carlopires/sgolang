@@ -11,9 +11,6 @@ const sgoMaxReadFile = 16 << 20 // ReadFile bound (D59)
 
 // sgoDirRoot returns the descriptor of grant g, or the error of its open at start.
 func sgoDirRoot(g int) (int32, *sgoIOErr) {
-	if sgoLab != nil {
-		panic(error(&sgoFailure{"Unsupported", "file grants are not yet served in lab runs (W09 step 4)", ""}))
-	}
 	d := &sgoDirGrants[g]
 	if d.fd < 0 {
 		return -1, &sgoIOErr{kind: d.err}
@@ -55,6 +52,9 @@ func sgoDirParentDone(root, fd int32) {
 
 // sgoDirIsDir checks that path names a directory in grant g (Dir.Sub).
 func sgoDirIsDir(g int, path string) *sgoIOErr {
+	if sgoLab != nil {
+		return sgoFakeIsDir(g, path)
+	}
 	root, e := sgoDirBegin(g)
 	if e != nil {
 		return e
@@ -69,6 +69,9 @@ func sgoDirIsDir(g int, path string) *sgoIOErr {
 
 // sgoDirMkdir creates directory path in grant g.
 func sgoDirMkdir(g int, path string) *sgoIOErr {
+	if sgoLab != nil {
+		return sgoFakeMkdir(g, path)
+	}
 	root, e := sgoDirBegin(g)
 	if e != nil {
 		return e
@@ -87,6 +90,9 @@ func sgoDirMkdir(g int, path string) *sgoIOErr {
 // sgoDirRemove removes the file, or the empty directory, path in grant g. A symlink is removed
 // itself, never followed.
 func sgoDirRemove(g int, path string) *sgoIOErr {
+	if sgoLab != nil {
+		return sgoFakeRemove(g, path)
+	}
 	root, e := sgoDirBegin(g)
 	if e != nil {
 		return e
@@ -112,6 +118,9 @@ func sgoDirRemove(g int, path string) *sgoIOErr {
 
 // sgoDirOpenGrant opens path in grant g as a file handle of the calling task.
 func sgoDirOpenGrant(g int, path string, write bool) (*sgoHandle, *sgoIOErr) {
+	if sgoLab != nil {
+		return sgoFakeOpen(g, path, write)
+	}
 	root, e := sgoDirBegin(g)
 	if e != nil {
 		return nil, e
@@ -166,6 +175,9 @@ func sgoDirWriteFile(g int, path, data string) *sgoIOErr {
 
 // sgoDirList returns the sorted names in directory path of grant g ("" is the grant directory).
 func sgoDirList(g int, path string) ([]string, *sgoIOErr) {
+	if sgoLab != nil {
+		return sgoFakeList(g, path)
+	}
 	root, e := sgoDirBegin(g)
 	if e != nil {
 		return nil, e

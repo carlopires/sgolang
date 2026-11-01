@@ -34,9 +34,11 @@ const (
 type sgoHandle struct {
 	kind     uint8
 	fd       int32
-	pd       *pollDesc // sockets: the poller registration (sgo_net.go)
-	readOnly bool      // a directory opened from an ro grant, or ReadOnly
-	write    bool      // a file opened for writing
+	pd       *pollDesc    // sockets: the poller registration (sgo_net.go)
+	fake     *sgoFakeFile // lab: a fake file (sgo_iofake.go)
+	conn     *sgoFakeConn // lab: a fake connection or listener (sgo_netfake.go)
+	readOnly bool         // a directory opened from an ro grant, or ReadOnly
+	write    bool         // a file opened for writing
 	owner    *sgoTask
 	scope    *sgoScope // the owner's innermost nursery at open (nil: the task body)
 	closed   bool
@@ -163,7 +165,12 @@ func sgoHandleFree(h *sgoHandle) {
 		poll_runtime_pollClose(h.pd)
 		h.pd = nil
 	}
-	sgoCloseFD(h.fd)
+	if h.conn != nil {
+		sgoFakeConnClose(h)
+	}
+	if h.fd >= 0 {
+		sgoCloseFD(h.fd)
+	}
 	h.fd = -1
 	t := h.owner
 	if h.prev != nil {
@@ -221,6 +228,9 @@ func sgoFileRead(h *sgoHandle, max int) (string, *sgoIOErr) {
 	if max <= 0 {
 		return "", nil
 	}
+	if h.fake != nil {
+		return sgoFakeRead(h, max)
+	}
 	buf := make([]byte, min(max, sgoIOChunk))
 	for {
 		n := sgoSysRead(h.fd, unsafe.Pointer(&buf[0]), int32(len(buf)))
@@ -246,6 +256,9 @@ func sgoFileWrite(h *sgoHandle, s string) (int, *sgoIOErr) {
 	if !h.write {
 		return 0, &sgoIOErr{"ReadOnly", 0}
 	}
+	if h.fake != nil {
+		return sgoFakeWrite(h, s)
+	}
 	done := 0
 	for done < len(s) {
 		if done > 0 && sgoTaskCancellation(sgoCurrent()) != nil {
@@ -270,6 +283,10 @@ func sgoFileSize(h *sgoHandle) (int, *sgoIOErr) {
 		return 0, e
 	}
 	defer sgoHandleEnd(h)
+	if h.fake != nil {
+		sgoLabPoint()
+		return len(h.fake.node.data), nil
+	}
 	var st sgoStatBuf
 	if sgoFstat(h.fd, &st) < 0 {
 		return 0, &sgoIOErr{"IOError", 0}
