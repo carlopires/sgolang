@@ -1,0 +1,538 @@
+{
+  "native-buffered": {
+    "scenario": {
+      "Caps": [
+        1
+      ],
+      "Events": 0,
+      "Limits": null,
+      "Tasks": [
+        [
+          {
+            "Kind": 0,
+            "Ch": 0,
+            "Val": 1,
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 0,
+            "Ch": 0,
+            "Val": 2,
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 1,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 1,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          }
+        ]
+      ],
+      "Cancellable": null
+    },
+    "outcomes": [
+      "t0=done t1=done c0=[1 2]/[] diags=0"
+    ],
+    "blocked_histories": false
+  },
+  "native-cancel-recv": {
+    "scenario": {
+      "Caps": [
+        0
+      ],
+      "Events": 0,
+      "Limits": null,
+      "Tasks": [
+        [
+          {
+            "Kind": 1,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 0,
+            "Ch": 0,
+            "Val": 7,
+            "Arms": null,
+            "Default": false
+          }
+        ]
+      ],
+      "Cancellable": [
+        true,
+        true
+      ]
+    },
+    "outcomes": [
+      "t0=Cancelled t1=Cancelled c0=[]/[] diags=0",
+      "t0=done t1=done c0=[7]/[] diags=0"
+    ],
+    "blocked_histories": false
+  },
+  "native-close-race": {
+    "scenario": {
+      "Caps": [
+        1
+      ],
+      "Events": 0,
+      "Limits": null,
+      "Tasks": [
+        [
+          {
+            "Kind": 0,
+            "Ch": 0,
+            "Val": 1,
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 0,
+            "Ch": 0,
+            "Val": 2,
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 3,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 1,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 1,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          }
+        ]
+      ],
+      "Cancellable": null
+    },
+    "outcomes": [
+      "t0=ClosedChannel t1=done t2=done c0=[1]/[] diags=0",
+      "t0=ClosedChannel t1=done t2=done c0=[]/[] diags=0",
+      "t0=done t1=done t2=done c0=[1 2]/[] diags=0"
+    ],
+    "blocked_histories": false
+  },
+  "native-event": {
+    "scenario": {
+      "Caps": [],
+      "Events": 1,
+      "Limits": null,
+      "Tasks": [
+        [
+          {
+            "Kind": 5,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 5,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 4,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 4,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          }
+        ]
+      ],
+      "Cancellable": [
+        true,
+        false,
+        false
+      ]
+    },
+    "outcomes": [
+      "t0=Cancelled t1=done t2=done diags=0",
+      "t0=done t1=done t2=done diags=0"
+    ],
+    "blocked_histories": false
+  },
+  "native-limiter": {
+    "scenario": {
+      "Caps": [],
+      "Events": 0,
+      "Limits": [
+        1
+      ],
+      "Tasks": [
+        [
+          {
+            "Kind": 6,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 7,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 6,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 6,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 7,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          }
+        ]
+      ],
+      "Cancellable": [
+        false,
+        false,
+        true
+      ]
+    },
+    "outcomes": [
+      "t0=done t1=done t2=Cancelled diags=1",
+      "t0=done t1=done t2=done diags=1"
+    ],
+    "blocked_histories": false
+  },
+  "native-rendezvous": {
+    "scenario": {
+      "Caps": [
+        0
+      ],
+      "Events": 0,
+      "Limits": null,
+      "Tasks": [
+        [
+          {
+            "Kind": 0,
+            "Ch": 0,
+            "Val": 1,
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 0,
+            "Ch": 0,
+            "Val": 2,
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 1,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 1,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          }
+        ]
+      ],
+      "Cancellable": null
+    },
+    "outcomes": [
+      "t0=done t1=done t2=done c0=[1 2]/[] diags=0",
+      "t0=done t1=done t2=done c0=[2 1]/[] diags=0"
+    ],
+    "blocked_histories": false
+  },
+  "native-select-default": {
+    "scenario": {
+      "Caps": [
+        1
+      ],
+      "Events": 0,
+      "Limits": null,
+      "Tasks": [
+        [
+          {
+            "Kind": 2,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": [
+              {
+                "Send": false,
+                "Ch": 0,
+                "Val": 0
+              }
+            ],
+            "Default": true
+          }
+        ],
+        [
+          {
+            "Kind": 0,
+            "Ch": 0,
+            "Val": 5,
+            "Arms": null,
+            "Default": false
+          }
+        ]
+      ],
+      "Cancellable": null
+    },
+    "outcomes": [
+      "t0=done t1=done c0=[5]/[] diags=0",
+      "t0=done t1=done c0=[]/[5] diags=0"
+    ],
+    "blocked_histories": false
+  },
+  "native-select-recv": {
+    "scenario": {
+      "Caps": [
+        1,
+        1
+      ],
+      "Events": 0,
+      "Limits": null,
+      "Tasks": [
+        [
+          {
+            "Kind": 0,
+            "Ch": 0,
+            "Val": 1,
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 0,
+            "Ch": 1,
+            "Val": 2,
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 2,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": [
+              {
+                "Send": false,
+                "Ch": 0,
+                "Val": 0
+              },
+              {
+                "Send": false,
+                "Ch": 1,
+                "Val": 0
+              }
+            ],
+            "Default": false
+          },
+          {
+            "Kind": 2,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": [
+              {
+                "Send": false,
+                "Ch": 0,
+                "Val": 0
+              },
+              {
+                "Send": false,
+                "Ch": 1,
+                "Val": 0
+              }
+            ],
+            "Default": false
+          }
+        ]
+      ],
+      "Cancellable": null
+    },
+    "outcomes": [
+      "t0=done t1=done t2=done c0=[1]/[] c1=[2]/[] diags=0"
+    ],
+    "blocked_histories": false
+  },
+  "native-select-send": {
+    "scenario": {
+      "Caps": [
+        0,
+        0
+      ],
+      "Events": 0,
+      "Limits": null,
+      "Tasks": [
+        [
+          {
+            "Kind": 2,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": [
+              {
+                "Send": true,
+                "Ch": 0,
+                "Val": 1
+              },
+              {
+                "Send": true,
+                "Ch": 1,
+                "Val": 2
+              }
+            ],
+            "Default": false
+          },
+          {
+            "Kind": 3,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 3,
+            "Ch": 1,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 1,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 1,
+            "Ch": 1,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          }
+        ]
+      ],
+      "Cancellable": null
+    },
+    "outcomes": [
+      "t0=done t1=done t2=done c0=[1]/[] c1=[]/[] diags=0",
+      "t0=done t1=done t2=done c0=[]/[] c1=[2]/[] diags=0"
+    ],
+    "blocked_histories": false
+  },
+  "native-send-closed": {
+    "scenario": {
+      "Caps": [
+        1
+      ],
+      "Events": 0,
+      "Limits": null,
+      "Tasks": [
+        [
+          {
+            "Kind": 3,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 0,
+            "Ch": 0,
+            "Val": 9,
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 1,
+            "Ch": 0,
+            "Val": 0,
+            "Arms": null,
+            "Default": false
+          }
+        ]
+      ],
+      "Cancellable": null
+    },
+    "outcomes": [
+      "t0=ClosedChannel t1=done c0=[]/[] diags=0"
+    ],
+    "blocked_histories": false
+  }
+}
