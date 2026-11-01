@@ -33,6 +33,11 @@ const (
 	sgoEHOSTUNREACH = 65
 )
 
+// sgoLibc calls libc function fn. Like the syscall package's wrappers it cannot grow the stack, so
+// a stack address passed as uintptr stays valid for the call.
+//
+//go:nosplit
+//go:uintptrkeepalive
 func sgoLibc(fn uintptr, args ...uintptr) int32 {
 	r, _, errno := syscall_rawsyscalln(fn, args...)
 	if int32(r) == -1 {
@@ -135,3 +140,44 @@ func sgo_getsockname_trampoline()
 //go:cgo_import_dynamic libc_setsockopt setsockopt "/usr/lib/libSystem.B.dylib"
 //go:cgo_import_dynamic libc_getsockopt getsockopt "/usr/lib/libSystem.B.dylib"
 //go:cgo_import_dynamic libc_getsockname getsockname "/usr/lib/libSystem.B.dylib"
+
+// sgoReadDirNames returns the names in directory fd (closing fd), without "." and "..", or a
+// negated errno. libc's fdopendir takes fd; readdir_r fills a struct dirent (d_namlen uint16 at
+// 18, d_name at 21 on darwin/arm64).
+func sgoReadDirNames(fd int32) ([]string, int32) {
+	dir, _, errno := syscall_rawsyscalln(abi.FuncPCABI0(sgo_fdopendir_trampoline), uintptr(fd))
+	if dir == 0 {
+		sgoCloseFD(fd)
+		return nil, -int32(errno)
+	}
+	var names []string
+	var ent [1048]byte
+	var res uintptr
+	r := int32(0)
+	for {
+		e, _, _ := syscall_rawsyscalln(abi.FuncPCABI0(sgo_readdir_r_trampoline), dir, uintptr(unsafe.Pointer(&ent[0])), uintptr(unsafe.Pointer(&res)))
+		if e != 0 {
+			r = -int32(e)
+			break
+		}
+		if res == 0 {
+			break
+		}
+		n := int(*(*uint16)(unsafe.Pointer(&ent[18])))
+		if name := string(ent[21 : 21+n]); name != "." && name != ".." {
+			names = append(names, name)
+		}
+	}
+	KeepAlive(&ent)
+	KeepAlive(&res)
+	syscall_rawsyscalln(abi.FuncPCABI0(sgo_closedir_trampoline), dir)
+	return names, r
+}
+
+func sgo_fdopendir_trampoline()
+func sgo_readdir_r_trampoline()
+func sgo_closedir_trampoline()
+
+//go:cgo_import_dynamic libc_fdopendir fdopendir "/usr/lib/libSystem.B.dylib"
+//go:cgo_import_dynamic libc_readdir_r readdir_r "/usr/lib/libSystem.B.dylib"
+//go:cgo_import_dynamic libc_closedir closedir "/usr/lib/libSystem.B.dylib"

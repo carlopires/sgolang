@@ -102,3 +102,31 @@ func sgoLocalPort(fd int32) (uint16, int32) {
 	KeepAlive(&n)
 	return uint16(b[2])<<8 | uint16(b[3]), r
 }
+
+// sgoReadDirNames returns the names in directory fd (closing fd), without "." and "..", or a
+// negated errno: getdents64 records (d_reclen uint16 at 16, d_name NUL-terminated at 19).
+func sgoReadDirNames(fd int32) ([]string, int32) {
+	defer sgoCloseFD(fd)
+	var names []string
+	buf := make([]byte, 8192)
+	for {
+		n := sgoSys(sgoSYS_getdents64, uintptr(fd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)), 0)
+		if n == -sgoEINTR {
+			continue
+		}
+		if n <= 0 {
+			return names, min(n, 0)
+		}
+		for off := 0; off < int(n); {
+			reclen := int(*(*uint16)(unsafe.Pointer(&buf[off+16])))
+			end := off + 19
+			for buf[end] != 0 {
+				end++
+			}
+			if name := string(buf[off+19 : end]); name != "." && name != ".." {
+				names = append(names, name)
+			}
+			off += reclen
+		}
+	}
+}

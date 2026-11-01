@@ -163,3 +163,54 @@ func sgoDirWriteFile(g int, path, data string) *sgoIOErr {
 	_, e = sgoFileWrite(f, data)
 	return e
 }
+
+// sgoDirList returns the sorted names in directory path of grant g ("" is the grant directory).
+func sgoDirList(g int, path string) ([]string, *sgoIOErr) {
+	root, e := sgoDirBegin(g)
+	if e != nil {
+		return nil, e
+	}
+	var fd int32
+	if path == "" {
+		fd = sgoOpenat(root, sgoCString("."), sgoO_RDONLY|sgoO_DIRECTORY|sgoO_CLOEXEC, 0)
+		if fd < 0 {
+			return nil, &sgoIOErr{kind: sgoErrKind(fd)}
+		}
+	} else {
+		var kind string
+		if fd, kind = sgoResolve(root, path, sgoO_RDONLY|sgoO_DIRECTORY, 0); kind != "" {
+			return nil, &sgoIOErr{kind: kind}
+		}
+	}
+	names, r := sgoReadDirNames(fd) // closes fd
+	if r < 0 {
+		return nil, &sgoIOErr{kind: sgoErrKind(r)}
+	}
+	sgoSortStrings(names)
+	return names, nil
+}
+
+// sgoSortStrings sorts s by byte order (merge sort; the runtime cannot import sort).
+func sgoSortStrings(s []string) {
+	if len(s) < 2 {
+		return
+	}
+	tmp := make([]string, len(s))
+	for w := 1; w < len(s); w *= 2 {
+		for lo := 0; lo < len(s)-w; lo += 2 * w {
+			mid, hi := lo+w, min(lo+2*w, len(s))
+			i, j, k := lo, mid, lo
+			for i < mid && j < hi {
+				if s[j] < s[i] {
+					tmp[k], j = s[j], j+1
+				} else {
+					tmp[k], i = s[i], i+1
+				}
+				k++
+			}
+			k += copy(tmp[k:], s[i:mid])
+			copy(tmp[k:], s[j:hi])
+			copy(s[lo:hi], tmp[lo:hi])
+		}
+	}
+}

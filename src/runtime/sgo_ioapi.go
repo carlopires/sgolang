@@ -171,3 +171,9 @@ func sgo_accept(h unsafe.Pointer) (unsafe.Pointer, error) {
 	}
 	return unsafe.Pointer(c), nil
 }
+
+//go:linkname sgo_dirList sgo.runtime_dirList
+func sgo_dirList(g int, path string) ([]string, error) {
+	names, e := sgoDirList(g, path)
+	return names, sgoIOResult(e, "Dir.List")
+}

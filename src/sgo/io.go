@@ -15,6 +15,7 @@ func runtime_dirMkdir(g int, path string) error
 func runtime_dirRemove(g int, path string) error
 func runtime_dirOpen(g int, path string, write bool) (unsafe.Pointer, error)
 func runtime_dirReadFile(g int, path string) (string, error)
+func runtime_dirList(g int, path string) ([]string, error)
 func runtime_dirWriteFile(g int, path, data string) error
 func runtime_read(h unsafe.Pointer, max int) (string, error)
 func runtime_ioWrite(h unsafe.Pointer, s string) (int, error)
@@ -134,7 +135,34 @@ func (d *Dir) Sub(path string) (*Dir, error) {
 	return &Dir{l: d.l, g: d.g, sub: p + "/", readOnly: d.readOnly}, nil
 }
 
-// ReadOnly returns a handle that permits only Open, ReadFile, and Sub.
+// List returns the names in directory path ("" is d itself), sorted by byte order.
+func (d *Dir) List(path string) (*Listing, error) {
+	p := d.path("Dir.List", path)
+	if path == "" && d.sub != "" {
+		p = d.sub[:len(d.sub)-1]
+	}
+	names, err := runtime_dirList(d.g, p)
+	if err != nil {
+		return nil, err
+	}
+	return &Listing{names}, nil
+}
+
+// Listing is the result of Dir.List: an immutable sequence of names.
+type Listing struct{ names []string }
+
+// Len returns the number of names.
+func (l *Listing) Len() int { return len(l.names) }
+
+// Name returns the i-th name, 0 <= i < Len().
+func (l *Listing) Name(i int) string {
+	if i < 0 || i >= len(l.names) {
+		runtime_fail("InvalidArgument", "Listing.Name("+itoa(i)+") with "+itoa(len(l.names))+" names")
+	}
+	return l.names[i]
+}
+
+// ReadOnly returns a handle that permits only Open, ReadFile, List, and Sub.
 func (d *Dir) ReadOnly() *Dir { return &Dir{l: d.l, g: d.g, sub: d.sub, readOnly: true} }
 
 // LendTo returns a copy of d that is revoked when n closes.

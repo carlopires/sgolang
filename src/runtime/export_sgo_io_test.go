@@ -117,3 +117,13 @@ func SGoParseAddr(a string) (ip [16]byte, v6 bool, port int, ok bool) {
 
 // SGoFields splits as the grant parser does.
 func SGoFields(s string, n int) []string { return sgoFields(s, n) }
+
+func SGoSortStrings(s []string) { sgoSortStrings(s) }
+
+// SGoDirList lists path in directory dir (opened as a grant directory for the call).
+func SGoDirList(dir, path string) ([]string, string) {
+	sgoDirGrants = append(sgoDirGrants[:0], sgoDirGrant{name: "t", fd: sgoOpenat(sgoAT_FDCWD, sgoCString(dir), sgoO_RDONLY|sgoO_DIRECTORY|sgoO_CLOEXEC, 0)})
+	defer func() { sgoCloseFD(sgoDirGrants[0].fd); sgoDirGrants = sgoDirGrants[:0] }()
+	names, e := sgoDirList(0, path)
+	return names, sgoIOErrKind(e)
+}

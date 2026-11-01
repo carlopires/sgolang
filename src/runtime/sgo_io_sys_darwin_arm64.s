@@ -104,3 +104,9 @@ TEXT runtime·sgo_getsockopt_trampoline(SB),NOSPLIT,$0-0
 	JMP	libc_getsockopt(SB)
 TEXT runtime·sgo_getsockname_trampoline(SB),NOSPLIT,$0-0
 	JMP	libc_getsockname(SB)
+TEXT runtime·sgo_fdopendir_trampoline(SB),NOSPLIT,$0-0
+	JMP	libc_fdopendir(SB)
+TEXT runtime·sgo_readdir_r_trampoline(SB),NOSPLIT,$0-0
+	JMP	libc_readdir_r(SB)
+TEXT runtime·sgo_closedir_trampoline(SB),NOSPLIT,$0-0
+	JMP	libc_closedir(SB)

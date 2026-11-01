@@ -45,3 +45,5 @@ func sgoAccept(fd int32) int32                                            { retu
 func sgoSetsockoptInt(fd, level, name, v int32) int32                     { return -sgoENOSYS }
 func sgoGetsockoptInt(fd, level, name int32) (int32, int32)               { return 0, -sgoENOSYS }
 func sgoLocalPort(fd int32) (uint16, int32)                               { return 0, -sgoENOSYS }
+
+func sgoReadDirNames(fd int32) ([]string, int32) { return nil, -sgoENOSYS }

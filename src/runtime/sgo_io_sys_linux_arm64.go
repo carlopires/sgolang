@@ -7,6 +7,7 @@ package runtime
 import "unsafe"
 
 const (
+	sgoSYS_getdents64  = 61
 	sgoSYS_socket      = 198
 	sgoSYS_connect     = 203
 	sgoSYS_accept4     = 242

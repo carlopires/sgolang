@@ -5,9 +5,13 @@
 package runtime_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
+	"sort"
+	"strings"
 	"testing"
 )
 
@@ -148,4 +152,45 @@ func TestSGoHandle(t *testing.T) {
 		runtime.SGoHandleClose(d)
 		runtime.SGoHandleClose(ro)
 	})
+}
+
+// TestSGoDirList: sorted names without "." and "..", subdirectories, many entries (several
+// getdents/readdir batches), symlinks listed but not followed, and the sort itself.
+func TestSGoDirList(t *testing.T) {
+	dir := t.TempDir()
+	var want []string
+	for i := range 700 {
+		n := fmt.Sprintf("f%04d-%s", (i*7919)%1000, strings.Repeat("x", i%40))
+		want = append(want, n)
+		if err := os.WriteFile(filepath.Join(dir, n), nil, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	os.Mkdir(filepath.Join(dir, "sub"), 0o755)
+	os.WriteFile(filepath.Join(dir, "sub", "b"), nil, 0o644)
+	os.WriteFile(filepath.Join(dir, "sub", "a"), nil, 0o644)
+	os.Symlink("/etc", filepath.Join(dir, "link"))
+	want = append(want, "sub", "link")
+	sort.Strings(want)
+	root(t, func() {
+		got, k := runtime.SGoDirList(dir, "")
+		if k != "" || !slices.Equal(got, want) {
+			t.Fatalf("list: %s, %d names (want %d)", k, len(got), len(want))
+		}
+		if got, k := runtime.SGoDirList(dir, "sub"); k != "" || !slices.Equal(got, []string{"a", "b"}) {
+			t.Errorf("sub: %q %s", got, k)
+		}
+		for path, kind := range map[string]string{"link": "PathRejected", "missing": "NotFound", "..": "PathRejected", "sub/a": "NotFound"} {
+			if _, k := runtime.SGoDirList(dir, path); k != kind {
+				t.Errorf("list %q: %q, want %q", path, k, kind)
+			}
+		}
+	})
+	s := []string{"b", "a", "c", "", "ab", "a", "z", "\xff", "0"}
+	ref := slices.Clone(s)
+	sort.Strings(ref)
+	runtime.SGoSortStrings(s)
+	if !slices.Equal(s, ref) {
+		t.Errorf("sort: %q", s)
+	}
 }
