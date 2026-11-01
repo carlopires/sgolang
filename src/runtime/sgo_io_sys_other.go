@@ -27,3 +27,5 @@ func sgoFstat(fd int32, st *sgoStatBuf) int32                               { re
 func sgoMkdirat(dirfd int32, path *byte, mode int32) int32                  { return -sgoENOSYS }
 func sgoUnlinkat(dirfd int32, path *byte, flags int32) int32                { return -sgoENOSYS }
 func sgoCloseFD(fd int32)                                                   {}
+
+func sgoStatSize(b *sgoStatBuf) int64 { return 0 }

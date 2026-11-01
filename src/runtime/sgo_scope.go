@@ -108,7 +108,8 @@ type sgoTask struct {
 	// Channel permits (sgo_chan.go): unresolved permits the task reserved (touched only by the
 	// task), and how many the runtime aborted because the task left them unresolved.
 	permits *sgoPermit
-	tokens  *sgoToken // limiter tokens the task holds (sgo_sync.go)
+	tokens  *sgoToken  // limiter tokens the task holds (sgo_sync.go)
+	handles *sgoHandle // I/O handles the task owns and has not closed (sgo_io.go)
 	// Lab state (sgo_lab.go): the lab task ID, ready and waiting flags, and the step count since
 	// the task's last decision. Touched under sgoLab.lock or by the baton holder.
 	labID                                 int32

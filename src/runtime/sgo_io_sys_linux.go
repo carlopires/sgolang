@@ -79,3 +79,6 @@ func sgoUnlinkat(dirfd int32, path *byte, flags int32) int32 {
 
 // sgoCloseFD closes fd.
 func sgoCloseFD(fd int32) { closefd(fd) }
+
+// sgoStatSize is st_size (int64 at 48 on linux/amd64 and linux/arm64).
+func sgoStatSize(b *sgoStatBuf) int64 { return *(*int64)(unsafe.Pointer(&b[48])) }

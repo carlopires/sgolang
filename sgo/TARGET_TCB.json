@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.4.0",
- "allowlist_digest": "d51347fb04de9f8194cb0a955426ebd38ae3069093e975895b1ecafa0a8f5b7f",
+ "allowlist_digest": "7d804417721d19c5a92596ebd4754ac67a70ea047e8e8e99eaeeeb089a07bcc1",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -445,8 +445,8 @@
  ],
  "summary": {
   "packages": 31,
-  "files": 1052,
-  "files_changed_from_upstream": 36,
+  "files": 1053,
+  "files_changed_from_upstream": 37,
   "services": {
    "active": 5,
    "dormant": 5,
@@ -4461,7 +4461,7 @@
   },
   {
    "path": "src/runtime/sgo_chan.go",
-   "sha256": "51ad513aca94c00e8bc7451ff03294981eec0cf55d8c633327fbfc1c71925f06",
+   "sha256": "ae1cfac8e92a1acaf9ea1470eda3c744184e6b3597db55ac7e9ce0af46d472f4",
    "upstream_identical": false
   },
   {
@@ -4475,8 +4475,13 @@
    "upstream_identical": false
   },
   {
+   "path": "src/runtime/sgo_io.go",
+   "sha256": "9031de3f16759ef57e6df725e5ae0b974ec4eab21e4792231e4c5c48ca8ff5eb",
+   "upstream_identical": false
+  },
+  {
    "path": "src/runtime/sgo_io_sys_darwin.go",
-   "sha256": "e3ecc1738e06e91e6a993ec3d49944373f60c85e2711d2c7b9312d851e480da1",
+   "sha256": "06bb74f1fb3c59a470a03b5ec7a2212fa61eabe6a952e70bc287228897b9edbd",
    "upstream_identical": false
   },
   {
@@ -4486,7 +4491,7 @@
   },
   {
    "path": "src/runtime/sgo_io_sys_linux.go",
-   "sha256": "23a6ff74e32b99830ffef1956ae5bd0f3ff9221f6cbd8acb6dc5b9d3b8ea05f2",
+   "sha256": "28d4a7f5343797e72ec5c930a78cc653821d3f5e7e858f2047d271c5e1926d42",
    "upstream_identical": false
   },
   {
@@ -4501,7 +4506,7 @@
   },
   {
    "path": "src/runtime/sgo_io_sys_other.go",
-   "sha256": "2973ddb5b660cd38eb7407db526eb9e20cd1de27fb5d4ab9452892758e18363b",
+   "sha256": "6051f0cb25ff87024cfaf59562db0ccb53590e22dfaf2a4c831b926729c19f4d",
    "upstream_identical": false
   },
   {
@@ -4556,7 +4561,7 @@
   },
   {
    "path": "src/runtime/sgo_scope.go",
-   "sha256": "1758c910bddaa91096e892971a83e4ce924233e7ab0ce50aa4b41aa958ca5040",
+   "sha256": "7c43c2c3e738caa259f49d6a9238599959fb523fb1c17e4cf21d5aad4cfdca7c",
    "upstream_identical": false
   },
   {

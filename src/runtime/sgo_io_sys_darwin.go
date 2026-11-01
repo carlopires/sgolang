@@ -103,3 +103,6 @@ func sgoCloseFD(fd int32) { closefd(fd) }
 //go:cgo_import_dynamic libc_fstat fstat "/usr/lib/libSystem.B.dylib"
 //go:cgo_import_dynamic libc_mkdirat mkdirat "/usr/lib/libSystem.B.dylib"
 //go:cgo_import_dynamic libc_unlinkat unlinkat "/usr/lib/libSystem.B.dylib"
+
+// sgoStatSize is st_size (int64 at 96: after the four timespecs).
+func sgoStatSize(b *sgoStatBuf) int64 { return *(*int64)(unsafe.Pointer(&b[96])) }
