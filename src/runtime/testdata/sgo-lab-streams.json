@@ -1,0 +1,1438 @@
+{
+  "lab-cancel": {
+    "scenario": {
+      "Caps": [
+        0
+      ],
+      "Root": null,
+      "Tasks": [
+        [
+          {
+            "Kind": 1,
+            "N": 50,
+            "Ch": 0,
+            "Text": "",
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 6,
+            "N": 0,
+            "Ch": 0,
+            "Text": "not reached\n",
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 4,
+            "N": 0,
+            "Ch": 0,
+            "Text": "",
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 2,
+            "N": 1,
+            "Ch": 0,
+            "Text": "",
+            "Arms": null,
+            "Default": false
+          }
+        ]
+      ],
+      "K": 1024,
+      "Quota": 100000,
+      "Policy": ""
+    },
+    "runs": [
+      {
+        "seed": 0,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Failed:ClosedChannel\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Cancelled\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":2,\"kind\":\"ClosedChannel\"}"
+        ],
+        "outcome": "exit=2 kind=\"ClosedChannel\" stdout=\"\""
+      },
+      {
+        "seed": 1,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Failed:ClosedChannel\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Cancelled\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":2,\"kind\":\"ClosedChannel\"}"
+        ],
+        "outcome": "exit=2 kind=\"ClosedChannel\" stdout=\"\""
+      },
+      {
+        "seed": 2,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Failed:ClosedChannel\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Cancelled\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":2,\"kind\":\"ClosedChannel\"}"
+        ],
+        "outcome": "exit=2 kind=\"ClosedChannel\" stdout=\"\""
+      },
+      {
+        "seed": 7,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Failed:ClosedChannel\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Cancelled\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":2,\"kind\":\"ClosedChannel\"}"
+        ],
+        "outcome": "exit=2 kind=\"ClosedChannel\" stdout=\"\""
+      },
+      {
+        "seed": 42,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Failed:ClosedChannel\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Cancelled\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":2,\"kind\":\"ClosedChannel\"}"
+        ],
+        "outcome": "exit=2 kind=\"ClosedChannel\" stdout=\"\""
+      }
+    ],
+    "outcomes": [
+      "exit=2 kind=\"ClosedChannel\" stdout=\"\""
+    ]
+  },
+  "lab-deadlock": {
+    "scenario": {
+      "Caps": [
+        0
+      ],
+      "Root": null,
+      "Tasks": [
+        [
+          {
+            "Kind": 3,
+            "N": 0,
+            "Ch": 0,
+            "Text": "",
+            "Arms": null,
+            "Default": false
+          }
+        ]
+      ],
+      "K": 1024,
+      "Quota": 100000,
+      "Policy": ""
+    },
+    "runs": [
+      {
+        "seed": 0,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":2,\"kind\":\"LabDeadlock\"}"
+        ],
+        "outcome": "exit=2 kind=\"LabDeadlock\" stdout=\"\""
+      },
+      {
+        "seed": 1,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"outcome\",\"status\":2,\"kind\":\"LabDeadlock\"}"
+        ],
+        "outcome": "exit=2 kind=\"LabDeadlock\" stdout=\"\""
+      },
+      {
+        "seed": 2,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":2,\"kind\":\"LabDeadlock\"}"
+        ],
+        "outcome": "exit=2 kind=\"LabDeadlock\" stdout=\"\""
+      },
+      {
+        "seed": 7,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":2,\"kind\":\"LabDeadlock\"}"
+        ],
+        "outcome": "exit=2 kind=\"LabDeadlock\" stdout=\"\""
+      },
+      {
+        "seed": 42,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":2,\"kind\":\"LabDeadlock\"}"
+        ],
+        "outcome": "exit=2 kind=\"LabDeadlock\" stdout=\"\""
+      }
+    ],
+    "outcomes": [
+      "exit=2 kind=\"LabDeadlock\" stdout=\"\""
+    ]
+  },
+  "lab-fifo-cancel": {
+    "scenario": {
+      "Caps": [
+        0
+      ],
+      "Root": [
+        {
+          "Kind": 6,
+          "N": 0,
+          "Ch": 0,
+          "Text": "m\n",
+          "Arms": null,
+          "Default": false
+        },
+        {
+          "Kind": 8,
+          "N": 0,
+          "Ch": 0,
+          "Text": "",
+          "Arms": null,
+          "Default": false
+        }
+      ],
+      "Tasks": [
+        [
+          {
+            "Kind": 3,
+            "N": 0,
+            "Ch": 0,
+            "Text": "",
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 7,
+            "N": 0,
+            "Ch": 0,
+            "Text": "",
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 6,
+            "N": 0,
+            "Ch": 0,
+            "Text": "c\n",
+            "Arms": null,
+            "Default": false
+          }
+        ]
+      ],
+      "K": 1024,
+      "Quota": 100000,
+      "Policy": "fifo"
+    },
+    "runs": [
+      {
+        "seed": 0,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"m\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"c\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Cancelled\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"m\\nc\\n\""
+      },
+      {
+        "seed": 1,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"m\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"c\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Cancelled\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"m\\nc\\n\""
+      },
+      {
+        "seed": 2,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"m\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"c\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Cancelled\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"m\\nc\\n\""
+      },
+      {
+        "seed": 7,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"m\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"c\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Cancelled\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"m\\nc\\n\""
+      },
+      {
+        "seed": 42,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"m\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"c\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Cancelled\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"m\\nc\\n\""
+      }
+    ],
+    "outcomes": [
+      "exit=0 kind=\"\" stdout=\"m\\nc\\n\""
+    ]
+  },
+  "lab-order-bug": {
+    "scenario": {
+      "Caps": [
+        1
+      ],
+      "Root": [
+        {
+          "Kind": 6,
+          "N": 0,
+          "Ch": 0,
+          "Text": "z",
+          "Arms": null,
+          "Default": false
+        }
+      ],
+      "Tasks": [
+        [
+          {
+            "Kind": 6,
+            "N": 0,
+            "Ch": 0,
+            "Text": "x",
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 2,
+            "N": 1,
+            "Ch": 0,
+            "Text": "",
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 6,
+            "N": 0,
+            "Ch": 0,
+            "Text": "y",
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 3,
+            "N": 0,
+            "Ch": 0,
+            "Text": "",
+            "Arms": null,
+            "Default": false
+          }
+        ]
+      ],
+      "K": 1024,
+      "Quota": 100000,
+      "Policy": ""
+    },
+    "runs": [
+      {
+        "seed": 0,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"x\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"z\"}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"y\"}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"xzy\""
+      },
+      {
+        "seed": 1,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"y\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"z\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"x\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"yzx\""
+      },
+      {
+        "seed": 2,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"x\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"z\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"y\"}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"xzy\""
+      },
+      {
+        "seed": 7,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"x\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"y\"}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"z\"}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"xyz\""
+      },
+      {
+        "seed": 42,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"x\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"z\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"y\"}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"xzy\""
+      }
+    ],
+    "outcomes": [
+      "exit=0 kind=\"\" stdout=\"xyz\"",
+      "exit=0 kind=\"\" stdout=\"xzy\"",
+      "exit=0 kind=\"\" stdout=\"yxz\"",
+      "exit=0 kind=\"\" stdout=\"yzx\"",
+      "exit=0 kind=\"\" stdout=\"zxy\"",
+      "exit=0 kind=\"\" stdout=\"zyx\""
+    ]
+  },
+  "lab-pingpong": {
+    "scenario": {
+      "Caps": [
+        0
+      ],
+      "Root": null,
+      "Tasks": [
+        [
+          {
+            "Kind": 2,
+            "N": 1,
+            "Ch": 0,
+            "Text": "",
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 6,
+            "N": 0,
+            "Ch": 0,
+            "Text": "sent\n",
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 3,
+            "N": 0,
+            "Ch": 0,
+            "Text": "",
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 6,
+            "N": 0,
+            "Ch": 0,
+            "Text": "received\n",
+            "Arms": null,
+            "Default": false
+          }
+        ]
+      ],
+      "K": 1024,
+      "Quota": 100000,
+      "Policy": ""
+    },
+    "runs": [
+      {
+        "seed": 0,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"sent\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"received\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"sent\\nreceived\\n\""
+      },
+      {
+        "seed": 1,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"sent\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"received\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"sent\\nreceived\\n\""
+      },
+      {
+        "seed": 2,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"received\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"sent\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"received\\nsent\\n\""
+      },
+      {
+        "seed": 7,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"received\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"sent\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"received\\nsent\\n\""
+      },
+      {
+        "seed": 42,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"sent\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"received\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"sent\\nreceived\\n\""
+      }
+    ],
+    "outcomes": [
+      "exit=0 kind=\"\" stdout=\"received\\nsent\\n\"",
+      "exit=0 kind=\"\" stdout=\"sent\\nreceived\\n\""
+    ]
+  },
+  "lab-quota": {
+    "scenario": {
+      "Caps": null,
+      "Root": null,
+      "Tasks": [
+        [
+          {
+            "Kind": 0,
+            "N": 5000,
+            "Ch": 0,
+            "Text": "",
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 6,
+            "N": 0,
+            "Ch": 0,
+            "Text": "other\n",
+            "Arms": null,
+            "Default": false
+          }
+        ]
+      ],
+      "K": 100,
+      "Quota": 1000,
+      "Policy": ""
+    },
+    "runs": [
+      {
+        "seed": 0,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"other\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"outcome\",\"status\":2,\"kind\":\"LabQuotaExhausted\"}"
+        ],
+        "outcome": "exit=2 kind=\"LabQuotaExhausted\" stdout=\"other\\n\""
+      },
+      {
+        "seed": 1,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"other\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"outcome\",\"status\":2,\"kind\":\"LabQuotaExhausted\"}"
+        ],
+        "outcome": "exit=2 kind=\"LabQuotaExhausted\" stdout=\"other\\n\""
+      },
+      {
+        "seed": 2,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"other\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"outcome\",\"status\":2,\"kind\":\"LabQuotaExhausted\"}"
+        ],
+        "outcome": "exit=2 kind=\"LabQuotaExhausted\" stdout=\"other\\n\""
+      },
+      {
+        "seed": 7,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"other\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"outcome\",\"status\":2,\"kind\":\"LabQuotaExhausted\"}"
+        ],
+        "outcome": "exit=2 kind=\"LabQuotaExhausted\" stdout=\"other\\n\""
+      },
+      {
+        "seed": 42,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"other\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"outcome\",\"status\":2,\"kind\":\"LabQuotaExhausted\"}"
+        ],
+        "outcome": "exit=2 kind=\"LabQuotaExhausted\" stdout=\"other\\n\""
+      }
+    ],
+    "outcomes": [
+      "exit=2 kind=\"LabQuotaExhausted\" stdout=\"\"",
+      "exit=2 kind=\"LabQuotaExhausted\" stdout=\"other\\n\""
+    ]
+  },
+  "lab-runnable-holds-time": {
+    "scenario": {
+      "Caps": null,
+      "Root": null,
+      "Tasks": [
+        [
+          {
+            "Kind": 0,
+            "N": 450,
+            "Ch": 0,
+            "Text": "",
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 6,
+            "N": 0,
+            "Ch": 0,
+            "Text": "work done\n",
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 1,
+            "N": 1,
+            "Ch": 0,
+            "Text": "",
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 6,
+            "N": 0,
+            "Ch": 0,
+            "Text": "slept\n",
+            "Arms": null,
+            "Default": false
+          }
+        ]
+      ],
+      "K": 100,
+      "Quota": 100000,
+      "Policy": ""
+    },
+    "runs": [
+      {
+        "seed": 0,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"work done\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"advance\",\"to\":1}",
+          "{\"e\":\"fire\",\"task\":2,\"timer\":0}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"slept\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"work done\\nslept\\n\""
+      },
+      {
+        "seed": 1,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"work done\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"advance\",\"to\":1}",
+          "{\"e\":\"fire\",\"task\":2,\"timer\":0}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"slept\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"work done\\nslept\\n\""
+      },
+      {
+        "seed": 2,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"work done\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"advance\",\"to\":1}",
+          "{\"e\":\"fire\",\"task\":2,\"timer\":0}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"slept\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"work done\\nslept\\n\""
+      },
+      {
+        "seed": 7,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"work done\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"advance\",\"to\":1}",
+          "{\"e\":\"fire\",\"task\":2,\"timer\":0}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"slept\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"work done\\nslept\\n\""
+      },
+      {
+        "seed": 42,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"work done\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"advance\",\"to\":1}",
+          "{\"e\":\"fire\",\"task\":2,\"timer\":0}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"slept\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"work done\\nslept\\n\""
+      }
+    ],
+    "outcomes": [
+      "exit=0 kind=\"\" stdout=\"work done\\nslept\\n\""
+    ]
+  },
+  "lab-select": {
+    "scenario": {
+      "Caps": [
+        1,
+        1
+      ],
+      "Root": [
+        {
+          "Kind": 2,
+          "N": 1,
+          "Ch": 0,
+          "Text": "",
+          "Arms": null,
+          "Default": false
+        },
+        {
+          "Kind": 2,
+          "N": 2,
+          "Ch": 1,
+          "Text": "",
+          "Arms": null,
+          "Default": false
+        },
+        {
+          "Kind": 5,
+          "N": 0,
+          "Ch": 0,
+          "Text": "",
+          "Arms": [
+            {
+              "Send": false,
+              "Ch": 0,
+              "Val": 0
+            },
+            {
+              "Send": false,
+              "Ch": 1,
+              "Val": 0
+            }
+          ],
+          "Default": false
+        },
+        {
+          "Kind": 6,
+          "N": 0,
+          "Ch": 0,
+          "Text": "chose\n",
+          "Arms": null,
+          "Default": false
+        }
+      ],
+      "Tasks": null,
+      "K": 1024,
+      "Quota": 100000,
+      "Policy": ""
+    },
+    "runs": [
+      {
+        "seed": 0,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[0,1],\"arm\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"chose\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"chose\\n\""
+      },
+      {
+        "seed": 1,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[0,1],\"arm\":0}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"chose\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"chose\\n\""
+      },
+      {
+        "seed": 2,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[0,1],\"arm\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"chose\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"chose\\n\""
+      },
+      {
+        "seed": 7,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[0,1],\"arm\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"chose\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"chose\\n\""
+      },
+      {
+        "seed": 42,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"select\",\"task\":0,\"arms\":[0,1],\"arm\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"write\",\"task\":0,\"text\":\"chose\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"chose\\n\""
+      }
+    ],
+    "outcomes": [
+      "exit=0 kind=\"\" stdout=\"chose\\n\""
+    ]
+  },
+  "lab-timer-ties": {
+    "scenario": {
+      "Caps": null,
+      "Root": null,
+      "Tasks": [
+        [
+          {
+            "Kind": 1,
+            "N": 20,
+            "Ch": 0,
+            "Text": "",
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 6,
+            "N": 0,
+            "Ch": 0,
+            "Text": "a20\n",
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 1,
+            "N": 10,
+            "Ch": 0,
+            "Text": "",
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 6,
+            "N": 0,
+            "Ch": 0,
+            "Text": "b10\n",
+            "Arms": null,
+            "Default": false
+          }
+        ],
+        [
+          {
+            "Kind": 1,
+            "N": 20,
+            "Ch": 0,
+            "Text": "",
+            "Arms": null,
+            "Default": false
+          },
+          {
+            "Kind": 6,
+            "N": 0,
+            "Ch": 0,
+            "Text": "c20\n",
+            "Arms": null,
+            "Default": false
+          }
+        ]
+      ],
+      "K": 1024,
+      "Quota": 100000,
+      "Policy": ""
+    },
+    "runs": [
+      {
+        "seed": 0,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,3],\"pick\":3}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"advance\",\"to\":10}",
+          "{\"e\":\"fire\",\"task\":2,\"timer\":1}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"b10\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"advance\",\"to\":20}",
+          "{\"e\":\"fire\",\"task\":1,\"timer\":0}",
+          "{\"e\":\"fire\",\"task\":3,\"timer\":2}",
+          "{\"e\":\"choose\",\"ready\":[1,3],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"a20\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1,3],\"pick\":3}",
+          "{\"e\":\"write\",\"task\":3,\"text\":\"c20\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1,3],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[3],\"pick\":3}",
+          "{\"e\":\"end\",\"task\":3,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"b10\\na20\\nc20\\n\""
+      },
+      {
+        "seed": 1,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,3],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[3],\"pick\":3}",
+          "{\"e\":\"advance\",\"to\":10}",
+          "{\"e\":\"fire\",\"task\":2,\"timer\":0}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"b10\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"advance\",\"to\":20}",
+          "{\"e\":\"fire\",\"task\":1,\"timer\":1}",
+          "{\"e\":\"fire\",\"task\":3,\"timer\":2}",
+          "{\"e\":\"choose\",\"ready\":[1,3],\"pick\":3}",
+          "{\"e\":\"write\",\"task\":3,\"text\":\"c20\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1,3],\"pick\":3}",
+          "{\"e\":\"end\",\"task\":3,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"a20\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"b10\\nc20\\na20\\n\""
+      },
+      {
+        "seed": 2,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,3],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[3],\"pick\":3}",
+          "{\"e\":\"advance\",\"to\":10}",
+          "{\"e\":\"fire\",\"task\":2,\"timer\":1}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"b10\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"advance\",\"to\":20}",
+          "{\"e\":\"fire\",\"task\":1,\"timer\":0}",
+          "{\"e\":\"fire\",\"task\":3,\"timer\":2}",
+          "{\"e\":\"choose\",\"ready\":[1,3],\"pick\":3}",
+          "{\"e\":\"write\",\"task\":3,\"text\":\"c20\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1,3],\"pick\":3}",
+          "{\"e\":\"end\",\"task\":3,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"a20\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"b10\\nc20\\na20\\n\""
+      },
+      {
+        "seed": 7,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,3],\"pick\":3}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"advance\",\"to\":10}",
+          "{\"e\":\"fire\",\"task\":2,\"timer\":1}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"b10\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"advance\",\"to\":20}",
+          "{\"e\":\"fire\",\"task\":1,\"timer\":0}",
+          "{\"e\":\"fire\",\"task\":3,\"timer\":2}",
+          "{\"e\":\"choose\",\"ready\":[1,3],\"pick\":3}",
+          "{\"e\":\"write\",\"task\":3,\"text\":\"c20\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1,3],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"a20\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1,3],\"pick\":3}",
+          "{\"e\":\"end\",\"task\":3,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[1],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"b10\\nc20\\na20\\n\""
+      },
+      {
+        "seed": 42,
+        "stream": [
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[0,2,3],\"pick\":0}",
+          "{\"e\":\"choose\",\"ready\":[2,3],\"pick\":2}",
+          "{\"e\":\"choose\",\"ready\":[3],\"pick\":3}",
+          "{\"e\":\"advance\",\"to\":10}",
+          "{\"e\":\"fire\",\"task\":2,\"timer\":1}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"write\",\"task\":2,\"text\":\"b10\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[2],\"pick\":2}",
+          "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"advance\",\"to\":20}",
+          "{\"e\":\"fire\",\"task\":1,\"timer\":0}",
+          "{\"e\":\"fire\",\"task\":3,\"timer\":2}",
+          "{\"e\":\"choose\",\"ready\":[1,3],\"pick\":1}",
+          "{\"e\":\"write\",\"task\":1,\"text\":\"a20\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[1,3],\"pick\":1}",
+          "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[3],\"pick\":3}",
+          "{\"e\":\"write\",\"task\":3,\"text\":\"c20\\n\"}",
+          "{\"e\":\"choose\",\"ready\":[3],\"pick\":3}",
+          "{\"e\":\"end\",\"task\":3,\"outcome\":\"Succeeded\"}",
+          "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+          "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+        ],
+        "outcome": "exit=0 kind=\"\" stdout=\"b10\\na20\\nc20\\n\""
+      }
+    ],
+    "outcomes": [
+      "exit=0 kind=\"\" stdout=\"b10\\na20\\nc20\\n\"",
+      "exit=0 kind=\"\" stdout=\"b10\\nc20\\na20\\n\""
+    ]
+  }
+}
