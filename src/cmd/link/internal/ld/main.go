@@ -221,10 +221,16 @@ func Main(arch *sys.Arch, theArch Arch) {
 	objabi.Flagfn1("sgogrants", "set the S-Go root grants to the comma-separated `kinds`", func(s string) {
 		sgoSetGrants(ctxt, s)
 	})
+	// S-Go: the lab execution configuration (D41), written by sgo lab: every S-Go package must be
+	// compiled with -sgolab, and the runtime is marked as a lab binary.
+	flag.BoolVar(&sgoLab, "sgolab", false, "link an S-Go program for the lab execution configuration")
 	objabi.Flagcount("v", "print link trace", &ctxt.Debugvlog)
 	objabi.Flagfn1("importcfg", "read import configuration from `file`", ctxt.readImportCfg)
 
 	objabi.Flagparse(usage)
+	if sgoLab {
+		addstrdata1(ctxt, "runtime.sgoLabBuild=lab") // the runtime boots the lab (sgo_lab_boot.go)
+	}
 	counter.CountFlags("link/flag:", *flag.CommandLine)
 
 	if ctxt.Debugvlog > 0 {

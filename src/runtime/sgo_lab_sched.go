@@ -66,6 +66,12 @@ func (l *sgoLabState) decide() *sgoTask {
 	}
 	pick := ids[0]
 	switch {
+	case l.replaying:
+		p, ok := l.replayPick(ids)
+		if !ok {
+			return nil
+		}
+		pick = p
 	case l.fifo:
 		for _, id := range ids {
 			if l.tasks[id].labSeq < l.tasks[pick].labSeq {
@@ -117,7 +123,11 @@ func (l *sgoLabState) waitBaton(t *sgoTask) {
 // caller waits until it is chosen again.
 func sgoLabPoint() {
 	l := sgoLab
-	if l == nil || l.finished {
+	if l == nil {
+		return
+	}
+	if l.finished {
+		l.stop() // the run has ended: no task runs on
 		return
 	}
 	t := sgoCurrent()
@@ -170,16 +180,16 @@ func sgoLabBlock(t *sgoTask) {
 }
 
 // sgoLabCommit is the lab part of every S-Go park commit, after the wait's locks are released: it
-// aborts the park (false) if the task was woken and chosen before it parked; otherwise the task is
-// parked in its wait. If the run has ended, the task parks for good and the run stops.
+// aborts the park (false) if the task was woken and chosen before it parked, or if the run has
+// ended (the task then stops the run on its own stack, sgoLabAfterPark); otherwise the task is
+// parked in its wait. It runs on the system stack and does not allocate.
 func sgoLabCommit(gp *g) bool {
 	l := sgoLab
 	t := gp.sgo
 	lock(&l.lock)
 	if l.finished {
 		unlock(&l.lock)
-		l.signalStop()
-		return true
+		return false
 	}
 	if t.labRun {
 		t.labRun = false
@@ -191,8 +201,16 @@ func sgoLabCommit(gp *g) bool {
 	return true
 }
 
-// signalStop ends the process (lab binaries) or wakes the test goroutine waiting for the run.
-// It may run on the system stack.
+// sgoLabAfterPark follows every lab park: if the run ended while the task was going to park (its
+// commit aborted the park), the task stops the run, which ends the process in a lab binary.
+func sgoLabAfterPark() {
+	if l := sgoLab; l != nil && l.finished {
+		l.stop()
+	}
+}
+
+// signalStop ends the process (lab binaries: the exit hook writes the trace) or wakes the test
+// goroutine waiting for the run. Called on a task's own stack with no runtime lock held.
 func (l *sgoLabState) signalStop() {
 	if l.exit != nil {
 		l.exit(l.status)
@@ -226,7 +244,11 @@ func sgoLabWait(l *sgoLabState) {
 // baton passes on; the goroutine then exits.
 func sgoLabEndTask(t *sgoTask) {
 	l := sgoLab
-	if l == nil || l.finished {
+	if l == nil {
+		return
+	}
+	if l.finished {
+		l.stop()
 		return
 	}
 	lock(&l.lock)
@@ -290,7 +312,11 @@ func sgoLabStart(c *sgoTask) {
 // code, D43): the quota bounds the run, and every K steps since the last decision is a yield.
 func sgoLabStep() {
 	l := sgoLab
-	if l == nil || l.finished {
+	if l == nil {
+		return
+	}
+	if l.finished {
+		l.stop()
 		return
 	}
 	t := sgoCurrent()
@@ -306,4 +332,30 @@ func sgoLabStep() {
 	if t.labSince >= l.k {
 		sgoLabPoint()
 	}
+}
+
+// replayPick is the decision a replay takes from the trace (D46): a set of two or more consumes
+// the next recorded pick, which must be in the set; a single element or an empty select set
+// (default) is forced and consumes nothing, so the driver records exactly the picks of the
+// events whose set has two or more elements. A pick outside the set, or no pick left, ends the
+// run with LabReplayDivergence; any other divergence shows in the driver's comparison of the
+// whole stream with the trace. Called with l.lock held.
+func (l *sgoLabState) replayPick(set []int32) (int32, bool) {
+	switch len(set) {
+	case 0:
+		return -1, true
+	case 1:
+		return set[0], true
+	}
+	if l.rpos < len(l.replay) {
+		p := l.replay[l.rpos]
+		l.rpos++
+		for _, id := range set {
+			if id == p {
+				return p, true
+			}
+		}
+	}
+	l.finish(2, "LabReplayDivergence")
+	return 0, false
 }

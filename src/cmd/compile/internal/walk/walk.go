@@ -29,6 +29,8 @@ func Walk(fn *ir.Func) {
 	analyzePreWalk(fn)
 	defer func() { staticValues = nil; shapeConvSources = nil }()
 
+	sgoLabInstrument(fn) // S-Go lab builds only (sgo_lab.go)
+
 	errorsBefore := base.Errors()
 	order(fn)
 	if base.Errors() > errorsBefore {

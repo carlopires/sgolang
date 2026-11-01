@@ -122,6 +122,7 @@ type CmdFlags struct {
 	SmallFrames        bool         "help:\"reduce the size limit for stack allocated objects\""      // small stacks, to diagnose GC latency; see golang.org/issue/27732
 	Spectre            string       "help:\"enable spectre mitigations in `list` (all, index, ret)\""
 	Std                bool         "help:\"compiling standard library\""
+	SGoLab             bool         "help:\"compile S-Go code for the lab execution configuration (D41, D43)\""
 	SymABIs            string       "help:\"read symbol ABIs from `file`\""
 	TraceProfile       string       "help:\"write an execution trace to `file`\""
 	TrimPath           string       "help:\"remove `prefix` from recorded source file paths\""
@@ -199,6 +200,11 @@ func ParseFlags() {
 	objabi.AddVersionFlag() // -V
 	registerFlags()
 	objabi.Flagparse(usage)
+	if Flag.SGoLab {
+		// Lab builds count a step at every function entry (D43): an inlined call would lose its
+		// entry step, so step counts would depend on inlining decisions. Inlining is off.
+		Flag.LowerL = 1
+	}
 	counter.CountFlags("compile/flag:", *flag.CommandLine)
 
 	if gcd := os.Getenv("GOCOMPILEDEBUG"); gcd != "" {

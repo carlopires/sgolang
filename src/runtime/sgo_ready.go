@@ -75,6 +75,7 @@ func sgoStart(s *sgoScope, fn func(*sgoTask) error) error {
 				sgoLabBlock(t)
 			}
 			gopark(sgoReadyPark, unsafe.Pointer(r), waitReasonSGoJoin, traceBlockSync, 1)
+			sgoLabAfterPark()
 			lock(&sgoSleepLock)
 			sgoReadyUnregister(r)
 		}

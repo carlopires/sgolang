@@ -17,10 +17,20 @@ type SGoLabResult struct {
 // and waits until the run stops: root ended it (SGoLabEnd), or the lab did (LabDeadlock,
 // LabQuotaExhausted). A run the lab stopped leaves its tasks parked for good.
 func SGoLabRun(seed uint64, fifo bool, k, quota int64, root func()) SGoLabResult {
+	return sgoLabRun(seed, fifo, k, quota, nil, false, root)
+}
+
+// SGoLabReplay is SGoLabRun taking every choice from picks (D46, replayPick).
+func SGoLabReplay(picks []int32, fifo bool, k, quota int64, root func()) SGoLabResult {
+	return sgoLabRun(0, fifo, k, quota, picks, true, root)
+}
+
+func sgoLabRun(seed uint64, fifo bool, k, quota int64, picks []int32, replay bool, root func()) SGoLabResult {
 	started := make(chan *sgoLabState, 1)
 	go func() {
 		sgoEnterRoot()
 		sgoLabEnable(seed, fifo, k, quota, nil)
+		sgoLab.replay, sgoLab.replaying = picks, replay
 		started <- sgoLab
 		root()
 		sgoLeaveRoot()

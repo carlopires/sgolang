@@ -410,6 +410,7 @@ func sgoNurseryJoin(s *sgoScope) (sgoScopeResult, []*sgoTask, error) {
 		if sgoLab != nil {
 			sgoLabBlock(t)
 			gopark(sgoJoinPark, unsafe.Pointer(s), waitReasonSGoJoin, traceBlockSync, 1)
+			sgoLabAfterPark()
 		} else {
 			goparkunlock(&s.lock, waitReasonSGoJoin, traceBlockSync, 1)
 		}

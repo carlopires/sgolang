@@ -265,6 +265,7 @@ var runtimeDecls = [...]struct {
 	{"sgoselectnbrecv", funcTag, 120},
 	{"sgoselectgo", funcTag, 122},
 	{"sgoblock", funcTag, 9},
+	{"sgoLabStep", funcTag, 9},
 	{"sgoEnterMain", funcTag, 164},
 	{"sgoExitMain", funcTag, 11},
 	{"sgoPanicValue", funcTag, 166},

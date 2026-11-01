@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.3.0",
- "allowlist_digest": "b000490b64a27e1741d86d603b80a3135431b384c52aca2331bcc9d380e96b1b",
+ "allowlist_digest": "7383df6130125529f38ac9ccd7c310ba0b2512d32b04de048f6c45af0742186b",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -445,8 +445,8 @@
  ],
  "summary": {
   "packages": 31,
-  "files": 1044,
-  "files_changed_from_upstream": 28,
+  "files": 1045,
+  "files_changed_from_upstream": 29,
   "services": {
    "active": 5,
    "dormant": 5,
@@ -4461,7 +4461,7 @@
   },
   {
    "path": "src/runtime/sgo_chan.go",
-   "sha256": "68e56d79e3aa078187ba2986e6fd373fb75d5e2599a784ba3b94300e27019497",
+   "sha256": "bd90f0aee85fcfc9381ea89c11a1db4e6e69ee79cc373621f480a43dce4b1c53",
    "upstream_identical": false
   },
   {
@@ -4471,22 +4471,27 @@
   },
   {
    "path": "src/runtime/sgo_lab.go",
-   "sha256": "3a8c6fb7a74f88f826802bf38713cf6bbe0b669473aad55137c14ddbfbd2fd58",
+   "sha256": "a817c1a32840a3da812f66fe3bfbcab3325ef2f6857b7bbd1497ed02f9152324",
+   "upstream_identical": false
+  },
+  {
+   "path": "src/runtime/sgo_lab_boot.go",
+   "sha256": "3f71b216f92448bf1f1886c784e9007b022cc8ac9ea77e40fecc5976c1eb5a08",
    "upstream_identical": false
   },
   {
    "path": "src/runtime/sgo_lab_run.go",
-   "sha256": "b605f5d036a0ca08f988b8eecc3bb85b3718a77e4cee2fec1f544d4b55cc3a99",
+   "sha256": "e7a2ce00fac602fdd00b09af6ba6436201192b00def3a78d80ccbad425f4247f",
    "upstream_identical": false
   },
   {
    "path": "src/runtime/sgo_lab_sched.go",
-   "sha256": "d45a4c9602995ad5473849dfb1b31ef003dd796006b00a8848ae8aa34a6bc1b1",
+   "sha256": "302e51c873540ea3b5bf264c0b63745d0449164e54b147106e28109a9d511716",
    "upstream_identical": false
   },
   {
    "path": "src/runtime/sgo_main.go",
-   "sha256": "6180564a31e1c81ac2d9e5527c18d0e1351bab5c85adc8419ff494418999f53a",
+   "sha256": "813bcbfe6d346366d6865bd2b377b59e4d8f4367b5b706d593d285a701a91782",
    "upstream_identical": false
   },
   {
@@ -4496,7 +4501,7 @@
   },
   {
    "path": "src/runtime/sgo_native_ops.go",
-   "sha256": "395a2011988f27b06412848ca569c47960dde060bd45baa0da4301e7f77b1f99",
+   "sha256": "67c488c1b838f1d3119266f93334c204371b4ae6da2aff9f0fe1bf0d0de8ad06",
    "upstream_identical": false
   },
   {
@@ -4506,7 +4511,7 @@
   },
   {
    "path": "src/runtime/sgo_ready.go",
-   "sha256": "eaceae64b84db363db32393cbc3c658ec3296ffcde654ee0cff616eb60ea75c6",
+   "sha256": "df37d904d8d4b98ec3ff757bca7be76bfdb7f1825ffbc6d8abf1998ed2c0a8de",
    "upstream_identical": false
   },
   {
@@ -4516,7 +4521,7 @@
   },
   {
    "path": "src/runtime/sgo_scope.go",
-   "sha256": "b200cdca641828e8d14b516ada9a0c75fb2593bbfeae76c6ace6cea0dd1ffa62",
+   "sha256": "f104c0cd7a50fd3c4b9ed58d79caafb8cc046f1c635247f6a2d7f0fe240e4df7",
    "upstream_identical": false
   },
   {

@@ -25,7 +25,7 @@ import (
 //
 // Every package compiled by the S-Go compiler records, in its export data, the identity line
 //
-//	sgo1 <spec version> <admission digest> <ABI> <contract digest>
+//	sgo1 <spec version> <admission digest> <ABI> <configuration> <contract digest>
 //
 // and, in its object file, the symbol go:sgoid.<package path> containing that line followed by one
 // line "import <path> <contract digest>" per direct import, as seen when it was compiled. The
@@ -63,7 +63,20 @@ func sgoContract(pkg *types2.Package) string {
 }
 
 func sgoIdentityLine(contract string) string {
-	return fmt.Sprintf("sgo1 %s %s %s %s", sgoadmit.SpecVersion, sgoadmit.AdmissionDigest, objabi.SGoABI, contract)
+	return fmt.Sprintf("sgo1 %s %s %s %s %s", sgoadmit.SpecVersion, sgoadmit.AdmissionDigest, objabi.SGoABI, sgoConfig(), contract)
+}
+
+// sgoConfig is the execution configuration of the package being compiled: lab objects (step
+// instrumentation, D43) and production objects never mix (D41, SGO-IMP-002). Trusted target code
+// is not instrumented and is the same in both configurations: "tcb".
+func sgoConfig() string {
+	switch {
+	case !base.SGo:
+		return "tcb"
+	case base.Flag.SGoLab:
+		return "lab"
+	}
+	return "prod"
 }
 
 // sgoCheckImports verifies the identity of every direct import and returns their contracts.
@@ -96,7 +109,13 @@ func sgoCheckImports(m posMap, noders []*noder, pkg *types2.Package) map[string]
 			base.ErrorfAt(pos, 0, "SGO_E_SPEC_MISMATCH: package %s was compiled for %q, this compiler is %q (SGO-IMP-002)",
 				path, strings.TrimSpace(line[:strings.LastIndex(line, " ")]), strings.TrimSpace(want))
 		default:
-			contracts[path] = line[len(want):]
+			config, contract, _ := strings.Cut(line[len(want):], " ")
+			if config != "tcb" && config != sgoConfig() {
+				base.ErrorfAt(pos, 0, "SGO_E_SPEC_MISMATCH: package %s was compiled for the %s configuration, this package for %s (D41, SGO-IMP-002)",
+					path, config, sgoConfig())
+				continue
+			}
+			contracts[path] = contract
 		}
 	}
 	return contracts

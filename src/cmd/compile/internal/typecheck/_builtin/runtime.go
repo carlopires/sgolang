@@ -324,6 +324,9 @@ func sgoselectnbrecv(elem *any, hchan <-chan any) (bool, bool)
 func sgoselectgo(cas0 *byte, order0 *byte, pc0 *uintptr, nsends int, nrecvs int, block bool) (int, bool)
 func sgoblock()
 
+// S-Go lab step counter (src/runtime/sgo_lab_sched.go; lab builds only, D43)
+func sgoLabStep()
+
 // S-Go program entry (src/runtime/sgo_main.go)
 func sgoEnterMain() unsafe.Pointer
 func sgoExitMain(err interface{})

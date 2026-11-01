@@ -45,25 +45,28 @@ type sgoLabTimer struct {
 }
 
 type sgoLabState struct {
-	lock     mutex
-	sched    sgoPCG
-	fifo     bool
-	k, quota int64
-	used     int64
-	now      int64
-	timers   []sgoLabTimer
-	nextTmr  int64
-	tasks    []*sgoTask // by task ID
-	seq      int64
-	events   []sgoLabEvent
-	sets     []int32 // ready sets and arm sets of events (set = [start, end))
-	scratch  []int32 // the ready set under construction
-	finished bool
-	status   int32
-	kind     string
-	exit     func(status int32) // ends the process (lab binaries); nil in the runtime's tests
-	stopped  bool               // the run has stopped: no task runs again
-	doneG    *g                 // a test goroutine waiting for the stop (sgoLabWait)
+	lock      mutex
+	sched     sgoPCG
+	fifo      bool
+	k, quota  int64
+	used      int64
+	now       int64
+	timers    []sgoLabTimer
+	nextTmr   int64
+	tasks     []*sgoTask // by task ID
+	seq       int64
+	events    []sgoLabEvent
+	sets      []int32 // ready sets and arm sets of events (set = [start, end))
+	scratch   []int32 // the ready set under construction
+	finished  bool
+	status    int32
+	kind      string
+	exit      func(status int32) // ends the process (lab binaries); nil in the runtime's tests
+	stopped   bool               // the run has stopped: no task runs again
+	replay    []int32            // replay (D46): the recorded pick of every choose and select event
+	replaying bool
+	rpos      int
+	doneG     *g // a test goroutine waiting for the stop (sgoLabWait)
 }
 
 // sgoLab is nil unless the lab is enabled: only lab binaries enable it (D41), and the runtime's

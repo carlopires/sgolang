@@ -80,7 +80,17 @@ func sgoLabSelectChoice(arms []int32) int {
 	l := sgoLab
 	lock(&l.lock)
 	pick := int32(-1)
-	if len(arms) > 0 {
+	switch {
+	case l.replaying:
+		p, ok := l.replayPick(arms)
+		if !ok {
+			// The run ended: the select proceeds as if by default and the task stops at its
+			// next point.
+			unlock(&l.lock)
+			return -1
+		}
+		pick = p
+	case len(arms) > 0:
 		pick = arms[0]
 		if len(arms) > 1 {
 			pick = arms[l.sched.uint64n(uint64(len(arms)))]
@@ -129,6 +139,7 @@ func sgoLabSleep(t *sgoTask, ms int64) error {
 	unlock(&l.lock)
 	sgoLabBlock(t)
 	gopark(sgoLabSleepPark, nil, waitReasonSleep, traceBlockSleep, 1)
+	sgoLabAfterPark()
 	lock(&sgoSleepLock)
 	sgoSleepRemove(r)
 	unlock(&sgoSleepLock)

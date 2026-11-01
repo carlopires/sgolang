@@ -77,7 +77,7 @@ func sgoSetGrants(ctxt *Link, s string) {
 // sgoCheckIdentity verifies the S-Go identity of every linked package (SGO-IMP-002). Each package
 // compiled by the S-Go compiler defines go:sgoid.<path>: the line
 //
-//	sgo1 <spec version> <admission digest> <ABI> <contract digest>
+//	sgo1 <spec version> <admission digest> <ABI> <configuration> <contract digest>
 //
 // followed by "import <path> <contract digest>" for each direct import as compiled
 // (cmd/compile/internal/noder/sgo_identity.go). The linker requires every package to have one,
@@ -87,8 +87,8 @@ func sgoSetGrants(ctxt *Link, s string) {
 func (ctxt *Link) sgoCheckIdentity() {
 	ldr := ctxt.loader
 	type ident struct {
-		head, contract string
-		imports        map[string]string
+		head, config, contract string
+		imports                map[string]string
 	}
 	ids := map[string]*ident{}
 	var pkgs []string
@@ -101,11 +101,16 @@ func (ctxt *Link) sgoCheckIdentity() {
 		}
 		lines := strings.Split(strings.TrimRight(string(ldr.Data(s)), "\n"), "\n")
 		f := strings.Fields(lines[0])
-		if len(f) != 5 || f[0] != "sgo1" {
+		if len(f) != 6 || f[0] != "sgo1" {
 			Errorf("sgo:1:1: SGO_E_FOREIGN_OBJECT: package %s has a malformed S-Go identity %q", lib.Pkg, lines[0])
 			continue
 		}
-		id := &ident{head: strings.Join(f[:4], " "), contract: f[4], imports: map[string]string{}}
+		id := &ident{head: strings.Join(f[:4], " "), config: f[4], contract: f[5], imports: map[string]string{}}
+		// S-Go code is compiled for one execution configuration, the one being linked (D41);
+		// trusted target code ("tcb") is the same in both.
+		if want := sgoConfigName(); id.config != "tcb" && id.config != want {
+			Errorf("sgo:1:1: SGO_E_SPEC_MISMATCH: package %s was compiled for the %s configuration, the program is linked for %s (D41, SGO-IMP-002)", lib.Pkg, id.config, want)
+		}
 		for _, l := range lines[1:] {
 			if g := strings.Fields(l); len(g) == 3 && g[0] == "import" {
 				id.imports[g[1]] = g[2]
@@ -150,4 +155,14 @@ func (ctxt *Link) sgoCheckIdentity() {
 			}
 		}
 	}
+}
+
+// sgoLab is set by -sgolab: the program is linked for the lab execution configuration (D41).
+var sgoLab bool
+
+func sgoConfigName() string {
+	if sgoLab {
+		return "lab"
+	}
+	return "prod"
 }

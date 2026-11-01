@@ -191,7 +191,33 @@ func TestSGoLabStreams(t *testing.T) {
 	}
 }
 
-// Replaying a seed gives the same stream (D46).
+// labPicks are the picks a replay consumes: those of the choose and select events whose set has
+// two or more elements (replayPick in sgo_lab_sched.go; the driver extracts them the same way).
+func labPicks(t *testing.T, stream []string) []int32 {
+	var picks []int32
+	for _, line := range stream {
+		var e struct {
+			E     string
+			Ready []int32
+			Arms  []int32
+			Pick  int32
+			Arm   int32
+		}
+		if err := json.Unmarshal([]byte(line), &e); err != nil {
+			t.Fatal(err)
+		}
+		switch {
+		case e.E == "choose" && len(e.Ready) > 1:
+			picks = append(picks, e.Pick)
+		case e.E == "select" && len(e.Arms) > 1:
+			picks = append(picks, e.Arm)
+		}
+	}
+	return picks
+}
+
+// A replay takes every choice from the trace, never from the generator (D46): replaying each
+// pinned stream's picks reproduces it, and a pick outside the ready set is a divergence.
 func TestSGoLabReplay(t *testing.T) {
 	data, err := os.ReadFile("testdata/sgo-lab-streams.json")
 	if err != nil {
@@ -201,10 +227,19 @@ func TestSGoLabReplay(t *testing.T) {
 	if err := json.Unmarshal(data, &golden); err != nil {
 		t.Fatal(err)
 	}
+	for name, g := range golden {
+		for _, run := range g.Runs {
+			sc := g.Scenario
+			picks := labPicks(t, run.Stream)
+			res := SGoLabReplay(picks, sc.Policy == "fifo", int64(sc.K), int64(sc.Quota), func() { labRoot(sc) })
+			if got, want := strings.Join(res.Lines, "\n"), strings.Join(run.Stream, "\n"); got != want {
+				t.Fatalf("%s seed %d: replay differs from the recorded stream\ngot:\n%s\nwant:\n%s", name, run.Seed, got, want)
+			}
+		}
+	}
 	sc := golden["lab-pingpong"].Scenario
-	a := SGoLabRun(7, false, int64(sc.K), int64(sc.Quota), func() { labRoot(sc) })
-	b := SGoLabRun(7, false, int64(sc.K), int64(sc.Quota), func() { labRoot(sc) })
-	if strings.Join(a.Lines, "\n") != strings.Join(b.Lines, "\n") {
-		t.Fatalf("two runs of one seed differ")
+	res := SGoLabReplay([]int32{7}, false, int64(sc.K), int64(sc.Quota), func() { labRoot(sc) })
+	if res.Kind != "LabReplayDivergence" || res.Status != 2 {
+		t.Fatalf("replay with an impossible pick: exit=%d kind=%q, want LabReplayDivergence", res.Status, res.Kind)
 	}
 }

@@ -174,6 +174,7 @@ func sgoChanPark(c *sgoChan, l *sgoWaitList, w *sgoChanWait, reason waitReason, 
 		sgoLabBlock(w.task) // the decision before parking (sgo_lab_sched.go)
 	}
 	gopark(sgoChanParkUnlock, unsafe.Pointer(w), reason, traceBlockChanRecv, 1)
+	sgoLabAfterPark()
 	lock(&c.lock)
 	lock(&sgoSleepLock)
 	sgoChanUnregister(w)

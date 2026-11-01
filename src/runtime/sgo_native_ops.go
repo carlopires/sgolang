@@ -383,6 +383,7 @@ func sgoselectgo(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs in
 		sgoLabBlock(t)
 	}
 	gopark(sgoSelParkUnlock, unsafe.Pointer(sp), waitReasonSelect, traceBlockSelect, 1)
+	sgoLabAfterPark()
 	// Loser cleanup: no arm stays registered once select returns.
 	sgoSelLock(locks)
 	lock(&sgoSleepLock)

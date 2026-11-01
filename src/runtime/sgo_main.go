@@ -33,6 +33,7 @@ func sgoEnterMain() unsafe.Pointer {
 	sgoEnforce.Store(true)
 	t := sgoEnterRoot()
 	t.ceiling = sgoRootCeiling
+	sgoLabBoot() // lab binaries only (sgo_lab_boot.go)
 	return unsafe.Pointer(&sgoContext{t: unsafe.Pointer(t)})
 }
 
@@ -44,6 +45,9 @@ func sgoExitMain(v any) {
 		sgoDefect("main returned with an open nursery or outside the root task") // OWN-3
 	}
 	if v == nil {
+		if sgoLab != nil {
+			sgoProgramExit(0, "") // a lab binary ends here, after the trace is written
+		}
 		return
 	}
 	err, ok := v.(error)
@@ -51,7 +55,7 @@ func sgoExitMain(v any) {
 		sgoDefect("main returned a non-error value")
 	}
 	sgoWriteRecord(sgoFailureInfo{"MainError", err.Error(), ""}, nil, sgoOrigin{})
-	exit(1)
+	sgoProgramExit(1, "MainError")
 }
 
 // sgoUnwound returns the primary failure of the unwinding that p is part of and the later failures
@@ -86,18 +90,18 @@ func sgoUnwoundOut(p *_panic) {
 		// D33: as if main had returned the cancellation error, unless something failed meanwhile.
 		if primary = sgoLaterFailure(p.arg, u); primary == nil {
 			sgoWriteRecord(sgoFailureInfo{"MainError", u.err.Error(), ""}, nil, sgoOrigin{})
-			exit(1)
+			sgoProgramExit(1, "MainError")
 		}
 	}
 	f := sgoFailureOf(primary)
 	sgoWriteRecord(f, sgoChain(t, p), sgoPrimaryOrigin(p))
 	switch f.kind {
 	case "ChildError":
-		exit(1)
+		sgoProgramExit(1, f.kind)
 	case "RuntimeDefect":
-		exit(4)
+		sgoProgramExit(4, f.kind)
 	}
-	exit(2)
+	sgoProgramExit(2, f.kind)
 }
 
 // sgoFailureOf classifies an unwinding payload into a failure kind of SGO-DEF-003.
@@ -129,7 +133,7 @@ func sgoDefect(msg string) {
 		o = sgoOriginOf(t)
 	}
 	sgoWriteRecord(sgoFailureInfo{"RuntimeDefect", msg, ""}, nil, o)
-	exit(4)
+	sgoProgramExit(4, "RuntimeDefect")
 }
 
 // sgoExhausted ends an S-Go program with a ResourceExhausted record naming the resource and
@@ -144,7 +148,7 @@ func sgoExhausted(msg string) {
 		o = sgoOriginOf(t)
 	}
 	sgoWriteRecord(sgoFailureInfo{"ResourceExhausted", msg, ""}, nil, o)
-	exit(4)
+	sgoProgramExit(4, "ResourceExhausted")
 }
 
 // sgoThrowExit ends an S-Go program on a runtime throw (SGO-ERR-003): exhausted resources are
