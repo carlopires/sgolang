@@ -428,6 +428,69 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation.** The `arms` and `arm` fields of a lab `select` event are **source indices**: arm *i* is the *i*-th case of the `select` statement as written (default excluded). The compiler gives the runtime each case's source index next to the case list, and the lab maps the runtime's case order (sends first) back before recording. Traces then read against the program text and match the model (sgo/model, which uses script order) for any mix of send and receive arms. Cost: a small compiler table and one lowering test; no change outside lab builds' trace output.
 
+## D51 — Spec version and scope of W09 **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** W09 is spec **0.5.0**, a strict superset of 0.4.0: no 0.4.0 program changes meaning. It admits a deliberately small production I/O surface in package `sgo` only: confined directory and file handles (SPEC-FILE), and TCP connections and listeners on granted IP endpoints (SPEC-NET). Go's `os`, `io`, `net`, `syscall`, and every other ambient I/O package stay denied (S13, S17); nothing is admitted by package name. Not in 0.5.0: DNS, TLS, HTTP, UDP, Unix sockets, pipes, stdin, file metadata beyond size and kind, permissions, process execution. Each needs its own contract later.
+
+## D52 — How file and network authority reaches a program **[USER]** · PROPOSED 2026-11-02
+
+**Why it matters.** Root authority must come from a trusted policy, not from a constructor any dependency can call (plan §8.2), and production behaviour must not depend on an ambient switch (S15).
+
+**Options.**
+- **(a) Declared in the main `sgo.mod`, fixed at build time.** `grant dir NAME PATH ro|rw` (PATH relative to the process working directory at start, or absolute), `grant connect IP:PORT`, `grant listen IP:PORT`. The grants are part of the build identity (as the effect kinds are, SGO-AUTH-002); `root.Dir("NAME")`, `root.Dial("IP:PORT")`, `root.Listen("IP:PORT")` return root handles only for declared grants. The program opens each granted directory once when it starts and holds it, so later renames of the path do not move the grant.
+- **(b) Declared names in `sgo.mod`, bound to paths and endpoints at launch** (a launcher flag or environment variable), so one binary can be deployed with different data directories.
+
+**Recommendation: (a)** for 0.5.0. Every authority a binary can exercise is visible in its identity and its module file, nothing at launch can widen it, and auditing a binary needs no knowledge of its environment. (b) can come later as a narrowing-only binding of declared grants.
+
+## D53 — Path confinement **[USER]** · PROPOSED 2026-11-02
+
+**Why it matters.** Plan §8.3 forbids string-prefix confinement; traversal, symlinks, and concurrent renames must not escape a directory grant (I01).
+
+**Options.**
+- **(a) Component-wise resolution from the held directory descriptor, no symlinks.** A path is a sequence of names (no empty name, `.`, `..`, NUL, or leading `/`); each component is opened with `openat(dirfd, name, O_NOFOLLOW | O_DIRECTORY | O_CLOEXEC)`, the last with `O_NOFOLLOW`. Any symlink in the path is an error (`PathRejected`). On linux, `openat2(RESOLVE_BENEATH | RESOLVE_NO_SYMLINKS)` is used when the kernel has it, with the same result. No path is ever resolved from the process working directory or as a string.
+- **(b) Follow symlinks that stay inside the grant**, which needs re-validation against concurrent changes and is hard to make race-free on darwin.
+
+**Recommendation: (a).** It is race-free on both targets with portable primitives, and the refusal of symlinks is visible and testable. Following symlinks can be added later under its own contract.
+
+## D54 — Handle ownership, sharing, and close **[USER]** · PROPOSED 2026-11-02
+
+**Why it matters.** Closing a resource to cancel one operation must not silently break another owner's operation (I04), and stale completions must not act on a reused descriptor (I05).
+
+**Recommendation.**
+- A `*sgo.File`, `*sgo.Conn`, or `*sgo.Listener` is a capability handle (no nil, no comparison) owned by the task that opened or accepted it, like a token (SGO-SYNC-002): only the owner closes it; an unclosed handle is closed when its nursery body exits or its task ends, with a `HandleAbandoned` entry in the failure chain.
+- `h.LendTo(n)` lends it to a nursery (as effect handles): children may read and write; the lend ends when the nursery closes. `Close` while the handle is lent to a live nursery fails with `HandleLent` and has no effect; the owner closes after the join.
+- Cancellation never closes a handle: it ends only the cancelled task's own operation.
+- Each handle has a generation; the runtime's descriptor table maps a handle to its descriptor only while the generation matches, so a completion or operation on a closed handle fails with `HandleClosed` and never reaches a reused descriptor.
+
+## D55 — Cancellation and blocking host operations **[USER]** · PROPOSED 2026-11-02
+
+**Why it matters.** Plan W09: isolate blocking host work without pretending it is cancellable by dropping an awaiter (I07).
+
+**Recommendation.**
+- **Sockets** are non-blocking and use the runtime's netpoller: a waiting `Read`, `Write`, `Accept`, or `Dial` is a cancellation point (SGO-CANCEL-002); cancellation wakes it, and it returns the progress made so far with the cancellation error.
+- **Regular files** are read and written with blocking system calls, each bounded to 1 MiB, on the calling thread (the runtime hands the processor off as for any blocking system call). A file operation is **not** a cancellation point while in the kernel: cancellation is observed before it starts and after it returns, and the contract says so; nothing reports a running file operation as stopped.
+- Deadlines: `Conn.ReadFor(n, ms)` style per-operation timeouts are omitted in 0.5.0; a task bounds an operation by running it in a nursery and cancelling it (Clock/Sleep), which the netpoller honours.
+
+## D56 — Partial progress and retry **[USER]** · PROPOSED 2026-11-02
+
+**Recommendation.** `Read(max int) (string, error)` returns what was read (possibly short; `""` with `nil` only for `max == 0`; end of file or connection is `sgo.EOF`). `Write(s string) (int, error)` writes all of `s` unless an error stops it and returns the bytes written. Every I/O error carries its progress: `sgo.Progress(err) int` (bytes transferred before the error) and `sgo.NoEffect(err) bool` (true only when nothing was transferred and the operation may be retried safely). A cancellation after partial progress returns both the bytes and the cancellation error (I03).
+
+## D57 — Network policy **[USER]** · PROPOSED 2026-11-02
+
+**Options.**
+- **(a) Exact IP endpoints.** `grant connect IP:PORT` and `grant listen IP:PORT` (IPv4 or IPv6 literal); `Dial` checks every call, so a reconnect is checked again (I02). No hostnames, no DNS. An accepted connection carries no authority beyond itself.
+- **(b) Hostname grants with DNS**, which needs a resolver contract (caching, rebinding) first.
+
+**Recommendation: (a)** for 0.5.0; (b) is a later work package.
+
+## D58 — Files and network in the lab **[USER]** · PROPOSED 2026-11-02
+
+**Recommendation.** In a lab run, directory, connection, and listener grants are served by in-process **fake adapters** (an in-memory directory tree per grant, starting empty unless the manifest seeds it; a loopback network that connects granted dials to granted listeners of the same run), with the same contracts, progress, and errors as the real adapters, and every operation a choice point (SGO-LAB-003). The fault stream (D44) can inject short reads and writes. I06 runs the same bounded scenarios through the real adapters (production, against local fixtures) and the fakes (lab) and compares normalized outcomes. Real host I/O is never reached from a lab binary.
+
+## D59 — File operations in 0.5.0 **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** `Dir`: `Open(path) (*File, error)` (read), `Create(path) (*File, error)` (write; creates or truncates; `rw` grants only), `ReadFile`/`WriteFile` (whole file, bounded size), `Remove(path)`, `Mkdir(path)`, `List(path) ([]string, error)` (sorted names), `Sub(path) (*Dir, error)` (attenuation to a subdirectory), `ReadOnly() *Dir`. `File`: `Read`, `Write`, `Close`, `Size`. No seek, rename, link, chmod, or metadata in 0.5.0.
+
 ---
 
 ## Approval record
