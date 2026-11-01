@@ -1,0 +1,24 @@
+package main
+
+import "sgo"
+
+func pick(out *sgo.Writer, name string, c chan int) chan int {
+	_ = out.WriteString(name)
+	return c
+}
+
+func val(out *sgo.Writer, name string, v int) int {
+	_ = out.WriteString(name)
+	return v
+}
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	a := make(chan int, 1)
+	b := make(chan int, 1)
+	select {
+	case pick(out, "a", a) <- val(out, "1", 1):
+	case pick(out, "b", b) <- val(out, "2", 2):
+	}
+	return out.WriteString("\n")
+}

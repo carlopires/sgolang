@@ -1,0 +1,22 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := make(chan int)
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			count := 0
+			defer func() { _ = out.WriteString("range ended by cancellation\n") }()
+			for range c {
+				count++
+			}
+			return nil
+		})
+		c <- 1
+		c <- 2
+		n.Cancel()
+	}
+	return out.WriteString("after\n")
+}

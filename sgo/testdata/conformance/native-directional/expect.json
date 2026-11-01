@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CHAN-002"
+ ],
+ "exit": 0,
+ "stdout": "seven\n",
+ "stderr_exact": "",
+ "note": "N05: directional channel parameters with implicit conversion."
+}

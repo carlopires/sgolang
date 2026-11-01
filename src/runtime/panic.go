@@ -1283,6 +1283,10 @@ func throw(s string) {
 //
 //go:nosplit
 func fatal(s string) {
+	if sgoProgram {
+		// S-Go: one diagnostic record (sgo_main.go); a deadlock is Deadlock, status 2.
+		systemstack(func() { sgoThrowExit(s) })
+	}
 	p := getg()._panic
 	// Everything fatal does should be recursively nosplit so it
 	// can be called even when it's unsafe to grow the stack.

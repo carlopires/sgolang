@@ -313,6 +313,17 @@ func asanregisterglobals(unsafe.Pointer, uintptr)
 func sgoNurseryEnter() unsafe.Pointer
 func sgoNurseryExit(scope unsafe.Pointer)
 
+// S-Go native channels and select (src/runtime/sgo_native.go, sgo_native_ops.go)
+func sgomakechan(chanType *byte, size int) (hchan chan any)
+func sgochanrecv1(hchan <-chan any, elem *any)
+func sgochanrecv2(hchan <-chan any, elem *any) bool
+func sgochansend1(hchan chan<- any, elem *any)
+func sgoclosechan(hchan chan<- any)
+func sgoselectnbsend(hchan chan<- any, elem *any) bool
+func sgoselectnbrecv(elem *any, hchan <-chan any) (bool, bool)
+func sgoselectgo(cas0 *byte, order0 *byte, pc0 *uintptr, nsends int, nrecvs int, block bool) (int, bool)
+func sgoblock()
+
 // S-Go program entry (src/runtime/sgo_main.go)
 func sgoEnterMain() unsafe.Pointer
 func sgoExitMain(err interface{})

@@ -69,6 +69,7 @@ func LoadPackage(filenames []string) {
 		base.ErrorExit()
 	}
 	sgoMode = !sgoadmit.Trusted(filenames)
+	base.SGo = sgoMode
 
 	var lines uint
 	var m posMap

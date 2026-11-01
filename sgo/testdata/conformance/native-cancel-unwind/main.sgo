@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := make(chan int)
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			defer func() { _ = out.WriteString("deferred\n") }()
+			<-c
+			return out.WriteString("not reached\n")
+		})
+		if err := root.Sleep(100); err != nil {
+			return err
+		}
+		n.Cancel()
+	}
+	return out.WriteString("after: child Cancelled\n")
+}

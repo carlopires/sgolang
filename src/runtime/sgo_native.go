@@ -47,6 +47,25 @@ func sgoUnwindingCancel() *sgoCancelUnwind {
 	return u
 }
 
+// sgoUnwindRetarget gives the oldest record of the current unwinding the origin that sgoPropagate
+// left pending (the failed child's), when a joined child's failure replaces a cancellation unwind.
+func sgoUnwindRetarget(t *sgoTask) {
+	if t.pend.seq == 0 {
+		return
+	}
+	var first *_panic
+	for p := getg()._panic; p != nil; p = p.link {
+		if p.goexit {
+			break
+		}
+		first = p
+	}
+	if first != nil {
+		first.sgoSeq, first.sgoTask, first.sgoScope = t.pend.seq, t.pend.origin.task, t.pend.origin.scope
+	}
+	t.pend.seq = 0
+}
+
 // sgoLaterFailure is the failure that ends a cancellation unwind as Failed: a failed child joined
 // during the unwind, or a deferred call that failed (latest is the newest unwinding value).
 func sgoLaterFailure(latest any, u *sgoCancelUnwind) any {

@@ -1,0 +1,13 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := make(chan int)
+	close(c)
+	select {
+	case c <- 1:
+	}
+	return out.WriteString("not reached\n")
+}

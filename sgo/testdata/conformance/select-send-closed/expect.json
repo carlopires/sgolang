@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CHAN-004",
+  "SGO-DEF-003"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"ClosedChannel\",\"message\":\"send on a closed channel\",\"position\":null,\"task_id\":0,\"scope_id\":null,\"chain\":[]}\n",
+ "note": "A chosen send arm on a closed channel fails with ClosedChannel."
+}

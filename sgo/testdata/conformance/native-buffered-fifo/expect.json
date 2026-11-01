@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CHAN-002"
+ ],
+ "exit": 0,
+ "stdout": "12345\n",
+ "stderr_exact": "",
+ "note": "H01: capacity 2, values received in sending order; range ends at close."
+}

@@ -73,7 +73,7 @@ def main():
         fam = clause_family.get(r["clause"])
         if fam is None:
             errors.append(f"INVENTORY.map:{r['line']}: unknown clause {r['clause']}")
-        elif r["verdict"] in ("admit", "internal") and fam.get("subset0") == "denied":
+        elif r["verdict"] in ("admit", "internal") and fam.get("subset0") == "denied" and fam.get("status") == "denied":
             errors.append(f"INVENTORY.map:{r['line']}: {r['verdict']} into wholly denied family {fam['id']}")
         if r["verdict"] == "internal" and r["kind"] in SOURCE_KINDS and not r["note"]:
             errors.append(f"INVENTORY.map:{r['line']}: 'internal' for source-visible kind {r['kind']} needs a note")

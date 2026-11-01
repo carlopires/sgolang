@@ -1,0 +1,38 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := make(chan int, 1)
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			for i := 0; i < 50; i++ {
+				select {
+				case c <- i:
+				case c <- i:
+				}
+			}
+			close(c)
+			return nil
+		})
+		count := 0
+		for {
+			ok := true
+			select {
+			case _, ok = <-c:
+			case _, ok = <-c:
+			}
+			if !ok {
+				break
+			}
+			count++
+		}
+		if count == 50 {
+			if err := out.WriteString("50 values, no duplicates\n"); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}

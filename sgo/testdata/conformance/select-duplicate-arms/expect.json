@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CHAN-004"
+ ],
+ "exit": 0,
+ "stdout": "50 values, no duplicates\n",
+ "stderr_exact": "",
+ "note": "N06: arms on the same channel; no duplicate effect."
+}

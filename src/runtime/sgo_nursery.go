@@ -95,6 +95,7 @@ func sgoUnwindNurseries(off uintptr, all bool) {
 					sgoPropagate(t, bad, c)
 				}
 			}
+			sgoUnwindRetarget(t) // the record names the child's origin, as a nursery exit would
 			if r.Outcome == sgoFailed {
 				u.fail = r.Panic
 			} else {

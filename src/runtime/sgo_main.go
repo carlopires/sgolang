@@ -151,10 +151,13 @@ func sgoExhausted(msg string) {
 // ResourceExhausted, every other throw is a violated invariant, RuntimeDefect. Status 4; deferred
 // calls do not run. It runs on the system stack and does not allocate.
 func sgoThrowExit(s string) {
-	kind := "RuntimeDefect"
+	kind, status := "RuntimeDefect", int32(4)
 	switch s {
 	case "stack overflow", "out of memory":
 		kind = "ResourceExhausted"
+	case "all goroutines are asleep - deadlock!":
+		// Every task waits and nothing can wake one (SGO-CHAN-003): a program error, not a defect.
+		kind, status, s = "Deadlock", 2, "every task is waiting and none can proceed"
 	}
 	var o sgoOrigin
 	if gp := getg().m.curg; gp != nil && gp.sgo != nil {
@@ -164,7 +167,7 @@ func sgoThrowExit(s string) {
 		}
 	}
 	sgoWriteRecord(sgoFailureInfo{kind, s, ""}, nil, o)
-	exit(4)
+	exit(status)
 }
 
 // sgoWriteRecord writes the single-line diagnostic record of SGO-ERR-002 to stderr. It does not

@@ -13,7 +13,8 @@ import (
 // sgoMembers are the admitted members of package sgo (SGO_SPEC_SUBSET0.md §0.2).
 var sgoMembers = map[string]bool{"Context": true, "Nursery": true, "Writer": true, "NewError": true, "IsCancelled": true,
 	"Channel": true, "SendPermit": true, "NewChannel": true, "Ready": true,
-	"Clock": true, "WallClock": true, "Random": true, "Entropy": true, "SimStore": true}
+	"Clock": true, "WallClock": true, "Random": true, "Entropy": true, "SimStore": true,
+	"Event": true, "NewEvent": true, "CapacityLimiter": true, "NewCapacityLimiter": true, "Token": true}
 
 // sgoGeneric are the parameterized members of package sgo, admitted only instantiated with one
 // channel element type (SGO-PERMIT-002); user-declared type parameters stay denied (SGO-GEN-001).
@@ -24,7 +25,8 @@ var chanElemTypes = map[string]bool{"int": true, "bool": true, "string": true, "
 
 // sgoHandleTypes may appear behind a pointer in types (SGO-TYPE-005).
 var sgoHandleTypes = map[string]bool{"Context": true, "Nursery": true, "Writer": true, "Ready": true,
-	"Clock": true, "WallClock": true, "Random": true, "Entropy": true, "SimStore": true}
+	"Clock": true, "WallClock": true, "Random": true, "Entropy": true, "SimStore": true,
+	"Event": true, "CapacityLimiter": true, "Token": true}
 
 // deniedNames are predeclared identifiers denied in subset 0 (sgo/spec/INVENTORY.map "universe").
 // Predeclared names cannot be redeclared (SGO-BIND-004), so every use refers to the predeclared one.
@@ -36,7 +38,7 @@ var deniedNames = map[string]string{
 	"complex128": "SGO-FLOAT-001", "real": "SGO-FLOAT-001", "imag": "SGO-FLOAT-001", "complex": "SGO-FLOAT-001",
 	"any": "SGO-IFACE-001", "comparable": "SGO-GEN-001", "iota": "SGO-VAL-004",
 	"append": "SGO-COMP-001", "cap": "SGO-COMP-001", "clear": "SGO-COMP-001", "copy": "SGO-COMP-001",
-	"delete": "SGO-COMP-001", "make": "SGO-COMP-001", "new": "SGO-COMP-001", "close": "SGO-CHAN-001",
+	"delete": "SGO-COMP-001", "make": "SGO-COMP-001", "new": "SGO-COMP-001",
 	"max": "SGO-VAL-001", "min": "SGO-VAL-001", "print": "SGO-PROC-003", "println": "SGO-PROC-003",
 	"recover": "SGO-DEF-002",
 }
@@ -64,7 +66,8 @@ func (a *admitter) stmt(s syntax.Stmt) {
 	case *syntax.ExprStmt:
 		a.expr(s.X)
 	case *syntax.SendStmt:
-		a.deny(s.Pos(), "channel send", "SGO-CHAN-001")
+		a.expr(s.Chan)
+		a.expr(s.Value)
 	case *syntax.DeclStmt:
 		for _, d := range s.DeclList {
 			switch d := d.(type) {
@@ -107,8 +110,10 @@ func (a *admitter) stmt(s syntax.Stmt) {
 		a.stmt(s.Else)
 	case *syntax.ForStmt:
 		if r, ok := s.Init.(*syntax.RangeClause); ok {
-			a.deny(a.tokenAfter(s.Pos(), "range"), "range clause", "SGO-COMP-001")
-			_ = r
+			// Only channel range is admitted (SGO-CHAN-002); types2 denies other operands.
+			a.expr(r.Lhs)
+			a.expr(r.X)
+			a.stmt(s.Body)
 			return
 		}
 		a.stmt(s.Init)
@@ -127,7 +132,10 @@ func (a *admitter) stmt(s syntax.Stmt) {
 			a.stmtList(c.Body)
 		}
 	case *syntax.SelectStmt:
-		a.deny(s.Pos(), "select", "SGO-CHAN-001")
+		for _, c := range s.Body {
+			a.stmt(c.Comm)
+			a.stmtList(c.Body)
+		}
 	case *syntax.NurseryStmt:
 		if s.Name == nil {
 			a.deny(s.Pos(), "anonymous nursery", "SGO-NUR-001")
@@ -179,7 +187,7 @@ func (a *admitter) typ(e syntax.Expr) {
 	case *syntax.MapType:
 		a.deny(e.Pos(), "map type", "SGO-COMP-001")
 	case *syntax.ChanType:
-		a.deny(e.Pos(), "channel type", "SGO-CHAN-001")
+		a.chanElem(e.Elem)
 	case *syntax.StructType:
 		a.deny(e.Pos(), "struct type", "SGO-COMP-001")
 	case *syntax.InterfaceType:
@@ -214,6 +222,24 @@ func (a *admitter) sgoInstance(e *syntax.IndexExpr, ms ...string) bool {
 	}
 	a.deny(e.Index.Pos(), "channel element type "+syntax.String(e.Index)+" (admitted: int, bool, string, error)", "SGO-PERMIT-002")
 	return true
+}
+
+// chanElem checks a native channel element type: int, bool, string, error, or a channel of them
+// (D36; SGO-CHAN-002).
+func (a *admitter) chanElem(e syntax.Expr) {
+	switch t := e.(type) {
+	case *syntax.Name:
+		if chanElemTypes[t.Value] {
+			return
+		}
+	case *syntax.ChanType:
+		a.chanElem(t.Elem)
+		return
+	case *syntax.ParenExpr:
+		a.chanElem(t.X)
+		return
+	}
+	a.deny(e.Pos(), "channel element type "+syntax.String(e)+" (admitted: int, bool, string, error, and channels of them)", "SGO-CHAN-002")
 }
 
 func isSgo(sel *syntax.SelectorExpr) bool {
@@ -271,7 +297,7 @@ func (a *admitter) expr(e syntax.Expr) {
 		case e.Y == nil && e.Op == syntax.And:
 			a.deny(e.Pos(), "address-of operator &", "SGO-COMP-001")
 		case e.Y == nil && e.Op == syntax.Recv:
-			a.deny(e.Pos(), "channel receive", "SGO-CHAN-001")
+			a.expr(e.X)
 		case e.Y == nil && e.Op == syntax.Mul:
 			a.typ(e)
 		default:
@@ -282,6 +308,16 @@ func (a *admitter) expr(e syntax.Expr) {
 		if n, ok := e.Fun.(*syntax.Name); ok && conversionTypes[n.Value] {
 			a.deny(n.Pos(), "conversion to "+n.Value, "SGO-TYPE-002")
 			return
+		}
+		if n, ok := e.Fun.(*syntax.Name); ok && n.Value == "make" && len(e.ArgList) > 0 {
+			if ct, ok := e.ArgList[0].(*syntax.ChanType); ok {
+				// make(chan T) and make(chan T, n) are the only constructors (SGO-CHAN-002).
+				a.typ(ct)
+				for _, x := range e.ArgList[1:] {
+					a.expr(x)
+				}
+				return
+			}
 		}
 		if e.HasDots {
 			a.deny(e.Pos(), "variadic call", "SGO-TYPE-003")

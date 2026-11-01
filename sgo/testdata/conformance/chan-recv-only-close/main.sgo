@@ -1,0 +1,14 @@
+package main
+
+import "sgo"
+
+func done(r <-chan int) {
+	close(r)
+}
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := make(chan int, 1)
+	done(c)
+	return out.WriteString("x\n")
+}

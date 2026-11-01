@@ -1,0 +1,13 @@
+package main
+
+import "sgo"
+
+func mk() (c chan int) {
+	return make(chan int)
+}
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	_ = mk()
+	return out.WriteString("x\n")
+}

@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CHAN-002"
+ ],
+ "exit": 0,
+ "stdout": "served\nserved\n",
+ "stderr_exact": "",
+ "note": "D36: reply channels (a channel of channels)."
+}

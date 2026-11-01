@@ -1,12 +1,13 @@
 {
  "kind": "reject",
  "clauses": [
-  "SGO-CHAN-001"
+  "SGO-CHAN-002"
  ],
  "diagnostics": [
   {
-   "code": "SGO_E_UNADMITTED",
-   "at": "chan int"
+   "code": "SGO_E_TYPE_MISMATCH",
+   "at": "nil"
   }
- ]
+ ],
+ "note": "0.3.0 (D31, D35): channel types are admitted; channels have no nil value, so the case now rejects the nil literal."
 }

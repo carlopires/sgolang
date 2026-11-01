@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-CHAN-001",
+  "SGO-COMP-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNADMITTED",
+   "at": "cap"
+  }
+ ],
+ "note": "cap stays denied (D35); the predeclared name is denied."
+}

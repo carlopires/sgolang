@@ -12,6 +12,10 @@ import (
 	"cmd/internal/src"
 )
 
+// SGo is set when the package being compiled is S-Go code (not trusted target code, SGO-TCB-002).
+// Walk then lowers channel operations to the S-Go runtime entry points (typecheck.LookupRuntime).
+var SGo bool
+
 // SGoPos formats pos as "file:line:col" for S-Go runtime diagnostic records (SGO-ERR-002). The
 // file is the name as written (line directives applied) with the -trimpath rewrites applied, so
 // a driver that maps the module root away gets module-relative names.

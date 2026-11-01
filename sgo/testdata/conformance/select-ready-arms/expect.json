@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CHAN-004"
+ ],
+ "exit": 0,
+ "stdout": "both arms, once each\n",
+ "stderr_exact": "",
+ "note": "N01: one arm per select; each ready value taken once."
+}

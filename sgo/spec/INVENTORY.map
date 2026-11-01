@@ -85,7 +85,9 @@ runtime-builtin  intstring  deny  SGO-TYPE-002
 runtime-builtin  makemap(64|_small)?|mapaccess[12](_fast32|_fast64|_faststr|_fat)?|mapassign(_fast32|_fast32ptr|_fast64|_fast64ptr|_faststr)?|mapIterStart|mapIterNext|mapdelete(_fast32|_fast64|_faststr)?|mapclear  deny  SGO-COMP-001
 runtime-builtin  makeslice(64|copy)?|growslice(Buf|BufNoAlias|NoAlias)?|moveSlice(NoScan|NoCap|NoCapNoScan)?|(mem|str|f32|f64|c64|c128|inter|nilinter)hash(0|8|16|32|64|128)?  deny  SGO-COMP-001
 runtime-builtin  convT(noptr|16|32|64|string|slice)?|assertE2I2?|panicdottype[EI]|panicnildottype|typeAssert|interfaceSwitch|ifaceeq|efaceeq|interequal|nilinterequal  deny  SGO-IFACE-001
-runtime-builtin  makechan(64)?|chanrecv[12]|chansend1|closechan|chanlen|chancap|selectnbsend|selectnbrecv|selectsetpc|selectgo|block  deny  SGO-CHAN-001
+runtime-builtin  makechan(64)?|chanrecv[12]|chansend1|closechan|chanlen|chancap|selectnbsend|selectnbrecv|selectsetpc|selectgo|block  deny  SGO-CHAN-001  # Go hchan entry points: refused for S-Go packages by typecheck.LookupRuntime (SGO-CHAN-002)
+runtime-builtin  sgomakechan|sgochanrecv[12]|sgochansend1|sgoclosechan  internal  SGO-CHAN-002  # native channel lowering (W07)
+runtime-builtin  sgoselectgo|sgoselectnbsend|sgoselectnbrecv|sgoblock  internal  SGO-CHAN-004  # select lowering (W07)
 runtime-builtin  rand|rand32  deny  SGO-RANDOM-001
 runtime-builtin  f32equal|f64equal|c64equal|c128equal|float64to(int64|uint64|uint32)|(int64|uint64|uint32)tofloat(64|32)|complex128div  deny  SGO-FLOAT-001
 runtime-builtin  unsafeslicecheckptr|panicunsafeslice(len|nilptr)|unsafestringcheckptr|panicunsafestring(len|nilptr)|checkptrAlignment|checkptrArithmetic|KeepAlive  deny  SGO-NATIVE-001

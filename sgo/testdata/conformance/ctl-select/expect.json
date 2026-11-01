@@ -1,13 +1,11 @@
 {
- "kind": "reject",
+ "kind": "run",
  "clauses": [
-  "SGO-CTL-001",
-  "SGO-CHAN-001"
+  "SGO-CHAN-004",
+  "SGO-CHAN-003"
  ],
- "diagnostics": [
-  {
-   "code": "SGO_E_UNADMITTED",
-   "at": "select"
-  }
- ]
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"Deadlock\",\"message\":\"every task is waiting and none can proceed\",\"position\":null,\"task_id\":0,\"scope_id\":null,\"chain\":[]}\n",
+ "note": "0.3.0 (D31, D34): moved from reject to run; select {} waits for cancellation, which the root task never receives, so the program deadlocks."
 }

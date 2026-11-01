@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CHAN-004"
+ ],
+ "exit": 0,
+ "stdout": "default twice\n",
+ "stderr_exact": "",
+ "note": "N03: default runs when no arm is ready."
+}

@@ -1,0 +1,22 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := make(chan int)
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			nursery (m) {
+				m.Spawn(func(t2 *sgo.Context) error {
+					close(c)
+					c <- 1
+					return nil
+				})
+				<-make(chan int)
+			}
+			return nil
+		})
+	}
+	return out.WriteString("not reached\n")
+}

@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-CHAN-002",
+  "SGO-CHAN-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNADMITTED",
+   "at": "*sgo.Nursery"
+  }
+ ],
+ "note": "Handles are not channel elements in 0.3.0 (D36)."
+}

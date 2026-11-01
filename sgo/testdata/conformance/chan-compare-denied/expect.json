@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-CHAN-002",
+  "SGO-CHAN-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNADMITTED",
+   "at": "c == d"
+  }
+ ],
+ "note": "Channel values are not compared."
+}

@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := make(chan string, 3)
+	c <- "a"
+	c <- "b"
+	close(c)
+	v, ok := <-c
+	w, ok2 := <-c
+	z, ok3 := <-c
+	if ok && ok2 && !ok3 && z == "" {
+		return out.WriteString(v + w + " closed\n")
+	}
+	return sgo.NewError("unexpected")
+}

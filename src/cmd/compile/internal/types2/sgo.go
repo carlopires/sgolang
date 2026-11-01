@@ -85,6 +85,12 @@ func sgoCoded(code Code, msg string) string {
 	return c + ": " + msg
 }
 
+// isChanType reports whether T's underlying type is a channel type.
+func isChanType(T Type) bool {
+	_, ok := T.Underlying().(*Chan)
+	return ok
+}
+
 // isFuncType reports whether T's underlying type is a function type.
 func isFuncType(T Type) bool {
 	_, ok := T.Underlying().(*Signature)
@@ -104,7 +110,7 @@ func isSgoHandle(T Type) bool {
 	}
 	switch n.obj.name {
 	case "Context", "Nursery", "Writer", "Channel", "SendPermit", "Ready",
-		"Clock", "WallClock", "Random", "Entropy", "SimStore":
+		"Clock", "WallClock", "Random", "Entropy", "SimStore", "Event", "CapacityLimiter", "Token":
 		return true
 	}
 	return false
@@ -118,6 +124,9 @@ func (check *Checker) sgoNilOK(x *operand, T Type) bool {
 		return true
 	case isSgoHandle(T):
 		check.errorf(x, IncompatibleAssign, "SGO_E_CAPABILITY_MISUSE: nil is not a value of capability type %s (SGO-TYPE-005)", T)
+		return false
+	case isChanType(T):
+		check.errorf(x, IncompatibleAssign, "SGO_E_TYPE_MISMATCH: nil is not a value of channel type %s; make(chan T) is the only constructor (SGO-CHAN-002)", T)
 		return false
 	case !Identical(T, universeError):
 		check.errorf(x, IncompatibleAssign, "SGO_E_TYPE_MISMATCH: nil is only a value of type error, not %s (SGO-TYPE-002)", T)
@@ -137,6 +146,9 @@ func (check *Checker) sgoComparisonOK(x, y *operand) bool {
 		switch {
 		case isSgoHandle(o.typ()):
 			check.errorf(x, MismatchedTypes, "SGO_E_CAPABILITY_MISUSE: capability handles cannot be compared (SGO-TYPE-005)")
+			return false
+		case isChanType(o.typ()):
+			check.errorf(x, MismatchedTypes, "SGO_E_UNADMITTED: comparison of channel values is not admitted (SGO-CHAN-002)")
 			return false
 		case isFuncType(o.typ()):
 			check.errorf(x, MismatchedTypes, "SGO_E_UNADMITTED: comparison of function values is not admitted in S-Go subset 0 (SGO-TYPE-003)")

@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CHAN-003"
+ ],
+ "exit": 0,
+ "stdout": "deferred\nafter: child Cancelled\n",
+ "stderr_exact": "",
+ "note": "D33, N08: a blocked receive under cancellation unwinds; defers run; the child ends Cancelled, which does not fail the nursery."
+}

@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-CHAN-002"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNINITIALIZED",
+   "at": "c chan int"
+  }
+ ],
+ "note": "A named result of channel type would start as a nil channel."
+}

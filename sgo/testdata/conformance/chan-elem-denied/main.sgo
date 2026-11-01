@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := make(chan *sgo.Nursery, 1)
+	_ = c
+	return out.WriteString("x\n")
+}

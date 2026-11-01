@@ -16,11 +16,11 @@ There is no ambient authority. A program's root grants are the `grant` lines of 
 
 Attenuation: `SimStore.ReadOnly`, `SimStore.Prefix`; every handle has `LendTo(n)`, revoked when `n` closes (SGO-AUTH-003).
 
-Capability handle types (opaque, used only behind `*`, never nil, never compared; SGO-TYPE-005): `*sgo.Channel`, `*sgo.Clock`, `*sgo.Context`, `*sgo.Entropy`, `*sgo.Nursery`, `*sgo.Random`, `*sgo.Ready`, `*sgo.SendPermit`, `*sgo.SimStore`, `*sgo.WallClock`, `*sgo.Writer` (`Channel` and `SendPermit` only instantiated, SGO-PERMIT-002).
+Capability handle types (opaque, used only behind `*`, never nil, never compared; SGO-TYPE-005): `*sgo.CapacityLimiter`, `*sgo.Channel`, `*sgo.Clock`, `*sgo.Context`, `*sgo.Entropy`, `*sgo.Event`, `*sgo.Nursery`, `*sgo.Random`, `*sgo.Ready`, `*sgo.SendPermit`, `*sgo.SimStore`, `*sgo.Token`, `*sgo.WallClock`, `*sgo.Writer` (`Channel` and `SendPermit` only instantiated, SGO-PERMIT-002).
 
 ## Trusted computing base
 
-`sgo/TARGET_TCB.json` (SGO-TCB-002): spec 0.2.0, allowlist digest `1f8a3af77c4150ee`, 31 packages, 1041 files (25 changed from upstream), 16 primitives. Each file is admitted only by its exact SHA-256; a package's name confers nothing.
+`sgo/TARGET_TCB.json` (SGO-TCB-002): spec 0.2.0, allowlist digest `63450c9329cf71b3`, 31 packages, 1041 files (25 changed from upstream), 16 primitives. Each file is admitted only by its exact SHA-256; a package's name confers nothing.
 
 ## Denied escape routes
 

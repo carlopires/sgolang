@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CHAN-002"
+ ],
+ "exit": 0,
+ "stdout": "kept\n",
+ "stderr_exact": "",
+ "note": "D35: closing a closed channel has no effect."
+}

@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CHAN-003",
+  "SGO-NUR-004"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"ClosedChannel\",\"message\":\"send on a closed channel\",\"position\":null,\"task_id\":2,\"scope_id\":2,\"chain\":[]}\n",
+ "note": "D33: a child failure joined during a cancellation unwind is primary, with the child's origin."
+}

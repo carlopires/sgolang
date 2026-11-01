@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CHAN-004"
+ ],
+ "exit": 0,
+ "stdout": "a1b2\n",
+ "stderr_exact": "",
+ "note": "N02: channel operands and send values are evaluated once, in source order, before the choice."
+}

@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CHAN-003"
+ ],
+ "exit": 0,
+ "stdout": "grandchild deferred\nowner deferred\nafter\n",
+ "stderr_exact": "",
+ "note": "D33, SGO-DEF-005: the unwinding owner joins its own nursery (the grandchild is cancelled) before its defers run."
+}

@@ -85,6 +85,11 @@ func (check *Checker) sgoFuncFlow(fd *syntax.FuncDecl) {
 			lits = append(lits, n)
 		case *syntax.CallExpr:
 			check.sgoPanicArg(n)
+			check.sgoChanLen(n)
+		case *syntax.ForStmt:
+			check.sgoRange(n)
+		case *syntax.FuncType:
+			check.sgoChanResults(n)
 		case *syntax.NurseryStmt:
 			if n.Name != nil {
 				if v := check.sgoLocalVar(check.Defs[n.Name]); v != nil {
@@ -245,4 +250,44 @@ func (check *Checker) sgoAssignments(fd *syntax.FuncDecl, captured map[*Var]*syn
 		}
 		return true
 	})
+}
+
+// sgoChanLen reports len of a channel: instantaneous counts are denied in 0.3.0 (SGO-CHAN-002).
+func (check *Checker) sgoChanLen(call *syntax.CallExpr) {
+	name, _ := syntax.Unparen(call.Fun).(*syntax.Name)
+	if name == nil || len(call.ArgList) != 1 {
+		return
+	}
+	if b, _ := check.Uses[name].(*Builtin); b == nil || b.id != _Len {
+		return
+	}
+	if tv, ok := check.Types[call.ArgList[0]]; ok && tv.Type != nil && isChanType(tv.Type) {
+		check.errorf(name, UnsupportedFeature, "SGO_E_UNADMITTED: len of a channel is not admitted (SGO-CHAN-002)")
+	}
+}
+
+// sgoRange reports a range clause whose operand is not a channel: only channel range is admitted
+// (SGO-CHAN-002; other range forms stay denied by SGO-COMP-001).
+func (check *Checker) sgoRange(s *syntax.ForStmt) {
+	r, _ := s.Init.(*syntax.RangeClause)
+	if r == nil {
+		return
+	}
+	if tv, ok := check.Types[r.X]; ok && tv.Type != nil && isChanType(tv.Type) {
+		return
+	}
+	check.errorf(r.Pos(), UnsupportedFeature, "SGO_E_UNADMITTED: range clause is not admitted in S-Go subset 0 (SGO-COMP-001)")
+}
+
+// sgoChanResults reports a named result of channel type: it would start as a nil channel, and
+// channels have no nil value (SGO-CHAN-002).
+func (check *Checker) sgoChanResults(t *syntax.FuncType) {
+	for _, f := range t.ResultList {
+		if f.Name == nil {
+			continue
+		}
+		if tv, ok := check.Types[f.Type]; ok && tv.Type != nil && isChanType(tv.Type) {
+			check.errorf(f.Name, UnsupportedFeature, "SGO_E_UNINITIALIZED: a named result of channel type would start as a nil channel (SGO-CHAN-002)")
+		}
+	}
 }

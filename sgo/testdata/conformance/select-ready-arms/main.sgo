@@ -1,0 +1,24 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	a := make(chan int, 1)
+	b := make(chan int, 1)
+	a <- 1
+	b <- 2
+	got := 0
+	for i := 0; i < 2; i++ {
+		select {
+		case v := <-a:
+			got = got + v
+		case v := <-b:
+			got = got + v
+		}
+	}
+	if got == 3 {
+		return out.WriteString("both arms, once each\n")
+	}
+	return nil
+}

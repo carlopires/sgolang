@@ -2,7 +2,7 @@
   "schema_version": 1,
   "plan_version": "2.0",
   "spec_version": "0.2.0",
-  "admission_digest": "d1ecf78b6f825e3f58f83fbc8e0f8ff2fdf231ec4d396cc50b749337df9df211",
+  "admission_digest": "4078f57d065770cf2876b76f223600c070f709b2e9849d2c9754acf6896b8d55",
   "status": "subset0_frozen_not_admitted",
   "warning": "Spec 0.1.0 is frozen: every row's clauses are fixed by digest. No row is admitted: admission requires implementation, enforcement, and executed evidence (constitution §6), starting in W03.",
   "default_decision": "reject",
@@ -566,29 +566,49 @@
       "surface_family": "Reserve/commit/abort and native channels, select, close and reflection",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W07",
-      "status": "denied",
+      "status": "specified_not_admitted",
       "clause_ids": [
-        "SGO-CHAN-001"
+        "SGO-CHAN-001",
+        "SGO-CHAN-002",
+        "SGO-CHAN-003",
+        "SGO-CHAN-004"
       ],
-      "normative_text_digest": "3c5d6c8b691b6f89557d1a8278fbe9cca64bb1b257b14f664d79b9f8b7eefb1d",
+      "normative_text_digest": "123110bab7a3ac5af0bd4e0ca0fcdd8aff6f50512b7b246edead4e4b08aadffc",
       "admitted_in": [],
       "acceptance_case_ids": [
         "H01",
         "H02",
+        "H12",
         "N01",
+        "N02",
+        "N03",
         "N04",
+        "N05",
+        "N06",
+        "N07",
+        "N08",
+        "N09",
         "S12"
       ],
       "evidence": [],
       "subset0": "denied",
       "clause_digests": {
-        "SGO-CHAN-001": "c7f9fcda2055123abba122405220619df5a6b0bd3dd47509521b857fe7594276"
+        "SGO-CHAN-001": "7c41048db5a410ea5a70cb45877a0f23f328a903e75bd3a43d1b4235d9838ad5",
+        "SGO-CHAN-002": "78c8c30c91acddb33a6251c12cd3f50ddf03464f45cf9342bb87ec12b9ffd117",
+        "SGO-CHAN-003": "d41b449851b82b4ea14e8d255ba21ede6d1e58a4cc1d419681a9960c9cf69d76",
+        "SGO-CHAN-004": "ddf4b115eb5a6e64666091abe636b21c13f6c66f5766ee4224ddc2c8c3d0a0b1"
       },
       "clause_status": {
-        "SGO-CHAN-001": "frozen"
+        "SGO-CHAN-001": "superseded",
+        "SGO-CHAN-002": "draft",
+        "SGO-CHAN-003": "draft",
+        "SGO-CHAN-004": "draft"
       },
       "clause_versions": {
-        "SGO-CHAN-001": 1
+        "SGO-CHAN-001": 2,
+        "SGO-CHAN-002": 1,
+        "SGO-CHAN-003": 1,
+        "SGO-CHAN-004": 1
       }
     },
     {

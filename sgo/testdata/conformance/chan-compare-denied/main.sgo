@@ -1,0 +1,13 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := make(chan int)
+	d := c
+	if c == d {
+		return out.WriteString("same\n")
+	}
+	return nil
+}

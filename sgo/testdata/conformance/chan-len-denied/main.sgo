@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := make(chan int, 1)
+	if len(c) == 0 {
+		return out.WriteString("empty\n")
+	}
+	return nil
+}

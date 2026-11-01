@@ -15,6 +15,9 @@ import (
 // _builtin/runtime.go. If types_ is non-empty, successive occurrences
 // of the "any" placeholder type will be substituted.
 func LookupRuntime(name string, types_ ...*types.Type) *ir.Name {
+	if base.SGo {
+		name = sgoRuntimeName(name)
+	}
 	s := ir.Pkgs.Runtime.Lookup(name)
 	if s == nil || s.Def == nil {
 		base.Fatalf("LookupRuntime: can't find runtime.%s", name)
@@ -131,4 +134,32 @@ func LookupCoverage(name string) *ir.Name {
 		base.Fatalf("LookupCoverage: can't find runtime/coverage.%s", name)
 	}
 	return sym.Def.(*ir.Name)
+}
+
+// sgoNative maps Go's channel entry points to the S-Go ones (spec 0.3.0, D32). Code of an S-Go
+// package reaches channels only through these: no path leads to Go's hchan implementation.
+var sgoNative = map[string]string{
+	"makechan":     "sgomakechan",
+	"makechan64":   "sgomakechan",
+	"chanrecv1":    "sgochanrecv1",
+	"chanrecv2":    "sgochanrecv2",
+	"chansend1":    "sgochansend1",
+	"closechan":    "sgoclosechan",
+	"selectnbsend": "sgoselectnbsend",
+	"selectnbrecv": "sgoselectnbrecv",
+	"selectgo":     "sgoselectgo",
+	"block":        "sgoblock",
+}
+
+// sgoRuntimeName is the runtime function an S-Go package calls for name. Go channel entry points
+// without an S-Go counterpart (len and cap of a channel, denied in 0.3.0) are a compiler defect.
+func sgoRuntimeName(name string) string {
+	if n, ok := sgoNative[name]; ok {
+		return n
+	}
+	switch name {
+	case "chanlen", "chancap", "reflect_makechan", "reflect_chansend", "reflect_chanrecv", "reflect_rselect":
+		base.Fatalf("S-Go: Go channel entry point runtime.%s requested for an S-Go package", name)
+	}
+	return name
 }

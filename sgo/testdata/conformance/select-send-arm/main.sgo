@@ -1,0 +1,22 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := make(chan string)
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			if err := out.WriteString(<-c + "\n"); err != nil {
+				return err
+			}
+			return nil
+		})
+		d := make(chan string)
+		select {
+		case c <- "sent through select":
+		case <-d:
+		}
+	}
+	return nil
+}

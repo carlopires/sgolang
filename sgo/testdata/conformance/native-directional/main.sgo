@@ -1,0 +1,22 @@
+package main
+
+import "sgo"
+
+func send(s chan<- int, v int) {
+	s <- v
+}
+
+func recv(r <-chan int) int {
+	return <-r
+}
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := make(chan int, 1)
+	send(c, 7)
+	v := recv(c)
+	if v == 7 {
+		return out.WriteString("seven\n")
+	}
+	return nil
+}

@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CHAN-003"
+ ],
+ "exit": 0,
+ "stdout": "range ended by cancellation\nafter\n",
+ "stderr_exact": "",
+ "note": "Each range step is a cancellation point."
+}

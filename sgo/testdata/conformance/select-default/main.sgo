@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := make(chan int)
+	select {
+	case v := <-c:
+		_ = v
+		return out.WriteString("not reached\n")
+	default:
+	}
+	select {
+	case c <- 1:
+		return out.WriteString("not reached\n")
+	default:
+	}
+	return out.WriteString("default twice\n")
+}

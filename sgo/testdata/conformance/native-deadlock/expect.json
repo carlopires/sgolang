@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CHAN-003"
+ ],
+ "exit": 2,
+ "stdout": "waiting\n",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"Deadlock\",\"message\":\"every task is waiting and none can proceed\",\"position\":null,\"task_id\":0,\"scope_id\":null,\"chain\":[]}\n",
+ "note": "Every task waits and none can proceed: Deadlock, status 2."
+}

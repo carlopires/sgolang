@@ -1,12 +1,10 @@
 {
- "kind": "reject",
+ "kind": "run",
  "clauses": [
-  "SGO-CHAN-001"
+  "SGO-CHAN-004"
  ],
- "diagnostics": [
-  {
-   "code": "SGO_E_UNADMITTED",
-   "at": "select"
-  }
- ]
+ "exit": 0,
+ "stdout": "",
+ "stderr_exact": "",
+ "note": "0.3.0 (D31, D34): moved from reject to run; a select whose only arm is default does not wait."
 }

@@ -1,0 +1,17 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := make(chan error, 1)
+	c <- sgo.NewError("kept")
+	close(c)
+	close(c)
+	e, ok := <-c
+	_, ok2 := <-c
+	if ok && !ok2 {
+		return out.WriteString(e.Error() + "\n")
+	}
+	return nil
+}

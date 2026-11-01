@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CHAN-002"
+ ],
+ "exit": 0,
+ "stdout": "ping pong\n",
+ "stderr_exact": "",
+ "note": "H02: capacity 0 hands each value to a waiting receiver."
+}

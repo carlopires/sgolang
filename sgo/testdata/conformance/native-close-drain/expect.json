@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CHAN-002"
+ ],
+ "exit": 0,
+ "stdout": "ab closed\n",
+ "stderr_exact": "",
+ "note": "N04: buffered values are received after close; then zero value and ok == false."
+}

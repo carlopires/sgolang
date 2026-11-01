@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CHAN-004"
+ ],
+ "exit": 0,
+ "stdout": "sent through select\n",
+ "stderr_exact": "",
+ "note": "A send arm takes effect; the losing receive arm leaves nothing."
+}
