@@ -24,6 +24,7 @@ func sgoNativeTrySend(c *sgoChan, box unsafe.Pointer) (*sgoChanWait, int) {
 		if r.claim(sgoWaitDone) {
 			c.recvs.remove(r)
 			r.val, r.delivered = box, true
+			sgoLabSelectWoken(r)
 			return r, sgoDone
 		}
 	}
@@ -47,6 +48,7 @@ func sgoNativeTryRecv(c *sgoChan) (box unsafe.Pointer, ok bool, wake *sgoChanWai
 				c.senders.remove(s)
 				c.queue = append(c.queue, s.box)
 				s.box, wake = nil, s
+				sgoLabSelectWoken(s)
 				break
 			}
 		}
@@ -57,6 +59,7 @@ func sgoNativeTryRecv(c *sgoChan) (box unsafe.Pointer, ok bool, wake *sgoChanWai
 		if s.claim(sgoWaitDone) {
 			c.senders.remove(s)
 			box, s.box = s.box, nil
+			sgoLabSelectWoken(s)
 			return box, true, s, true
 		}
 	}
@@ -68,12 +71,13 @@ func sgoNativeTryRecv(c *sgoChan) (box unsafe.Pointer, ok bool, wake *sgoChanWai
 
 func sgoReadyOne(w *sgoChanWait) {
 	if w != nil {
-		goready(w.g, 0)
+		sgoWake(w.g)
 	}
 }
 
 // sgochansend1 is ch <- v.
 func sgochansend1(c *sgoChan, elem unsafe.Pointer) {
+	sgoLabPoint()
 	t := sgoCurrent()
 	box := sgoNativeBox(c, elem)
 	if raceenabled {
@@ -108,6 +112,7 @@ func sgochansend1(c *sgoChan, elem unsafe.Pointer) {
 
 // sgochanrecv2 is v, ok := <-ch (and each step of range).
 func sgochanrecv2(c *sgoChan, dst unsafe.Pointer) bool {
+	sgoLabPoint()
 	t := sgoCurrent()
 	sgoRaceRendezvousStart(c)
 	lock(&c.lock)
@@ -143,6 +148,7 @@ func sgochanrecv1(c *sgoChan, dst unsafe.Pointer) {
 
 // sgoclosechan is close(ch); closing a closed channel has no effect (D35).
 func sgoclosechan(c *sgoChan) {
+	sgoLabPoint()
 	sgoChanInject(sgoFaultBeforeClose)
 	if raceenabled {
 		racerelease(unsafe.Pointer(c))
@@ -159,6 +165,7 @@ func sgoclosechan(c *sgoChan) {
 		if s.claim(sgoWaitDone) {
 			c.senders.remove(s)
 			s.closed, s.box = true, nil
+			sgoLabSelectWoken(s)
 			s.wake, wake = wake, s
 		}
 		s = next
@@ -168,6 +175,7 @@ func sgoclosechan(c *sgoChan) {
 		if r.claim(sgoWaitDone) {
 			c.recvs.remove(r)
 			r.delivered = false
+			sgoLabSelectWoken(r)
 			r.wake, wake = wake, r
 		}
 		r = next
@@ -254,6 +262,7 @@ func sgoSelParkUnlock(gp *g, p unsafe.Pointer) bool {
 // sgoselectgo is a select: the first nsends arms are sends, then nrecvs receives. It returns the
 // chosen arm and, for a receive, ok; -1 if block is false and no arm can proceed (default).
 func sgoselectgo(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs int, block bool) (int, bool) {
+	sgoLabPoint()
 	t := sgoCurrent()
 	n := nsends + nrecvs
 	var cas []sgoScase
@@ -274,11 +283,25 @@ func sgoselectgo(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs in
 	sgoSelLock(locks)
 	// Uniform choice among the arms that can proceed (D34), by reservoir sampling.
 	pick, ready := -1, uint32(0)
-	for i := range cas {
-		if sgoSelCanProceed(cas[i].c, i < nsends) {
-			ready++
-			if cheaprandn(ready) == 0 {
-				pick = i
+	if sgoLab != nil {
+		// The lab records the ready arms and chooses from the sched stream (D34, D43).
+		var buf [16]int32
+		arms := buf[:0]
+		for i := range cas {
+			if len(arms) < len(buf) && sgoSelCanProceed(cas[i].c, i < nsends) {
+				arms = append(arms, int32(i))
+			}
+		}
+		if len(arms) > 0 || !block {
+			pick = sgoLabSelectChoice(arms)
+		}
+	} else {
+		for i := range cas {
+			if sgoSelCanProceed(cas[i].c, i < nsends) {
+				ready++
+				if cheaprandn(ready) == 0 {
+					pick = i
+				}
 			}
 		}
 	}
@@ -311,7 +334,7 @@ func sgoselectgo(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs in
 	gp := getg()
 	for i := range ws {
 		w := &ws[i]
-		w.g, w.task, w.sel = gp, t, sel
+		w.g, w.task, w.sel, w.arm = gp, t, sel, int32(i)
 		if i == n {
 			break
 		}
@@ -337,6 +360,9 @@ func sgoselectgo(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs in
 	}
 	sgoChanWaiters = rep
 	sp := &sgoSelPark{locks: locks, rep: rep}
+	if sgoLab != nil {
+		sgoLabBlock(t)
+	}
 	gopark(sgoSelParkUnlock, unsafe.Pointer(sp), waitReasonSelect, traceBlockSelect, 1)
 	// Loser cleanup: no arm stays registered once select returns.
 	sgoSelLock(locks)

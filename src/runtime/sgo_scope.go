@@ -107,9 +107,16 @@ type sgoTask struct {
 
 	// Channel permits (sgo_chan.go): unresolved permits the task reserved (touched only by the
 	// task), and how many the runtime aborted because the task left them unresolved.
-	permits   *sgoPermit
-	tokens    *sgoToken // limiter tokens the task holds (sgo_sync.go)
-	abandoned int64
+	permits *sgoPermit
+	tokens  *sgoToken // limiter tokens the task holds (sgo_sync.go)
+	// Lab state (sgo_lab.go): the lab task ID, ready and waiting flags, and the step count since
+	// the task's last decision. Touched under sgoLab.lock or by the baton holder.
+	labID                                 int32
+	labReady, labRun, labParked, labWoken bool
+	labDone                               bool
+	labSeq, labSince                      int64
+	labG                                  *g
+	abandoned                             int64
 
 	// ready is the readiness record of a child started by n.Start (sgo_ready.go), nil otherwise.
 	ready *sgoReady

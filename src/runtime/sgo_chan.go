@@ -73,6 +73,7 @@ type sgoChanWait struct {
 	sel        *sgoSel        // native: the operation's single decision (nil: state decides)
 	box        unsafe.Pointer // native sender: the boxed value
 	closed     bool           // native sender: claimed by close (ClosedChannel)
+	arm        int32          // native select: the arm's cas index (lab select events)
 }
 
 type sgoWaitList struct{ first, last *sgoChanWait }
@@ -139,7 +140,7 @@ func sgoChanReady(wake *sgoChanWait) {
 	for wake != nil {
 		w := wake
 		wake, w.wake = w.wake, nil
-		goready(w.g, 0)
+		sgoWake(w.g)
 	}
 }
 
@@ -169,6 +170,9 @@ func sgoChanPark(c *sgoChan, l *sgoWaitList, w *sgoChanWait, reason waitReason, 
 		sgoChanWaiters.cprev = w
 	}
 	sgoChanWaiters = w
+	if sgoLab != nil {
+		sgoLabBlock(w.task) // the decision before parking (sgo_lab_sched.go)
+	}
 	gopark(sgoChanParkUnlock, unsafe.Pointer(w), reason, traceBlockChanRecv, 1)
 	lock(&c.lock)
 	lock(&sgoSleepLock)
