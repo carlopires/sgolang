@@ -43,6 +43,8 @@ Passed/failed/skipped/unrun: all passed; nothing skipped or unrun. No scenario o
 
 Problems found and fixed during W07, before the commits above:
 
+- The first CI run of the closure commit (`sgo-runtime` 41302656249) failed under `-race`: the fault-injected pass added to TestSGoNativeOutcomes in that commit shared one `math/rand.Rand` across concurrently running tasks (a race in the test, reported by the detector). The callback now uses the package-level generator; `runtime-lane.sh -race -count=2 -run TestSGo runtime` passes locally.
+
 - The cancellation-unwind test showed an owner could finish with an open nursery when the nursery's frame was not recorded; the compiler's nursery entry records it, and the test now uses that entry point.
 - The race gate found a missing edge: for capacity 0 the receive also happens before the send completes. Each capacity-0 operation now releases into the channel when it starts and acquires from it when it completes (as Go does for unbuffered channels).
 - A deadlock of every task printed Go's fatal error; it is now one `Deadlock` record with status 2 (SGO-CHAN-003).

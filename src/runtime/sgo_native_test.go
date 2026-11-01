@@ -251,13 +251,10 @@ func TestSGoNativeOutcomes(t *testing.T) {
 			t.Logf("%d runs, %d of %d model outcomes observed", runs, len(seen), len(allowed))
 			// The same runs with yields injected at the fault points after each transition
 			// (send published, receive done, close before and after), as in W06.
-			reached := map[int]bool{}
-			var mu sync.Mutex
-			runtime.SGoSetChanFault(func(point int) {
-				mu.Lock()
-				reached[point] = true
-				mu.Unlock()
-				for range rng.Intn(3) {
+			// The callback runs on many tasks at once: it uses the concurrency-safe package-level
+			// generator, not rng.
+			runtime.SGoSetChanFault(func(int) {
+				for range rand.Intn(3) {
 					runtime.Gosched()
 				}
 			})
