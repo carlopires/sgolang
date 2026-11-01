@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | work_package_id | W09 |
-| state | passed on darwin/arm64 (local, all commands below); linux/amd64 and linux/arm64: `sgo-runtime` run 41354110725 at `0b68d667d9`, the last runtime change (S-Go runtime tests including `TestSGoResolve`, `TestSGoResolveRenameRace`, `TestSGoHandle`, `TestSGoNet`, `TestSGoNetUnix`, `TestSGoDirList`, with -cpu=1,4 and the race detector); `sgo-w00` (builds, compile-level and driver conformance with all 325 cases, identity, TCB, flags, mutations, `test-lab.py`) at `f78bb3249e`: PENDING run 41357268356 |
+| state | passed on darwin/arm64 (local, all commands below); linux/amd64 and linux/arm64: `sgo-runtime` run 41354110725 at `0b68d667d9`, the last runtime change (S-Go runtime tests including `TestSGoResolve`, `TestSGoResolveRenameRace`, `TestSGoHandle`, `TestSGoNet`, `TestSGoNetUnix`, `TestSGoDirList`, with -cpu=1,4 and the race detector); `sgo-w00` (builds, compile-level and driver conformance with all 325 cases, identity, TCB, flags, mutations, `test-lab.py`) at `f78bb3249e`: run 41357268356 passed on both runners (every step, including the driver conformance with all 325 cases and the B03 upstream baseline) |
 | spec_version | 0.5.0 frozen (101 clauses: 95 frozen, 6 superseded); W09 adds SGO-FILE-002, SGO-FILE-003, SGO-NET-002, supersedes SGO-FILE-001 and SGO-NET-001, and amends SGO-TYPE-001, SGO-TYPE-005, SGO-AUTH-002 (`sgo/spec/CHANGELOG.md`) |
 | admission identity | registry content digest `f9a7bfd0b6abd1dc`; toolchain identity `6c8a3b09d1890c38` |
 | decisions | D51–D59 approved 2026-11-02 (D59 amended by the user: `Dir.List` returns `*sgo.Listing`); D60 (Unix domain sockets) approved 2026-11-02; SPEC-FILE and SPEC-NET clauses approved 2026-11-02 |

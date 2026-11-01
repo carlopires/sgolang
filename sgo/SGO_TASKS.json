@@ -633,7 +633,7 @@
         "W07"
       ],
       "risk": "high",
-      "status": "pending",
+      "status": "passed",
       "plan_section": "11/W09",
       "deliverables": [
         "Bounded audited I/O surface",
