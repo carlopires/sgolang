@@ -127,7 +127,7 @@ func sgoProgramExit(status int32, kind string) {
 // sgoLabReadAll reads fd to its end; false if fd cannot be read.
 func sgoLabReadAll(fd int32) (string, bool) {
 	var b []byte
-	var buf [4096]byte
+	buf := make([]byte, 4096) // on the heap: read's buffer escapes on some systems
 	for {
 		n := read(fd, unsafe.Pointer(&buf[0]), int32(len(buf)))
 		if n == -_EINTR {
