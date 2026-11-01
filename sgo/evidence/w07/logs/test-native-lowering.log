@@ -1,0 +1,1 @@
+test-native-lowering: ok: 9 S-Go channel entry points called, no Go channel entry point (self-test on stock Go code sees them)

@@ -1,0 +1,1 @@
+test-identity: ok: build metadata, stale contract (exported/unexported change, recorded contract), foreign export data and object, spec mismatch in export data and object

@@ -1226,7 +1226,8 @@
       "implementation_status": "implemented",
       "execution_status": "passed",
       "evidence": [
-        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model capacity/FIFO invariants; sgoChanCheck; TestSGoChanFIFO; permit-buffered-fifo (sgo/evidence/w06/README.md)"
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model capacity/FIFO invariants; sgoChanCheck; TestSGoChanFIFO; permit-buffered-fifo (sgo/evidence/w06/README.md)",
+        "W07: strict_native lane passed - model nativemodel.go; TestSGoNativeOutcomes with and without fault injection; native-* and sync-* fixtures (sgo/evidence/w07/README.md)"
       ]
     },
     {
@@ -1246,7 +1247,8 @@
       "implementation_status": "implemented",
       "execution_status": "passed",
       "evidence": [
-        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model rendezvous scenarios; receiver matching before reservation; permit-rendezvous (sgo/evidence/w06/README.md)"
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model rendezvous scenarios; receiver matching before reservation; permit-rendezvous (sgo/evidence/w06/README.md)",
+        "W07: strict_native lane passed - model nativemodel.go; TestSGoNativeOutcomes with and without fault injection; native-* and sync-* fixtures (sgo/evidence/w07/README.md)"
       ]
     },
     {
@@ -1266,7 +1268,8 @@
       "implementation_status": "implemented",
       "execution_status": "passed",
       "evidence": [
-        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model buffered-abort; permit-reserve-abort (sgo/evidence/w06/README.md)"
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model buffered-abort; permit-reserve-abort (sgo/evidence/w06/README.md)",
+        "W07: strict_native lane passed - model nativemodel.go; TestSGoNativeOutcomes with and without fault injection; native-* and sync-* fixtures (sgo/evidence/w07/README.md)"
       ]
     },
     {
@@ -1286,7 +1289,8 @@
       "implementation_status": "implemented",
       "execution_status": "passed",
       "evidence": [
-        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model SendAliasDouble; permit-double-commit (sgo/evidence/w06/README.md)"
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model SendAliasDouble; permit-double-commit (sgo/evidence/w06/README.md)",
+        "W07: strict_native lane passed - model nativemodel.go; TestSGoNativeOutcomes with and without fault injection; native-* and sync-* fixtures (sgo/evidence/w07/README.md)"
       ]
     },
     {
@@ -1306,7 +1310,8 @@
       "implementation_status": "implemented",
       "execution_status": "passed",
       "evidence": [
-        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - TestSGoChanTaskAffinity; permit-foreign-task (sgo/evidence/w06/README.md)"
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - TestSGoChanTaskAffinity; permit-foreign-task (sgo/evidence/w06/README.md)",
+        "W07: strict_native lane passed - model nativemodel.go; TestSGoNativeOutcomes with and without fault injection; native-* and sync-* fixtures (sgo/evidence/w07/README.md)"
       ]
     },
     {
@@ -1326,7 +1331,8 @@
       "implementation_status": "implemented",
       "execution_status": "passed",
       "evidence": [
-        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model SendCancelRace; permit-cancel-before-commit (sgo/evidence/w06/README.md)"
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model SendCancelRace; permit-cancel-before-commit (sgo/evidence/w06/README.md)",
+        "W07: strict_native lane passed - model nativemodel.go; TestSGoNativeOutcomes with and without fault injection; native-* and sync-* fixtures (sgo/evidence/w07/README.md)"
       ]
     },
     {
@@ -1346,7 +1352,8 @@
       "implementation_status": "implemented",
       "execution_status": "passed",
       "evidence": [
-        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model SendCancelRace (commit not retroactive); permit-cancel-after-commit (sgo/evidence/w06/README.md)"
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model SendCancelRace (commit not retroactive); permit-cancel-after-commit (sgo/evidence/w06/README.md)",
+        "W07: strict_native lane passed - model nativemodel.go; TestSGoNativeOutcomes with and without fault injection; native-* and sync-* fixtures (sgo/evidence/w07/README.md)"
       ]
     },
     {
@@ -1366,7 +1373,8 @@
       "implementation_status": "implemented",
       "execution_status": "passed",
       "evidence": [
-        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model buffered-close-race (the three outcomes of plan section 7.3); permit-close-versus-commit (sgo/evidence/w06/README.md)"
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model buffered-close-race (the three outcomes of plan section 7.3); permit-close-versus-commit (sgo/evidence/w06/README.md)",
+        "W07: strict_native lane passed - model nativemodel.go; TestSGoNativeOutcomes with and without fault injection; native-* and sync-* fixtures (sgo/evidence/w07/README.md)"
       ]
     },
     {
@@ -1386,7 +1394,8 @@
       "implementation_status": "implemented",
       "execution_status": "passed",
       "evidence": [
-        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - TestSGoChanPanicWithPermit; permit-panic-with-permit (PermitAbandoned in the chain) (sgo/evidence/w06/README.md)"
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - TestSGoChanPanicWithPermit; permit-panic-with-permit (PermitAbandoned in the chain) (sgo/evidence/w06/README.md)",
+        "W07: strict_native lane passed - model nativemodel.go; TestSGoNativeOutcomes with and without fault injection; native-* and sync-* fixtures (sgo/evidence/w07/README.md)"
       ]
     },
     {
@@ -1406,7 +1415,8 @@
       "implementation_status": "implemented",
       "execution_status": "passed",
       "evidence": [
-        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - TestSGoChanTaskAffinity (body-exit abort); permit-owner-exits (sgo/evidence/w06/README.md)"
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - TestSGoChanTaskAffinity (body-exit abort); permit-owner-exits (sgo/evidence/w06/README.md)",
+        "W07: strict_native lane passed - model nativemodel.go; TestSGoNativeOutcomes with and without fault injection; native-* and sync-* fixtures (sgo/evidence/w07/README.md)"
       ]
     },
     {
@@ -1426,7 +1436,8 @@
       "implementation_status": "implemented",
       "execution_status": "passed",
       "evidence": [
-        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - TestSGoChanValueLifetime; permit-error-values (sgo/evidence/w06/README.md)"
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - TestSGoChanValueLifetime; permit-error-values (sgo/evidence/w06/README.md)",
+        "W07: strict_native lane passed - model nativemodel.go; TestSGoNativeOutcomes with and without fault injection; native-* and sync-* fixtures (sgo/evidence/w07/README.md)"
       ]
     },
     {
@@ -1446,7 +1457,8 @@
       "implementation_status": "implemented",
       "execution_status": "passed",
       "evidence": [
-        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model conservation invariant; TestSGoChanConservation (sgo/evidence/w06/README.md)"
+        "W06: passed in the model and typed_channel lanes; strict_native lane: W07 - model conservation invariant; TestSGoChanConservation (sgo/evidence/w06/README.md)",
+        "W07: strict_native lane passed - model nativemodel.go; TestSGoNativeOutcomes with and without fault injection; native-* and sync-* fixtures (sgo/evidence/w07/README.md)"
       ]
     },
     {
@@ -1462,9 +1474,11 @@
       ],
       "scenario": "Make multiple cases ready simultaneously and cancel competing cases.",
       "expected": "Exactly one user case/effect wins; all losing registrations are removed.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W07: passed - sgoSel single decision; TestSGoNativeSelectStress; select-ready-arms (sgo/evidence/w07/README.md)"
+      ]
     },
     {
       "id": "N02",
@@ -1479,9 +1493,11 @@
       ],
       "scenario": "Use side effects in channel operands and send values.",
       "expected": "Each operand/value evaluates once in the specified order, regardless of selected case.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W07: passed - select-eval-order (sgo/evidence/w07/README.md)"
+      ]
     },
     {
       "id": "N03",
@@ -1496,9 +1512,11 @@
       ],
       "scenario": "Exercise nil channel send/receive, default, and an empty select with cancellation.",
       "expected": "Normal readiness rules are preserved; cancellation does not fabricate a received zero value or execute a default incorrectly.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W07: passed - no nil channels (chan-type, chan-named-result-denied); select-default; TestSGoNativeEmptySelect; ctl-select (sgo/evidence/w07/README.md)"
+      ]
     },
     {
       "id": "N04",
@@ -1513,9 +1531,11 @@
       ],
       "scenario": "Test send on closed, drain buffered closed channel, and closed receive comma-ok.",
       "expected": "Outcomes follow frozen S-Go close/send/receive clauses. Cancellation remains distinct from channel closure; no raw Go channel path is selected.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W07: passed - native-send-closed, native-close-drain, native-close-idempotent; test-native-lowering.py (sgo/evidence/w07/README.md)"
+      ]
     },
     {
       "id": "N05",
@@ -1530,9 +1550,11 @@
       ],
       "scenario": "Use reflect.Select, channel range, directional channels, and generic helper paths.",
       "expected": "All relevant paths preserve ownership/domain/cancel contracts or explicitly reject an advertised-unsupported surface before claiming support.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W07: passed - native-range, native-directional, native-chan-of-chan; reflect and user generics stay denied (reflect-import, SGO-GEN-001) (sgo/evidence/w07/README.md)"
+      ]
     },
     {
       "id": "N06",
@@ -1547,9 +1569,11 @@
       ],
       "scenario": "Select on multiple cases referring to the same channel.",
       "expected": "No self-deadlock, duplicate commitment, or leaked loser waiter occurs.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W07: passed - deduplicated lock order; TestSGoNativeSelectStress; select-duplicate-arms (sgo/evidence/w07/README.md)"
+      ]
     },
     {
       "id": "N07",
@@ -1564,9 +1588,11 @@
       ],
       "scenario": "Run litmus tests for buffered/unbuffered/close synchronization and join.",
       "expected": "The required happens-before relations are maintained and correctly represented to race instrumentation.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W07: passed - TestSGoNativeRace under -race (six orderings clean, deliberate race reported) (sgo/evidence/w07/README.md)"
+      ]
     },
     {
       "id": "N08",
@@ -1581,9 +1607,11 @@
       ],
       "scenario": "Cancel a blocked native send/receive and deliberately recover the internal signal.",
       "expected": "The waiter is removed before signal delivery; cancellation stays sticky; no fabricated data or dropped committed value.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W07: passed - TestSGoNativeCancelUnwind; native-cancel-*; recover not part of S-Go (sgo/evidence/w07/README.md)"
+      ]
     },
     {
       "id": "N09",
@@ -1598,9 +1626,11 @@
       ],
       "scenario": "Exercise optimized native operations under GC/stack copying and goroutine reuse.",
       "expected": "No bypass of managed protocol, stale stack pointer, or domain confusion occurs.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W07: passed - TestSGoNativeGCStack; heap-boxed values; -cpu=1,4,16 (sgo/evidence/w07/README.md)"
+      ]
     },
     {
       "id": "D01",
@@ -2484,10 +2514,11 @@
       ],
       "scenario": "Before native channel admission, attempt chan/select/reflect fast paths; after admission, attempt a raw-channel escape.",
       "expected": "Not-yet-implemented native operations are rejected; admitted ones use the sole S-Go contract. No legacy channel fallback exists.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W03: W03 part passed (W07: channel admission) - chan-type, chan-select, reflect-import, sync-mutex (sgo/evidence/w03/README.md)"
+        "W03: W03 part passed (W07: channel admission) - chan-type, chan-select, reflect-import, sync-mutex (sgo/evidence/w03/README.md)",
+        "W07: W07 part passed - test-native-lowering.py; chan-len-denied, chan-cap-denied, chan-compare-denied, chan-elem-denied, chan-recv-only-close (sgo/evidence/w07/README.md)"
       ]
     },
     {
@@ -2563,11 +2594,12 @@
       ],
       "scenario": "Audit and test admitted integer/float edges, nil/bounds errors, aliases, shared-memory races, atomic ordering, and resource-exhaustion outcomes.",
       "expected": "Every admitted family has explicit legality and allowed outcomes with tests. Unresolved families remain rejected; arbitrary implementation behavior is not a spec.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
         "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages",
-        "W03: W03 part passed; shared mutation and atomics do not exist in subset 0 (W07) - val-* (overflow, division, shifts, conversions, strings), err-stack-overflow-exit-4, mem-* (sgo/evidence/w03/README.md)"
+        "W03: W03 part passed; shared mutation and atomics do not exist in subset 0 (W07) - val-* (overflow, division, shifts, conversions, strings), err-stack-overflow-exit-4, mem-* (sgo/evidence/w03/README.md)",
+        "W07: W07 part passed - shared mutation impossible, sync stays denied (sync-mutex); channel and limiter orderings specified and race-checked (sgo/evidence/w07/README.md)"
       ]
     },
     {

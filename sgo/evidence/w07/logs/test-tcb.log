@@ -1,0 +1,1 @@
+test-tcb: ok: clean build; edited runtime file, added runtime file, and edited sgo file each fail with one SGO_E_TCB_DIGEST; restored trees build

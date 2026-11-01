@@ -1,0 +1,1 @@
+test-flags: ok: compiler flags and environment do not change admission; TCB paths need pinned files; driver and linker refuse permissive flags and non-executable modes

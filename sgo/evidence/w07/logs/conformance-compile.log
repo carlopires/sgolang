@@ -1,0 +1,2 @@
+conformance-compile: 95 passed, 0 failed, 24 not eligible (of 280 cases; eligible = flat reject cases without driver flags or driver-level diagnostics)
+conformance-compile: run cases: 161 clean, 0 with spurious diagnostics

@@ -1,0 +1,53 @@
+sgo: runtime lane: upstream tools at 2aae1000ea1d, fork TCB overlay digest 896b8425e834b9bb
+=== RUN   TestSGoNativeRaceHelper
+    sgo_native_race_test.go:92: helper of TestSGoNativeRace
+--- SKIP: TestSGoNativeRaceHelper (0.00s)
+=== RUN   TestSGoNativeRace
+    sgo_native_race_test.go:99: the race gate runs with -race
+--- SKIP: TestSGoNativeRace (0.00s)
+=== RUN   TestSGoNativeOutcomes
+=== RUN   TestSGoNativeOutcomes/native-buffered
+    sgo_native_test.go:251: 300 runs, 1 of 1 model outcomes observed
+=== RUN   TestSGoNativeOutcomes/native-cancel-recv
+    sgo_native_test.go:251: 300 runs, 2 of 2 model outcomes observed
+=== RUN   TestSGoNativeOutcomes/native-close-race
+    sgo_native_test.go:251: 300 runs, 3 of 3 model outcomes observed
+=== RUN   TestSGoNativeOutcomes/native-event
+    sgo_native_test.go:251: 300 runs, 2 of 2 model outcomes observed
+=== RUN   TestSGoNativeOutcomes/native-limiter
+    sgo_native_test.go:251: 300 runs, 2 of 2 model outcomes observed
+=== RUN   TestSGoNativeOutcomes/native-rendezvous
+    sgo_native_test.go:251: 300 runs, 1 of 1 model outcomes observed
+=== RUN   TestSGoNativeOutcomes/native-select-default
+    sgo_native_test.go:251: 300 runs, 2 of 2 model outcomes observed
+=== RUN   TestSGoNativeOutcomes/native-select-recv
+    sgo_native_test.go:251: 300 runs, 1 of 1 model outcomes observed
+=== RUN   TestSGoNativeOutcomes/native-select-send
+    sgo_native_test.go:251: 300 runs, 2 of 2 model outcomes observed
+=== RUN   TestSGoNativeOutcomes/native-send-closed
+    sgo_native_test.go:251: 300 runs, 1 of 1 model outcomes observed
+--- PASS: TestSGoNativeOutcomes (0.04s)
+    --- PASS: TestSGoNativeOutcomes/native-buffered (0.01s)
+    --- PASS: TestSGoNativeOutcomes/native-cancel-recv (0.01s)
+    --- PASS: TestSGoNativeOutcomes/native-close-race (0.01s)
+    --- PASS: TestSGoNativeOutcomes/native-event (0.00s)
+    --- PASS: TestSGoNativeOutcomes/native-limiter (0.00s)
+    --- PASS: TestSGoNativeOutcomes/native-rendezvous (0.00s)
+    --- PASS: TestSGoNativeOutcomes/native-select-default (0.00s)
+    --- PASS: TestSGoNativeOutcomes/native-select-recv (0.00s)
+    --- PASS: TestSGoNativeOutcomes/native-select-send (0.00s)
+    --- PASS: TestSGoNativeOutcomes/native-send-closed (0.00s)
+=== RUN   TestSGoNativeSelectStress
+--- PASS: TestSGoNativeSelectStress (0.00s)
+=== RUN   TestSGoNativeCancelUnwind
+--- PASS: TestSGoNativeCancelUnwind (0.00s)
+=== RUN   TestSGoNativeEmptySelect
+--- PASS: TestSGoNativeEmptySelect (0.00s)
+=== RUN   TestSGoNativeGCStack
+--- PASS: TestSGoNativeGCStack (0.01s)
+=== RUN   TestSGoLimiter
+--- PASS: TestSGoLimiter (0.00s)
+=== RUN   TestSGoEvent
+--- PASS: TestSGoEvent (0.00s)
+PASS
+ok  	runtime	0.285s

@@ -1,0 +1,45 @@
+sgo: runtime lane: upstream tools at 2aae1000ea1d, fork TCB overlay digest 046befc5d3d087f5
+=== RUN   TestSGoNativeOutcomes
+=== RUN   TestSGoNativeOutcomes/native-buffered
+    sgo_native_test.go:251: 300 runs, 1 of 1 model outcomes observed
+    sgo_native_test.go:273: with fault injection: 150 runs, 1 of 1 model outcomes observed
+=== RUN   TestSGoNativeOutcomes/native-cancel-recv
+    sgo_native_test.go:251: 300 runs, 2 of 2 model outcomes observed
+    sgo_native_test.go:273: with fault injection: 150 runs, 2 of 2 model outcomes observed
+=== RUN   TestSGoNativeOutcomes/native-close-race
+    sgo_native_test.go:251: 300 runs, 3 of 3 model outcomes observed
+    sgo_native_test.go:273: with fault injection: 150 runs, 3 of 3 model outcomes observed
+=== RUN   TestSGoNativeOutcomes/native-event
+    sgo_native_test.go:251: 300 runs, 2 of 2 model outcomes observed
+    sgo_native_test.go:273: with fault injection: 150 runs, 2 of 2 model outcomes observed
+=== RUN   TestSGoNativeOutcomes/native-limiter
+    sgo_native_test.go:251: 300 runs, 2 of 2 model outcomes observed
+    sgo_native_test.go:273: with fault injection: 150 runs, 2 of 2 model outcomes observed
+=== RUN   TestSGoNativeOutcomes/native-rendezvous
+    sgo_native_test.go:251: 300 runs, 1 of 1 model outcomes observed
+    sgo_native_test.go:273: with fault injection: 150 runs, 1 of 1 model outcomes observed
+=== RUN   TestSGoNativeOutcomes/native-select-default
+    sgo_native_test.go:251: 300 runs, 2 of 2 model outcomes observed
+    sgo_native_test.go:273: with fault injection: 150 runs, 2 of 2 model outcomes observed
+=== RUN   TestSGoNativeOutcomes/native-select-recv
+    sgo_native_test.go:251: 300 runs, 1 of 1 model outcomes observed
+    sgo_native_test.go:273: with fault injection: 150 runs, 1 of 1 model outcomes observed
+=== RUN   TestSGoNativeOutcomes/native-select-send
+    sgo_native_test.go:251: 300 runs, 2 of 2 model outcomes observed
+    sgo_native_test.go:273: with fault injection: 150 runs, 2 of 2 model outcomes observed
+=== RUN   TestSGoNativeOutcomes/native-send-closed
+    sgo_native_test.go:251: 300 runs, 1 of 1 model outcomes observed
+    sgo_native_test.go:273: with fault injection: 150 runs, 1 of 1 model outcomes observed
+--- PASS: TestSGoNativeOutcomes (0.08s)
+    --- PASS: TestSGoNativeOutcomes/native-buffered (0.01s)
+    --- PASS: TestSGoNativeOutcomes/native-cancel-recv (0.01s)
+    --- PASS: TestSGoNativeOutcomes/native-close-race (0.01s)
+    --- PASS: TestSGoNativeOutcomes/native-event (0.01s)
+    --- PASS: TestSGoNativeOutcomes/native-limiter (0.01s)
+    --- PASS: TestSGoNativeOutcomes/native-rendezvous (0.01s)
+    --- PASS: TestSGoNativeOutcomes/native-select-default (0.01s)
+    --- PASS: TestSGoNativeOutcomes/native-select-recv (0.01s)
+    --- PASS: TestSGoNativeOutcomes/native-select-send (0.01s)
+    --- PASS: TestSGoNativeOutcomes/native-send-closed (0.01s)
+PASS
+ok  	runtime	0.308s

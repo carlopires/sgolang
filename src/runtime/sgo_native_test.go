@@ -249,6 +249,28 @@ func TestSGoNativeOutcomes(t *testing.T) {
 				seen[o]++
 			}
 			t.Logf("%d runs, %d of %d model outcomes observed", runs, len(seen), len(allowed))
+			// The same runs with yields injected at the fault points after each transition
+			// (send published, receive done, close before and after), as in W06.
+			reached := map[int]bool{}
+			var mu sync.Mutex
+			runtime.SGoSetChanFault(func(point int) {
+				mu.Lock()
+				reached[point] = true
+				mu.Unlock()
+				for range rng.Intn(3) {
+					runtime.Gosched()
+				}
+			})
+			defer runtime.SGoSetChanFault(nil)
+			faulted := map[string]int{}
+			for range runs / 2 {
+				o := runNativeScenario(t, g.Scenario, rand.New(rand.NewSource(rng.Int63())))
+				if !allowed[o] {
+					t.Fatalf("with fault injection, outcome %q is not admitted by the model; model outcomes: %v", o, g.Outcomes)
+				}
+				faulted[o]++
+			}
+			t.Logf("with fault injection: %d runs, %d of %d model outcomes observed", runs/2, len(faulted), len(allowed))
 		})
 	}
 }

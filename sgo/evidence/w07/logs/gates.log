@@ -1,0 +1,6 @@
+spec-tool: ok: 93 clauses {'frozen': 90, 'superseded': 3}, spec_version=0.3.0
+inventory: ok: 555 surfaces mapped by 106 rules (admit 91, internal 116, deny 348)
+tcb-manifest: ok: {'packages': 31, 'files': 1041, 'files_changed_from_upstream': 25, 'services': {'active': 5, 'dormant': 5, 'not-built': 1}}
+generated-twin-check: ok: 59 generator inputs and outputs equal upstream 2aae1000ea1d
+adoption-check: ok: 7 adopting clauses, 14 digest-locked upstream sections
+policy-report: ok: 28 denied routes with cases; effect kinds and handle types agree
