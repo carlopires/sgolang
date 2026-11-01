@@ -70,6 +70,9 @@ jobs:
       - name: Compiled S-Go code reaches channels only through S-Go entry points (S12, W07)
         run: sgo/scripts/test-native-lowering.py
 
+      - name: Lab execution configuration end to end (W08, D41-D49)
+        run: sgo/scripts/test-lab.py
+
       - name: No flag, mode, or environment reopens stock Go (S01, S15)
         run: sgo/scripts/test-flags.py
 

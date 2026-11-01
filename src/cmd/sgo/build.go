@@ -28,7 +28,7 @@ func cmdBuild(args []string) error {
 		dir = f.args[0]
 	}
 	out := f.out
-	_, err = buildProgram(dir, f.target, f.drain, func(m *module, main *pkg) string {
+	_, err = buildProgram(dir, f.target, f.drain, false, func(m *module, main *pkg) string {
 		if out == "" {
 			out = path_base(main.path)
 		}
@@ -50,7 +50,7 @@ func cmdRun(args []string) error {
 		return err
 	}
 	defer os.RemoveAll(tmp)
-	exe, err := buildProgram(f.args[0], "", f.drain, func(*module, *pkg) string { return filepath.Join(tmp, "prog") })
+	exe, err := buildProgram(f.args[0], "", f.drain, false, func(*module, *pkg) string { return filepath.Join(tmp, "prog") })
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,8 @@ func path_base(p string) string {
 
 // buildProgram compiles the main package named by arg (a directory, default ".") and every module
 // package it imports, links the program, and returns the output path. Any error leaves no output.
-func buildProgram(arg, target string, drain int64, output func(*module, *pkg) string) (string, error) {
+// lab builds a lab binary (sgo lab, D41): S-Go code is compiled and linked with -sgolab.
+func buildProgram(arg, target string, drain int64, lab bool, output func(*module, *pkg) string) (string, error) {
 	t, err := findToolchain()
 	if err != nil {
 		return "", err
@@ -143,14 +144,15 @@ func buildProgram(arg, target string, drain int64, output func(*module, *pkg) st
 	defer os.RemoveAll(work)
 	env := t.toolEnv(goos, goarch)
 	for _, p := range pkgs {
-		a, err := t.compileUser(m, p, p == main, archives, work, env)
+		a, err := t.compileUser(m, p, p == main, lab, archives, work, env)
 		if err != nil {
 			return "", err
 		}
 		archives[p.path] = a
 	}
 	exe := filepath.Join(work, "prog")
-	if err := t.link(archives, archives[main.path], exe, t.buildInfo(goos, goarch, drain, m.grants), drain, m.grants, env); err != nil {
+	lastBuildID = t.buildInfo(goos, goarch, drain, m.grants, lab)
+	if err := t.link(archives, archives[main.path], exe, lastBuildID, drain, m.grants, lab, env); err != nil {
 		return "", err
 	}
 	out := output(m, main)
@@ -159,6 +161,9 @@ func buildProgram(arg, target string, drain int64, output func(*module, *pkg) st
 	}
 	return out, moveFile(exe, out)
 }
+
+// lastBuildID is the build ID of the program buildProgram built last (the lab trace header, D46).
+var lastBuildID string
 
 func writeImportcfg(path string, archives map[string]string) error {
 	var keys []string
@@ -175,7 +180,7 @@ func writeImportcfg(path string, archives map[string]string) error {
 
 // compileUser compiles one module package under subset 0. Files are passed relative to the module
 // root, so diagnostics and runtime-record positions are module-relative (SGO-ERR-001/002).
-func (t *toolchain) compileUser(m *module, p *pkg, isMain bool, archives map[string]string, work string, env []string) (string, error) {
+func (t *toolchain) compileUser(m *module, p *pkg, isMain, lab bool, archives map[string]string, work string, env []string) (string, error) {
 	name := fmt.Sprintf("p%03d", p.order)
 	importcfg := filepath.Join(work, name+".importcfg")
 	if err := writeImportcfg(importcfg, archives); err != nil {
@@ -188,14 +193,17 @@ func (t *toolchain) compileUser(m *module, p *pkg, isMain bool, archives map[str
 	archive := filepath.Join(work, name+".a")
 	args := append([]string{"-o", archive, "-p", pkgpath, "-importcfg", importcfg, "-pack", "-complete",
 		"-trimpath", m.root + "=>"}, p.files...)
+	if lab {
+		args = append([]string{"-sgolab"}, args...)
+	}
 	return archive, t.runTool(m.root, env, "compile", args...)
 }
 
 // buildInfo is the build metadata recorded in every binary (SGO-BUILD-001, SGO-TOOL-001): spec
 // version, admission digest, drain budget, root grants (SGO-AUTH-002), target, toolchain
 // identity, and upstream base commit. It is the binary's build ID, which the linker writes
-// verbatim in every executable format.
-func (t *toolchain) buildInfo(goos, goarch string, drain int64, grants []string) string {
+// verbatim in every executable format. A lab binary's ID also names its configuration (D41).
+func (t *toolchain) buildInfo(goos, goarch string, drain int64, grants []string, lab bool) string {
 	budget := "none"
 	if drain > 0 {
 		budget = fmt.Sprint(drain)
@@ -204,13 +212,17 @@ func (t *toolchain) buildInfo(goos, goarch string, drain int64, grants []string)
 	if len(grants) > 0 {
 		g = strings.Join(grants, ",")
 	}
-	return fmt.Sprintf("sgo1/spec=%s/admission=%s/drain=%s/grants=%s/target=%s-%s/toolchain=%s/upstream=%s",
-		t.specVersion, t.admission, budget, g, goos, goarch, t.version, t.upstream)
+	config := ""
+	if lab {
+		config = "/config=lab"
+	}
+	return fmt.Sprintf("sgo1/spec=%s/admission=%s%s/drain=%s/grants=%s/target=%s-%s/toolchain=%s/upstream=%s",
+		t.specVersion, t.admission, config, budget, g, goos, goarch, t.version, t.upstream)
 }
 
 // link links the program; a drain budget is passed with the linker's dedicated -sgodrainbudget
 // flag, which sets the runtime's budget (-X is refused for S-Go programs).
-func (t *toolchain) link(archives map[string]string, main, exe, buildInfo string, drain int64, grants []string, env []string) error {
+func (t *toolchain) link(archives map[string]string, main, exe, buildInfo string, drain int64, grants []string, lab bool, env []string) error {
 	importcfg := exe + ".importcfg"
 	if err := writeImportcfg(importcfg, archives); err != nil {
 		return err
@@ -221,6 +233,9 @@ func (t *toolchain) link(archives map[string]string, main, exe, buildInfo string
 	}
 	if len(grants) > 0 {
 		args = append(args, "-sgogrants="+strings.Join(grants, ","))
+	}
+	if lab {
+		args = append(args, "-sgolab")
 	}
 	return t.runTool(filepath.Dir(exe), env, "link", append(args, main)...)
 }

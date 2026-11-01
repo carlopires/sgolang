@@ -12,6 +12,7 @@
 //	sgo run <main package>
 //	sgo version
 //	sgo fmt [files]
+//	sgo lab run|replay|sweep ... (lab.go: the lab execution configuration, D41)
 //
 // Any other command or flag is rejected with SGO_E_USAGE. There is no flag, environment variable,
 // file name, build tag, or pragma that changes the language or disables a check.
@@ -56,7 +57,7 @@ func main() {
 
 func run(args []string) error {
 	if len(args) == 0 {
-		return usage("missing command (sgo build | run | version)")
+		return usage("missing command (sgo build | run | lab | version)")
 	}
 	switch cmd, rest := args[0], args[1:]; cmd {
 	case "build":
@@ -70,6 +71,8 @@ func run(args []string) error {
 		return cmdVersion()
 	case "fmt":
 		return cmdFmt(rest)
+	case "lab":
+		return cmdLab(rest)
 	default:
 		return usage("unknown command %q", cmd)
 	}

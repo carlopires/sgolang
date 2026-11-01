@@ -1,0 +1,304 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+// sgo lab (D41, D46, D48): lab binaries run under a manifest on fd 3 and write their canonical
+// event lines to fd 4 (src/runtime/sgo_lab_boot.go). The driver adds the trace header and footer
+// and a sidecar with host data, which never enters the canonical lines.
+//
+//	sgo lab run [-seed N] [-sched random|fifo] [-k N] [-quota N] [-trace FILE] [-timeout S] <main package>
+//	sgo lab replay [-timeout S] <trace> <main package>
+//	sgo lab sweep -seeds A..B [-sched ...] [-k N] [-quota N] [-expect FILE] [-save FILE] [-timeout S] <main package>
+
+import (
+	"bytes"
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+)
+
+// labFlags are the flags of the sgo lab commands.
+type labFlags struct {
+	seed, seedTo uint64
+	haveSeeds    bool
+	policy       string
+	k, quota     int64
+	trace        string
+	expect, save string
+	timeout      time.Duration
+	args         []string
+}
+
+// The manifest defaults: K of D43, a quota that bounds any run, the watchdog of D47.
+const (
+	labDefaultK       = 1024
+	labDefaultQuota   = 100_000_000
+	labDefaultTimeout = 60 * time.Second
+)
+
+func parseLabFlags(cmd string, args []string) (*labFlags, error) {
+	f := &labFlags{policy: "random", k: labDefaultK, quota: labDefaultQuota, timeout: labDefaultTimeout}
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		if !strings.HasPrefix(a, "-") || a == "-" {
+			f.args = args[i:]
+			break
+		}
+		name, val, hasVal := strings.Cut(strings.TrimLeft(a, "-"), "=")
+		if !hasVal {
+			if i+1 >= len(args) {
+				return nil, usage("flag -%s needs a value", name)
+			}
+			i++
+			val = args[i]
+		}
+		num := func() (int64, error) {
+			v, err := strconv.ParseInt(val, 10, 64)
+			if err != nil || v < 0 {
+				return 0, usage("-%s must be a non-negative integer, not %q", name, val)
+			}
+			return v, nil
+		}
+		var err error
+		switch {
+		case name == "seed" && cmd == "run":
+			var v int64
+			v, err = num()
+			f.seed = uint64(v)
+		case name == "seeds" && cmd == "sweep":
+			from, to, ok := strings.Cut(val, "..")
+			a, e1 := strconv.ParseUint(from, 10, 64)
+			b, e2 := strconv.ParseUint(to, 10, 64)
+			if !ok || e1 != nil || e2 != nil || b < a {
+				return nil, usage("-seeds must be A..B with A <= B, not %q (D48)", val)
+			}
+			f.seed, f.seedTo, f.haveSeeds = a, b, true
+		case name == "sched" && cmd != "replay":
+			if val != "random" && val != "fifo" {
+				return nil, usage("-sched must be random or fifo, not %q (D49)", val)
+			}
+			f.policy = val
+		case name == "k" && cmd != "replay":
+			f.k, err = num()
+			if err == nil && f.k == 0 {
+				err = usage("-k must be positive")
+			}
+		case name == "quota" && cmd != "replay":
+			f.quota, err = num()
+		case name == "trace" && cmd == "run":
+			f.trace = val
+		case name == "expect" && cmd == "sweep":
+			f.expect = val
+		case name == "save" && cmd == "sweep":
+			f.save = val
+		case name == "timeout":
+			var v int64
+			v, err = num()
+			if err == nil && v == 0 {
+				err = usage("-timeout must be positive")
+			}
+			f.timeout = time.Duration(v) * time.Second
+		default:
+			return nil, usage("unknown flag %s for sgo lab %s", a, cmd)
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+	return f, nil
+}
+
+func cmdLab(args []string) error {
+	if len(args) == 0 {
+		return usage("missing lab command (sgo lab run | replay | sweep)")
+	}
+	switch cmd, rest := args[0], args[1:]; cmd {
+	case "run":
+		return cmdLabRun(rest)
+	case "replay":
+		return cmdLabReplay(rest)
+	case "sweep":
+		return cmdLabSweep(rest)
+	default:
+		return usage("unknown lab command %q", cmd)
+	}
+}
+
+// labManifest is the manifest of one run (D46); the header of its trace.
+type labManifest struct {
+	Format  string `json:"sgolab"`
+	Build   string `json:"build"`
+	Seed    uint64 `json:"seed"`
+	Policy  string `json:"policy"`
+	K       int64  `json:"k"`
+	Quota   int64  `json:"quota"`
+	Replay  bool   `json:"replay,omitempty"`
+	Picks   []int  `json:"-"`
+	program string // the binary
+}
+
+const labFormat = "1"
+
+// labResult is one run: its canonical lines, exit status, output, and host data.
+type labResult struct {
+	lines          []string
+	status         int
+	stdout, stderr []byte
+	hang           bool
+	wall           time.Duration
+}
+
+// labBuild builds the lab binary of the main package in dir into tmp.
+func labBuild(dir, tmp string) (string, string, error) {
+	exe, err := buildProgram(dir, "", 0, true, func(*module, *pkg) string { return filepath.Join(tmp, "prog") })
+	return exe, lastBuildID, err
+}
+
+// labExec runs the lab binary once under m: the manifest on fd 3, the event lines from fd 4.
+// stdout and stderr are copied to the given writers (and kept). A run that does not end within
+// timeout is killed and reported as a host hang (D47), never as a managed outcome.
+func labExec(m *labManifest, timeout time.Duration, stdout, stderr io.Writer) (*labResult, error) {
+	tmp, err := os.MkdirTemp("", "sgo-lab-")
+	if err != nil {
+		return nil, err
+	}
+	defer os.RemoveAll(tmp)
+	var man bytes.Buffer
+	fmt.Fprintf(&man, "seed %d\npolicy %s\nk %d\nquota %d\n", m.Seed, m.Policy, m.K, m.Quota)
+	if m.Replay {
+		s := make([]string, len(m.Picks))
+		for i, p := range m.Picks {
+			s[i] = strconv.Itoa(p)
+		}
+		fmt.Fprintf(&man, "replay %s\n", strings.Join(s, ","))
+	}
+	manPath, tracePath := filepath.Join(tmp, "manifest"), filepath.Join(tmp, "trace")
+	if err := os.WriteFile(manPath, man.Bytes(), 0o600); err != nil {
+		return nil, err
+	}
+	mf, err := os.Open(manPath)
+	if err != nil {
+		return nil, err
+	}
+	defer mf.Close()
+	tf, err := os.Create(tracePath)
+	if err != nil {
+		return nil, err
+	}
+	defer tf.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, m.program)
+	var out, errb bytes.Buffer
+	cmd.Stdin = nil
+	cmd.Stdout = io.MultiWriter(&out, stdout)
+	cmd.Stderr = io.MultiWriter(&errb, stderr)
+	cmd.ExtraFiles = []*os.File{mf, tf} // fd 3, fd 4
+	start := time.Now()
+	err = cmd.Run()
+	r := &labResult{stdout: out.Bytes(), stderr: errb.Bytes(), wall: time.Since(start)}
+	if ctx.Err() != nil {
+		r.hang, r.status = true, -1
+		return r, nil
+	}
+	var ee *exec.ExitError
+	switch {
+	case err == nil:
+	case errors.As(err, &ee):
+		r.status = ee.ExitCode()
+	default:
+		return nil, err
+	}
+	data, err := os.ReadFile(tracePath)
+	if err != nil {
+		return nil, err
+	}
+	for _, l := range strings.Split(strings.TrimRight(string(data), "\n"), "\n") {
+		if l != "" {
+			r.lines = append(r.lines, l)
+		}
+	}
+	return r, nil
+}
+
+// labDigest is the SHA-256 of the canonical lines, each ended by a newline (D46).
+func labDigest(lines []string) string {
+	h := sha256.New()
+	for _, l := range lines {
+		io.WriteString(h, l+"\n")
+	}
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+// writeLabTrace writes a trace: the manifest header, the canonical lines, and the footer (D46);
+// host data go to the sidecar path+".host.json".
+func writeLabTrace(path string, m *labManifest, r *labResult) error {
+	var b bytes.Buffer
+	hdr, _ := json.Marshal(m)
+	b.Write(hdr)
+	b.WriteByte('\n')
+	for _, l := range r.lines {
+		b.WriteString(l)
+		b.WriteByte('\n')
+	}
+	foot, _ := json.Marshal(struct {
+		End    bool   `json:"end"`
+		Events int    `json:"events"`
+		Status int    `json:"status"`
+		SHA256 string `json:"sha256"`
+	}{true, len(r.lines), r.status, labDigest(r.lines)})
+	b.Write(foot)
+	b.WriteByte('\n')
+	if err := os.WriteFile(path, b.Bytes(), 0o644); err != nil {
+		return err
+	}
+	host, _ := json.MarshalIndent(struct {
+		Hang   bool    `json:"hang"`
+		Status int     `json:"status"`
+		WallMS float64 `json:"wall_ms"`
+	}{r.hang, r.status, float64(r.wall.Microseconds()) / 1000}, "", "  ")
+	return os.WriteFile(path+".host.json", append(host, '\n'), 0o644)
+}
+
+// readLabTrace reads a trace written by writeLabTrace and checks its footer digest.
+func readLabTrace(path string) (*labManifest, []string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, nil, usage("cannot read trace %s", path)
+	}
+	all := strings.Split(strings.TrimRight(string(data), "\n"), "\n")
+	if len(all) < 2 {
+		return nil, nil, labErr("SGO_E_LAB_TRACE", "trace %s has no header and footer", path)
+	}
+	var m labManifest
+	if err := json.Unmarshal([]byte(all[0]), &m); err != nil || m.Format != labFormat {
+		return nil, nil, labErr("SGO_E_LAB_TRACE", "trace %s has no sgolab %s header", path, labFormat)
+	}
+	var foot struct {
+		End    bool   `json:"end"`
+		Events int    `json:"events"`
+		SHA256 string `json:"sha256"`
+	}
+	lines := all[1 : len(all)-1]
+	if err := json.Unmarshal([]byte(all[len(all)-1]), &foot); err != nil || !foot.End ||
+		foot.Events != len(lines) || foot.SHA256 != labDigest(lines) {
+		return nil, nil, labErr("SGO_E_LAB_TRACE", "trace %s is incomplete or altered (footer does not match its events)", path)
+	}
+	return &m, lines, nil
+}
+
+func labErr(code, format string, args ...any) *toolErr {
+	return &toolErr{"sgo:1:1", code, fmt.Sprintf(format, args...), 1}
+}
