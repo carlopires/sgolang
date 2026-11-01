@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | work_package_id | W08 |
-| state | passed on darwin/arm64 (local, all commands below); linux/amd64 and linux/arm64: CI_PENDING |
+| state | passed on darwin/arm64 (local, all commands below) and linux/amd64, linux/arm64: `sgo-w00` run 41323350439 at `4b9fb8c7fa` (builds, compile-level and driver conformance with all 306 cases including the 26 lab cases, identity, TCB, flags, mutations, native lowering, `test-lab.py`); `sgo-runtime` run 41318257071 at `a2b1e562f2`, the last runtime change (S-Go runtime tests including `TestSGoLabStreams` and `TestSGoLabReplay`, with -cpu=1,4 and the race detector); `sgo-spec` run 41323608740 at `a583d17e30`. `sgo-runtime` run 41315970127 at `88a5fa366b` failed on linux only (escaping read buffer), fixed in `54fc8f99fd` |
 | spec_version | 0.4.0 frozen (98 clauses: 94 frozen, 4 superseded); W08 adds SGO-LAB-002 to SGO-LAB-006 and supersedes SGO-LAB-001 (`sgo/spec/CHANGELOG.md`) |
 | admission identity | registry content digest `ce0d9ead18412a3e`; toolchain identity `0b84789dcdb9938f` |
 | decisions | D40–D49 approved 2026-11-02; D50 (source-order select arm indices) approved 2026-11-02; SPEC-LAB clauses approved 2026-11-02 |

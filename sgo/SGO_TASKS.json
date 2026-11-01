@@ -597,7 +597,7 @@
         "W07"
       ],
       "risk": "very_high",
-      "status": "in_progress",
+      "status": "passed",
       "plan_section": "11/W08",
       "deliverables": [
         "Controlled scheduler and virtual time",
