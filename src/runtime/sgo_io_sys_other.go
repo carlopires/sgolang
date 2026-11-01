@@ -29,3 +29,19 @@ func sgoUnlinkat(dirfd int32, path *byte, flags int32) int32                { re
 func sgoCloseFD(fd int32)                                                   {}
 
 func sgoStatSize(b *sgoStatBuf) int64 { return 0 }
+
+const (
+	sgoEAGAIN, sgoEINPROGRESS, sgoEPIPE, sgoEADDRINUSE, sgoECONNRESET = -1, -2, -3, -4, -5
+	sgoECONNREFUSED, sgoENETUNREACH, sgoEHOSTUNREACH, sgoETIMEDOUT    = -6, -7, -8, -9
+	sgoSOL_SOCKET, sgoSO_ERROR, sgoSO_REUSEADDR                       = 0, 0, 0
+)
+
+func sgoSockaddr(b *[28]byte, ip *[16]byte, v6 bool, port uint16) uintptr { return 0 }
+func sgoSocket(v6 bool) int32                                             { return -sgoENOSYS }
+func sgoConnectSys(fd int32, sa *[28]byte, n uintptr) int32               { return -sgoENOSYS }
+func sgoBind(fd int32, sa *[28]byte, n uintptr) int32                     { return -sgoENOSYS }
+func sgoListenSys(fd int32, backlog int32) int32                          { return -sgoENOSYS }
+func sgoAccept(fd int32) int32                                            { return -sgoENOSYS }
+func sgoSetsockoptInt(fd, level, name, v int32) int32                     { return -sgoENOSYS }
+func sgoGetsockoptInt(fd, level, name int32) (int32, int32)               { return 0, -sgoENOSYS }
+func sgoLocalPort(fd int32) (uint16, int32)                               { return 0, -sgoENOSYS }

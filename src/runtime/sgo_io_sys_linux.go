@@ -39,6 +39,10 @@ const (
 // sgoStatBuf holds a struct stat (144 bytes on linux/amd64, 128 on linux/arm64).
 type sgoStatBuf [256]byte
 
+func sgoSyscall6(num, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2, errno uintptr) {
+	return linux.Syscall6(num, a1, a2, a3, a4, a5, a6)
+}
+
 func sgoSys(num, a1, a2, a3, a4 uintptr) int32 {
 	r, _, errno := linux.Syscall6(num, a1, a2, a3, a4, 0, 0)
 	if errno != 0 {

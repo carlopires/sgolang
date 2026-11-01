@@ -290,9 +290,11 @@ func sgoWakeCancelled() {
 	}
 	chanWake := sgoChanWakeCancelled()   // channel waiters (sgo_chan.go)
 	readyWake := sgoReadyWakeCancelled() // starters waiting for readiness (sgo_ready.go)
+	netWake := sgoNetWakeCancelled()     // tasks waiting on sockets (sgo_net.go)
 	unlock(&sgoSleepLock)
 	sgoChanReady(chanWake)
 	sgoReadyReadyAll(readyWake)
+	sgoNetWakeAll(netWake)
 	// A stale timer fire for these records fails its state CAS and does nothing.
 	for wake != nil {
 		r := wake

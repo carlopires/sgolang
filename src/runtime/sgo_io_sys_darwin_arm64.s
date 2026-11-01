@@ -86,3 +86,21 @@ TEXT runtime·sgo_unlinkat_trampoline(SB),NOSPLIT,$0
 	NEG	R0, R0
 noerr:
 	RET
+
+// Socket functions, called through syscallN_trampoline (sgo_net_sys_darwin.go).
+TEXT runtime·sgo_socket_trampoline(SB),NOSPLIT,$0-0
+	JMP	libc_socket(SB)
+TEXT runtime·sgo_connect_trampoline(SB),NOSPLIT,$0-0
+	JMP	libc_connect(SB)
+TEXT runtime·sgo_bind_trampoline(SB),NOSPLIT,$0-0
+	JMP	libc_bind(SB)
+TEXT runtime·sgo_listen_trampoline(SB),NOSPLIT,$0-0
+	JMP	libc_listen(SB)
+TEXT runtime·sgo_accept_trampoline(SB),NOSPLIT,$0-0
+	JMP	libc_accept(SB)
+TEXT runtime·sgo_setsockopt_trampoline(SB),NOSPLIT,$0-0
+	JMP	libc_setsockopt(SB)
+TEXT runtime·sgo_getsockopt_trampoline(SB),NOSPLIT,$0-0
+	JMP	libc_getsockopt(SB)
+TEXT runtime·sgo_getsockname_trampoline(SB),NOSPLIT,$0-0
+	JMP	libc_getsockname(SB)

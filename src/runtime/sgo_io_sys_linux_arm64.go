@@ -7,10 +7,18 @@ package runtime
 import "unsafe"
 
 const (
-	sgoSYS_openat   = 56
-	sgoSYS_fstatat  = 79 // newfstatat
-	sgoSYS_mkdirat  = 34
-	sgoSYS_unlinkat = 35
+	sgoSYS_socket      = 198
+	sgoSYS_connect     = 203
+	sgoSYS_accept4     = 242
+	sgoSYS_bind        = 200
+	sgoSYS_listen      = 201
+	sgoSYS_setsockopt  = 208
+	sgoSYS_getsockopt  = 209
+	sgoSYS_getsockname = 204
+	sgoSYS_openat      = 56
+	sgoSYS_fstatat     = 79 // newfstatat
+	sgoSYS_mkdirat     = 34
+	sgoSYS_unlinkat    = 35
 
 	sgoO_NOFOLLOW  = 0x8000
 	sgoO_DIRECTORY = 0x4000

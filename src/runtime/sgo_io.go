@@ -34,8 +34,9 @@ const (
 type sgoHandle struct {
 	kind     uint8
 	fd       int32
-	readOnly bool // a directory opened from an ro grant, or ReadOnly
-	write    bool // a file opened for writing
+	pd       *pollDesc // sockets: the poller registration (sgo_net.go)
+	readOnly bool      // a directory opened from an ro grant, or ReadOnly
+	write    bool      // a file opened for writing
 	owner    *sgoTask
 	scope    *sgoScope // the owner's innermost nursery at open (nil: the task body)
 	closed   bool
@@ -69,6 +70,17 @@ func sgoScopeOpen(s *sgoScope) bool {
 	open := s.state != sgoClosed
 	unlock(&s.lock)
 	return open
+}
+
+// sgoHandleLentOpen reports whether h is lent to a nursery that has not closed: at the exit of the
+// body it was opened in it stays open for the borrowers, and is closed at the owner's end.
+func sgoHandleLentOpen(h *sgoHandle) bool {
+	for _, s := range h.lentTo {
+		if sgoScopeOpen(s) {
+			return true
+		}
+	}
+	return false
 }
 
 // sgoHandleUser reports whether task t may operate on h: its owner, or a task inside a nursery h
@@ -114,6 +126,10 @@ func sgoHandleLend(h *sgoHandle, s *sgoScope) {
 	if sgoCurrent() != h.owner {
 		panic(&sgoViolation{"LendTo of an I/O handle by a task that does not own it"})
 	}
+	if s.owner != h.owner {
+		// Only nurseries of the owner: they all close before it ends, so no borrower outlives it.
+		panic(&sgoViolation{"LendTo of an I/O handle to a nursery its owner does not own"})
+	}
 	h.lentTo = append(h.lentTo, s)
 }
 
@@ -142,6 +158,11 @@ func sgoHandleClose(h *sgoHandle) *sgoIOErr {
 
 func sgoHandleFree(h *sgoHandle) {
 	h.closed = true
+	if h.pd != nil {
+		poll_runtime_pollUnblock(h.pd)
+		poll_runtime_pollClose(h.pd)
+		h.pd = nil
+	}
 	sgoCloseFD(h.fd)
 	h.fd = -1
 	t := h.owner
@@ -161,7 +182,7 @@ func sgoHandleFree(h *sgoHandle) {
 func sgoHandlesResolve(t *sgoTask, s *sgoScope, all bool) {
 	for h := t.handles; h != nil; {
 		next := h.next
-		if all || h.scope == s {
+		if all || h.scope == s && !sgoHandleLentOpen(h) {
 			t.abandoned++
 			t.seq++
 			t.entries = append(t.entries, sgoEntry{t.seq, sgoFailureInfo{"HandleAbandoned",
