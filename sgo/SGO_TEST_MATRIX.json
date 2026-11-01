@@ -1880,7 +1880,9 @@
       "expected": "The file capability cannot access outside its grant; no naive string-prefix authorization is accepted.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W09: passed - fixture file-confined-paths (traversal, absolute path, prefix confusion, symlink escape); model path scenarios with renames; TestSGoResolve, TestSGoResolveRenameRace (sgo/evidence/w09/README.md)"
+      ]
     },
     {
       "id": "I02",
@@ -1896,7 +1898,9 @@
       "expected": "Every new connection/effect passes the declared capability policy; later connections do not bypass the initial grant.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W09: passed - fixtures net-undeclared-endpoint (every Dial checked), net-dial-from-child, net-grant-hostname; TestSGoParseAddr (sgo/evidence/w09/README.md)"
+      ]
     },
     {
       "id": "I03",
@@ -1912,7 +1916,9 @@
       "expected": "Results report actual progress and distinguish retryable no-effect from partial effects.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W09: passed - fixture net-cancel-progress (cancelled write with 0 < Progress < len, not NoEffect); Read/Write progress contract; model handle scenarios (sgo/evidence/w09/README.md)"
+      ]
     },
     {
       "id": "I04",
@@ -1928,7 +1934,9 @@
       "expected": "Cancellation/close behavior follows explicit ownership and does not silently destroy unrelated work.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W09: passed - fixtures file-handle-lent (HandleLent, borrower undisturbed), net-cancel-progress (owner connection intact); TestSGoHandle, TestSGoNet (sgo/evidence/w09/README.md)"
+      ]
     },
     {
       "id": "I05",
@@ -1944,7 +1952,9 @@
       "expected": "Stale completions cannot operate on a new resource generation.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W09: passed - fixture file-handle-closed (HandleClosed while a new handle is open); TestSGoHandle; model generations (sgo/evidence/w09/README.md)"
+      ]
     },
     {
       "id": "I06",
@@ -1960,7 +1970,9 @@
       "expected": "Normalized outcomes/progress satisfy the same contract; timing need not be falsely identical.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W09: passed - lab twins lab-file-dir-ops, lab-net-tcp-echo, lab-net-unix-echo match file-dir-ops, net-tcp-echo, net-unix-echo (sgo/evidence/w09/README.md)"
+      ]
     },
     {
       "id": "I07",
@@ -1976,7 +1988,9 @@
       "expected": "The uncontracted host operation is rejected. An admitted adapter may execute only with its explicit containment, progress, and cancellation contract; dropping a waiter is never reported as stopping the operation.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W09: passed - bounded, non-interruptible file system calls never reported as stopped (SGO-FILE-003); ambient host APIs rejected: native-syscall-import, net-dial, file-open (sgo/evidence/w09/README.md)"
+      ]
     },
     {
       "id": "T01",
@@ -2563,7 +2577,8 @@
       "implementation_status": "implemented",
       "execution_status": "passed",
       "evidence": [
-        "W05: passed - W05 part: bind-import-fmt, auth-dependency-ambient, timer-time-package, random-import, net-dial, sync-mutex, policy report (sgo/evidence/w05/README.md)"
+        "W05: passed - W05 part: bind-import-fmt, auth-dependency-ambient, timer-time-package, random-import, net-dial, sync-mutex, policy report (sgo/evidence/w05/README.md)",
+        "W09: W09 part passed - file-open and net-dial stay rejected; I/O authority only through declared sgo.mod grants (sgo/evidence/w09/README.md)"
       ]
     },
     {
@@ -2648,7 +2663,8 @@
       "implementation_status": "pending",
       "execution_status": "unrun",
       "evidence": [
-        "W03: W03 part passed (W09/W12 release qualification) - every subset-0 denial has a reject fixture; admitted-but-unimplemented W04 operations fail closed with SpawnContractViolation (sgo/evidence/w03/README.md)"
+        "W03: W03 part passed (W09/W12 release qualification) - every subset-0 denial has a reject fixture; admitted-but-unimplemented W04 operations fail closed with SpawnContractViolation (sgo/evidence/w03/README.md)",
+        "W09: W09 part passed - SGO-FILE-001 and SGO-NET-001 superseded with every access outside the new APIs still rejected; undeclared grants fail closed (sgo/evidence/w09/README.md)"
       ]
     },
     {
