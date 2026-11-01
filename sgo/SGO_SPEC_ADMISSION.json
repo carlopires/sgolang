@@ -2,7 +2,7 @@
   "schema_version": 1,
   "plan_version": "2.0",
   "spec_version": "0.3.0",
-  "admission_digest": "10a823feff7a1669b4bafbb1ee9e9916783c39cf124cb4bad3dca74b721ac37e",
+  "admission_digest": "8d6202a0a5ef69883eddadc80c3e4c26c294e6903397f2dd2402cda49994c43f",
   "status": "subset0_frozen_not_admitted",
   "warning": "Spec 0.1.0 is frozen: every row's clauses are fixed by digest. No row is admitted: admission requires implementation, enforcement, and executed evidence (constitution §6), starting in W03.",
   "default_decision": "reject",
@@ -935,9 +935,14 @@
       "implementation_owner_work_package": "W08",
       "status": "denied",
       "clause_ids": [
-        "SGO-LAB-001"
+        "SGO-LAB-001",
+        "SGO-LAB-002",
+        "SGO-LAB-003",
+        "SGO-LAB-004",
+        "SGO-LAB-005",
+        "SGO-LAB-006"
       ],
-      "normative_text_digest": "8d9a9f50eba953e9dcf11f997de431461ce8fd8b17274e0de348f6a2081cb345",
+      "normative_text_digest": "63d20a2feda6a1a9769da4b036e1fd85e011dd54b1c9c187703efadcc252f7d1",
       "admitted_in": [],
       "acceptance_case_ids": [
         "D02",
@@ -950,13 +955,28 @@
       "evidence": [],
       "subset0": "denied",
       "clause_digests": {
-        "SGO-LAB-001": "9ac71fdd99d036e9307f3e35401a407bcde5842886ebb8b7a21dd765ed771327"
+        "SGO-LAB-001": "9ac71fdd99d036e9307f3e35401a407bcde5842886ebb8b7a21dd765ed771327",
+        "SGO-LAB-002": "ff9e9e77559a4000bf71df66bab6adfc2091cd9bc27f01bb83d28467af16718a",
+        "SGO-LAB-003": "a2e86740f7259e431121672d344ec0c8e850643c96e2f4cd31e2ca0416bb2734",
+        "SGO-LAB-004": "5959e599a28508d9a104ab2904e5f521a670f1b1d9a357f9fb7b41a50f3a9ded",
+        "SGO-LAB-005": "c93d10f361b85e3e5d7b54c29187d48d22f7f365c8960b2e606db9e6278f8d16",
+        "SGO-LAB-006": "1eec75d0eb644812ed91d8e5276105d972f260b57dc0442a3399c40826b78bab"
       },
       "clause_status": {
-        "SGO-LAB-001": "frozen"
+        "SGO-LAB-001": "frozen",
+        "SGO-LAB-002": "draft",
+        "SGO-LAB-003": "draft",
+        "SGO-LAB-004": "draft",
+        "SGO-LAB-005": "draft",
+        "SGO-LAB-006": "draft"
       },
       "clause_versions": {
-        "SGO-LAB-001": 1
+        "SGO-LAB-001": 1,
+        "SGO-LAB-002": 1,
+        "SGO-LAB-003": 1,
+        "SGO-LAB-004": 1,
+        "SGO-LAB-005": 1,
+        "SGO-LAB-006": 1
       }
     },
     {

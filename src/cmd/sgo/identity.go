@@ -9,6 +9,6 @@ package main
 // differs from these values: the toolchain was built for another specification (S18).
 const (
 	SpecVersion     = "0.3.0"
-	AdmissionDigest = "83fee1764c753ec5"
+	AdmissionDigest = "3a54eb251fae572a"
 	ABI             = "sgo-abi-1" // S-Go ABI identity: lowering of nurseries, failures, checked arithmetic
 )

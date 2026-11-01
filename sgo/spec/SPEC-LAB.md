@@ -23,3 +23,117 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-LAB`: `subset0` =
 - **implementation_coverage:** gate level only — `sgo/scripts/sgo-target` denies every program (W00); compiler-level denial is W03.
 - **executed_evidence:** W00 gate checks passed on darwin/arm64, linux/amd64, linux/arm64 (gate level; not construct-specific).
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
+
+## Spec 0.4.0 draft (W08; D40–D50; proposed for approval)
+
+The clauses below admit the lab execution configuration. When frozen in 0.4.0 they supersede SGO-LAB-001; until then they are drafts and the lab is reachable only through `sgo lab`, outside the frozen language.
+
+### SGO-LAB-002 — The lab execution configuration
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-LAB-001, SGO-TOOL-001, SGO-IMP-002, SGO-BUILD-001, SGO-PROC-002; D41.
+- **grammar_and_types:** No source construct: the language of a lab program is the language of its production program. The configuration is selected only by `sgo lab run`, `sgo lab replay`, and `sgo lab sweep`, which build a **lab binary**; no flag of `sgo build` or `sgo run`, environment variable, file, or pragma selects it.
+- **preconditions:** The program is admitted for production (the lab admits no construct production denies).
+- **evaluation_and_value_semantics:** A lab binary runs the program under the lab scheduler (SGO-LAB-003) with the run manifest given by the driver; apart from the scheduling, time, and effect rules of SGO-LAB-003 and SGO-LAB-004, every clause applies unchanged.
+- **ownership_and_lifecycle:** One run per process (D48). The manifest is fixed for the run.
+- **effect_and_capability_requirements:** Grants are those of the production program (SGO-AUTH-002); their lab meaning is SGO-LAB-004.
+- **concurrency_and_memory_order:** SGO-LAB-003.
+- **allowed_nondeterminism:** None that depends on the host: given the manifest, the canonical event stream is a function of the program.
+- **failure_and_partial_progress:** A lab binary started without a manifest ends as `RuntimeDefect` (status 4).
+- **cancellation_and_cleanup:** Unchanged.
+- **compile_link_checks:** The execution configuration (`prod`, `lab`, or `tcb` for trusted target code shared by both) is part of every S-Go package's identity; a package imports only packages of its own configuration or `tcb`, and the linker links a lab program only from lab and `tcb` packages, else `SGO_E_SPEC_MISMATCH` (SGO-IMP-002). A lab binary's build ID names `config=lab`.
+- **runtime_guards:** A production binary has no lab activation path: it never reads a manifest.
+- **tcb_assumptions:** `runtime/sgo_lab*.go` (baton scheduler, streams, trace); `cmd/link` sets the lab marker only for `-sgolab`.
+- **positive_tests:** S14, D02; PENDING: lab conformance lane; `sgo/scripts/test-lab.py`.
+- **negative_tests:** S14; PENDING: lab conformance lane; `test-lab.py` (production binary given a manifest).
+- **implementation_coverage:** compiler `noder/sgo_identity.go`; linker `ld/sgoid.go`; driver `cmd/sgo/lab*.go`; runtime `sgo_lab_boot.go`.
+- **executed_evidence:** PENDING: W08 evidence (`sgo/evidence/w08/README.md`, in progress).
+- **supported_execution_configurations:** lab.
+
+### SGO-LAB-003 — Lab scheduling, choice points, steps, and quota
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-LAB-002, SGO-NUR-001, SGO-SPAWN-001, SGO-CHAN-004, SGO-SYNC-002, SGO-WAIT-001, SGO-CANCEL-002; D42, D43, D49, D50.
+- **grammar_and_types:** n/a — configuration clause.
+- **preconditions:** n/a — configuration clause; it adds no operation with preconditions.
+- **evaluation_and_value_semantics:** Exactly one task runs at a time. A **choice point** precedes every spawn and `Start`, nursery join, task end, channel operation and `select`, `Event` and `CapacityLimiter` operation, readiness `Signal`, `Sleep`, `Checkpoint`, effect operation, and `Writer.WriteString`; every `K` steps since the running task's last choice point is also one. A **step** is a function entry or a loop iteration of S-Go code (lab builds count them; production builds do not, and lab builds do not inline). At a choice point the **ready set** is the IDs (creation order, root 0) of the tasks that can run; the scheduler records it and chooses one: `random` (default) uniformly with the `sched` stream, `fifo` the task ready longest. A `select` whose ready arms are two or more records them and the chosen arm, as source indices of the `select` statement (D50); a waiting `select` completed by another task records the arm it completed.
+- **ownership_and_lifecycle:** n/a — configuration clause; ownership rules are the production ones.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** The run is a single interleaving: every happens-before edge of the production clauses holds, and nothing else orders operations.
+- **allowed_nondeterminism:** None given the manifest: the stream and the output are determined by the program, the seed, the policy, `K`, the quota, and the epoch.
+- **failure_and_partial_progress:** The total steps of a run are bounded by the quota; SGO-LAB-006.
+- **cancellation_and_cleanup:** Cancellation wakes waiting tasks as in production; they become ready and run when chosen.
+- **compile_link_checks:** n/a — no source construct; the configuration checks are SGO-LAB-002.
+- **runtime_guards:** n/a — the scheduler is the guard (SGO-LAB-003).
+- **tcb_assumptions:** The S-Go runtime is the only source of user-visible blocking and waking; Go runtime goroutines never make user-visible decisions.
+- **positive_tests:** D03, D07, D10; PENDING: lab conformance lane; `sgo/model/labmodel_test.go`, runtime `TestSGoLabStreams`.
+- **negative_tests:** D05; PENDING: lab conformance lane.
+- **implementation_coverage:** runtime `sgo_lab_sched.go`, `sgo_native_ops.go`; compiler `walk/sgo_lab.go`, `walk/select.go`.
+- **executed_evidence:** PENDING: W08 evidence.
+- **supported_execution_configurations:** lab.
+
+### SGO-LAB-004 — Lab streams, virtual time, and effects
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-LAB-003, SGO-AUTH-002, SGO-RANDOM-001, SGO-WAIT-001; D26, D44, D45.
+- **grammar_and_types:** n/a — configuration clause.
+- **preconditions:** n/a — configuration clause; it adds no operation with preconditions.
+- **evaluation_and_value_semantics:** The manifest's seed derives the `sched`, `fault`, and `data` streams by SplitMix64; each is PCG-DXSM with unbiased bounded sampling. Time is virtual: it starts at 0 and advances, only when no task is ready, to the earliest pending `Sleep` deadline; timers with the same deadline fire in timer-creation order. `Clock.Since` is virtual time; `WallClock.Now` is the manifest's epoch (UTC milliseconds, default 0) plus virtual time; `Random` is unchanged (seeded by the program); `SimStore` starts empty; `Writer.WriteString` writes and is recorded.
+- **ownership_and_lifecycle:** n/a — configuration clause; ownership rules are the production ones.
+- **effect_and_capability_requirements:** The production grants.
+- **concurrency_and_memory_order:** SGO-LAB-003.
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** `Entropy.Bytes` ends the run with `UnsupportedLabEffect` (SGO-LAB-006): entropy is unpredictable by definition and has no seeded substitute.
+- **cancellation_and_cleanup:** A cancelled `Sleep` returns the cancellation error and its timer is dropped.
+- **compile_link_checks:** n/a — no source construct; the configuration checks are SGO-LAB-002.
+- **runtime_guards:** n/a — the scheduler is the guard (SGO-LAB-003).
+- **tcb_assumptions:** `runtime/sgo_lab.go` generator; checked against `math/rand/v2` vectors (`sgo/model`).
+- **positive_tests:** D01, D06; PENDING: lab conformance lane; `test-lab.py` (WallClock epoch).
+- **negative_tests:** D09; PENDING: lab conformance lane; `test-lab.py` (Entropy).
+- **implementation_coverage:** runtime `sgo_lab.go`, `sgo_lab_run.go`, `sgo_effects.go`.
+- **executed_evidence:** PENDING: W08 evidence.
+- **supported_execution_configurations:** lab.
+
+### SGO-LAB-005 — Trace, replay, and sweeps
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-LAB-002, SGO-LAB-003; D46, D48, D50.
+- **grammar_and_types:** `sgo lab run [-seed N] [-sched random|fifo] [-k N] [-quota N] [-epoch MS] [-trace FILE] [-timeout S] pkg`; `sgo lab replay [-timeout S] TRACE pkg`; `sgo lab sweep -seeds A..B [-sched] [-k] [-quota] [-epoch] [-expect FILE] [-save FILE] [-timeout S] pkg`.
+- **preconditions:** Replay: the trace was written by `sgo lab` for the same build ID.
+- **evaluation_and_value_semantics:** A trace is JSONL: a header with the manifest (format, build ID, seed, policy, K, quota, epoch), one canonical line per event (`choose`, `select`, `advance`, `fire`, `write`, `end`, `outcome`; `sgo/docs/w08-plan.md`), and a footer with the event count, exit status, and SHA-256 of the canonical lines. Canonical lines hold no host data; host data (wall time, hang) go to a sidecar. Replay takes every choice whose set has two or more elements from the trace, never from a generator, and compares the whole stream; a sweep runs each seed in a fresh process and reports the distinct outcomes.
+- **ownership_and_lifecycle:** n/a — configuration clause; ownership rules are the production ones.
+- **effect_and_capability_requirements:** n/a — no effect beyond the production grants (SGO-LAB-004).
+- **concurrency_and_memory_order:** n/a — the run is one interleaving (SGO-LAB-003).
+- **allowed_nondeterminism:** None in canonical lines; the sidecar is host data.
+- **failure_and_partial_progress:** A trace whose footer does not match is refused (`SGO_E_LAB_TRACE`), and one of another build before running (`SGO_E_LAB_MANIFEST`); a replay that differs reports the first differing event and the last matching one (`SGO_E_LAB_DIVERGENCE`). A sweep fails if a run's status is not 0 or its stdout differs from `-expect`, and saves the first failing trace. A passing sweep shows those schedules pass, not every schedule.
+- **cancellation_and_cleanup:** n/a — host tooling; a run ends as SGO-LAB-006 says.
+- **compile_link_checks:** n/a — no source construct; the configuration checks are SGO-LAB-002.
+- **runtime_guards:** n/a — the scheduler is the guard (SGO-LAB-003).
+- **tcb_assumptions:** The driver is host code (SGO-TOOL-001).
+- **positive_tests:** D02, D13; PENDING: lab conformance lane; `test-lab.py`, runtime `TestSGoLabReplay`.
+- **negative_tests:** D04, D05, D12; PENDING: lab conformance lane; `test-lab.py` (altered, other-build, and changed-choice traces).
+- **implementation_coverage:** driver `cmd/sgo/lab.go`, `lab_cmds.go`; runtime `sgo_lab_boot.go` (manifest on fd 3, canonical lines on fd 4).
+- **executed_evidence:** PENDING: W08 evidence.
+- **supported_execution_configurations:** lab.
+
+### SGO-LAB-006 — Lab outcomes
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-PROC-002, SGO-ERR-002, SGO-CHAN-003, SGO-LAB-003, SGO-LAB-004; D47.
+- **grammar_and_types:** n/a — configuration clause.
+- **preconditions:** n/a — configuration clause; it adds no operation with preconditions.
+- **evaluation_and_value_semantics:** Every production outcome is unchanged. In addition: `LabDeadlock` when no task is ready and no timer is pending while a task is live (in a lab run, in place of `Deadlock`); its record carries the wait graph, one `LabWait` chain entry per live task with what it waits in and its scope chain. `LabQuotaExhausted` when the quota is used up; `UnsupportedLabEffect` (SGO-LAB-004); `LabReplayDivergence` when a replay's recorded choice is not in the set. Each is one diagnostic record and status 2, and the trace's last event is the outcome.
+- **ownership_and_lifecycle:** n/a — configuration clause; ownership rules are the production ones.
+- **effect_and_capability_requirements:** n/a — no effect beyond the production grants (SGO-LAB-004).
+- **concurrency_and_memory_order:** n/a — the run is one interleaving (SGO-LAB-003).
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** A run that does not reach a choice point within the driver's watchdog is killed and reported as a host hang (`SGO_E_LAB_HANG`, sidecar), never as a lab outcome.
+- **cancellation_and_cleanup:** The run ends where it stops: no task runs on, and no further deferred call runs.
+- **compile_link_checks:** n/a — no source construct; the configuration checks are SGO-LAB-002.
+- **runtime_guards:** The lab decides at every choice point.
+- **tcb_assumptions:** n/a — the outcomes are decided by the scheduler of SGO-LAB-003.
+- **positive_tests:** D08; PENDING: lab conformance lane.
+- **negative_tests:** D08, D09, D11; PENDING: lab conformance lane; `test-lab.py` (LabDeadlock with wait graph, LabQuotaExhausted, UnsupportedLabEffect).
+- **implementation_coverage:** runtime `sgo_lab_sched.go`, `sgo_lab_boot.go`.
+- **executed_evidence:** PENDING: W08 evidence.
+- **supported_execution_configurations:** lab.
