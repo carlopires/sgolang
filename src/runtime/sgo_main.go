@@ -82,6 +82,13 @@ func sgoUnwoundOut(p *_panic) {
 		return
 	}
 	primary, _ := sgoUnwound(p)
+	if u, ok := primary.(*sgoCancelUnwind); ok {
+		// D33: as if main had returned the cancellation error, unless something failed meanwhile.
+		if primary = sgoLaterFailure(p.arg, u); primary == nil {
+			sgoWriteRecord(sgoFailureInfo{"MainError", u.err.Error(), ""}, nil, sgoOrigin{})
+			exit(1)
+		}
+	}
 	f := sgoFailureOf(primary)
 	sgoWriteRecord(f, sgoChain(t, p), sgoPrimaryOrigin(p))
 	switch f.kind {

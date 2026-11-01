@@ -286,6 +286,18 @@ func sgoTaskMain(c *sgoTask, fn func(*sgoTask) error) {
 			if primary == nil {
 				primary = v
 			}
+			if u, ok := primary.(*sgoCancelUnwind); ok {
+				// D33: a cancellation unwind ends the task Cancelled, as a returned cancellation
+				// error would, unless a child or deferred call failed meanwhile.
+				if later := sgoLaterFailure(v, u); later != nil {
+					primary = later
+				} else {
+					c.outcome, c.err, c.chain = sgoCancelled, u.err, nil
+					c.entries = nil
+					sgoTaskExit(c)
+					return
+				}
+			}
 			c.outcome, c.panic = sgoFailed, primary
 			c.entries = nil
 		}

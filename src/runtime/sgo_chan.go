@@ -44,6 +44,8 @@ type sgoChan struct {
 	closed   bool
 	senders  sgoWaitList
 	recvs    sgoWaitList
+	elem     *_type // native channels (sgo_native.go): the element type of the boxed values
+	native   bool
 }
 
 type sgoPermit struct {
@@ -65,9 +67,12 @@ type sgoChanWait struct {
 	prev, next *sgoChanWait   // in senders or recvs, under ch.lock
 	cprev      *sgoChanWait   // in sgoChanWaiters, under sgoSleepLock
 	cnext      *sgoChanWait
-	wake       *sgoChanWait // wake list, under the lock of whoever builds it
-	pre        *sgoChanWait // senders this C == 0 receiver claimed; readied once it is parked
-	listed     bool         // in the channel's list
+	wake       *sgoChanWait   // wake list, under the lock of whoever builds it
+	pre        *sgoChanWait   // senders this C == 0 receiver claimed; readied once it is parked
+	listed     bool           // in the channel's list
+	sel        *sgoSel        // native: the operation's single decision (nil: state decides)
+	box        unsafe.Pointer // native sender: the boxed value
+	closed     bool           // native sender: claimed by close (ClosedChannel)
 }
 
 type sgoWaitList struct{ first, last *sgoChanWait }
@@ -201,7 +206,7 @@ func sgoChanUnregister(w *sgoChanWait) {
 func sgoChanWakeCancelled() *sgoChanWait {
 	var wake *sgoChanWait
 	for w := sgoChanWaiters; w != nil; w = w.cnext {
-		if sgoOuterCancelled(w.task) != nil && w.state.CompareAndSwap(sgoWaitWaiting, sgoWaitCancelled) {
+		if sgoOuterCancelled(w.task) != nil && w.claim(sgoWaitCancelled) {
 			w.wake, wake = wake, w
 		}
 	}

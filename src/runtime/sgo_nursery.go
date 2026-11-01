@@ -83,9 +83,24 @@ func sgoUnwindNurseries(off uintptr, all bool) {
 			return
 		}
 		sgoCancel(s, sgoCause{kind: sgoCauseUnwind})
-		_, bad, err := sgoNurseryJoin(s)
+		r, bad, err := sgoNurseryJoin(s)
 		if err != nil {
 			throw("sgo: unwinding join failed") // the innermost scope is the caller's own: a defect
+		}
+		// A cancellation unwind (D33) is not a failure: the owner behaves as if the nursery body had
+		// returned, so a failed or errored child becomes the primary failure (Rules 2 and 3).
+		if u := sgoUnwindingCancel(); u != nil && u.fail == nil && r.Outcome != sgoSucceeded && r.Outcome != sgoCancelled {
+			for _, c := range bad {
+				if c.id == r.Primary {
+					sgoPropagate(t, bad, c)
+				}
+			}
+			if r.Outcome == sgoFailed {
+				u.fail = r.Panic
+			} else {
+				u.fail = error(&sgoFailure{"ChildError", r.Err.Error(), ""})
+			}
+			continue
 		}
 		// Rule 1: the owner's failure stays primary; every child failure joins its chain.
 		sgoRecord(t, bad, nil)
