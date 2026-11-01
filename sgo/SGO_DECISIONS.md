@@ -504,7 +504,7 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 ## D61 — Spec version and scope of W10 **[DEFAULT]** · PROPOSED 2026-11-02
 
-**Recommendation.** W10 is spec **0.6.0**, a strict superset of 0.5.0 (no 0.5.0 program changes meaning). It adds only tooling: tests written in S-Go (D62), a type-check command (D63), and the distribution (D61 below, D67). The language and the runtime contracts do not change; examples, reports, and benchmarks are evidence, not spec surface. Editor/LSP support stays explicitly unsupported (plan §11/W10) until a forked tool works.
+**Recommendation.** W10 is spec **0.6.0**, a strict superset of 0.5.0 (no 0.5.0 program changes meaning). It adds only tooling: tests written in S-Go (D62), a type-check command (D63), and the distribution (below). The language and the runtime contracts do not change; examples, reports, and benchmarks are evidence, not spec surface. Editor/LSP support stays explicitly unsupported (plan §11/W10) until a forked tool works.
 
 **Distribution.** A release is an archive `sgo-<version>-<os>-<arch>.tar.gz` holding `bin/sgo`, the toolchain binaries it runs (`compile`, `link`, `asm`), the TCB sources and `sgo` package it compiles for targets, and the frozen registry (`spec/VERSION`, `SGO_SPEC_ADMISSION.json`, `TARGET_TCB.json`). It holds **no `go` command** and no stock standard library sources outside the TCB, so the installation is single-language. `sgo` finds its root from its own path; installing is extracting the archive and adding `bin` to `PATH`. A script builds the archive from a clean checkout and a fresh-machine check (CI) builds and runs the examples from it (W10 gate).
 
