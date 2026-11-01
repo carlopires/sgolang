@@ -20,7 +20,7 @@ Capability handle types (opaque, used only behind `*`, never nil, never compared
 
 ## Trusted computing base
 
-`sgo/TARGET_TCB.json` (SGO-TCB-002): spec 0.3.0, allowlist digest `5fabd52c82292fe8`, 31 packages, 1045 files (29 changed from upstream), 19 primitives. Each file is admitted only by its exact SHA-256; a package's name confers nothing.
+`sgo/TARGET_TCB.json` (SGO-TCB-002): spec 0.3.0, allowlist digest `9d7fa5ab85f7f4a3`, 31 packages, 1045 files (29 changed from upstream), 19 primitives. Each file is admitted only by its exact SHA-256; a package's name confers nothing.
 
 ## Denied escape routes
 

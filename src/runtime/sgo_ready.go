@@ -72,7 +72,7 @@ func sgoStart(s *sgoScope, fn func(*sgoTask) error) error {
 			}
 			sgoReadyWaiters = r
 			if sgoLab != nil {
-				sgoLabBlock(t)
+				sgoLabBlock(t, "Start, waiting for readiness")
 			}
 			gopark(sgoReadyPark, unsafe.Pointer(r), waitReasonSGoJoin, traceBlockSync, 1)
 			sgoLabAfterPark()
@@ -206,6 +206,7 @@ func sgo_start(scope unsafe.Pointer, fn func(task unsafe.Pointer) error) error {
 
 //go:linkname sgo_readySignal sgo.runtime_readySignal
 func sgo_readySignal(ready unsafe.Pointer) {
+	sgoLabPoint()
 	sgoReadySignal((*sgoReady)(ready))
 }
 

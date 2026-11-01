@@ -160,12 +160,13 @@ func sgoLabPoint() {
 // the wait's locks): it is no longer ready, and the baton passes to the chosen task. The caller
 // then parks, and its park commit calls sgoLabCommit. If no task can be chosen, the run ends
 // (LabDeadlock); the commit stops it, once the wait's locks are released.
-func sgoLabBlock(t *sgoTask) {
+func sgoLabBlock(t *sgoTask, what string) {
 	l := sgoLab
 	if l.finished {
 		return
 	}
 	lock(&l.lock)
+	t.labWait = what
 	t.labReady = false
 	t.labG = getg()
 	p := l.decide()

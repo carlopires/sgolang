@@ -12,7 +12,10 @@ Checks, with real lab binaries:
     another build (SGO_E_LAB_MANIFEST) are refused before running;
   - LabDeadlock and LabQuotaExhausted end a run with one diagnostic record and status 2 (D47);
   - D13: a sweep finds the schedule of an ordering bug, saves its trace, and replay reproduces it;
-  - a production binary given a lab manifest on fd 3 behaves exactly as without it (D41).
+  - a production binary given a lab manifest on fd 3 behaves exactly as without it (D41);
+  - D45: WallClock is the manifest's epoch plus virtual time; Entropy ends the run with
+    UnsupportedLabEffect; Event and CapacityLimiter operations are scheduled by the lab (a sweep
+    of a program using them passes every seed); D47: the LabDeadlock record carries the wait graph.
 """
 
 import hashlib
@@ -93,7 +96,64 @@ func main(root *sgo.Context) error {
 	return out.WriteString("\\n")
 }
 ''',
+    "entropy": '''package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	e := root.Entropy()
+	if len(e.Bytes(8)) != 8 {
+		return sgo.NewError("short")
+	}
+	return root.Stdout().WriteString("read\\n")
 }
+''',
+    "wallclock": '''package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	if root.WallClock().Now() != 1700000000000 {
+		return sgo.NewError("WallClock is not the manifest epoch")
+	}
+	return root.Stdout().WriteString("epoch\\n")
+}
+''',
+    "event": '''package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	ev := sgo.NewEvent()
+	lim := sgo.NewCapacityLimiter(1)
+	woke := make(chan bool, 3)
+	nursery (n) {
+		for i := 0; i < 3; i++ {
+			n.Spawn(func(task *sgo.Context) error {
+				if err := ev.Wait(task); err != nil {
+					return err
+				}
+				tok, err := lim.Acquire(task)
+				if err != nil {
+					return err
+				}
+				woke <- true
+				tok.Release()
+				return nil
+			})
+		}
+		ev.Set()
+		<-woke
+		<-woke
+		<-woke
+	}
+	return out.WriteString("3 woke\\n")
+}
+''',
+}
+
+GRANTS = {"entropy": "grant entropy\n", "wallclock": "grant wallclock\n"}
 
 
 def fail(msg):
@@ -126,7 +186,7 @@ def main():
         for name, src in PROGRAMS.items():
             d = os.path.join(tmp, name)
             os.makedirs(d)
-            open(os.path.join(d, "sgo.mod"), "w").write(f"module example.com/{name}\n\nsgo {VERSION}\n")
+            open(os.path.join(d, "sgo.mod"), "w").write(f"module example.com/{name}\n\nsgo {VERSION}\n" + GRANTS.get(name, ""))
             open(os.path.join(d, "main.sgo"), "w").write(src)
             dirs[name] = d
 
@@ -183,6 +243,30 @@ def main():
             last = json.loads(open(os.path.join(dirs[name], "t.jsonl")).read().splitlines()[-2])
             if r.returncode != 2 or [x["kind"] for x in recs] != [kind] or last != {"e": "outcome", "status": 2, "kind": kind}:
                 fail(f"{name}: exit {r.returncode}, records {recs}, last event {last}")
+            if name == "deadlock":
+                graph = [(c["kind"], c["message"]) for c in recs[0]["chain"]]
+                if len(graph) != 1 or graph[0][0] != "LabWait" or not graph[0][1].startswith("task 0 waits in chan receive"):
+                    fail(f"LabDeadlock wait graph {graph}")
+
+        # D45: lab effects.
+        r = sgo(["lab", "run", "-trace", "t.jsonl", "."], dirs["entropy"], env)
+        if r.returncode != 2 or [x["kind"] for x in records(r.stderr)] != ["UnsupportedLabEffect"] or r.stdout:
+            fail(f"entropy in the lab: exit {r.returncode}, stdout {r.stdout!r}, stderr {r.stderr!r}")
+        r = sgo(["lab", "run", "-epoch", "1700000000000", "-trace", "t.jsonl", "."], dirs["wallclock"], env)
+        if r.returncode != 0 or r.stdout != "epoch\n":
+            fail(f"wallclock with -epoch: exit {r.returncode}, stdout {r.stdout!r}, stderr {r.stderr!r}")
+        r = sgo(["lab", "run", "-trace", "t.jsonl", "."], dirs["wallclock"], env)
+        if r.returncode != 1:
+            fail(f"wallclock without -epoch is epoch 0: exit {r.returncode}, stderr {r.stderr!r}")
+        r = sgo(["lab", "replay", "t.jsonl", "."], dirs["wallclock"], env)
+        if r.returncode != 1 or "replay reproduced" not in r.stderr:
+            fail(f"replay keeps the epoch: exit {r.returncode}, stderr {r.stderr!r}")
+        r = sgo(["lab", "sweep", "-seeds", "0..15", "."], dirs["event"], env)
+        if r.returncode != 0 or 'runs=16' not in r.stdout or 'stdout="3 woke\\n"' not in r.stdout:
+            fail(f"Event and CapacityLimiter sweep: exit {r.returncode}, stdout {r.stdout!r}")
+        t = open(os.path.join(dirs["entropy"], "t.jsonl")).read()
+        if '"kind":"UnsupportedLabEffect"' not in t:
+            fail("entropy trace has no UnsupportedLabEffect outcome")
 
         # D13: a sweep finds the ordering bug; replay reproduces it.
         d = dirs["order"]
@@ -215,7 +299,8 @@ def main():
         if p.returncode != 0 or p.stdout not in ("ab\n", "ba\n") or p.stderr or os.path.getsize(trace) != 0:
             fail(f"production binary with a manifest: exit {p.returncode}, stdout {p.stdout!r}, stderr {p.stderr!r}")
         print("test-lab: ok: run, determinism, sidecar, replay, divergence, refusals, LabDeadlock, LabQuotaExhausted, "
-              "D13 sweep and replay, production binary ignores a manifest")
+              "D13 sweep and replay, production binary ignores a manifest, WallClock epoch, Entropy unsupported, "
+              "Event and limiter sweep, wait graph")
 
 
 if __name__ == "__main__":

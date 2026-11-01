@@ -117,6 +117,7 @@ type sgoTask struct {
 	labDone                               bool
 	labSeq, labSince                      int64
 	labG                                  *g
+	labWait                               string // what the task waits in (LabDeadlock wait graph)
 	abandoned                             int64
 
 	// ready is the readiness record of a child started by n.Start (sgo_ready.go), nil otherwise.
@@ -408,7 +409,7 @@ func sgoNurseryJoin(s *sgoScope) (sgoScopeResult, []*sgoTask, error) {
 	for s.live > 0 {
 		s.joiner = getg()
 		if sgoLab != nil {
-			sgoLabBlock(t)
+			sgoLabBlock(t, "nursery join")
 			gopark(sgoJoinPark, unsafe.Pointer(s), waitReasonSGoJoin, traceBlockSync, 1)
 			sgoLabAfterPark()
 		} else {

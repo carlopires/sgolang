@@ -137,7 +137,7 @@ func sgoLabSleep(t *sgoTask, ms int64) error {
 	l.timers = append(l.timers, sgoLabTimer{deadline: l.now + ms, id: l.nextTmr, t: t, r: r}) // capacity reserved
 	l.nextTmr++
 	unlock(&l.lock)
-	sgoLabBlock(t)
+	sgoLabBlock(t, "Sleep")
 	gopark(sgoLabSleepPark, nil, waitReasonSleep, traceBlockSleep, 1)
 	sgoLabAfterPark()
 	lock(&sgoSleepLock)
@@ -277,4 +277,13 @@ func sgoLabDropTimer(r *sgoSleep) {
 	lock(&l.lock)
 	l.dropTimer(r)
 	unlock(&l.lock)
+}
+
+// sgoLabUnsupported ends the run with UnsupportedLabEffect (D45, D47); it does not return.
+func sgoLabUnsupported() {
+	l := sgoLab
+	lock(&l.lock)
+	l.finish(2, "UnsupportedLabEffect")
+	unlock(&l.lock)
+	l.stop()
 }

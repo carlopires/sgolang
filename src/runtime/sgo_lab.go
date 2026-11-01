@@ -65,6 +65,7 @@ type sgoLabState struct {
 	stopped   bool               // the run has stopped: no task runs again
 	replay    []int32            // replay (D46): the recorded pick of every choose and select event
 	replaying bool
+	epoch     int64 // WallClock at virtual time 0, in UTC milliseconds (manifest, D45)
 	rpos      int
 	doneG     *g // a test goroutine waiting for the stop (sgoLabWait)
 }

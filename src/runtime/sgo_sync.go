@@ -179,10 +179,14 @@ func sgoTokensResolve(t *sgoTask, s *sgoScope, all bool) {
 func sgo_eventNew() unsafe.Pointer { return unsafe.Pointer(&sgoEvent{}) }
 
 //go:linkname sgo_eventSet sgo.runtime_eventSet
-func sgo_eventSet(e unsafe.Pointer) { sgoEventSet((*sgoEvent)(e)) }
+func sgo_eventSet(e unsafe.Pointer) {
+	sgoLabPoint() // a choice point in a lab run (D43); nothing otherwise
+	sgoEventSet((*sgoEvent)(e))
+}
 
 //go:linkname sgo_eventWait sgo.runtime_eventWait
 func sgo_eventWait(e, task unsafe.Pointer) error {
+	sgoLabPoint()
 	return sgoEventWait((*sgoEvent)(e), (*sgoTask)(task))
 }
 
@@ -194,9 +198,13 @@ func sgo_limiterNew(n int) unsafe.Pointer { return unsafe.Pointer(sgoLimiterNew(
 
 //go:linkname sgo_limiterAcquire sgo.runtime_limiterAcquire
 func sgo_limiterAcquire(l, task unsafe.Pointer) (unsafe.Pointer, error) {
+	sgoLabPoint()
 	k, err := sgoLimiterAcquire((*sgoLimiter)(l), (*sgoTask)(task))
 	return unsafe.Pointer(k), err
 }
 
 //go:linkname sgo_tokenRelease sgo.runtime_tokenRelease
-func sgo_tokenRelease(k unsafe.Pointer) { sgoTokenRelease((*sgoToken)(k)) }
+func sgo_tokenRelease(k unsafe.Pointer) {
+	sgoLabPoint()
+	sgoTokenRelease((*sgoToken)(k))
+}

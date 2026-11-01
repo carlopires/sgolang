@@ -380,7 +380,7 @@ func sgoselectgo(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs in
 	sgoChanWaiters = rep
 	sp := &sgoSelPark{locks: locks, rep: rep}
 	if sgoLab != nil {
-		sgoLabBlock(t)
+		sgoLabBlock(t, "select")
 	}
 	gopark(sgoSelParkUnlock, unsafe.Pointer(sp), waitReasonSelect, traceBlockSelect, 1)
 	sgoLabAfterPark()

@@ -171,7 +171,7 @@ func sgoChanPark(c *sgoChan, l *sgoWaitList, w *sgoChanWait, reason waitReason, 
 	}
 	sgoChanWaiters = w
 	if sgoLab != nil {
-		sgoLabBlock(w.task) // the decision before parking (sgo_lab_sched.go)
+		sgoLabBlock(w.task, reason.String()) // the decision before parking (sgo_lab_sched.go)
 	}
 	gopark(sgoChanParkUnlock, unsafe.Pointer(w), reason, traceBlockChanRecv, 1)
 	sgoLabAfterPark()

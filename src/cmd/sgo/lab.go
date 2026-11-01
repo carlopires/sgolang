@@ -8,7 +8,7 @@ package main
 // event lines to fd 4 (src/runtime/sgo_lab_boot.go). The driver adds the trace header and footer
 // and a sidecar with host data, which never enters the canonical lines.
 //
-//	sgo lab run [-seed N] [-sched random|fifo] [-k N] [-quota N] [-trace FILE] [-timeout S] <main package>
+//	sgo lab run [-seed N] [-sched random|fifo] [-k N] [-quota N] [-epoch MS] [-trace FILE] [-timeout S] <main package>
 //	sgo lab replay [-timeout S] <trace> <main package>
 //	sgo lab sweep -seeds A..B [-sched ...] [-k N] [-quota N] [-expect FILE] [-save FILE] [-timeout S] <main package>
 
@@ -35,6 +35,7 @@ type labFlags struct {
 	haveSeeds    bool
 	policy       string
 	k, quota     int64
+	epoch        int64 // WallClock at virtual time 0, UTC ms (D45)
 	trace        string
 	expect, save string
 	timeout      time.Duration
@@ -97,6 +98,8 @@ func parseLabFlags(cmd string, args []string) (*labFlags, error) {
 			}
 		case name == "quota" && cmd != "replay":
 			f.quota, err = num()
+		case name == "epoch" && cmd != "replay":
+			f.epoch, err = num()
 		case name == "trace" && cmd == "run":
 			f.trace = val
 		case name == "expect" && cmd == "sweep":
@@ -144,6 +147,7 @@ type labManifest struct {
 	Policy  string `json:"policy"`
 	K       int64  `json:"k"`
 	Quota   int64  `json:"quota"`
+	Epoch   int64  `json:"epoch"`
 	Replay  bool   `json:"replay,omitempty"`
 	Picks   []int  `json:"-"`
 	program string // the binary
@@ -176,7 +180,7 @@ func labExec(m *labManifest, timeout time.Duration, stdout, stderr io.Writer) (*
 	}
 	defer os.RemoveAll(tmp)
 	var man bytes.Buffer
-	fmt.Fprintf(&man, "seed %d\npolicy %s\nk %d\nquota %d\n", m.Seed, m.Policy, m.K, m.Quota)
+	fmt.Fprintf(&man, "seed %d\npolicy %s\nk %d\nquota %d\nepoch %d\n", m.Seed, m.Policy, m.K, m.Quota, m.Epoch)
 	if m.Replay {
 		s := make([]string, len(m.Picks))
 		for i, p := range m.Picks {

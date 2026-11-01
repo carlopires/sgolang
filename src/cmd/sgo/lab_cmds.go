@@ -38,7 +38,7 @@ func labSetup(f *labFlags, nargs int, what string) (string, *labManifest, func()
 		cleanup()
 		return "", nil, nil, err
 	}
-	m := &labManifest{Format: labFormat, Build: id, Seed: f.seed, Policy: f.policy, K: f.k, Quota: f.quota, program: exe}
+	m := &labManifest{Format: labFormat, Build: id, Seed: f.seed, Policy: f.policy, K: f.k, Quota: f.quota, Epoch: f.epoch, program: exe}
 	return f.args[nargs-1], m, cleanup, nil
 }
 
@@ -126,7 +126,7 @@ func cmdLabReplay(args []string) error {
 	if err != nil {
 		return err
 	}
-	m.Seed, m.Policy, m.K, m.Quota, m.Replay, m.Picks = rec.Seed, rec.Policy, rec.K, rec.Quota, true, picks
+	m.Seed, m.Policy, m.K, m.Quota, m.Epoch, m.Replay, m.Picks = rec.Seed, rec.Policy, rec.K, rec.Quota, rec.Epoch, true, picks
 	r, err := labExec(m, f.timeout, os.Stdout, os.Stderr)
 	if err != nil {
 		return err

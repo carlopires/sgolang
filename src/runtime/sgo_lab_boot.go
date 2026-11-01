@@ -25,6 +25,7 @@ const (
 //	policy <random|fifo>
 //	k <n>             steps per scheduling slice (D43)
 //	quota <n>         total steps (D43)
+//	epoch <ms>        WallClock at virtual time 0, UTC milliseconds (D45)
 //	replay <p,...>    replay: the pick of every choose and select event whose set has two or
 //	                  more elements, in order (D46, replayPick)
 //
@@ -41,6 +42,7 @@ func sgoLabBoot() {
 	fifo, k, quota := false, int64(1024), int64(1)<<40
 	var replay []int32
 	var haveReplay bool
+	var epoch int64
 	for len(data) > 0 {
 		line := data
 		if i := sgoIndexByte(data, '\n'); i >= 0 {
@@ -64,6 +66,8 @@ func sgoLabBoot() {
 			k = sgoLabAtoi(val)
 		case "quota":
 			quota = sgoLabAtoi(val)
+		case "epoch":
+			epoch = sgoLabAtoi(val)
 		case "replay":
 			haveReplay = true
 			for val != "" {
@@ -81,6 +85,7 @@ func sgoLabBoot() {
 		}
 	}
 	sgoLabEnable(seed, fifo, k, quota, sgoLabExit)
+	sgoLab.epoch = epoch
 	if haveReplay {
 		sgoLab.replay, sgoLab.replaying = replay, true
 	}
@@ -92,9 +97,11 @@ func sgoLabExit(status int32) {
 	l := sgoLab
 	switch l.kind {
 	case "LabDeadlock":
-		sgoWriteRecord(sgoFailureInfo{l.kind, "every live task is waiting and no timer is pending", ""}, nil, sgoOrigin{})
+		sgoWriteRecord(sgoFailureInfo{l.kind, "every live task is waiting and no timer is pending", ""}, l.waitGraph(), sgoOrigin{})
 	case "LabQuotaExhausted":
 		sgoWriteRecord(sgoFailureInfo{l.kind, "the step quota of the run is used up", ""}, nil, sgoOrigin{})
+	case "UnsupportedLabEffect":
+		sgoWriteRecord(sgoFailureInfo{l.kind, "Entropy is not available in the lab: it is unpredictable by definition", ""}, nil, sgoOrigin{})
 	case "LabReplayDivergence":
 		sgoWriteRecord(sgoFailureInfo{l.kind, "the program made a choice the trace does not allow", ""}, nil, sgoOrigin{})
 	}
@@ -166,4 +173,34 @@ func sgoLabAtoi(s string) int64 {
 		v = v*10 + int64(c-'0')
 	}
 	return v
+}
+
+// waitGraph is the LabDeadlock wait graph (D47): one entry per live task, in task ID order, with
+// the operation it waits in and its scope chain (innermost first).
+func (l *sgoLabState) waitGraph() []sgoFailureInfo {
+	var g []sgoFailureInfo
+	for _, t := range l.tasks {
+		if t.labDone {
+			continue
+		}
+		var b []byte
+		b = append(b, "task "...)
+		b = sgoLabInt(b, int64(t.labID))
+		b = append(b, " waits in "...)
+		b = append(b, t.labWait...)
+		b = append(b, "; scopes"...)
+		s := t.currentScope()
+		if s == nil {
+			s = t.scope
+		}
+		if s == nil {
+			b = append(b, " none"...)
+		}
+		for ; s != nil; s = s.parent {
+			b = append(b, ' ')
+			b = sgoLabInt(b, int64(s.id))
+		}
+		g = append(g, sgoFailureInfo{"LabWait", string(b), ""})
+	}
+	return g
 }

@@ -85,6 +85,10 @@ func sgo_claimOwner(p *unsafe.Pointer) unsafe.Pointer {
 //
 //go:linkname sgo_sinceMS sgo.runtime_sinceMS
 func sgo_sinceMS() int {
+	if l := sgoLab; l != nil {
+		sgoLabPoint()
+		return int(l.now) // virtual monotonic time (D45)
+	}
 	return int((nanotime() - runtimeInitTime) / 1_000_000)
 }
 
@@ -92,6 +96,10 @@ func sgo_sinceMS() int {
 //
 //go:linkname sgo_wallMS sgo.runtime_wallMS
 func sgo_wallMS() int {
+	if l := sgoLab; l != nil {
+		sgoLabPoint()
+		return int(l.epoch + l.now) // the manifest's epoch plus virtual time (D45)
+	}
 	sec, nsec, _ := time_now()
 	return int(sec*1000 + int64(nsec)/1_000_000)
 }
@@ -101,6 +109,10 @@ func sgo_wallMS() int {
 //
 //go:linkname sgo_entropy sgo.runtime_entropy
 func sgo_entropy(k int) string {
+	if sgoLab != nil {
+		sgoLabPoint()
+		sgoLabUnsupported() // unpredictable by definition: no seeded substitute (D45)
+	}
 	b := make([]byte, k)
 	if readRandom(b) != k {
 		sgoExhausted("entropy: the OS cryptographic source failed")
@@ -126,12 +138,14 @@ func sgoStoreCurrent() map[string]string {
 
 //go:linkname sgo_storeGet sgo.runtime_storeGet
 func sgo_storeGet(key string) (string, bool) {
+	sgoLabPoint()
 	v, ok := sgoStoreCurrent()[key]
 	return v, ok
 }
 
 //go:linkname sgo_storePut sgo.runtime_storePut
 func sgo_storePut(key, value string) {
+	sgoLabPoint()
 	for {
 		old := sgoStoreCurrent()
 		next := make(map[string]string, len(old)+1)
