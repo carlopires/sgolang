@@ -86,7 +86,12 @@ func (l *sgoLabState) transfer(p *sgoTask) *g {
 	switch {
 	case p.labWoken:
 		p.labWoken = false
-		return p.labG
+		if p.labInWait { // parked in its S-Go wait (sgoLabCommit)
+			p.labInWait = false
+			return p.labG
+		}
+		p.labRun = true // still on its way to park: its commit aborts the park
+		return nil
 	case p.labParked:
 		p.labParked = false
 		return p.labG
@@ -141,11 +146,15 @@ func sgoLabPoint() {
 	l.waitBaton(t)
 }
 
-// sgoLabBlock is the decision made by a task about to park in an S-Go wait: it is no longer
-// ready, and the baton passes to the chosen task. The caller then parks. If no task can be
-// chosen, the run ends (LabDeadlock).
+// sgoLabBlock is the decision made by a task about to park in an S-Go wait (the caller may hold
+// the wait's locks): it is no longer ready, and the baton passes to the chosen task. The caller
+// then parks, and its park commit calls sgoLabCommit. If no task can be chosen, the run ends
+// (LabDeadlock); the commit stops it, once the wait's locks are released.
 func sgoLabBlock(t *sgoTask) {
 	l := sgoLab
+	if l.finished {
+		return
+	}
 	lock(&l.lock)
 	t.labReady = false
 	t.labG = getg()
@@ -155,13 +164,62 @@ func sgoLabBlock(t *sgoTask) {
 		gp = l.transfer(p)
 	}
 	unlock(&l.lock)
-	if p == nil {
-		l.stop()
-		return
-	}
 	if gp != nil {
 		goready(gp, 0)
 	}
+}
+
+// sgoLabCommit is the lab part of every S-Go park commit, after the wait's locks are released: it
+// aborts the park (false) if the task was woken and chosen before it parked; otherwise the task is
+// parked in its wait. If the run has ended, the task parks for good and the run stops.
+func sgoLabCommit(gp *g) bool {
+	l := sgoLab
+	t := gp.sgo
+	lock(&l.lock)
+	if l.finished {
+		unlock(&l.lock)
+		l.signalStop()
+		return true
+	}
+	if t.labRun {
+		t.labRun = false
+		unlock(&l.lock)
+		return false
+	}
+	t.labInWait = true
+	unlock(&l.lock)
+	return true
+}
+
+// signalStop ends the process (lab binaries) or wakes the test goroutine waiting for the run.
+// It may run on the system stack.
+func (l *sgoLabState) signalStop() {
+	if l.exit != nil {
+		l.exit(l.status)
+	}
+	lock(&l.lock)
+	if l.stopped {
+		unlock(&l.lock)
+		return
+	}
+	l.stopped = true
+	gp := l.doneG
+	l.doneG = nil
+	unlock(&l.lock)
+	if gp != nil {
+		goready(gp, 0)
+	}
+}
+
+// sgoLabWait parks the calling (non-task) goroutine until the run stops or the root ends it.
+func sgoLabWait(l *sgoLabState) {
+	lock(&l.lock)
+	if l.stopped {
+		unlock(&l.lock)
+		return
+	}
+	l.doneG = getg()
+	goparkunlock(&l.lock, waitReasonSGoJoin, traceBlockForever, 1)
 }
 
 // sgoLabEndTask is the decision after the calling task's end event: it leaves the lab and the
@@ -189,7 +247,7 @@ func sgoLabEndTask(t *sgoTask) {
 	}
 }
 
-// sgoReady readies gp, an S-Go task parked in an S-Go wait: in the lab it only becomes ready and
+// sgoWake readies gp, an S-Go task parked in an S-Go wait: in the lab it only becomes ready and
 // runs when chosen.
 func sgoWake(gp *g) {
 	l := sgoLab

@@ -31,6 +31,9 @@ func sgo_isCurrent(task unsafe.Pointer) bool {
 //
 //go:linkname sgo_cancel sgo.runtime_cancel
 func sgo_cancel(scope unsafe.Pointer) {
+	if sgoLab != nil {
+		sgoLabPoint()
+	}
 	if err := sgoNurseryCancel((*sgoScope)(scope)); err != nil {
 		panic(err)
 	}
@@ -40,6 +43,9 @@ func sgo_cancel(scope unsafe.Pointer) {
 //
 //go:linkname sgo_checkpoint sgo.runtime_checkpoint
 func sgo_checkpoint(task unsafe.Pointer) error {
+	if sgoLab != nil {
+		sgoLabPoint()
+	}
 	return sgoTaskCancellation((*sgoTask)(task))
 }
 
@@ -97,6 +103,10 @@ var sgoStdoutLock mutex
 //
 //go:linkname sgo_write sgo.runtime_write
 func sgo_write(s string) (int, bool) {
+	if sgoLab != nil {
+		sgoLabPoint()
+		sgoLabWriteText(s)
+	}
 	p := unsafe.Pointer(unsafe.StringData(s))
 	done := 0
 	lock(&sgoStdoutLock)

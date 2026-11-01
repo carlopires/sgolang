@@ -21,7 +21,7 @@ func (l *sgoLabState) finish(status int32, kind string) {
 // (the process exits); in the runtime's tests it reports the result, and the calling task then
 // stays parked.
 func (l *sgoLabState) stop() {
-	l.exit(l.status)
+	l.signalStop()
 	gopark(nil, nil, waitReasonSGoJoin, traceBlockForever, 1)
 }
 
@@ -34,7 +34,7 @@ func sgoLabProgramEnd(status int32, kind string) {
 	lock(&l.lock)
 	l.finish(status, kind)
 	unlock(&l.lock)
-	l.exit(status)
+	l.signalStop()
 }
 
 // sgoLabOutcomeOf is the canonical outcome of a child task (sgo/docs/w08-plan.md).
@@ -133,12 +133,7 @@ func sgoLabSleep(t *sgoTask, ms int64) error {
 	sgoSleepRemove(r)
 	unlock(&sgoSleepLock)
 	lock(&l.lock)
-	for i, tm := range l.timers { // a cancelled sleep's timer is dropped
-		if tm.r == r {
-			l.timers = append(l.timers[:i], l.timers[i+1:]...)
-			break
-		}
-	}
+	l.dropTimer(r)
 	unlock(&l.lock)
 	if r.state.Load() == 2 {
 		return sgoTaskCancellation(t)
@@ -148,7 +143,7 @@ func sgoLabSleep(t *sgoTask, ms int64) error {
 
 func sgoLabSleepPark(gp *g, _ unsafe.Pointer) bool {
 	unlock(&sgoSleepLock)
-	return true
+	return sgoLabCommit(gp)
 }
 
 // Lines formats the canonical stream (for the trace writer and the runtime's tests).
@@ -251,4 +246,24 @@ func sgoLabQuote(b []byte, s string) []byte {
 		}
 	}
 	return append(b, '"')
+}
+
+// dropTimer removes the timer of Sleep call r, if it has not fired. Called with l.lock held.
+func (l *sgoLabState) dropTimer(r *sgoSleep) {
+	for i, tm := range l.timers {
+		if tm.r == r {
+			copy(l.timers[i:], l.timers[i+1:])
+			l.timers[len(l.timers)-1] = sgoLabTimer{}
+			l.timers = l.timers[:len(l.timers)-1]
+			return
+		}
+	}
+}
+
+// sgoLabDropTimer drops the timer of a sleep a canceller claimed (under sgoSleepLock).
+func sgoLabDropTimer(r *sgoSleep) {
+	l := sgoLab
+	lock(&l.lock)
+	l.dropTimer(r)
+	unlock(&l.lock)
 }

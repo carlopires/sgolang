@@ -203,6 +203,10 @@ var (
 // sgoSleepFor is task.Sleep(ms) (SGO-WAIT-001): nil after at least ms milliseconds of monotonic
 // time, or a cancellation error as soon as a linked scope is CANCELLING in effect.
 func sgoSleepFor(t *sgoTask, ms int64) error {
+	if sgoLab != nil {
+		sgoLabPoint()
+		return sgoLabSleep(t, ms)
+	}
 	if err := sgoTaskCancellation(t); err != nil {
 		return err
 	}
@@ -279,6 +283,9 @@ func sgoWakeCancelled() {
 	for r := sgoSleepers; r != nil; r = r.next {
 		if sgoOuterCancelled(r.task) != nil && r.state.CompareAndSwap(0, 2) {
 			r.wake, wake = wake, r
+			if sgoLab != nil {
+				sgoLabDropTimer(r) // the model drops it now: no later fire event
+			}
 		}
 	}
 	chanWake := sgoChanWakeCancelled()   // channel waiters (sgo_chan.go)
@@ -290,8 +297,10 @@ func sgoWakeCancelled() {
 	for wake != nil {
 		r := wake
 		wake, r.wake = r.wake, nil
-		r.timer.stop()
-		goready(r.g, 0)
+		if r.timer != nil {
+			r.timer.stop()
+		}
+		sgoWake(r.g)
 	}
 }
 

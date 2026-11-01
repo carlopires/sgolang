@@ -113,6 +113,7 @@ type sgoTask struct {
 	// the task's last decision. Touched under sgoLab.lock or by the baton holder.
 	labID                                 int32
 	labReady, labRun, labParked, labWoken bool
+	labInWait                             bool
 	labDone                               bool
 	labSeq, labSince                      int64
 	labG                                  *g
@@ -204,6 +205,9 @@ func sgoSpawn(s *sgoScope, fn func(*sgoTask) error) error {
 // sgo_ready.go), and removes the kinds in without from the child's ceiling (n.SpawnWithout,
 // sgo_auth.go).
 func sgoAdmit(s *sgoScope, fn func(*sgoTask) error, r *sgoReady, without uint8) (*sgoTask, error) {
+	if sgoLab != nil {
+		sgoLabPoint()
+	}
 	t := sgoCurrent()
 	switch {
 	case s == nil:
@@ -247,6 +251,9 @@ func sgoAdmit(s *sgoScope, fn func(*sgoTask) error, r *sgoReady, without uint8) 
 	}
 	s.last = c
 	unlock(&s.lock)
+	if sgoLab != nil {
+		sgoLabSpawned(c)
+	}
 
 	gp := getg()
 	pc := sys.GetCallerPC()
@@ -268,6 +275,9 @@ func sgoAdmit(s *sgoScope, fn func(*sgoTask) error, r *sgoReady, without uint8) 
 // before the g became runnable.
 func sgoTaskStart() {
 	c := getg().sgo
+	if sgoLab != nil {
+		sgoLabStart(c)
+	}
 	fn := c.fn
 	c.fn = nil
 	sgoTaskMain(c, fn)
@@ -332,6 +342,10 @@ func sgoTaskMain(c *sgoTask, fn func(*sgoTask) error) {
 
 // sgoTaskExit publishes the child's outcome and wakes the joining owner if it was the last child.
 func sgoTaskExit(c *sgoTask) {
+	if sgoLab != nil {
+		sgoLabPoint() // the end point (D43), then the end event
+		sgoLabTaskEnded(c)
+	}
 	if len(c.nest) != 0 {
 		throw("sgo: task finished with an open nursery") // RuntimeDefect (SGO-ERR-003)
 	}
@@ -365,16 +379,22 @@ func sgoTaskExit(c *sgoTask) {
 		wake, s.joiner = s.joiner, nil
 	}
 	unlock(&s.lock)
-	getg().sgo = nil
 	if wake != nil {
-		goready(wake, 0)
+		sgoWake(wake)
 	}
+	if sgoLab != nil {
+		sgoLabEndTask(c)
+	}
+	getg().sgo = nil
 }
 
 // sgoNurseryJoin completes the calling task's innermost nursery s: it waits until no registered child
 // is live, closes s, and returns its outcome (SGO-NUR-003, SGO-NUR-004) and its children that
 // ended Failed or Errored, in creation order (for the diagnostic chain, sgo_record.go).
 func sgoNurseryJoin(s *sgoScope) (sgoScopeResult, []*sgoTask, error) {
+	if sgoLab != nil {
+		sgoLabPoint()
+	}
 	t := sgoCurrent()
 	if t == nil || s == nil || s.owner != t || t.currentScope() != s {
 		return sgoScopeResult{}, nil, &sgoViolation{"join of a nursery that is not the caller's innermost nursery"}
@@ -387,7 +407,12 @@ func sgoNurseryJoin(s *sgoScope) (sgoScopeResult, []*sgoTask, error) {
 	}
 	for s.live > 0 {
 		s.joiner = getg()
-		goparkunlock(&s.lock, waitReasonSGoJoin, traceBlockSync, 1)
+		if sgoLab != nil {
+			sgoLabBlock(t)
+			gopark(sgoJoinPark, unsafe.Pointer(s), waitReasonSGoJoin, traceBlockSync, 1)
+		} else {
+			goparkunlock(&s.lock, waitReasonSGoJoin, traceBlockSync, 1)
+		}
 		lock(&s.lock)
 	}
 	if raceenabled {
@@ -435,4 +460,10 @@ func sgoNurseryJoin(s *sgoScope) (sgoScopeResult, []*sgoTask, error) {
 		}
 	}
 	return r, bad, nil
+}
+
+// sgoJoinPark is the lab's join park commit: it releases the scope lock (sgo_lab_sched.go).
+func sgoJoinPark(gp *g, p unsafe.Pointer) bool {
+	unlock(&(*sgoScope)(p).lock)
+	return sgoLabCommit(gp)
 }

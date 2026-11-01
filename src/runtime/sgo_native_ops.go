@@ -256,6 +256,9 @@ func sgoSelParkUnlock(gp *g, p unsafe.Pointer) bool {
 	sp := (*sgoSelPark)(p)
 	unlock(&sgoSleepLock)
 	sgoSelUnlock(sp.locks)
+	if sgoLab != nil {
+		return sgoLabCommit(gp)
+	}
 	return true
 }
 

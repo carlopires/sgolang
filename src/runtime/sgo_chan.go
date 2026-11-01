@@ -189,6 +189,9 @@ func sgoChanParkUnlock(gp *g, p unsafe.Pointer) bool {
 	unlock(&sgoSleepLock)
 	unlock(&w.ch.lock)
 	sgoChanReady(pre)
+	if sgoLab != nil {
+		return sgoLabCommit(gp)
+	}
 	return true
 }
 

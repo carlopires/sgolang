@@ -61,7 +61,9 @@ type sgoLabState struct {
 	finished bool
 	status   int32
 	kind     string
-	exit     func(status int32) // ends the run (the process, or a test hook)
+	exit     func(status int32) // ends the process (lab binaries); nil in the runtime's tests
+	stopped  bool               // the run has stopped: no task runs again
+	doneG    *g                 // a test goroutine waiting for the stop (sgoLabWait)
 }
 
 // sgoLab is nil unless the lab is enabled: only lab binaries enable it (D41), and the runtime's

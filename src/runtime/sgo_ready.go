@@ -71,6 +71,9 @@ func sgoStart(s *sgoScope, fn func(*sgoTask) error) error {
 				sgoReadyWaiters.prev = r
 			}
 			sgoReadyWaiters = r
+			if sgoLab != nil {
+				sgoLabBlock(t)
+			}
 			gopark(sgoReadyPark, unsafe.Pointer(r), waitReasonSGoJoin, traceBlockSync, 1)
 			lock(&sgoSleepLock)
 			sgoReadyUnregister(r)
@@ -91,6 +94,9 @@ func sgoStart(s *sgoScope, fn func(*sgoTask) error) error {
 
 func sgoReadyPark(gp *g, p unsafe.Pointer) bool {
 	unlock(&sgoSleepLock)
+	if sgoLab != nil {
+		return sgoLabCommit(gp)
+	}
 	return true
 }
 
@@ -120,7 +126,7 @@ func sgoReadyDecide(r *sgoReady, d uint32) bool {
 	}
 	unlock(&sgoSleepLock)
 	if gp != nil {
-		goready(gp, 0)
+		sgoWake(gp)
 	}
 	return won
 }
@@ -184,7 +190,7 @@ func sgoReadyReadyAll(wake *sgoReady) {
 	for wake != nil {
 		r := wake
 		wake, r.wake = r.wake, nil
-		goready(r.g, 0)
+		sgoWake(r.g)
 	}
 }
 
