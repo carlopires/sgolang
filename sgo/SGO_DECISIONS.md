@@ -1,6 +1,6 @@
 # S-Go open design decisions
 
-**Version:** 1 · **Date:** 2026-10-30 · **Status:** D01–D22 APPROVED by the user on 2026-10-30 (D01–D21 as recommended; D22 as the user specified); D23–D30 APPROVED on 2026-10-31 as recommended.
+**Version:** 1 · **Date:** 2026-10-30 · **Status:** D01–D22 APPROVED by the user on 2026-10-30 (D01–D21 as recommended; D22 as the user specified); D23–D30 APPROVED on 2026-10-31 as recommended; D31–D38 PROPOSED on 2026-11-01.
 
 ## Purpose and precedence
 
@@ -277,6 +277,76 @@ This needs ints and strings only (D29); values like random bytes are returned as
 ## D30 — Model first, then runtime **[DEFAULT]** · APPROVED 2026-10-31
 
 **Recommendation.** W06 extends the executable model (`sgo/model`) with channels, permits, close, and cancellation, explores bounded histories, and the runtime implementation is checked against the model's reference histories (plan §7.1, W06 gate) before any public permit is admitted. W05's readiness protocol gets the same treatment for R01–R04 races. Neither work package changes subset-0 behavior.
+
+# Subset 2 (W07) — PROPOSED 2026-11-01
+
+Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0 denies all of it (SGO-CHAN-001). These decisions fix the language-design choices the 0.3.0 clauses need; the plan fixes only the outcome (native operations follow the §7 protocol, never raw Go behavior).
+
+## D31 — Spec version and scope of subset 2 **[DEFAULT]** · PROPOSED
+
+**Recommendation.** Subset 2 is spec **0.3.0**, a strict superset of 0.2.0 (as D23): every 0.2.0 program keeps its meaning; SGO-CHAN-001 is superseded by the native-channel clauses; reject cases whose construct becomes admitted move to positive cases with a recorded reason; objects built for 0.2.0 are refused by a 0.3.0 toolchain (SGO-IMP-002). 0.3.0 covers W07 only: native channel types, send, receive, `close`, `select`, and channel `range`, plus the carry-overs of D38. It follows D30: the executable model gains native operations and `select` first, and the runtime is checked against its reference histories.
+
+## D32 — Native `chan` and `sgo.Channel` **[USER]** · PROPOSED
+
+**Why it matters.** Two channel forms could diverge in semantics, or one could become a raw Go path.
+
+**Options.**
+- **(a) One protocol.** Native channels are the managed channels of W06 (TCB-P12): `ch <- v` is a reserve and commit that the sender cannot interleave (it waits like `Reserve`, then publishes once); `v, ok := <-ch` and `v := <-ch` are `Receive`. `sgo.Channel[T]` stays, as the explicit-permit form for code that must reserve before it has the value; both forms share element types (D36), close, and cancellation rules.
+- **(b) Native only.** Retire `sgo.Channel[T]` and its permits once native channels exist (a 0.3.0 incompatibility with 0.2.0, contrary to D23).
+- **(c) Separate implementations.** Native channels on Go's `hchan` with added checks.
+
+**Recommendation: (a).** One runtime protocol keeps the W06 model and evidence valid for both forms, and keeps 0.3.0 a superset. (c) is the raw-Go path the plan forbids.
+
+## D33 — Cancellation of a blocked native operation **[USER]** · PROPOSED
+
+**Why it matters.** `sgo.Channel` operations return a cancellation error; `ch <- v` and `<-ch` have no error result, so cancellation of a task blocked in them needs another channel to the task.
+
+**Options.**
+- **(a) Cancellation unwind.** A send, receive, `range` step, or blocking `select` that waits while a scope linked to the task is CANCELLING (as SGO-CANCEL-002) ends the operation with no effect and unwinds the task: deferred calls run and the task ends **Cancelled** (not Failed: it does not cancel its nursery, SGO-SPAWN-004), exactly as if it had returned the cancellation error. A nursery owner unwinding this way joins its children first (SGO-DEF-005). Operations that can proceed without waiting do not observe cancellation.
+- **(b) Explicit only.** Admit a blocking native operation only inside a `select` that also has a cancellation arm (for example `case <-task.Done():`); a plain blocking `<-ch` is a compile error.
+- **(c) Implicit arm.** Every blocking native operation is a `select` with a hidden cancellation arm that sets a result flag the program must check.
+
+**Recommendation: (a).** It is the plan's "cancellation unwind from safe user boundaries", keeps channel code as short as Go's, and its outcome (Cancelled, defers run, owned children joined) is already defined for returned cancellation errors. The unwind starts only at a channel wait, an existing cancellation point, so no code is interrupted elsewhere. (b) makes every pipeline stage verbose; (c) adds a check that is easy to forget.
+
+## D34 — `select` **[USER]** · PROPOSED
+
+**Recommendation.**
+- **Evaluation:** all channel operands and send values are evaluated once, in source order, before any arm is chosen (as Go).
+- **Choice:** if several arms can proceed, one is chosen uniformly at random by the runtime; the program cannot observe the generator. Production does not promise a reproducible choice; the lab scheduler (W08) records and replays it. The alternative, the first ready arm in source order, is deterministic but starves later arms, which Go's semantics were designed to avoid.
+- **`default`:** admitted; with `default`, `select` never waits and never observes cancellation.
+- **Cancellation:** a `select` without `default` that waits is a cancellation point with the unwind of D33; there is no special cancellation arm (and no `task.Done()` channel in 0.3.0).
+- **Linearization:** exactly one arm takes effect; a send arm that loses leaves no reservation (W07 gate: winner/loser cleanup).
+
+## D35 — `close`, closed channels, nil channels, `len`/`cap`, `range`, directions **[USER]** · PROPOSED
+
+**Recommendation.**
+- **`close(ch)`:** admitted for any holder of a send-capable channel (as `sgo.Channel.Close`); closing a closed channel has no effect (as SGO-PERMIT-002), unlike Go, which panics.
+- **Send on a closed channel:** fails the sending task with a new failure kind `ClosedChannel` (SGO-DEF-003 amended), with no effect; Go panics instead. (The explicit-permit form keeps its error result.)
+- **Receive from a closed, empty channel:** returns the zero value and `ok = false` (as Go and `Receive`).
+- **Nil channels:** do not exist. Channel types join the no-nil rule of capability handles (SGO-TYPE-005): no nil literal of a channel type, variables must be initialized (SGO-BIND-003), and `make(chan T, n)` is the only constructor, so nil-channel blocking cannot occur. A `select` arm cannot be disabled by setting its channel to nil; programs restructure instead.
+- **`len(ch)`, `cap(ch)`:** denied in 0.3.0. They only report instantaneous counts, which tempt check-then-act races and are nondeterministic.
+- **`for v := range ch`:** admitted; it ends when the channel is closed and empty, and each wait is a cancellation point (D33).
+- **Directional types** `<-chan T`, `chan<- T`: admitted, with Go's implicit conversion from bidirectional channels; a receive-only channel cannot be closed.
+
+## D36 — Channel element types in 0.3.0 **[USER]** · PROPOSED
+
+**Options.**
+- **(a) Keep D29:** element types `int`, `bool`, `string`, `error`, for native channels and `sgo.Channel` alike.
+- **(b) Add channels of those types** (`chan chan int`), so tasks can hand each other reply channels.
+- **(c) Add capability handles as elements,** so authority can be passed through channels.
+
+**Recommendation: (a) plus (b).** Reply channels are a central channel idiom and add no shared mutable state (a channel is synchronized). Handles as elements (c) stay denied in 0.3.0: authority would move between tasks outside spawn, which the ceiling model (D24) does not yet describe. Aggregate values (structs, slices) remain the separate decision D29 deferred, before W09.
+
+## D37 — Shared-memory synchronization **[USER]** · PROPOSED
+
+**Recommendation.** Keep SGO-SYNC-001 denying `sync` and `sync/atomic` entirely in 0.3.0. S-Go subset 0–2 has no mutable state shared between tasks (D01: only immutable values and synchronized handles cross task boundaries), so mutexes and condition variables would have nothing to protect, and wait groups are replaced by nurseries. The plan's W07 audit then reduces to evidence that every `sync` route stays rejected, including through dependencies.
+
+## D38 — Carry-overs from 0.2.0 **[USER]** · PROPOSED
+
+**Recommendation.**
+- **(a) Generator hand-off.** A `*sgo.Random` returned by `Split` is unowned until its first use; the first task that uses it becomes its owner, and any other task's later use is a `SpawnContractViolation`. A parent can then split one generator per child before spawning it, giving every task a deterministic stream (today only the root task can use a generator). The claim is one atomic step; the original generator stays with its owner.
+- **(b) Module path diagnostic.** A module path equal to `sgo`, or to any other TCB package path or path prefix, is rejected with `SGO_E_USAGE` at `sgo.mod` instead of an import cycle (SGO-IMP-001 amended).
+- **(c) Simulated network:** not in 0.3.0; it belongs with I/O in W09.
 
 ---
 
