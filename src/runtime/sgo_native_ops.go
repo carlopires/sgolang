@@ -79,6 +79,7 @@ func sgochansend1(c *sgoChan, elem unsafe.Pointer) {
 	if raceenabled {
 		racereleasemerge(box)
 	}
+	sgoRaceRendezvousStart(c)
 	lock(&c.lock)
 	wake, st := sgoNativeTrySend(c, box)
 	if st != sgoNotReady {
@@ -87,6 +88,7 @@ func sgochansend1(c *sgoChan, elem unsafe.Pointer) {
 		if st == sgoClosedSend {
 			sgoClosedChannel()
 		}
+		sgoRaceRendezvousEnd(c)
 		sgoChanInject(sgoFaultAfterCommit)
 		return
 	}
@@ -100,15 +102,14 @@ func sgochansend1(c *sgoChan, elem unsafe.Pointer) {
 	if closed {
 		sgoClosedChannel()
 	}
-	if raceenabled {
-		raceacquire(box) // a rendezvous receive happens before the send completes
-	}
+	sgoRaceRendezvousEnd(c) // a rendezvous receive happens before the send completes
 	sgoChanInject(sgoFaultAfterCommit)
 }
 
 // sgochanrecv2 is v, ok := <-ch (and each step of range).
 func sgochanrecv2(c *sgoChan, dst unsafe.Pointer) bool {
 	t := sgoCurrent()
+	sgoRaceRendezvousStart(c)
 	lock(&c.lock)
 	box, ok, wake, ready := sgoNativeTryRecv(c)
 	if !ready {
@@ -130,6 +131,7 @@ func sgochanrecv2(c *sgoChan, dst unsafe.Pointer) bool {
 	} else {
 		sgoNativeZero(c, dst)
 	}
+	sgoRaceRendezvousEnd(c)
 	sgoChanInject(sgoFaultAfterReceive)
 	return ok
 }
@@ -266,6 +268,9 @@ func sgoselectgo(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs in
 		}
 	}
 	locks := sgoSelLocks(cas)
+	for _, c := range locks {
+		sgoRaceRendezvousStart(c)
+	}
 	sgoSelLock(locks)
 	// Uniform choice among the arms that can proceed (D34), by reservoir sampling.
 	pick, ready := -1, uint32(0)
@@ -286,12 +291,14 @@ func sgoselectgo(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs in
 			if st == sgoClosedSend {
 				sgoClosedChannel()
 			}
+			sgoRaceRendezvousEnd(c)
 			return pick, false
 		}
 		box, ok, wake, _ := sgoNativeTryRecv(c)
 		sgoSelUnlock(locks)
 		sgoReadyOne(wake)
 		sgoSelFinishRecv(c, cas[pick].elem, box, ok)
+		sgoRaceRendezvousEnd(c)
 		return pick, ok
 	}
 	if !block {
@@ -361,12 +368,11 @@ func sgoselectgo(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs in
 		if closed {
 			sgoClosedChannel()
 		}
-		if raceenabled {
-			raceacquire(boxes[i])
-		}
+		sgoRaceRendezvousEnd(cas[i].c)
 		return i, false
 	}
 	sgoSelFinishRecv(cas[i].c, cas[i].elem, box, ok)
+	sgoRaceRendezvousEnd(cas[i].c)
 	return i, ok
 }
 

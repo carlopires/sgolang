@@ -143,6 +143,21 @@ func sgoNativeZero(c *sgoChan, dst unsafe.Pointer) {
 	}
 }
 
+// sgoRaceRendezvous gives a capacity-0 operation the two-way order of a rendezvous for the race
+// detector (SGO-CHAN-002: the receive also happens before the send completes): every operation
+// releases into the channel when it starts and acquires from it when it completes.
+func sgoRaceRendezvousStart(c *sgoChan) {
+	if raceenabled && c.cap == 0 {
+		racereleasemerge(unsafe.Pointer(c))
+	}
+}
+
+func sgoRaceRendezvousEnd(c *sgoChan) {
+	if raceenabled && c.cap == 0 {
+		raceacquire(unsafe.Pointer(c))
+	}
+}
+
 func sgomakechan(t *chantype, size int) *sgoChan {
 	if size < 0 {
 		panic(error(&sgoFailure{"InvalidArgument", "make of a channel with a negative capacity", ""}))
