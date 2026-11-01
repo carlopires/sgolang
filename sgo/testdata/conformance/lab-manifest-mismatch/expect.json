@@ -1,0 +1,12 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-005"
+ ],
+ "exit": 0,
+ "stdout": "ping pong\n",
+ "lab_checks": [
+  "reject-other-build"
+ ],
+ "note": "D04: a trace of another build is refused before running (SGO_E_LAB_MANIFEST)."
+}

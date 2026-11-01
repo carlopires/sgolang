@@ -1,3 +1,3 @@
 module example.com/native-buffered-fifo
 
-sgo 0.3.0
+sgo 0.4.0

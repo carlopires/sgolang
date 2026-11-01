@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+// D50: the ready arms are recorded as source indices (1 and 2), not the runtime's case order.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	a := make(chan int, 1)
+	b := make(chan int, 1)
+	c := make(chan int)
+	a <- 1
+	select {
+	case <-c:
+		return out.WriteString("c\n")
+	case b <- 2:
+		return out.WriteString("b\n")
+	case <-a:
+		return out.WriteString("a\n")
+	}
+}

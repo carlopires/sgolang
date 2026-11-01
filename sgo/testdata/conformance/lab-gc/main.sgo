@@ -1,0 +1,32 @@
+package main
+
+import "sgo"
+
+// Allocation-heavy tasks: garbage collection does not change the schedule (D10).
+func build(k int) string {
+	s := ""
+	for i := 0; i < k; i++ {
+		s = s + "x"
+	}
+	return s
+}
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := make(chan string)
+	nursery (n) {
+		for j := 0; j < 3; j++ {
+			n.Spawn(func(task *sgo.Context) error {
+				c <- build(3000)
+				return nil
+			})
+		}
+		a := <-c
+		b := <-c
+		d := <-c
+		if a != b || b != d {
+			return sgo.NewError("differ")
+		}
+	}
+	return out.WriteString("built\n")
+}

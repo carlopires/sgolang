@@ -2,6 +2,24 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.4.0 — 2026-11-02
+
+The lab execution configuration (W08, D40-D50). The source language is unchanged: every 0.3.0 program keeps its meaning in production, and the lab is selected only by `sgo lab run`, `sgo lab replay`, and `sgo lab sweep`. The admission digest and toolchain identity change, so objects built for 0.3.0 are refused by a 0.4.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.4.0`. The S-Go identity of every package now names its execution configuration (`prod`, `lab`, or `tcb`).
+
+New frozen clauses (W08, model first per D30):
+
+- SGO-LAB-002 v1 — the lab execution configuration: lab binaries built only by `sgo lab`; configurations never mix; a production binary has no lab activation path (D41).
+- SGO-LAB-003 v1 — scheduling: one task runs at a time; a choice point before every listed operation and every K steps of S-Go code; `random` and `fifo` policies; select arms by source index (D42, D43, D49, D50).
+- SGO-LAB-004 v1 — streams, virtual time, and effects: PCG-DXSM streams from the seed by SplitMix64; virtual time and timer ties; WallClock from the manifest epoch; Entropy unsupported (D44, D45).
+- SGO-LAB-005 v1 — trace, replay, and sweeps (D46, D48).
+- SGO-LAB-006 v1 — lab outcomes: LabDeadlock with the wait graph, LabQuotaExhausted, UnsupportedLabEffect, LabReplayDivergence; host hangs stay outside (D47).
+
+Superseded denial clauses:
+
+- SGO-LAB-001 v1 → v2, superseded by SGO-LAB-002 to SGO-LAB-006 — lab-only APIs, source constructs, pragmas, and flags of `sgo build`/`sgo run` stay denied.
+
+Execution configurations: the `supported_execution_configurations` field of the 0.3.0 clauses reads "lab denied until W08 (SPEC-LAB)". From 0.4.0, SGO-LAB-002 states that every clause applies unchanged in a lab run except for the scheduling, time, and effect rules of SGO-LAB-003 and SGO-LAB-004; those clauses are not amended.
+
 ## 0.3.0 — 2026-11-02
 
 Subset 2 (D31): a strict superset of 0.2.0. Every 0.2.0 program keeps its meaning; constructs 0.2.0 denied and 0.3.0 admits are named below. The admission digest and toolchain identity change, so objects built for 0.2.0 are refused by a 0.3.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.3.0`.

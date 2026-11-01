@@ -1,0 +1,19 @@
+package main
+
+import "sgo"
+
+// A08: a seeded generator is deterministic and target-independent (PCG-DXSM, math/rand/v2).
+// The expected values are math/rand/v2 rand.New(rand.NewPCG(42, 0)).IntN(1000), and IntN(100)
+// of the generator seeded from its next two outputs.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	r := root.Random(42)
+	if r.Intn(1000) != 857 || r.Intn(1000) != 960 || r.Intn(1000) != 136 || r.Intn(1000) != 88 || r.Intn(1000) != 185 {
+		return sgo.NewError("sequence differs")
+	}
+	c := r.Split()
+	if c.Intn(100) != 73 || c.Intn(100) != 96 || c.Intn(100) != 67 {
+		return sgo.NewError("split sequence differs")
+	}
+	return out.WriteString("match\n")
+}

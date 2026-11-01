@@ -1,0 +1,12 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-005"
+ ],
+ "exit": 0,
+ "stdout": "ping pong\n",
+ "lab_checks": [
+  "reject-altered"
+ ],
+ "note": "D12: a trace whose events do not match its footer is refused (SGO_E_LAB_TRACE)."
+}

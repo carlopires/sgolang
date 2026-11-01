@@ -1,0 +1,21 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-004"
+ ],
+ "lab_args": [
+  "-sched",
+  "fifo"
+ ],
+ "exit": 0,
+ "stdout": "123\n",
+ "timeout_ms": 60000,
+ "note": "D06: 100 s of virtual time pass at once; equal deadlines fire in timer-creation order.",
+ "trace_events": [
+  "{\"e\":\"advance\",\"to\":100000}",
+  "{\"e\":\"fire\",\"task\":1,\"timer\":0}",
+  "{\"e\":\"fire\",\"task\":2,\"timer\":1}",
+  "{\"e\":\"fire\",\"task\":3,\"timer\":2}",
+  "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+ ]
+}

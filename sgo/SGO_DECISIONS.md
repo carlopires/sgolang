@@ -439,3 +439,4 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - 2026-11-01: user approved D31–D39 as recommended (D39, structured `Event` and `CapacityLimiter`, added at the user's request; D37 revised to point to it). Follow-up: spec 0.3.0 clauses for native channels, `select`, the structured primitives, and the D38 carry-overs; W07 implementation, model first.
 - 2026-11-02: user approved D40–D49 as recommended ("looks good, approved!"). Follow-up: spec 0.4.0 clauses for the lab execution configuration (scheduler, boundaries and quota, streams, effects, trace and replay, outcomes); W08 implementation, model first (D30).
 - 2026-11-02: user approved D50 as recommended (source-order select arm indices in the lab trace).
+- 2026-11-02: user approved the SPEC-LAB 0.4.0 clauses SGO-LAB-002 to SGO-LAB-006 as drafted ("looks good, continue"); frozen in spec 0.4.0 with the lab conformance lane (17 lab cases).

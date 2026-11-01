@@ -1,0 +1,16 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-005"
+ ],
+ "lab_args": [
+  "-seed",
+  "7"
+ ],
+ "exit": 0,
+ "stdout": "ping pong\n",
+ "lab_checks": [
+  "reject-changed-choice"
+ ],
+ "note": "D05: a trace whose choice was changed diverges (SGO_E_LAB_DIVERGENCE) and names the last matching event."
+}

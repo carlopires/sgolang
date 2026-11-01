@@ -1,0 +1,16 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			return out.WriteString("a")
+		})
+		n.Spawn(func(task *sgo.Context) error {
+			return out.WriteString("b")
+		})
+	}
+	return out.WriteString("\n")
+}

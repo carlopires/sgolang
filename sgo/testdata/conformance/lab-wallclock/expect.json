@@ -1,0 +1,16 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-004"
+ ],
+ "lab_args": [
+  "-epoch",
+  "1700000000000"
+ ],
+ "exit": 0,
+ "stdout": "epoch\n",
+ "lab_checks": [
+  "replay"
+ ],
+ "note": "D45: WallClock is the manifest epoch plus virtual time."
+}

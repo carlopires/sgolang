@@ -1,0 +1,13 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	n := 0
+	for {
+		n = n + 1
+		if n < 0 {
+			return sgo.NewError("unreachable")
+		}
+	}
+}

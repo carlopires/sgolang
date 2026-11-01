@@ -1,3 +1,3 @@
 module example.com/val-string-range
 
-sgo 0.3.0
+sgo 0.4.0

@@ -1,0 +1,16 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-004",
+  "SGO-LAB-003"
+ ],
+ "exit": 0,
+ "sweep": {
+  "seeds": "0..15",
+  "expect": "busy\nlate\n",
+  "outcomes": [
+   "busy\nlate\n"
+  ]
+ },
+ "note": "D07: time advances only when no task is ready, for every seed of the sweep."
+}

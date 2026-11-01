@@ -1,3 +1,3 @@
 module example.com/nur-basic
 
-sgo 0.3.0
+sgo 0.4.0

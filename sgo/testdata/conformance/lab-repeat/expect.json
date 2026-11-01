@@ -1,0 +1,18 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-002",
+  "SGO-LAB-005"
+ ],
+ "lab_args": [
+  "-seed",
+  "7"
+ ],
+ "exit": 0,
+ "stdout": "ping pong\n",
+ "lab_checks": [
+  "repeat",
+  "replay"
+ ],
+ "note": "D02: two runs of one manifest write the same trace; replay reproduces it."
+}

@@ -1,0 +1,17 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-003"
+ ],
+ "lab_args": [
+  "-seed",
+  "11"
+ ],
+ "exit": 0,
+ "stdout": "built\n",
+ "lab_checks": [
+  "repeat",
+  "replay"
+ ],
+ "note": "D10: garbage collection and runtime goroutines do not change the schedule."
+}

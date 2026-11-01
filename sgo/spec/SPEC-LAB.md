@@ -1,36 +1,32 @@
 # SPEC-LAB — Deterministic lab
 
-Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-LAB`: `subset0` = `denied`).
+Denied in subsets 0 to 2 (spec 0.1.0 to 0.3.0, SGO-LAB-001). Spec 0.4.0 admits the lab execution configuration (SGO-LAB-002 to SGO-LAB-006, D40-D50), selected only by `sgo lab`; the source language is unchanged.
 
 ### SGO-LAB-001 — Deterministic lab are denied in subset 0
-- **version:** 1
-- **status:** frozen
-- **reference_closure:** SGO-ERR-001; D22; plan §9; SPEC-4.
-- **grammar_and_types:** Denied: the lab execution configuration: virtual time, seeded scheduling, trace recording and replay, and any lab-only API or build flag. No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
+- **version:** 2
+- **status:** superseded
+- **reference_closure:** SGO-ERR-001, SGO-LAB-002; D22, D41; plan §9; SPEC-4.
+- **grammar_and_types:** Superseded in spec 0.4.0 by SGO-LAB-002 to SGO-LAB-006, which admit the lab execution configuration through `sgo lab`. Still denied: any lab-only API, source construct, pragma, or build flag of `sgo build` or `sgo run`, and any way to enable the lab in a production binary.
 - **preconditions:** n/a — denial clause; there is nothing to use.
 - **evaluation_and_value_semantics:** n/a — denied constructs never execute.
 - **ownership_and_lifecycle:** n/a — denied constructs never execute.
 - **effect_and_capability_requirements:** n/a — denied constructs never execute.
 - **concurrency_and_memory_order:** n/a — denied constructs never execute.
 - **allowed_nondeterminism:** None.
-- **failure_and_partial_progress:** Any use is a compile error; no object file is produced.
+- **failure_and_partial_progress:** Any use is a compile error or a usage error; no object file is produced.
 - **cancellation_and_cleanup:** n/a — denied constructs never execute.
-- **compile_link_checks:** `SGO_E_UNADMITTED`, naming the construct and this clause.
+- **compile_link_checks:** `SGO_E_UNADMITTED` or `SGO_E_USAGE`, naming the construct and this clause.
 - **runtime_guards:** n/a — rejected before execution.
 - **tcb_assumptions:** n/a — no runtime involvement.
-- **positive_tests:** n/a — denial clause; admission is planned for W08 (plan §9).
+- **positive_tests:** n/a — denial clause; the lab is tested under SGO-LAB-002 to SGO-LAB-006.
 - **negative_tests:** S14; fixture:lab-flag.
-- **implementation_coverage:** gate level only — `sgo/scripts/sgo-target` denies every program (W00); compiler-level denial is W03.
-- **executed_evidence:** W00 gate checks passed on darwin/arm64, linux/amd64, linux/arm64 (gate level; not construct-specific).
-- **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
-
-## Spec 0.4.0 draft (W08; D40–D50; proposed for approval)
-
-The clauses below admit the lab execution configuration. When frozen in 0.4.0 they supersede SGO-LAB-001; until then they are drafts and the lab is reachable only through `sgo lab`, outside the frozen language.
+- **implementation_coverage:** gate level W00; compiler-level denial W03; narrowed in W08 to the forms above (`cmd/sgo` accepts no lab flag outside `sgo lab`).
+- **executed_evidence:** `sgo/evidence/w03/README.md`; `sgo/evidence/w08/README.md`.
+- **supported_execution_configurations:** production; lab (SGO-LAB-002).
 
 ### SGO-LAB-002 — The lab execution configuration
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-LAB-001, SGO-TOOL-001, SGO-IMP-002, SGO-BUILD-001, SGO-PROC-002; D41.
 - **grammar_and_types:** No source construct: the language of a lab program is the language of its production program. The configuration is selected only by `sgo lab run`, `sgo lab replay`, and `sgo lab sweep`, which build a **lab binary**; no flag of `sgo build` or `sgo run`, environment variable, file, or pragma selects it.
 - **preconditions:** The program is admitted for production (the lab admits no construct production denies).
@@ -44,15 +40,15 @@ The clauses below admit the lab execution configuration. When frozen in 0.4.0 th
 - **compile_link_checks:** The execution configuration (`prod`, `lab`, or `tcb` for trusted target code shared by both) is part of every S-Go package's identity; a package imports only packages of its own configuration or `tcb`, and the linker links a lab program only from lab and `tcb` packages, else `SGO_E_SPEC_MISMATCH` (SGO-IMP-002). A lab binary's build ID names `config=lab`.
 - **runtime_guards:** A production binary has no lab activation path: it never reads a manifest.
 - **tcb_assumptions:** `runtime/sgo_lab*.go` (baton scheduler, streams, trace); `cmd/link` sets the lab marker only for `-sgolab`.
-- **positive_tests:** S14, D02; PENDING: lab conformance lane; `sgo/scripts/test-lab.py`.
-- **negative_tests:** S14; PENDING: lab conformance lane; `test-lab.py` (production binary given a manifest).
+- **positive_tests:** S14, D02; fixture:lab-repeat; `sgo/scripts/test-lab.py`.
+- **negative_tests:** S14; fixture:lab-rejects-like-production; `test-lab.py` (production binary given a manifest).
 - **implementation_coverage:** compiler `noder/sgo_identity.go`; linker `ld/sgoid.go`; driver `cmd/sgo/lab*.go`; runtime `sgo_lab_boot.go`.
-- **executed_evidence:** PENDING: W08 evidence (`sgo/evidence/w08/README.md`, in progress).
+- **executed_evidence:** `sgo/evidence/w08/README.md`.
 - **supported_execution_configurations:** lab.
 
 ### SGO-LAB-003 — Lab scheduling, choice points, steps, and quota
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-LAB-002, SGO-NUR-001, SGO-SPAWN-001, SGO-CHAN-004, SGO-SYNC-002, SGO-WAIT-001, SGO-CANCEL-002; D42, D43, D49, D50.
 - **grammar_and_types:** n/a — configuration clause.
 - **preconditions:** n/a — configuration clause; it adds no operation with preconditions.
@@ -66,15 +62,15 @@ The clauses below admit the lab execution configuration. When frozen in 0.4.0 th
 - **compile_link_checks:** n/a — no source construct; the configuration checks are SGO-LAB-002.
 - **runtime_guards:** n/a — the scheduler is the guard (SGO-LAB-003).
 - **tcb_assumptions:** The S-Go runtime is the only source of user-visible blocking and waking; Go runtime goroutines never make user-visible decisions.
-- **positive_tests:** D03, D07, D10; PENDING: lab conformance lane; `sgo/model/labmodel_test.go`, runtime `TestSGoLabStreams`.
-- **negative_tests:** D05; PENDING: lab conformance lane.
+- **positive_tests:** D03, D07, D10; fixture:lab-ready-set, fixture:lab-select-source-order, fixture:lab-gc, fixture:lab-runnable-time; `sgo/model/labmodel_test.go`, runtime `TestSGoLabStreams`.
+- **negative_tests:** D05, D11; fixture:lab-quota.
 - **implementation_coverage:** runtime `sgo_lab_sched.go`, `sgo_native_ops.go`; compiler `walk/sgo_lab.go`, `walk/select.go`.
-- **executed_evidence:** PENDING: W08 evidence.
+- **executed_evidence:** `sgo/evidence/w08/README.md`.
 - **supported_execution_configurations:** lab.
 
 ### SGO-LAB-004 — Lab streams, virtual time, and effects
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-LAB-003, SGO-AUTH-002, SGO-RANDOM-001, SGO-WAIT-001; D26, D44, D45.
 - **grammar_and_types:** n/a — configuration clause.
 - **preconditions:** n/a — configuration clause; it adds no operation with preconditions.
@@ -88,15 +84,15 @@ The clauses below admit the lab execution configuration. When frozen in 0.4.0 th
 - **compile_link_checks:** n/a — no source construct; the configuration checks are SGO-LAB-002.
 - **runtime_guards:** n/a — the scheduler is the guard (SGO-LAB-003).
 - **tcb_assumptions:** `runtime/sgo_lab.go` generator; checked against `math/rand/v2` vectors (`sgo/model`).
-- **positive_tests:** D01, D06; PENDING: lab conformance lane; `test-lab.py` (WallClock epoch).
-- **negative_tests:** D09; PENDING: lab conformance lane; `test-lab.py` (Entropy).
+- **positive_tests:** D01, D06, D07; fixture:lab-random, fixture:lab-timer-ties, fixture:lab-wallclock, fixture:lab-runnable-time.
+- **negative_tests:** D09; fixture:lab-entropy.
 - **implementation_coverage:** runtime `sgo_lab.go`, `sgo_lab_run.go`, `sgo_effects.go`.
-- **executed_evidence:** PENDING: W08 evidence.
+- **executed_evidence:** `sgo/evidence/w08/README.md`.
 - **supported_execution_configurations:** lab.
 
 ### SGO-LAB-005 — Trace, replay, and sweeps
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-LAB-002, SGO-LAB-003; D46, D48, D50.
 - **grammar_and_types:** `sgo lab run [-seed N] [-sched random|fifo] [-k N] [-quota N] [-epoch MS] [-trace FILE] [-timeout S] pkg`; `sgo lab replay [-timeout S] TRACE pkg`; `sgo lab sweep -seeds A..B [-sched] [-k] [-quota] [-epoch] [-expect FILE] [-save FILE] [-timeout S] pkg`.
 - **preconditions:** Replay: the trace was written by `sgo lab` for the same build ID.
@@ -110,15 +106,15 @@ The clauses below admit the lab execution configuration. When frozen in 0.4.0 th
 - **compile_link_checks:** n/a — no source construct; the configuration checks are SGO-LAB-002.
 - **runtime_guards:** n/a — the scheduler is the guard (SGO-LAB-003).
 - **tcb_assumptions:** The driver is host code (SGO-TOOL-001).
-- **positive_tests:** D02, D13; PENDING: lab conformance lane; `test-lab.py`, runtime `TestSGoLabReplay`.
-- **negative_tests:** D04, D05, D12; PENDING: lab conformance lane; `test-lab.py` (altered, other-build, and changed-choice traces).
+- **positive_tests:** D02, D13; fixture:lab-repeat, fixture:lab-find-bug; runtime `TestSGoLabReplay`.
+- **negative_tests:** D04, D05, D12; fixture:lab-manifest-mismatch, fixture:lab-impossible-choice, fixture:lab-trace-integrity.
 - **implementation_coverage:** driver `cmd/sgo/lab.go`, `lab_cmds.go`; runtime `sgo_lab_boot.go` (manifest on fd 3, canonical lines on fd 4).
-- **executed_evidence:** PENDING: W08 evidence.
+- **executed_evidence:** `sgo/evidence/w08/README.md`.
 - **supported_execution_configurations:** lab.
 
 ### SGO-LAB-006 — Lab outcomes
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-PROC-002, SGO-ERR-002, SGO-CHAN-003, SGO-LAB-003, SGO-LAB-004; D47.
 - **grammar_and_types:** n/a — configuration clause.
 - **preconditions:** n/a — configuration clause; it adds no operation with preconditions.
@@ -132,8 +128,8 @@ The clauses below admit the lab execution configuration. When frozen in 0.4.0 th
 - **compile_link_checks:** n/a — no source construct; the configuration checks are SGO-LAB-002.
 - **runtime_guards:** The lab decides at every choice point.
 - **tcb_assumptions:** n/a — the outcomes are decided by the scheduler of SGO-LAB-003.
-- **positive_tests:** D08; PENDING: lab conformance lane.
-- **negative_tests:** D08, D09, D11; PENDING: lab conformance lane; `test-lab.py` (LabDeadlock with wait graph, LabQuotaExhausted, UnsupportedLabEffect).
+- **positive_tests:** D08; fixture:lab-deadlock.
+- **negative_tests:** D08, D09, D11; fixture:lab-deadlock, fixture:lab-entropy, fixture:lab-quota, fixture:lab-host-hang.
 - **implementation_coverage:** runtime `sgo_lab_sched.go`, `sgo_lab_boot.go`.
-- **executed_evidence:** PENDING: W08 evidence.
+- **executed_evidence:** `sgo/evidence/w08/README.md`.
 - **supported_execution_configurations:** lab.

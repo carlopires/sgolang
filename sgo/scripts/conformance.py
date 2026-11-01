@@ -39,7 +39,12 @@ SGO = os.path.join(ROOT, "sgo")
 CASES = os.path.join(SGO, "testdata", "conformance")
 REGISTRY = os.path.join(SGO, "SGO_SPEC_ADMISSION.json")
 KEYS = {"kind", "clauses", "exit", "stdout", "stdout_any_of", "stderr_kind", "stderr_exact", "diagnostics",
-        "build_args", "build_env", "run_env", "timeout_ms", "expect_watchdog", "procedure", "note", "no_module", "occurrence", "stderr_message"}
+        "build_args", "build_env", "run_env", "timeout_ms", "expect_watchdog", "procedure", "note", "no_module", "occurrence", "stderr_message",
+        "lab_args", "trace_events", "lab_checks", "sweep"}
+# Lab cases (kind "lab", W08, SPEC-LAB): run with `sgo lab run` (or `sgo lab sweep` with "sweep"), and
+# check the program's result, the trace's canonical events ("trace_events", in order), and the
+# lab_checks; a lab case with diagnostics expects the same rejection as production (S14).
+LAB_CHECKS = {"repeat", "replay", "reject-other-build", "reject-changed-choice", "reject-altered", "hang"}
 PROCEDURES = {"rebuild-after-edit"}  # build once, replace each X with X.next, build again; expectations apply to the second build
 CODE = re.compile(r"^SGO_E_[A-Z_]+$")
 
@@ -90,8 +95,16 @@ def validate_case(name, d, clauses):
         tracked = subprocess.run(["git", "-C", ROOT, "ls-files", "--error-unmatch", rel], capture_output=True).returncode == 0
         if not tracked:
             errs.append(f"{name}: {f} is not tracked by git (check .gitignore; use git add -f)")
-    if e.get("kind") not in ("run", "reject"):
-        errs.append(f"{name}: kind must be run or reject")
+    if e.get("kind") not in ("run", "reject", "lab"):
+        errs.append(f"{name}: kind must be run, reject, or lab")
+    if e.get("kind") == "lab":
+        for c in e.get("lab_checks", []):
+            if c not in LAB_CHECKS:
+                errs.append(f"{name}: unknown lab check {c!r}")
+        if "diagnostics" not in e and "hang" not in e.get("lab_checks", []) and not isinstance(e.get("exit"), int):
+            errs.append(f"{name}: lab case needs integer exit")
+    elif any(k in e for k in ("lab_args", "trace_events", "lab_checks", "sweep")):
+        errs.append(f"{name}: lab keys in a {e.get('kind')} case")
     if not e.get("clauses"):
         errs.append(f"{name}: must name at least one clause")
     for c in e.get("clauses", []):
@@ -106,7 +119,7 @@ def validate_case(name, d, clauses):
             errs.append(f"{name}: run case needs exactly one of stdout / stdout_any_of")
         if "diagnostics" in e:
             errs.append(f"{name}: run case cannot have diagnostics")
-    if e.get("kind") == "reject":
+    if e.get("kind") == "reject" or (e.get("kind") == "lab" and "diagnostics" in e):
         if not e.get("diagnostics"):
             errs.append(f"{name}: reject case needs diagnostics")
         for dg in e.get("diagnostics", []):
@@ -175,6 +188,8 @@ def run_case(name, src, sgo):
     with tempfile.TemporaryDirectory() as tmp:
         d = os.path.join(tmp, name)
         shutil.copytree(src, d)
+        if e["kind"] == "lab":
+            return run_lab_case(src, d, sgo, e)
         build = [sgo, "build", "-o", os.path.join(tmp, "prog")] + e.get("build_args", [])
         benv = env_for(e.get("build_env"))
         if e.get("procedure") == "rebuild-after-edit":
@@ -217,6 +232,120 @@ def run_case(name, src, sgo):
                 if "stderr_" + key in e and rec.get(key) != e["stderr_" + key]:
                     return f"diagnostic {key} {rec.get(key)!r}, want {e['stderr_' + key]!r}"
         return ""
+
+
+def lab_trace(path):
+    """The canonical lines of a trace written by sgo lab (header and footer dropped)."""
+    lines = open(path).read().splitlines()
+    return lines[1:-1]
+
+
+def rewrite_trace(src, dst, edit):
+    """Copies trace src to dst with edit applied to its canonical lines and the footer recomputed."""
+    import hashlib
+    lines = open(src).read().splitlines()
+    events = edit(lines[1:-1])
+    foot = json.loads(lines[-1])
+    foot["events"] = len(events)
+    foot["sha256"] = hashlib.sha256("".join(x + "\n" for x in events).encode()).hexdigest()
+    open(dst, "w").write("\n".join([lines[0]] + events + [json.dumps(foot, separators=(",", ":"))]) + "\n")
+
+
+def flip_choice(events):
+    for i, x in enumerate(events):
+        ev = json.loads(x)
+        if ev.get("e") == "choose" and len(ev["ready"]) > 1:
+            ev["pick"] = [t for t in ev["ready"] if t != ev["pick"]][0]
+            events[i] = json.dumps(ev, separators=(",", ":"))
+            return events
+    raise ValueError("no choice with two or more ready tasks to change")
+
+
+def lab_record(stderr):
+    recs = [l for l in stderr.splitlines() if l.startswith('{"sgo_diagnostic"')]
+    return json.loads(recs[-1]) if recs else {}
+
+
+def run_lab_case(src, d, sgo, e):
+    """A lab case: '' on pass, otherwise the mismatch."""
+    env = env_for(e.get("build_env"))
+    to = e.get("timeout_ms", 120000) / 1000
+    args = e.get("lab_args", [])
+    if "sweep" in e:
+        sw = e["sweep"]
+        cmd = [sgo, "lab", "sweep", "-seeds", sw["seeds"]] + args
+        if "expect" in sw:
+            open(os.path.join(d, "expect.out"), "w").write(sw["expect"])
+            cmd += ["-expect", "expect.out", "-save", "fail.jsonl"]
+        r = subprocess.run(cmd + ["."], cwd=d, env=env, capture_output=True, text=True, timeout=to)
+        if r.returncode != e["exit"]:
+            return f"sweep exit {r.returncode}, want {e['exit']}; {r.stdout[-300:]} {r.stderr[-300:]}"
+        for out in sw.get("outcomes", []):
+            if f"stdout={json.dumps(out)}" not in r.stdout:
+                return f"sweep did not observe stdout {out!r}: {r.stdout[-400:]}"
+        if "replay_saved" in sw:
+            rr = subprocess.run([sgo, "lab", "replay", "fail.jsonl", "."], cwd=d, env=env, capture_output=True, text=True, timeout=to)
+            if rr.stdout != sw["replay_saved"] or "replay reproduced" not in rr.stderr:
+                return f"replay of the saved failure: stdout {rr.stdout!r}, stderr {rr.stderr[-200:]!r}"
+        return ""
+    trace = os.path.join(d, "t.jsonl")
+    r = subprocess.run([sgo, "lab", "run"] + args + ["-trace", trace, "."], cwd=d, env=env, capture_output=True, text=True, timeout=to)
+    if "diagnostics" in e:
+        got = [(m.group(1), m.group(2)) for m in DIAG.finditer(r.stderr)]
+        want = [(position(src, dg), dg["code"]) for dg in e["diagnostics"]]
+        return "" if r.returncode != 0 and got == want else f"diagnostics {got}, want {want}"
+    checks = e.get("lab_checks", [])
+    if "hang" in checks:
+        host = json.load(open(trace + ".host.json")) if os.path.exists(trace + ".host.json") else {}
+        if r.returncode != 1 or "SGO_E_LAB_HANG" not in r.stderr or not host.get("hang"):
+            return f"expected a host hang (SGO_E_LAB_HANG, sidecar hang): exit {r.returncode}, stderr {r.stderr[-200:]!r}"
+        if any('"e":"outcome"' in x for x in lab_trace(trace)):
+            return "a host hang must not be a lab outcome"
+        return ""
+    if r.returncode != e["exit"]:
+        return f"exit {r.returncode}, want {e['exit']}; stderr {r.stderr.strip()[-300:]}"
+    outs = e["stdout_any_of"] if "stdout_any_of" in e else [e["stdout"]]
+    if r.stdout not in outs:
+        return f"stdout {r.stdout!r}, want one of {outs!r}"
+    if "stderr_kind" in e and lab_record(r.stderr).get("kind") != e["stderr_kind"]:
+        return f"diagnostic kind {lab_record(r.stderr).get('kind')!r}, want {e['stderr_kind']!r}"
+    events = lab_trace(trace)
+    i = 0
+    for want in e.get("trace_events", []):
+        while i < len(events) and events[i] != want:
+            i += 1
+        if i == len(events):
+            return f"trace has no {want} (in order); trace: {events[:40]}"
+        i += 1
+    if "repeat" in checks:
+        t2 = os.path.join(d, "t2.jsonl")
+        subprocess.run([sgo, "lab", "run"] + args + ["-trace", t2, "."], cwd=d, env=env, capture_output=True, text=True, timeout=to)
+        if open(t2).read() != open(trace).read():
+            return "a second run of the same manifest wrote a different trace"
+    if "replay" in checks:
+        rr = subprocess.run([sgo, "lab", "replay", trace, "."], cwd=d, env=env, capture_output=True, text=True, timeout=to)
+        if rr.returncode != e["exit"] or rr.stdout != r.stdout or "replay reproduced" not in rr.stderr:
+            return f"replay: exit {rr.returncode}, stdout {rr.stdout!r}, stderr {rr.stderr[-200:]!r}"
+    refusals = {"reject-other-build": "SGO_E_LAB_MANIFEST", "reject-changed-choice": "SGO_E_LAB_DIVERGENCE",
+                "reject-altered": "SGO_E_LAB_TRACE"}
+    for c in checks:
+        if c not in refusals:
+            continue
+        bad = os.path.join(d, c + ".jsonl")
+        if c == "reject-other-build":
+            lines = open(trace).read().splitlines()
+            h = json.loads(lines[0])
+            h["build"] = h["build"].replace("config=lab", "config=lab/drain=1")
+            open(bad, "w").write("\n".join([json.dumps(h)] + lines[1:]) + "\n")
+        elif c == "reject-changed-choice":
+            rewrite_trace(trace, bad, flip_choice)
+        else:
+            lines = open(trace).read().splitlines()
+            open(bad, "w").write("\n".join(lines[:-3] + lines[-1:]) + "\n")
+        rr = subprocess.run([sgo, "lab", "replay", bad, "."], cwd=d, env=env, capture_output=True, text=True, timeout=to)
+        if rr.returncode != 1 or refusals[c] not in rr.stderr:
+            return f"{c}: exit {rr.returncode}, stderr {rr.stderr[-200:]!r}, want {refusals[c]}"
+    return ""
 
 
 def run(sgo, only=None):

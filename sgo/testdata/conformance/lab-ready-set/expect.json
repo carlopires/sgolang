@@ -1,0 +1,23 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-003"
+ ],
+ "lab_args": [
+  "-seed",
+  "3"
+ ],
+ "exit": 0,
+ "note": "D03: every choice records the ready set (creation-order IDs, root 0) and the pick.",
+ "stdout": "ab\n",
+ "trace_events": [
+  "{\"e\":\"choose\",\"ready\":[0],\"pick\":0}",
+  "{\"e\":\"choose\",\"ready\":[0,1],\"pick\":1}",
+  "{\"e\":\"choose\",\"ready\":[0,1,2],\"pick\":2}",
+  "{\"e\":\"write\",\"task\":1,\"text\":\"a\"}",
+  "{\"e\":\"end\",\"task\":1,\"outcome\":\"Succeeded\"}",
+  "{\"e\":\"write\",\"task\":2,\"text\":\"b\"}",
+  "{\"e\":\"end\",\"task\":2,\"outcome\":\"Succeeded\"}",
+  "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+ ]
+}

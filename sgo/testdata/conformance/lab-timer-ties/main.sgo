@@ -1,0 +1,29 @@
+package main
+
+import "sgo"
+
+// Three tasks sleep until the same virtual deadline: the timers fire in creation order (D06).
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			if err := task.Sleep(100000); err != nil {
+				return err
+			}
+			return out.WriteString("1")
+		})
+		n.Spawn(func(task *sgo.Context) error {
+			if err := task.Sleep(100000); err != nil {
+				return err
+			}
+			return out.WriteString("2")
+		})
+		n.Spawn(func(task *sgo.Context) error {
+			if err := task.Sleep(100000); err != nil {
+				return err
+			}
+			return out.WriteString("3")
+		})
+	}
+	return out.WriteString("\n")
+}

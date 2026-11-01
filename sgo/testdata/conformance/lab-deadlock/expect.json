@@ -1,0 +1,13 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-006"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "LabDeadlock",
+ "trace_events": [
+  "{\"e\":\"outcome\",\"status\":2,\"kind\":\"LabDeadlock\"}"
+ ],
+ "note": "D08: a managed deadlock is LabDeadlock with the wait graph."
+}

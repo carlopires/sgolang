@@ -1,0 +1,21 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	c := make(chan string)
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			c <- "ping"
+			c <- "pong"
+			return nil
+		})
+		a := <-c
+		b := <-c
+		if err := out.WriteString(a + " " + b + "\n"); err != nil {
+			return err
+		}
+	}
+	return nil
+}

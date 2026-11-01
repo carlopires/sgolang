@@ -1,0 +1,9 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-004"
+ ],
+ "exit": 0,
+ "stdout": "match\n",
+ "note": "D01: Random is unchanged in the lab: seed 42 gives the math/rand/v2 sequence."
+}

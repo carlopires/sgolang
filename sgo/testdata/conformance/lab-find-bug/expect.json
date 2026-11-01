@@ -1,0 +1,17 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-005"
+ ],
+ "exit": 1,
+ "sweep": {
+  "seeds": "0..31",
+  "expect": "ab\n",
+  "outcomes": [
+   "ab\n",
+   "ba\n"
+  ],
+  "replay_saved": "ba\n"
+ },
+ "note": "D13: a sweep finds the ordering bug, saves its trace, and replay reproduces it."
+}

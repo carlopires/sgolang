@@ -1,0 +1,18 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-003",
+  "SGO-LAB-006"
+ ],
+ "lab_args": [
+  "-quota",
+  "5000"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "LabQuotaExhausted",
+ "trace_events": [
+  "{\"e\":\"outcome\",\"status\":2,\"kind\":\"LabQuotaExhausted\"}"
+ ],
+ "note": "D07, D11: the quota bounds a busy loop: LabQuotaExhausted."
+}

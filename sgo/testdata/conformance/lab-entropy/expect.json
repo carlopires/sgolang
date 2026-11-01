@@ -1,0 +1,14 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-004",
+  "SGO-LAB-006"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "UnsupportedLabEffect",
+ "trace_events": [
+  "{\"e\":\"outcome\",\"status\":2,\"kind\":\"UnsupportedLabEffect\"}"
+ ],
+ "note": "D09: Entropy has no seeded substitute: UnsupportedLabEffect."
+}

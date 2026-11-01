@@ -1,0 +1,17 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-003"
+ ],
+ "lab_args": [
+  "-seed",
+  "1"
+ ],
+ "exit": 0,
+ "stdout": "b\n",
+ "note": "D50: the select event names the ready arms by source index.",
+ "trace_events": [
+  "{\"e\":\"select\",\"task\":0,\"arms\":[1,2],\"arm\":1}",
+  "{\"e\":\"write\",\"task\":0,\"text\":\"b\\n\"}"
+ ]
+}

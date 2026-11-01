@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+// WallClock is the manifest epoch plus virtual time (D45).
+func main(root *sgo.Context) error {
+	w := root.WallClock()
+	if w.Now() != 1700000000000 {
+		return sgo.NewError("not the epoch")
+	}
+	if err := root.Sleep(250); err != nil {
+		return err
+	}
+	if w.Now() != 1700000000250 {
+		return sgo.NewError("virtual time did not advance by 250")
+	}
+	return root.Stdout().WriteString("epoch\n")
+}

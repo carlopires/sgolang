@@ -1,0 +1,16 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-006"
+ ],
+ "lab_args": [
+  "-quota",
+  "1000000000000",
+  "-timeout",
+  "2"
+ ],
+ "lab_checks": [
+  "hang"
+ ],
+ "note": "D11: a run that does not end within the watchdog is a host hang, never a lab outcome."
+}

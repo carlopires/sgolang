@@ -1,0 +1,10 @@
+package main
+
+import (
+	"unsafe"
+	"sgo"
+)
+
+func main(root *sgo.Context) error {
+	return nil
+}
