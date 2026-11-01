@@ -38,16 +38,17 @@ func (s *lState) canRecv(ch int) bool {
 
 // wake completes waiter w's operation: the task leaves every channel it waits on, its operation
 // is done (pc advances), and it is ready; a select reports the arm used.
-func (s *lState) wake(w lWait, pend int) {
+func (s *lState) wake(w lWait, closedSend bool) {
 	t := s.tasks[w.task]
 	s.unregister(t.id)
 	if w.arm >= 0 {
 		s.emit(LEvent{Kind: "select", Task: t.id, Arms: []int{w.arm}, Arm: w.arm})
 	}
-	if pend == pNone {
+	if closedSend {
+		s.fail(t, "ClosedChannel") // a waiting send claimed by close
+	} else {
 		t.pc++
 	}
-	t.pend = pend
 	s.makeReady(t)
 }
 
@@ -68,7 +69,7 @@ func (s *lState) send(ch, v int) bool {
 		return false
 	}
 	if r, ok := first(c, false); ok {
-		s.wake(r, pNone)
+		s.wake(r, false)
 		return true
 	}
 	c.queue = append(c.queue, v)
@@ -82,12 +83,12 @@ func (s *lState) recv(ch int) {
 		c.queue = c.queue[1:]
 		if w, ok := first(c, true); ok {
 			c.queue = append(c.queue, w.val)
-			s.wake(w, pNone)
+			s.wake(w, false)
 		}
 		return
 	}
 	if w, ok := first(c, true); ok {
-		s.wake(w, pNone)
+		s.wake(w, false)
 	}
 	// closed and empty: zero value, ok == false
 }
@@ -115,11 +116,7 @@ func (s *lState) chanStep(t *lTask, op LOp) error {
 			c.closed = true
 			for len(c.waiters) > 0 {
 				w := c.waiters[0]
-				if w.send {
-					s.wake(w, pClosedFail)
-				} else {
-					s.wake(w, pNone)
-				}
+				s.wake(w, w.send)
 			}
 		}
 	case LSelect:
@@ -157,6 +154,5 @@ func (s *lState) chanStep(t *lTask, op LOp) error {
 		}
 	}
 	t.pc++
-	s.makeReady(t)
 	return nil
 }

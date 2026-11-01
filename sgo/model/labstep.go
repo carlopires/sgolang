@@ -2,8 +2,8 @@ package model
 
 import "slices"
 
-// next runs one choice point: if no task is ready, time advances to the earliest timer and every
-// timer at that deadline fires in timer-ID order; with no timer either, the run ends LabDeadlock.
+// next runs one decision: if no task is ready, time advances to the earliest timer and every timer
+// at that deadline fires in timer-ID order; with no timer either, the run ends LabDeadlock.
 // Otherwise it picks a ready task and runs one step of it. It reports false once the run ended.
 func (s *lState) next() (bool, error) {
 	if s.finished {
@@ -57,20 +57,75 @@ func (s *lState) next() (bool, error) {
 	return !s.finished, nil
 }
 
-// step runs one operation of t. A task that stays ready re-enters the ready set behind the others
-// (its ready sequence is renewed, which the fifo policy uses).
+// step runs the chosen task: the operation at its point, if any, then its code up to its next
+// point. A task that stays ready re-enters the ready order behind the others (fifo).
 func (s *lState) step(t *lTask) error {
-	switch t.pend {
-	case pUnwind:
-		t.pend = pNone
-		s.unwind(t)
-		return nil
-	case pClosedFail:
-		t.pend = pNone
-		s.fail(t, "ClosedChannel")
+	if t.joinDone {
+		t.joinDone = false
+		s.finishMain()
 		return nil
 	}
-	if t.pc >= len(t.script) { // a child's callback returned nil
+	if t.atOp {
+		t.atOp = false
+		if err := s.exec(t); err != nil {
+			return err
+		}
+	}
+	if !s.finished && t.status == tReady && !t.atOp {
+		s.segment(t)
+	}
+	if t.status == tReady && !s.finished {
+		s.makeReady(t)
+	}
+	return nil
+}
+
+// segment runs t's code up to its next point: work steps (the quota is checked first; every K
+// steps since the last decision is a point, D43), then the point of the next operation or end.
+func (s *lState) segment(t *lTask) {
+	since := 0
+	k := max(s.sc.K, 1)
+	for {
+		if t.endWith != "" {
+			if t.id == 0 {
+				s.mainExits(t, t.endWith)
+			} else {
+				t.atOp = true // the end point
+			}
+			return
+		}
+		if t.pc >= len(t.script) || t.script[t.pc].Kind != LWork {
+			t.atOp = true
+			return
+		}
+		if t.rem < 0 {
+			t.rem = t.script[t.pc].N
+		}
+		take := min(t.rem, k-since)
+		if s.used+take > s.sc.Quota {
+			s.finish(2, "LabQuotaExhausted")
+			return
+		}
+		s.used += take
+		since += take
+		t.rem -= take
+		if t.rem == 0 {
+			t.pc++
+			t.rem = -1
+		}
+		if since >= k {
+			return // a yield point; the task stays ready mid-segment
+		}
+	}
+}
+
+// exec runs the operation at t's point.
+func (s *lState) exec(t *lTask) error {
+	if t.endWith != "" {
+		s.endChild(t, t.endWith)
+		return nil
+	}
+	if t.pc >= len(t.script) { // the callback returned nil
 		s.endChild(t, "Succeeded")
 		return nil
 	}
@@ -84,31 +139,15 @@ func (s *lState) step(t *lTask) error {
 		}
 		t.pc++
 	case lJoin:
+		t.inBody = false
 		if s.childrenDone() {
 			s.finishMain()
 			return nil
 		}
-		t.inBody = false
 		t.status = tJoining
-		return nil
-	case LWork:
-		if t.rem < 0 {
-			t.rem = op.N
-		}
-		chunk := min(t.rem, max(s.sc.K, 1))
-		if s.used+chunk > s.sc.Quota {
-			s.finish(2, "LabQuotaExhausted")
-			return nil
-		}
-		s.used += chunk
-		t.rem -= chunk
-		if t.rem == 0 {
-			t.pc++
-			t.rem = -1
-		}
 	case LSleep:
 		if s.cancelledFor(t) {
-			s.unwind(t) // Sleep returns the cancellation error, which the task returns
+			t.endWith = unwound(t) // Sleep returns the cancellation error, which the task returns
 			return nil
 		}
 		t.pc++
@@ -116,11 +155,10 @@ func (s *lState) step(t *lTask) error {
 			s.timers = append(s.timers, lTimer{deadline: s.now + int64(op.N), id: s.nextTimer, task: t.id})
 			s.nextTimer++
 			t.status = tSleeping
-			return nil
 		}
 	case LCheckpoint:
 		if s.cancelledFor(t) {
-			s.unwind(t)
+			t.endWith = unwound(t)
 			return nil
 		}
 		t.pc++
@@ -137,29 +175,17 @@ func (s *lState) step(t *lTask) error {
 		} else {
 			s.endChild(t, "Errored")
 		}
-		return nil
 	case LSend, LRecv, LClose, LSelect:
 		return s.chanStep(t, op)
-	}
-	if t.status == tReady {
-		s.makeReady(t)
 	}
 	return nil
 }
 
-// unwind ends t's operation with no effect and ends the task Cancelled (main: leaves the body).
-func (s *lState) unwind(t *lTask) {
-	if t.id == 0 {
-		s.mainExits(t, "cancelled")
-		return
-	}
-	s.endChild(t, "Cancelled")
-}
-
-// block parks t on its operation, or unwinds it if it observes cancellation (D33).
+// block parks t on its operation, or, if it observes cancellation, ends the operation with no
+// effect so that t's next point unwinds it (D33).
 func (s *lState) block(t *lTask, waits []chWait) {
 	if s.cancelledFor(t) {
-		s.unwind(t)
+		t.endWith = unwound(t)
 		return
 	}
 	for _, w := range waits {

@@ -19,22 +19,22 @@ const (
 	tDone
 )
 
-// Pending results set by a waker; the task acts on them at its next step.
-const (
-	pNone       = iota
-	pUnwind     // claimed by cancellation: the operation has no effect and the task unwinds
-	pClosedFail // a waiting send was claimed by close: ClosedChannel
-)
-
+// A run alternates decisions and steps. A choice point precedes every operation and every K steps
+// of work (D43). The chosen task runs one step: the operation at its point, if it is at one, and
+// then its code up to its next point (the work that follows, D43). A task that was woken, spawned,
+// or yielded resumes mid-segment: its step is only that code. This is exactly what the runtime does
+// between two decisions, so the two produce the same canonical stream.
 type lTask struct {
 	id       int
 	script   []LOp
 	pc       int
 	rem      int // remaining steps of the current LWork op; -1 when not started
 	status   int
-	pend     int
 	readySeq int
-	inBody   bool   // main only: still inside the nursery body (a cancellation point there)
+	atOp     bool   // at the point of the operation at pc (its end when pc is past the script)
+	endWith  string // the next point ends the task: "Cancelled", "Failed:<k>"; main: "cancelled", "failed:<k>"
+	joinDone bool   // main: woken by the last child's end; its next step completes the join
+	inBody   bool   // main: still inside the nursery body (a cancellation point there)
 	outcome  string // children: the outcome once done
 }
 
@@ -77,7 +77,7 @@ type lState struct {
 	seq       int
 	events    []LEvent
 	out       strings.Builder
-	rootErr   string // main's own result: "" | "cancelled" | "errored"
+	rootErr   string // main's exit from the body: "" | "cancelled" | "errored" | "failed:<k>"
 	finished  bool
 	status    int
 	kind      string
@@ -94,8 +94,10 @@ func newLabState(sc LScenario, ch Chooser) *lState {
 	}
 	main = append(main, sc.Root...)
 	main = append(main, LOp{Kind: lJoin})
-	s.tasks = append(s.tasks, &lTask{id: 0, script: main, rem: -1, inBody: true})
-	s.makeReady(s.tasks[0])
+	m := &lTask{id: 0, script: main, rem: -1, inBody: true}
+	s.tasks = append(s.tasks, m)
+	s.makeReady(m)
+	s.segment(m) // main runs up to its first point before the first decision
 	return s
 }
 
@@ -123,7 +125,24 @@ func (s *lState) cancelledFor(t *lTask) bool {
 	return s.cancelled && (t.id != 0 || t.inBody)
 }
 
-// unregister removes every waiter of task id from every channel (all arms of a select).
+// unwound is the end of a task whose operation observed cancellation (D33).
+func unwound(t *lTask) string {
+	if t.id == 0 {
+		return "cancelled"
+	}
+	return "Cancelled"
+}
+
+// fail makes t's next point its end with a failure of kind; main's own failure stays primary.
+func (s *lState) fail(t *lTask, kind string) {
+	if t.id == 0 {
+		t.endWith = "failed:" + kind
+	} else {
+		t.endWith = "Failed:" + kind
+	}
+}
+
+// unregister removes every waiter and timer of task id (all arms of a select).
 func (s *lState) unregister(id int) {
 	for _, c := range s.chans {
 		c.waiters = slices.DeleteFunc(c.waiters, func(w lWait) bool { return w.task == id })
@@ -132,7 +151,7 @@ func (s *lState) unregister(id int) {
 }
 
 // cancel cancels the nursery: every waiting or sleeping task that observes it is claimed now and
-// unwinds at its next step (sgoWakeCancelled).
+// ends (unwinds) at its next point (sgoWakeCancelled).
 func (s *lState) cancel() {
 	if s.cancelled {
 		return
@@ -141,7 +160,7 @@ func (s *lState) cancel() {
 	for _, t := range s.tasks {
 		if (t.status == tBlocked || t.status == tSleeping) && s.cancelledFor(t) {
 			s.unregister(t.id)
-			t.pend = pUnwind
+			t.endWith = unwound(t)
 			s.makeReady(t)
 		}
 	}
@@ -157,6 +176,7 @@ func (s *lState) endChild(t *lTask, outcome string) {
 		s.cancel()
 	}
 	if s.childrenDone() && s.tasks[0].status == tJoining {
+		s.tasks[0].joinDone = true
 		s.makeReady(s.tasks[0])
 	}
 }
@@ -170,46 +190,34 @@ func (s *lState) childrenDone() bool {
 	return true
 }
 
-// fail ends t's operation with a failure of kind: a child ends Failed; main unwinds (its nursery
-// is cancelled and joined) and the run ends with the failure unless a child's failure is primary.
-func (s *lState) fail(t *lTask, kind string) {
-	if t.id != 0 {
-		s.endChild(t, "Failed:"+kind)
-		return
-	}
-	s.mainExits(t, "failed:"+kind)
-	s.cancel()
-}
-
-// mainExits leaves the nursery body: the remaining body operations are skipped and main joins.
+// mainExits leaves the nursery body: main's next point is the join. An unwinding owner cancels
+// its nursery before joining (SGO-DEF-005); a returned error does not.
 func (s *lState) mainExits(t *lTask, why string) {
 	s.rootErr = why
 	t.inBody = false
 	t.pc = len(t.script) - 1
 	t.rem = -1
-	t.pend = pNone
-	if why == "cancelled" {
-		s.cancel() // an unwinding owner cancels its nursery before joining (SGO-DEF-005)
+	t.endWith = ""
+	t.atOp = true
+	if why != "errored" {
+		s.cancel()
 	}
-	s.makeReady(t)
 }
 
 // finishMain ends the run once the nursery has joined (SGO-NUR-004, SGO-PROC-002).
 func (s *lState) finishMain() {
-	t := s.tasks[0]
-	t.status = tDone
-	status, kind := 0, ""
+	s.tasks[0].status = tDone
 	if k, ok := strings.CutPrefix(s.rootErr, "failed:"); ok {
-		s.finish(2, k) // the owner's failure stays primary (SGO-NUR-004 rule 1)
+		s.finish(2, k) // the owner's failure stays primary (rule 1)
 		return
 	}
+	status, kind := 0, ""
 	for _, c := range s.tasks[1:] {
-		o := c.outcome
-		if strings.HasPrefix(o, "Failed:") {
-			status, kind = 2, strings.TrimPrefix(o, "Failed:")
+		if k, ok := strings.CutPrefix(c.outcome, "Failed:"); ok {
+			status, kind = 2, k
 			break
 		}
-		if o == "Errored" {
+		if c.outcome == "Errored" {
 			status, kind = 1, "ChildError"
 			break
 		}
