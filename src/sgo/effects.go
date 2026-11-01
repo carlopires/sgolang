@@ -16,6 +16,7 @@ func runtime_rootGrant(task unsafe.Pointer, kind uint8, op string)
 func runtime_scopeLive(scope unsafe.Pointer) bool
 func runtime_canLend(scope unsafe.Pointer) bool
 func runtime_currentTask() unsafe.Pointer
+func runtime_claimOwner(p *unsafe.Pointer) unsafe.Pointer
 func runtime_sinceMS() int
 func runtime_wallMS() int
 func runtime_entropy(k int) string
@@ -120,7 +121,8 @@ func (h *Entropy) Bytes(k int) string {
 func (h *Entropy) LendTo(n *Nursery) *Entropy { return &Entropy{h.l.to(n, "Entropy.LendTo")} }
 
 // Random is a deterministic generator (PCG-DXSM with 128-bit state, the algorithm of
-// math/rand/v2's PCG). It is task-affine: only the task that obtained it may use it.
+// math/rand/v2's PCG). It is task-affine: only its owner may use it
+// (the task that obtained it from Random, or the first task that used it after Split).
 type Random struct {
 	l      lent
 	owner  unsafe.Pointer
@@ -135,7 +137,7 @@ func (c *Context) Random(seed int) *Random {
 }
 
 func (r *Random) own(op string) {
-	if r.owner != runtime_currentTask() {
+	if runtime_claimOwner(&r.owner) != runtime_currentTask() {
 		runtime_violation(op + " on a generator that belongs to another task")
 	}
 	use(kindRandom, r.l, op)
@@ -150,12 +152,14 @@ func (r *Random) Intn(n int) int {
 	return int(r.uint64n(uint64(n)))
 }
 
-// Split returns a new generator, owned by the calling task, seeded from the next two outputs.
+// Split returns a new generator seeded from the next two outputs. It is unowned until its first
+// use: the first task that uses it becomes its owner (D38), so a parent can split one generator
+// per child before spawning it.
 func (r *Random) Split() *Random {
 	r.own("Random.Split")
 	hi := r.next64()
 	lo := r.next64()
-	return &Random{l: r.l, owner: r.owner, hi: hi, lo: lo}
+	return &Random{l: r.l, hi: hi, lo: lo}
 }
 
 // LendTo returns a copy of r's current state that is revoked when n closes. The copy belongs to

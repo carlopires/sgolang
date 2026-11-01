@@ -20,7 +20,7 @@ Capability handle types (opaque, used only behind `*`, never nil, never compared
 
 ## Trusted computing base
 
-`sgo/TARGET_TCB.json` (SGO-TCB-002): spec 0.2.0, allowlist digest `63450c9329cf71b3`, 31 packages, 1041 files (25 changed from upstream), 16 primitives. Each file is admitted only by its exact SHA-256; a package's name confers nothing.
+`sgo/TARGET_TCB.json` (SGO-TCB-002): spec 0.2.0, allowlist digest `b46db6cad2c6ec17`, 31 packages, 1041 files (25 changed from upstream), 16 primitives. Each file is admitted only by its exact SHA-256; a package's name confers nothing.
 
 ## Denied escape routes
 
@@ -53,4 +53,4 @@ Capability handle types (opaque, used only behind `*`, never nil, never compared
 | root handle from a non-root context | SGO-AUTH-002 | `auth-root-only` | MissingCapability |
 | lent handle after its nursery closed | SGO-AUTH-003 | `auth-lend-revoked` | MissingCapability |
 | a user package named like a TCB package | SGO-TCB-002 | `tcb-user-package-named-runtime` | SGO_E_UNADMITTED |
-| a module named like the trusted package sgo | SGO-TCB-002 | `tcb-module-named-sgo` | SGO_E_IMPORT_CYCLE |
+| a module named like the trusted package sgo | SGO-TCB-002 | `tcb-module-named-sgo` | SGO_E_USAGE |

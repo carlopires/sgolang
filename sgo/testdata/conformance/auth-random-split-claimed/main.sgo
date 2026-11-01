@@ -1,0 +1,19 @@
+package main
+
+import "sgo"
+
+// D38: once a task has used a split generator, it is that task's; another task's use is a
+// SpawnContractViolation.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	r := root.Random(7)
+	g := r.Split()
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			_ = g.Intn(10)
+			return nil
+		})
+	}
+	_ = g.Intn(10)
+	return out.WriteString("not reached\n")
+}

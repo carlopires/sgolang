@@ -6,9 +6,10 @@
  ],
  "diagnostics": [
   {
-   "code": "SGO_E_IMPORT_CYCLE",
-   "at": "\"sgo\""
+   "code": "SGO_E_USAGE",
+   "file": "sgo.mod",
+   "at": "module sgo"
   }
  ],
- "note": "A09: a module named sgo cannot shadow the trusted package sgo: import paths of the module are under its path, so import \"sgo\" names the program's own root package (a cycle)."
+ "note": "A09, D38: a module named sgo would shadow the trusted package sgo; the module path is refused at sgo.mod (it was an import cycle in 0.2.0)."
 }

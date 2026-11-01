@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SYNC-002"
+ ],
+ "exit": 1,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"ChildError\",\"message\":\"boom\",\"position\":null,\"task_id\":1,\"scope_id\":1,\"chain\":[{\"kind\":\"TokenAbandoned\",\"message\":\"capacity token acquired by task 1 was not released; the runtime released it\",\"position\":null}]}\n",
+ "note": "An unreleased token is released at task end with TokenAbandoned in the chain."
+}

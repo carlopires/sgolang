@@ -1,0 +1,30 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	lim := sgo.NewCapacityLimiter(1)
+	tok, err := lim.Acquire(root)
+	if err != nil {
+		return err
+	}
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			t2, aerr := lim.Acquire(task)
+			if aerr != nil {
+				return aerr
+			}
+			t2.Release()
+			return out.WriteString("child acquired\n")
+		})
+		if serr := root.Sleep(100); serr != nil {
+			return serr
+		}
+		if werr := out.WriteString("root holds\n"); werr != nil {
+			return werr
+		}
+		tok.Release()
+	}
+	return nil
+}

@@ -1,0 +1,11 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	ev := sgo.NewEvent()
+	ev.Set()
+	ev.Wait(root)
+	return out.WriteString("x\n")
+}

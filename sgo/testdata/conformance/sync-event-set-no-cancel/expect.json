@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SYNC-002"
+ ],
+ "exit": 0,
+ "stdout": "set wins\n",
+ "stderr_exact": "",
+ "note": "Wait on a set event does not wait, so it does not observe cancellation."
+}

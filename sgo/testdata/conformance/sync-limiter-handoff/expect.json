@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SYNC-002"
+ ],
+ "exit": 0,
+ "stdout": "root holds\nchild acquired\n",
+ "stderr_exact": "",
+ "note": "Release passes the slot to the waiting acquirer."
+}

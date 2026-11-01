@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SYNC-002"
+ ],
+ "exit": 0,
+ "stdout": "3 woke\n",
+ "stderr_exact": "",
+ "note": "Set wakes every waiter; a second Set has no effect."
+}

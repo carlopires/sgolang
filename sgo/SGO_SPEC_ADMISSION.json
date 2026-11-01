@@ -2,7 +2,7 @@
   "schema_version": 1,
   "plan_version": "2.0",
   "spec_version": "0.2.0",
-  "admission_digest": "4078f57d065770cf2876b76f223600c070f709b2e9849d2c9754acf6896b8d55",
+  "admission_digest": "01f68967ef498a956d636de62616e4339f8fbe3e95169edb3e2168aa01f59b04",
   "status": "subset0_frozen_not_admitted",
   "warning": "Spec 0.1.0 is frozen: every row's clauses are fixed by digest. No row is admitted: admission requires implementation, enforcement, and executed evidence (constitution §6), starting in W03.",
   "default_decision": "reject",
@@ -1290,11 +1290,12 @@
       "surface_family": "Shared-memory synchronization: mutexes, atomics, once, wait groups and sendability",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "denied",
+      "status": "specified_not_admitted",
       "clause_ids": [
-        "SGO-SYNC-001"
+        "SGO-SYNC-001",
+        "SGO-SYNC-002"
       ],
-      "normative_text_digest": "ae513b39e35218991eb36b78267c95f12e00ad726d7bfbc2c47c16810a20d604",
+      "normative_text_digest": "e7d21bac4e8df28332ef54733f46e7f82bf0eeedb69ec3e6da03c48f027ed603",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S16",
@@ -1304,13 +1305,16 @@
       "decision_refs": "D01",
       "subset0": "denied",
       "clause_digests": {
-        "SGO-SYNC-001": "c1daaeb64cc4dc7cfcc5b567b1d6e1119c179687bd560174fab5d78d71a4bc59"
+        "SGO-SYNC-001": "c1daaeb64cc4dc7cfcc5b567b1d6e1119c179687bd560174fab5d78d71a4bc59",
+        "SGO-SYNC-002": "e5cc1399a367df3279f2ea99e116c17bf28882985b801bca715e9b8e8cc9d603"
       },
       "clause_status": {
-        "SGO-SYNC-001": "frozen"
+        "SGO-SYNC-001": "frozen",
+        "SGO-SYNC-002": "draft"
       },
       "clause_versions": {
-        "SGO-SYNC-001": 1
+        "SGO-SYNC-001": 1,
+        "SGO-SYNC-002": 1
       }
     },
     {

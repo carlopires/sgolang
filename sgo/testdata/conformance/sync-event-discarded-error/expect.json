@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-SYNC-002",
+  "SGO-CTL-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_DISCARDED_ERROR",
+   "at": "ev.Wait(root)"
+  }
+ ],
+ "note": "The error of Wait must be used."
+}

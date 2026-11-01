@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	lim := sgo.NewCapacityLimiter(2)
+	a, err := lim.Acquire(root)
+	if err != nil {
+		return err
+	}
+	b, err2 := lim.Acquire(root)
+	if err2 != nil {
+		return err2
+	}
+	if a == b {
+		return out.WriteString("same\n")
+	}
+	return nil
+}

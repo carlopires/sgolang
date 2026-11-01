@@ -1,0 +1,33 @@
+package main
+
+import "sgo"
+
+// D38: a parent splits one generator per child before spawning it; each child's first use
+// claims its generator, so every task has a deterministic stream. Expected values are
+// math/rand/v2 IntN(100) of the PCGs seeded from the next two outputs of NewPCG(42, 0), twice.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	r := root.Random(42)
+	a := r.Split()
+	b := r.Split()
+	got := make(chan int, 2)
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			got <- a.Intn(100)
+			return nil
+		})
+		n.Spawn(func(task *sgo.Context) error {
+			got <- b.Intn(100) + 1000
+			return nil
+		})
+	}
+	x := <-got
+	y := <-got
+	if x > y {
+		x, y = y, x
+	}
+	if x == 57 && y == 1074 {
+		return out.WriteString("each child owns its generator\n")
+	}
+	return sgo.NewError("unexpected values")
+}

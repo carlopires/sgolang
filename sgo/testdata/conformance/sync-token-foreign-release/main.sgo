@@ -1,0 +1,19 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	lim := sgo.NewCapacityLimiter(1)
+	tok, err := lim.Acquire(root)
+	if err != nil {
+		return err
+	}
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			tok.Release()
+			return nil
+		})
+	}
+	return out.WriteString("not reached\n")
+}

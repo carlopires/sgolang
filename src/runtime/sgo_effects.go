@@ -12,7 +12,10 @@
 
 package runtime
 
-import "unsafe"
+import (
+	"internal/runtime/atomic"
+	"unsafe"
+)
 
 // sgo_require fails the calling task with MissingCapability unless its ceiling contains kind.
 //
@@ -60,6 +63,22 @@ func sgo_canLend(scope unsafe.Pointer) bool {
 //go:linkname sgo_currentTask sgo.runtime_currentTask
 func sgo_currentTask() unsafe.Pointer {
 	return unsafe.Pointer(sgoCurrent())
+}
+
+// sgo_claimOwner returns the owner of a *sgo.Random, making the calling task its owner if it has
+// none (a generator returned by Split is unowned until its first use, D38): one atomic step, so
+// exactly one task claims it.
+//
+//go:linkname sgo_claimOwner sgo.runtime_claimOwner
+func sgo_claimOwner(p *unsafe.Pointer) unsafe.Pointer {
+	if o := atomic.Loadp(unsafe.Pointer(p)); o != nil {
+		return o
+	}
+	t := unsafe.Pointer(sgoCurrent())
+	if atomic_casPointer(p, nil, t) {
+		return t
+	}
+	return atomic.Loadp(unsafe.Pointer(p))
 }
 
 // sgo_sinceMS is Clock.Since: monotonic milliseconds since the program started.

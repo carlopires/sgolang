@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	lim := sgo.NewCapacityLimiter(2)
+	tok, err := lim.Acquire(root)
+	if err != nil {
+		return err
+	}
+	tok.Release()
+	tok.Release()
+	return out.WriteString("not reached\n")
+}

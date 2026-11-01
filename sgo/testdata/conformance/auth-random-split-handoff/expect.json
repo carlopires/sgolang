@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-AUTH-003"
+ ],
+ "exit": 0,
+ "stdout": "each child owns its generator\n",
+ "stderr_exact": "",
+ "note": "D38(a): a generator returned by Split is claimed by its first user."
+}

@@ -1,0 +1,19 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	ev := sgo.NewEvent()
+	ev.Set()
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			n.Cancel()
+			if err := ev.Wait(task); err != nil {
+				return err
+			}
+			return out.WriteString("set wins\n")
+		})
+	}
+	return nil
+}

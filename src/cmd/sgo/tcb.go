@@ -113,6 +113,29 @@ func cacheRoot() (string, error) {
 }
 
 // buildTCB returns the archive of every target TCB package, building them if needed.
+// checkModulePath refuses a module path that equals, contains, or lies under the import path of a
+// TCB package (SGO-IMP-001, D38): its packages would shadow trusted ones or import themselves.
+func (t *toolchain) checkModulePath(m *module, goos, goarch string) error {
+	ctx, err := t.buildContext(goos, goarch)
+	if err != nil {
+		return err
+	}
+	pkgs, err := t.loadTCB(ctx)
+	if err != nil {
+		return err
+	}
+	paths := []string{"unsafe"}
+	for _, p := range pkgs {
+		paths = append(paths, p.path)
+	}
+	for _, p := range paths {
+		if m.path == p || strings.HasPrefix(p, m.path+"/") || strings.HasPrefix(m.path, p+"/") {
+			return &toolErr{m.pathAt, "SGO_E_USAGE", fmt.Sprintf("module path %s collides with the trusted package path %s; a module path cannot equal, contain, or lie under a TCB package path (SGO-IMP-001)", m.path, p), 2}
+		}
+	}
+	return nil
+}
+
 func (t *toolchain) buildTCB(goos, goarch string) (map[string]string, error) {
 	ctx, err := t.buildContext(goos, goarch)
 	if err != nil {

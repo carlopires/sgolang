@@ -1,0 +1,24 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	ev := sgo.NewEvent()
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			err := ev.Wait(task)
+			if sgo.IsCancelled(err) {
+				if werr := out.WriteString("wait cancelled\n"); werr != nil {
+					return werr
+				}
+			}
+			return err
+		})
+		if err := root.Sleep(100); err != nil {
+			return err
+		}
+		n.Cancel()
+	}
+	return out.WriteString("after\n")
+}

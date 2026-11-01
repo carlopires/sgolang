@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SYNC-002"
+ ],
+ "exit": 0,
+ "stdout": "acquire cancelled\nafter\n",
+ "stderr_exact": "",
+ "note": "A waiting Acquire returns the cancellation error and takes no slot."
+}

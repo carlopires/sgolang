@@ -22,6 +22,7 @@ import (
 type module struct {
 	root   string   // absolute directory containing sgo.mod
 	path   string   // module path
+	pathAt string   // position of the module directive in sgo.mod
 	grants []string // granted effect kinds, in canonical order (SGO-AUTH-002)
 }
 
@@ -90,7 +91,7 @@ func (m *module) parseMod(t *toolchain) error {
 		fields := strings.Fields(text)
 		switch {
 		case fields[0] == "module" && len(fields) == 2 && m.path == "":
-			m.path = fields[1]
+			m.path, m.pathAt = fields[1], at
 		case fields[0] == "sgo" && len(fields) == 2 && !sawSgo:
 			sawSgo = true
 			if fields[1] != t.specVersion {

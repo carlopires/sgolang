@@ -1,0 +1,26 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	ev := sgo.NewEvent()
+	woke := make(chan bool, 3)
+	nursery (n) {
+		for i := 0; i < 3; i++ {
+			n.Spawn(func(task *sgo.Context) error {
+				if err := ev.Wait(task); err != nil {
+					return err
+				}
+				woke <- true
+				return nil
+			})
+		}
+		ev.Set()
+		ev.Set()
+		<-woke
+		<-woke
+		<-woke
+	}
+	return out.WriteString("3 woke\n")
+}

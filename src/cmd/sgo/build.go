@@ -119,6 +119,9 @@ func buildProgram(arg, target string, drain int64, output func(*module, *pkg) st
 	if err != nil {
 		return "", err
 	}
+	if err := t.checkModulePath(m, goos, goarch); err != nil {
+		return "", err
+	}
 	rel, err := filepath.Rel(m.root, dir)
 	if err != nil || strings.HasPrefix(rel, "..") {
 		return "", usage("%s is outside the module %s", dir, m.root)

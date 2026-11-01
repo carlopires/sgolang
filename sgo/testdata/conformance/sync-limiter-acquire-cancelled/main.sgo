@@ -1,0 +1,31 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	lim := sgo.NewCapacityLimiter(1)
+	tok, err := lim.Acquire(root)
+	if err != nil {
+		return err
+	}
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			t2, aerr := lim.Acquire(task)
+			if aerr != nil {
+				if werr := out.WriteString("acquire cancelled\n"); werr != nil {
+					return werr
+				}
+				return aerr
+			}
+			t2.Release()
+			return nil
+		})
+		if serr := root.Sleep(100); serr != nil {
+			return serr
+		}
+		n.Cancel()
+	}
+	tok.Release()
+	return out.WriteString("after\n")
+}

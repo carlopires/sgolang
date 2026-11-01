@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SYNC-002"
+ ],
+ "exit": 0,
+ "stdout": "wait cancelled\nafter\n",
+ "stderr_exact": "",
+ "note": "Wait is a cancellation point; the child returns the cancellation error and ends Cancelled."
+}
