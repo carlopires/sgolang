@@ -424,6 +424,10 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation.** `random` (default): uniform choice from the ready set with the `sched` stream. `fifo`: the longest-ready task runs next (a diagnostic, fair round-robin scheduler). The scheduler policy and version are in the manifest; a random schedule is not assumed fair, and the quota bounds every run.
 
+## D50 — Select arm index in the lab trace **[DEFAULT]** · APPROVED 2026-11-02
+
+**Recommendation.** The `arms` and `arm` fields of a lab `select` event are **source indices**: arm *i* is the *i*-th case of the `select` statement as written (default excluded). The compiler gives the runtime each case's source index next to the case list, and the lab maps the runtime's case order (sends first) back before recording. Traces then read against the program text and match the model (sgo/model, which uses script order) for any mix of send and receive arms. Cost: a small compiler table and one lowering test; no change outside lab builds' trace output.
+
 ---
 
 ## Approval record
@@ -434,3 +438,4 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - 2026-10-31: user approved D23–D30 as recommended ("recommendations are good enough"). Follow-up: spec 0.2.0 clauses for capabilities, root grants, first effects, readiness, and sgo.Channel permits; W05 and W06 implementation starts after those clauses are frozen.
 - 2026-11-01: user approved D31–D39 as recommended (D39, structured `Event` and `CapacityLimiter`, added at the user's request; D37 revised to point to it). Follow-up: spec 0.3.0 clauses for native channels, `select`, the structured primitives, and the D38 carry-overs; W07 implementation, model first.
 - 2026-11-02: user approved D40–D49 as recommended ("looks good, approved!"). Follow-up: spec 0.4.0 clauses for the lab execution configuration (scheduler, boundaries and quota, streams, effects, trace and replay, outcomes); W08 implementation, model first (D30).
+- 2026-11-02: user approved D50 as recommended (source-order select arm indices in the lab trace).
