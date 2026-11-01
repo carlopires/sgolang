@@ -14,7 +14,8 @@ import (
 var sgoMembers = map[string]bool{"Context": true, "Nursery": true, "Writer": true, "NewError": true, "IsCancelled": true,
 	"Channel": true, "SendPermit": true, "NewChannel": true, "Ready": true,
 	"Clock": true, "WallClock": true, "Random": true, "Entropy": true, "SimStore": true,
-	"Event": true, "NewEvent": true, "CapacityLimiter": true, "NewCapacityLimiter": true, "Token": true}
+	"Event": true, "NewEvent": true, "CapacityLimiter": true, "NewCapacityLimiter": true, "Token": true,
+	"Dir": true, "File": true, "Conn": true, "Listener": true, "Progress": true, "NoEffect": true, "IsEOF": true}
 
 // sgoGeneric are the parameterized members of package sgo, admitted only instantiated with one
 // channel element type (SGO-PERMIT-002); user-declared type parameters stay denied (SGO-GEN-001).
@@ -26,7 +27,8 @@ var chanElemTypes = map[string]bool{"int": true, "bool": true, "string": true, "
 // sgoHandleTypes may appear behind a pointer in types (SGO-TYPE-005).
 var sgoHandleTypes = map[string]bool{"Context": true, "Nursery": true, "Writer": true, "Ready": true,
 	"Clock": true, "WallClock": true, "Random": true, "Entropy": true, "SimStore": true,
-	"Event": true, "CapacityLimiter": true, "Token": true}
+	"Event": true, "CapacityLimiter": true, "Token": true,
+	"Dir": true, "File": true, "Conn": true, "Listener": true}
 
 // deniedNames are predeclared identifiers denied in subset 0 (sgo/spec/INVENTORY.map "universe").
 // Predeclared names cannot be redeclared (SGO-BIND-004), so every use refers to the predeclared one.

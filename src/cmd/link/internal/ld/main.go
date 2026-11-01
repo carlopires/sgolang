@@ -221,6 +221,10 @@ func Main(arch *sys.Arch, theArch Arch) {
 	objabi.Flagfn1("sgogrants", "set the S-Go root grants to the comma-separated `kinds`", func(s string) {
 		sgoSetGrants(ctxt, s)
 	})
+	// S-Go: the file and network grants of D52, written by the sgo driver from the main sgo.mod.
+	objabi.Flagfn1("sgoiogrants", "set the S-Go file and network grants to the newline-separated `grants`", func(s string) {
+		sgoSetIOGrants(ctxt, s)
+	})
 	// S-Go: the lab execution configuration (D41), written by sgo lab: every S-Go package must be
 	// compiled with -sgolab, and the runtime is marked as a lab binary.
 	flag.BoolVar(&sgoLab, "sgolab", false, "link an S-Go program for the lab execution configuration")

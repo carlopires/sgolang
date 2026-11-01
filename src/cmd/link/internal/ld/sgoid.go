@@ -7,6 +7,8 @@ package ld
 import (
 	"internal/buildcfg"
 	"internal/platform"
+	"net/netip"
+	"regexp"
 	"slices"
 	"sort"
 	"strings"
@@ -73,6 +75,33 @@ func sgoSetGrants(ctxt *Link, s string) {
 	}
 	addstrdata1(ctxt, "runtime.sgoGrants="+s)
 }
+
+// sgoSetIOGrants handles -sgoiogrants=lines: it sets runtime.sgoIOGrants, the file and network
+// grants (D52, D57). Only the driver's canonical form is accepted: sorted, unique lines
+// "dir NAME ro|rw PATH", "connect IP:PORT", "listen IP:PORT".
+func sgoSetIOGrants(ctxt *Link, s string) {
+	lines := strings.Split(s, "\n")
+	for i, l := range lines {
+		f := strings.SplitN(l, " ", 4)
+		ok := i == 0 || lines[i-1] < l
+		switch {
+		case !ok:
+		case f[0] == "dir":
+			ok = len(f) == 4 && sgoGrantName.MatchString(f[1]) && (f[2] == "ro" || f[2] == "rw") && f[3] != "" && !strings.ContainsAny(f[3], "\n\x00")
+		case f[0] == "connect" || f[0] == "listen":
+			ap, err := netip.ParseAddrPort(f[len(f)-1])
+			ok = len(f) == 2 && err == nil && ap.String() == f[1] && ap.Port() != 0 && !ap.Addr().Is4In6() && ap.Addr().Zone() == ""
+		default:
+			ok = false
+		}
+		if !ok {
+			Exitf("sgo:1:1: SGO_E_USAGE: -sgoiogrants must be the driver's canonical grant lines, not %q (D52)", l)
+		}
+	}
+	addstrdata1(ctxt, "runtime.sgoIOGrants="+s)
+}
+
+var sgoGrantName = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,31}$`)
 
 // sgoCheckIdentity verifies the S-Go identity of every linked package (SGO-IMP-002). Each package
 // compiled by the S-Go compiler defines go:sgoid.<path>: the line

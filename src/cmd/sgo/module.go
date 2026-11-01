@@ -20,10 +20,11 @@ import (
 
 // module is the module containing the working directory (SGO-IMP-001).
 type module struct {
-	root   string   // absolute directory containing sgo.mod
-	path   string   // module path
-	pathAt string   // position of the module directive in sgo.mod
-	grants []string // granted effect kinds, in canonical order (SGO-AUTH-002)
+	root     string   // absolute directory containing sgo.mod
+	path     string   // module path
+	pathAt   string   // position of the module directive in sgo.mod
+	grants   []string // granted effect kinds, in canonical order (SGO-AUTH-002)
+	ioGrants []string // file and network grants, canonical and sorted (iogrant.go)
 }
 
 // grantKinds are the effect kinds a grant line may name (SGO-AUTH-003), in canonical order.
@@ -96,6 +97,10 @@ func (m *module) parseMod(t *toolchain) error {
 			sawSgo = true
 			if fields[1] != t.specVersion {
 				return &toolErr{at, "SGO_E_SPEC_VERSION", fmt.Sprintf("module requires S-Go spec %s; this toolchain implements %s", fields[1], t.specVersion), 1}
+			}
+		case fields[0] == "grant" && len(fields) >= 2 && slices.Contains([]string{"dir", "connect", "listen"}, fields[1]):
+			if _, err := m.parseIOGrant(fields, text, at); err != nil {
+				return err
 			}
 		case fields[0] == "grant":
 			if len(fields) != 2 || !slices.Contains(grantKinds, fields[1]) {
