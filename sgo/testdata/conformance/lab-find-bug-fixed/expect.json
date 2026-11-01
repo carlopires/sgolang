@@ -1,0 +1,15 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-005"
+ ],
+ "exit": 0,
+ "sweep": {
+  "seeds": "0..31",
+  "expect": "ab\n",
+  "outcomes": [
+   "ab\n"
+  ]
+ },
+ "note": "D13: the fixed program passes the same 32-seed sweep that found the bug in lab-find-bug."
+}

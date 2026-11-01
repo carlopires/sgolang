@@ -1,0 +1,19 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-002",
+  "SGO-SPAWN-002",
+  "SGO-TYPE-002"
+ ],
+ "lab_args": [
+  "-seed",
+  "5"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_TYPE_MISMATCH",
+   "at": "nil)"
+  }
+ ],
+ "note": "S14: the production case spawn-nil-callback under the lab: the same outcome, record, and output (and the same rejection)."
+}

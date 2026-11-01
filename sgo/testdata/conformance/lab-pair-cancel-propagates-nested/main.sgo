@@ -1,0 +1,29 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (a) {
+		a.Spawn(func(task *sgo.Context) error {
+			nursery (b) {
+				b.Spawn(func(t2 *sgo.Context) error {
+					for {
+						if err := t2.Sleep(1); err != nil {
+							_ = out.WriteString("grandchild cancelled\n")
+							return err
+						}
+					}
+				})
+			}
+			return nil
+		})
+		// Give the child time to open b and spawn the grandchild: a task that opens a nursery
+		// after a is cancelled opens it CANCELLING, and spawning into it creates no child (R5).
+		if err := root.Sleep(200); err != nil {
+			return err
+		}
+		a.Cancel()
+	}
+	return out.WriteString("after\n")
+}

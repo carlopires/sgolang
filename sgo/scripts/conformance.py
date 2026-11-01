@@ -307,6 +307,10 @@ def run_lab_case(src, d, sgo, e):
     outs = e["stdout_any_of"] if "stdout_any_of" in e else [e["stdout"]]
     if r.stdout not in outs:
         return f"stdout {r.stdout!r}, want one of {outs!r}"
+    if "stderr_exact" in e:
+        recs = "".join(l + "\n" for l in r.stderr.splitlines() if l.startswith('{"sgo_diagnostic"'))
+        if recs != e["stderr_exact"]:
+            return f"diagnostic records {recs!r}, want {e['stderr_exact']!r}"
     if "stderr_kind" in e and lab_record(r.stderr).get("kind") != e["stderr_kind"]:
         return f"diagnostic kind {lab_record(r.stderr).get('kind')!r}, want {e['stderr_kind']!r}"
     events = lab_trace(trace)

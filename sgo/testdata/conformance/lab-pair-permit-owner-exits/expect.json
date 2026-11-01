@@ -1,0 +1,18 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-002",
+  "SGO-PERMIT-002",
+  "SGO-NUR-003"
+ ],
+ "lab_args": [
+  "-seed",
+  "5"
+ ],
+ "exit": 0,
+ "stdout": "child\n",
+ "lab_checks": [
+  "replay"
+ ],
+ "note": "S14: the production case permit-owner-exits under the lab: the same outcome, record, and output (and the same rejection)."
+}

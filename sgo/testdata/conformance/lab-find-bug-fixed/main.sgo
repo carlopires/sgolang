@@ -1,0 +1,23 @@
+package main
+
+import "sgo"
+
+// D13: the fixed version of lab-find-bug: b is written only after a, on every schedule.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	done := make(chan bool)
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			if err := out.WriteString("a"); err != nil {
+				return err
+			}
+			done <- true
+			return nil
+		})
+		n.Spawn(func(task *sgo.Context) error {
+			<-done
+			return out.WriteString("b")
+		})
+	}
+	return out.WriteString("\n")
+}

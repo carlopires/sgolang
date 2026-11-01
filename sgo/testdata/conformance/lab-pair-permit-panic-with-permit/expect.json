@@ -1,0 +1,19 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-002",
+  "SGO-PERMIT-002",
+  "SGO-NUR-004"
+ ],
+ "lab_args": [
+  "-seed",
+  "5"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"Panic\",\"message\":\"failed holding a permit\",\"position\":\"main.sgo:15:4\",\"task_id\":1,\"scope_id\":1,\"chain\":[{\"kind\":\"PermitAbandoned\",\"message\":\"send permit reserved by task 1 was neither committed nor aborted; the runtime aborted it\",\"position\":null}]}\n",
+ "lab_checks": [
+  "replay"
+ ],
+ "note": "S14: the production case permit-panic-with-permit under the lab: the same outcome, record, and output (and the same rejection)."
+}

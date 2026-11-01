@@ -1,0 +1,20 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-002",
+  "SGO-NUR-004",
+  "SGO-PROC-002"
+ ],
+ "lab_args": [
+  "-seed",
+  "5"
+ ],
+ "exit": 1,
+ "stdout": "",
+ "stderr_kind": "ChildError",
+ "stderr_message": "child failed",
+ "lab_checks": [
+  "replay"
+ ],
+ "note": "S14: the production case nur-child-error-exit-1 under the lab: the same outcome, record, and output (and the same rejection)."
+}

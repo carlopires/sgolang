@@ -1,0 +1,18 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-002",
+  "SGO-MEM-004",
+  "SGO-NUR-003"
+ ],
+ "lab_args": [
+  "-seed",
+  "5"
+ ],
+ "exit": 0,
+ "stdout": "child\nafter join\n",
+ "lab_checks": [
+  "replay"
+ ],
+ "note": "S14: the production case mem-join-visibility under the lab: the same outcome, record, and output (and the same rejection)."
+}

@@ -1,0 +1,20 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-002",
+  "SGO-SPAWN-004",
+  "SGO-CANCEL-001",
+  "SGO-NUR-004"
+ ],
+ "lab_args": [
+  "-seed",
+  "5"
+ ],
+ "exit": 2,
+ "stdout": "sibling saw: cancelled: child 2 failed\nsibling cleanup ran\n",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"Panic\",\"message\":\"p1\",\"position\":\"main.sgo:17:43\",\"task_id\":2,\"scope_id\":1,\"chain\":[]}\n",
+ "lab_checks": [
+  "replay"
+ ],
+ "note": "S14: the production case def-child-panic-sibling-cleanup under the lab: the same outcome, record, and output (and the same rejection)."
+}
