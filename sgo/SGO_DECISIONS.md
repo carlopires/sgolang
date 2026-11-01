@@ -1,6 +1,6 @@
 # S-Go open design decisions
 
-**Version:** 1 · **Date:** 2026-10-30 · **Status:** D01–D22 APPROVED by the user on 2026-10-30 (D01–D21 as recommended; D22 as the user specified); D23–D30 APPROVED on 2026-10-31 as recommended; D31–D38 PROPOSED on 2026-11-01.
+**Version:** 1 · **Date:** 2026-10-30 · **Status:** D01–D22 APPROVED by the user on 2026-10-30 (D01–D21 as recommended; D22 as the user specified); D23–D30 APPROVED on 2026-10-31 as recommended; D31–D39 APPROVED on 2026-11-01 as recommended.
 
 ## Purpose and precedence
 
@@ -278,15 +278,15 @@ This needs ints and strings only (D29); values like random bytes are returned as
 
 **Recommendation.** W06 extends the executable model (`sgo/model`) with channels, permits, close, and cancellation, explores bounded histories, and the runtime implementation is checked against the model's reference histories (plan §7.1, W06 gate) before any public permit is admitted. W05's readiness protocol gets the same treatment for R01–R04 races. Neither work package changes subset-0 behavior.
 
-# Subset 2 (W07) — PROPOSED 2026-11-01
+# Subset 2 (W07) — APPROVED 2026-11-01 as recommended
 
 Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0 denies all of it (SGO-CHAN-001). These decisions fix the language-design choices the 0.3.0 clauses need; the plan fixes only the outcome (native operations follow the §7 protocol, never raw Go behavior).
 
-## D31 — Spec version and scope of subset 2 **[DEFAULT]** · PROPOSED
+## D31 — Spec version and scope of subset 2 **[DEFAULT]** · APPROVED 2026-11-01
 
 **Recommendation.** Subset 2 is spec **0.3.0**, a strict superset of 0.2.0 (as D23): every 0.2.0 program keeps its meaning; SGO-CHAN-001 is superseded by the native-channel clauses; reject cases whose construct becomes admitted move to positive cases with a recorded reason; objects built for 0.2.0 are refused by a 0.3.0 toolchain (SGO-IMP-002). 0.3.0 covers W07 only: native channel types, send, receive, `close`, `select`, and channel `range`, plus the carry-overs of D38. It follows D30: the executable model gains native operations and `select` first, and the runtime is checked against its reference histories.
 
-## D32 — Native `chan` and `sgo.Channel` **[USER]** · PROPOSED
+## D32 — Native `chan` and `sgo.Channel` **[USER]** · APPROVED 2026-11-01
 
 **Why it matters.** Two channel forms could diverge in semantics, or one could become a raw Go path.
 
@@ -297,7 +297,7 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation: (a).** One runtime protocol keeps the W06 model and evidence valid for both forms, and keeps 0.3.0 a superset. (c) is the raw-Go path the plan forbids.
 
-## D33 — Cancellation of a blocked native operation **[USER]** · PROPOSED
+## D33 — Cancellation of a blocked native operation **[USER]** · APPROVED 2026-11-01
 
 **Why it matters.** `sgo.Channel` operations return a cancellation error; `ch <- v` and `<-ch` have no error result, so cancellation of a task blocked in them needs another channel to the task.
 
@@ -308,7 +308,7 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation: (a).** It is the plan's "cancellation unwind from safe user boundaries", keeps channel code as short as Go's, and its outcome (Cancelled, defers run, owned children joined) is already defined for returned cancellation errors. The unwind starts only at a channel wait, an existing cancellation point, so no code is interrupted elsewhere. (b) makes every pipeline stage verbose; (c) adds a check that is easy to forget.
 
-## D34 — `select` **[USER]** · PROPOSED
+## D34 — `select` **[USER]** · APPROVED 2026-11-01
 
 **Recommendation.**
 - **Evaluation:** all channel operands and send values are evaluated once, in source order, before any arm is chosen (as Go).
@@ -317,7 +317,7 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - **Cancellation:** a `select` without `default` that waits is a cancellation point with the unwind of D33; there is no special cancellation arm (and no `task.Done()` channel in 0.3.0).
 - **Linearization:** exactly one arm takes effect; a send arm that loses leaves no reservation (W07 gate: winner/loser cleanup).
 
-## D35 — `close`, closed channels, nil channels, `len`/`cap`, `range`, directions **[USER]** · PROPOSED
+## D35 — `close`, closed channels, nil channels, `len`/`cap`, `range`, directions **[USER]** · APPROVED 2026-11-01
 
 **Recommendation.**
 - **`close(ch)`:** admitted for any holder of a send-capable channel (as `sgo.Channel.Close`); closing a closed channel has no effect (as SGO-PERMIT-002), unlike Go, which panics.
@@ -328,7 +328,7 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - **`for v := range ch`:** admitted; it ends when the channel is closed and empty, and each wait is a cancellation point (D33).
 - **Directional types** `<-chan T`, `chan<- T`: admitted, with Go's implicit conversion from bidirectional channels; a receive-only channel cannot be closed.
 
-## D36 — Channel element types in 0.3.0 **[USER]** · PROPOSED
+## D36 — Channel element types in 0.3.0 **[USER]** · APPROVED 2026-11-01
 
 **Options.**
 - **(a) Keep D29:** element types `int`, `bool`, `string`, `error`, for native channels and `sgo.Channel` alike.
@@ -337,16 +337,25 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation: (a) plus (b).** Reply channels are a central channel idiom and add no shared mutable state (a channel is synchronized). Handles as elements (c) stay denied in 0.3.0: authority would move between tasks outside spawn, which the ceiling model (D24) does not yet describe. Aggregate values (structs, slices) remain the separate decision D29 deferred, before W09.
 
-## D37 — Shared-memory synchronization **[USER]** · PROPOSED
+## D37 — Shared-memory synchronization **[USER]** · APPROVED 2026-11-01
 
-**Recommendation.** Keep SGO-SYNC-001 denying `sync` and `sync/atomic` entirely in 0.3.0. S-Go subset 0–2 has no mutable state shared between tasks (D01: only immutable values and synchronized handles cross task boundaries), so mutexes and condition variables would have nothing to protect, and wait groups are replaced by nurseries. The plan's W07 audit then reduces to evidence that every `sync` route stays rejected, including through dependencies.
+**Recommendation.** Keep SGO-SYNC-001 denying Go's `sync` and `sync/atomic` entirely in 0.3.0. S-Go subset 0–2 has no mutable state shared between tasks (D01: only immutable values and synchronized handles cross task boundaries), so mutexes and condition variables would have nothing to protect, and wait groups are replaced by nurseries. Coordination between tasks (waiting for an event, bounding concurrent use of a resource) is covered by the structured primitives of D39, not by Go's package. The plan's W07 audit then reduces to evidence that every `sync` route stays rejected, including through dependencies.
 
-## D38 — Carry-overs from 0.2.0 **[USER]** · PROPOSED
+## D38 — Carry-overs from 0.2.0 **[USER]** · APPROVED 2026-11-01
 
 **Recommendation.**
 - **(a) Generator hand-off.** A `*sgo.Random` returned by `Split` is unowned until its first use; the first task that uses it becomes its owner, and any other task's later use is a `SpawnContractViolation`. A parent can then split one generator per child before spawning it, giving every task a deterministic stream (today only the root task can use a generator). The claim is one atomic step; the original generator stays with its owner.
 - **(b) Module path diagnostic.** A module path equal to `sgo`, or to any other TCB package path or path prefix, is rejected with `SGO_E_USAGE` at `sgo.mod` instead of an import cycle (SGO-IMP-001 amended).
 - **(c) Simulated network:** not in 0.3.0; it belongs with I/O in W09.
+
+## D39 — Structured synchronization primitives **[USER]** · APPROVED 2026-11-01
+
+**Why it matters.** Without shared memory, Go's mutexes have nothing to protect, but tasks still coordinate: waiting until something happened, and bounding how many tasks use a resource at once (Trio's `Event` and `CapacityLimiter`). Closed channels and buffered channels can imitate both, but only by convention, and a slot taken from a buffered channel is not tied to the task that took it.
+
+**Recommendation.** Add two primitives to 0.3.0, built on the managed-channel runtime and the W06 obligation tracking, and checked against the executable model like channels (D30):
+- **`ev := sgo.NewEvent()`** with `ev.Set()` (idempotent; every waiter wakes), `err := ev.Wait(task)` (returns nil once set, or a cancellation error; a cancellation point), and `ev.IsSet() bool`. `Set` happens-before every `Wait` that returns nil.
+- **`lim := sgo.NewCapacityLimiter(n)`** (`n >= 1`) with `tok, err := lim.Acquire(task)` (waits in FIFO order for one of `n` slots; a cancellation point; returns a task-affine `*sgo.Token`) and `tok.Release()`. A token is an obligation like a send permit: an unreleased token is released at the owner's nursery-body exit and at task end, with a `TokenAbandoned` diagnostic, so a failing or cancelled task never leaks a slot. Releasing twice, or releasing another task's token, is a `SpawnContractViolation`.
+- **Not added:** `Semaphore` (a limiter without borrower tracking, the property worth having), `Lock` (a limiter of 1 with no shared state to protect), and `Condition` (requires shared state).
 
 ---
 
@@ -356,3 +365,4 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - 2026-10-30: user approved D22 (darwin/arm64 first; linux/amd64 real target; linux/arm64 first-class).
 - Follow-up applied: execution plan amended (§1.2, §4.2, §4.5, §4.6, §15.1), start prompt reading order and pin updated, missing inventory families added to `SGO_SPEC_ADMISSION.json` as denied in subset 0, `SGO_SPEC_SUBSET0.md` drafted.
 - 2026-10-31: user approved D23–D30 as recommended ("recommendations are good enough"). Follow-up: spec 0.2.0 clauses for capabilities, root grants, first effects, readiness, and sgo.Channel permits; W05 and W06 implementation starts after those clauses are frozen.
+- 2026-11-01: user approved D31–D39 as recommended (D39, structured `Event` and `CapacityLimiter`, added at the user's request; D37 revised to point to it). Follow-up: spec 0.3.0 clauses for native channels, `select`, the structured primitives, and the D38 carry-overs; W07 implementation, model first.
