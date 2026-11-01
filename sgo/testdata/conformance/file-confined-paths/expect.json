@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-FILE-002"
+ ],
+ "exit": 0,
+ "stdout": "seed.txt: ok\n../outside.txt: PathRejected: Dir.ReadFile\n../data2/x.txt: PathRejected: Dir.ReadFile\n/etc/passwd: PathRejected: Dir.ReadFile\nlink: PathRejected: Dir.ReadFile\nsub/../seed.txt: PathRejected: Dir.ReadFile\nseed.txt/x: NotFound: Dir.ReadFile\nmissing: NotFound: Dir.ReadFile\n",
+ "note": "I01: traversal, absolute path, prefix confusion (data2), a symlink to a file outside the grant, and a .. inside a path are rejected; only names below the grant resolve."
+}

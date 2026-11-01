@@ -1,0 +1,42 @@
+package main
+
+import "sgo"
+
+// I01: only names below the granted directory resolve; traversal, absolute paths, a sibling
+// that shares the grant's prefix, and a symlink pointing outside are all PathRejected.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	d := root.Dir("data")
+	if err := try(out, d, "seed.txt"); err != nil {
+		return err
+	}
+	if err := try(out, d, "../outside.txt"); err != nil {
+		return err
+	}
+	if err := try(out, d, "../data2/x.txt"); err != nil {
+		return err
+	}
+	if err := try(out, d, "/etc/passwd"); err != nil {
+		return err
+	}
+	if err := try(out, d, "link"); err != nil {
+		return err
+	}
+	if err := try(out, d, "sub/../seed.txt"); err != nil {
+		return err
+	}
+	if err := try(out, d, "seed.txt/x"); err != nil {
+		return err
+	}
+	return try(out, d, "missing")
+}
+
+// try reads p through d and prints the outcome.
+func try(out *sgo.Writer, d *sgo.Dir, p string) error {
+	_, err := d.ReadFile(p)
+	msg := "ok"
+	if err != nil {
+		msg = err.Error()
+	}
+	return out.WriteString(p + ": " + msg + "\n")
+}

@@ -2,6 +2,25 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.5.0 — 2026-11-02
+
+Confined files and network endpoints (W09, D51-D60). Programs without I/O grants keep their meaning; the admission digest and toolchain identity change, so objects built for 0.4.0 are refused by a 0.5.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.5.0`. A program with file or network grants records their digest in its build ID (`io=`).
+
+New frozen clauses (W09, model first per D30):
+
+- SGO-FILE-002 v1 — directory grants (`grant dir NAME PATH ro|rw`) and confined paths: held directories, component-wise resolution without symlinks and with chain verification, the `Dir` and `Listing` API (D52, D53, D59 amended by the user: `List` returns `*sgo.Listing`).
+- SGO-FILE-003 v1 — the I/O handle contract of `File`, `Conn`, and `Listener`: ownership, lending only to the owner's nurseries, `HandleLent`, `HandleClosed` and no reuse, abandonment, progress (`sgo.Progress`, `sgo.NoEffect`, `sgo.IsEOF`), and which waits are cancellation points (D54-D56).
+- SGO-NET-002 v1 — endpoint grants for TCP (exact IPv4 and IPv6 literals) and Unix domain stream sockets (`unix:PATH`), `Dial`, `Listen`, `Accept`, `PeerUID`, stale-socket removal, and the lab loopback network (D57, D58, D60).
+
+Superseded:
+
+- SGO-FILE-001 v2 and SGO-NET-001 v2 — superseded by the clauses above; ambient file and network packages, DNS, UDP, abstract and datagram sockets, descriptor passing, and every access outside the new APIs stay denied.
+
+Amended:
+
+- SGO-TYPE-001 v4 and SGO-TYPE-005 v4 — the I/O handle types `*sgo.Dir`, `*sgo.Listing`, `*sgo.File`, `*sgo.Conn`, `*sgo.Listener` are capability handle types, and where their values come from.
+- SGO-AUTH-002 v2 — `sgo.mod` also holds the file and network grants; they are not effect kinds and do not enter ceilings; only the root task holds them.
+
 ## 0.4.0 — 2026-11-02
 
 The lab execution configuration (W08, D40-D50). The source language is unchanged: every 0.3.0 program keeps its meaning in production, and the lab is selected only by `sgo lab run`, `sgo lab replay`, and `sgo lab sweep`. The admission digest and toolchain identity change, so objects built for 0.3.0 are refused by a 0.4.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.4.0`. The S-Go identity of every package now names its execution configuration (`prod`, `lab`, or `tcb`).

@@ -1,3 +1,3 @@
 module example.com/bind-import-fmt
 
-sgo 0.4.0
+sgo 0.5.0

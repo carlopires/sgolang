@@ -1,0 +1,19 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-FILE-002",
+  "SGO-FILE-003",
+  "SGO-LAB-002"
+ ],
+ "lab_args": [
+  "-seed",
+  "3"
+ ],
+ "exit": 0,
+ "stdout": "mkdir again: Exists: Dir.Mkdir\nlist: a.txt b.txt\nremove dir: NotEmpty: Dir.Remove\nsub read: alpha, be of a file of size 4\nread after close: HandleClosed: File.Read\nafter remove: NotFound: Dir.ReadFile\n",
+ "lab_checks": [
+  "repeat",
+  "replay"
+ ],
+ "note": "I06: the program of file-dir-ops in a lab run, against the in-memory tree: the same output; no host file is reached (the case has no data directory)."
+}

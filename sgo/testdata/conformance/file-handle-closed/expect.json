@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-FILE-003"
+ ],
+ "exit": 0,
+ "stdout": "old: HandleClosed: File.Read\nnew: seed\n",
+ "note": "I05: operations through a closed handle are HandleClosed even when a new handle (possibly with the same descriptor number) is open."
+}

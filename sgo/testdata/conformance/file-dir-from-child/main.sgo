@@ -1,0 +1,14 @@
+package main
+
+import "sgo"
+
+// Grants are the root task's: a child obtains a directory only through a lent handle.
+func main(root *sgo.Context) error {
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			d := task.Dir("data")
+			return d.Mkdir("x")
+		})
+	}
+	return nil
+}

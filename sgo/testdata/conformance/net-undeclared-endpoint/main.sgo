@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+// I02: every Dial is checked: a granted endpoint is attempted (nobody listens: refused), and a
+// later dial to another endpoint fails before any effect.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	_, err := root.Dial("127.0.0.1:47912")
+	if err == nil {
+		return sgo.NewError("expected a refused connection")
+	}
+	if werr := out.WriteString("granted: " + err.Error() + "\n"); werr != nil {
+		return werr
+	}
+	_, err2 := root.Dial("127.0.0.1:47913")
+	return err2
+}

@@ -1,0 +1,58 @@
+package main
+
+import "sgo"
+
+// A server task accepts on a lent listener and echoes; the root dials, writes, and reads.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	l, err := root.Listen("unix:echo.sock")
+	if err != nil {
+		return err
+	}
+	nursery (n) {
+		ll := l.LendTo(n)
+		n.Spawn(func(task *sgo.Context) error {
+			c, aerr := ll.Accept()
+			if aerr != nil {
+				return aerr
+			}
+			s, rerr := c.Read(100)
+			if rerr != nil {
+				return rerr
+			}
+			uid, uerr := c.PeerUID()
+			if uerr != nil {
+				return uerr
+			}
+			if uid < 0 {
+				return sgo.NewError("negative peer uid")
+			}
+			if _, werr := c.Write("echo " + s); werr != nil {
+				return werr
+			}
+			_, eof := c.Read(100)
+			if !sgo.IsEOF(eof) {
+				return sgo.NewError("expected end of stream")
+			}
+			return c.Close()
+		})
+		c, derr := root.Dial("unix:echo.sock")
+		if derr != nil {
+			return derr
+		}
+		if _, werr := c.Write("hello"); werr != nil {
+			return werr
+		}
+		got, rerr := c.Read(100)
+		if rerr != nil {
+			return rerr
+		}
+		if werr := out.WriteString(got + "\n"); werr != nil {
+			return werr
+		}
+		if cerr := c.Close(); cerr != nil {
+			return cerr
+		}
+	}
+	return l.Close()
+}

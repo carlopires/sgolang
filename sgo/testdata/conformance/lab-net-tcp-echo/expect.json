@@ -1,0 +1,15 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-NET-002",
+  "SGO-LAB-002"
+ ],
+ "exit": 0,
+ "sweep": {
+  "seeds": "0..15",
+  "outcomes": [
+   "echo hello\n"
+  ]
+ },
+ "note": "I06: the program of net-tcp-echo in lab runs on the run's loopback network: the same output under 16 schedules; no host socket is used."
+}

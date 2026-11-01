@@ -1,0 +1,30 @@
+package main
+
+import "sgo"
+
+// I05: a closed handle reaches nothing, also after the same file is opened again (and the host
+// may reuse the descriptor number).
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	d := root.Dir("data")
+	f, err := d.Open("seed.txt")
+	if err != nil {
+		return err
+	}
+	if cerr := f.Close(); cerr != nil {
+		return cerr
+	}
+	g, gerr := d.Open("seed.txt")
+	if gerr != nil {
+		return gerr
+	}
+	_, stale := f.Read(4)
+	s, rerr := g.Read(4)
+	if rerr != nil {
+		return rerr
+	}
+	if werr := out.WriteString("old: " + stale.Error() + "\nnew: " + s + "\n"); werr != nil {
+		return werr
+	}
+	return g.Close()
+}

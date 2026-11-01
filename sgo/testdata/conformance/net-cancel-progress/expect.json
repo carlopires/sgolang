@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-NET-002",
+  "SGO-FILE-003"
+ ],
+ "exit": 0,
+ "stdout": "write cancelled after partial progress\nthe owner closed the connection\n",
+ "note": "I03, I04: a blocked socket write ends at cancellation with its progress (0 < Progress < len, not NoEffect); the owner's connection is unaffected and closes after the join."
+}

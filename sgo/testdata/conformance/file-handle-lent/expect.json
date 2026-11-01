@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-FILE-003"
+ ],
+ "exit": 0,
+ "stdout": "child read seed\nclose while lent: HandleLent: File.Close\nclosed after the nursery\n",
+ "note": "I04: Close while the handle is lent to a live nursery fails with HandleLent and has no effect; the child's read is not disturbed; the owner closes after the join."
+}

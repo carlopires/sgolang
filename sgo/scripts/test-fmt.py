@@ -37,7 +37,7 @@ def main():
             if not os.path.isdir(src):
                 continue
             d = os.path.join(tmp, name)
-            shutil.copytree(src, d)
+            shutil.copytree(src, d, symlinks=True)  # keep fixture symlinks as links (I01)
             files = sorted(os.path.relpath(os.path.join(r, f), d) for r, _, fs in os.walk(d) for f in fs if f.endswith(".sgo"))
             for f in files:
                 p = os.path.join(d, f)

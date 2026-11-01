@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-FILE-002"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "MissingCapability",
+ "stderr_message": "Dir: no directory grant named \"secrets\"",
+ "note": "root.Dir with a name no grant declares fails with MissingCapability."
+}

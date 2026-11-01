@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": "0.4.0",
-  "admission_digest": "5ea4977adcddfe8f762f2fefaaaf77197cd97f9d741babe98c7f171f7936a91c",
+  "spec_version": "0.5.0",
+  "admission_digest": "f9a7bfd0b6abd1dcd16b62eef19cf4541f7402099fb0a2793470a3cffa8668f1",
   "status": "subset0_frozen_not_admitted",
   "warning": "Spec 0.1.0 is frozen: every row's clauses are fixed by digest. No row is admitted: admission requires implementation, enforcement, and executed evidence (constitution §6), starting in W03.",
   "default_decision": "reject",
@@ -152,7 +152,7 @@
         "SGO-TYPE-005",
         "SGO-TYPE-006"
       ],
-      "normative_text_digest": "c72e07bce23aa1152672ed49df8f50d536b00d79b82c1c6e179fe69b27fc8c99",
+      "normative_text_digest": "2de181d37b3c1a9359d00e6f3c984f726b238beffd1fb36ede201e733b38c5e9",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X10",
@@ -162,11 +162,11 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-TYPE-001": "aa7a8f5854c4e25997dce7a6dbafd93d35f9302ad4169591e34932e9c81aaada",
+        "SGO-TYPE-001": "6bb4b4c1230f94dee4579a6739e3af7aa825bd8cb51ff66968c2d925b0f71dbf",
         "SGO-TYPE-002": "8f0be92070475862d6095c90b28a2b0e63d24f6a3f9062b278fed9f01b61d1e2",
         "SGO-TYPE-003": "a1e06f6a06fccd6bc4d5a83ecf208d1a612639b582bf70abef98331e8b841343",
         "SGO-TYPE-004": "ed7f04b19e34d997c1d626f4056021977c51e644d9adc52207ca5a149f9d4819",
-        "SGO-TYPE-005": "14134a563b5a2b27ad9bcfd326082f25152ba50bcd54979c2ae94a3a27c2cd79",
+        "SGO-TYPE-005": "8af5f290011224c77bdd571d49537474ff4529802b12b35e871bf1b3d16d74e0",
         "SGO-TYPE-006": "782ac892c2affcdc43a6c63e4007c4e2bf47c7f98583e0f194194c9b7febc992"
       },
       "clause_status": {
@@ -178,11 +178,11 @@
         "SGO-TYPE-006": "frozen"
       },
       "clause_versions": {
-        "SGO-TYPE-001": 3,
+        "SGO-TYPE-001": 4,
         "SGO-TYPE-002": 1,
         "SGO-TYPE-003": 1,
         "SGO-TYPE-004": 1,
-        "SGO-TYPE-005": 3,
+        "SGO-TYPE-005": 4,
         "SGO-TYPE-006": 1
       }
     },
@@ -688,7 +688,7 @@
         "SGO-AUTH-002",
         "SGO-AUTH-003"
       ],
-      "normative_text_digest": "f6dc11822a6d890c1c63449f5df03eb18f6984ee19e3ca639e987a9b6d42fbc8",
+      "normative_text_digest": "882e0a1fb91722ffa10b411796a5f4503c4646efb6b9f533ccbee85aa64f1ada",
       "admitted_in": [],
       "acceptance_case_ids": [
         "A01",
@@ -706,7 +706,7 @@
       "subset0": "denied",
       "clause_digests": {
         "SGO-AUTH-001": "d672d6e298826ed13c783ed0487106f8262f42bace3410719fec1373b53e5c4b",
-        "SGO-AUTH-002": "4f780a1e3afc03cf72efa3d429eae558223f2b7185687f19eb39182e928e289a",
+        "SGO-AUTH-002": "7a352f89eb0d847e7869a508abb307c48927c74c93d2d7ed0efd7aad0e8b1b23",
         "SGO-AUTH-003": "6301abe9220d9304e623c41b91787d661f05b25a3132cb3b3001502e3df36de5"
       },
       "clause_status": {
@@ -716,7 +716,7 @@
       },
       "clause_versions": {
         "SGO-AUTH-001": 1,
-        "SGO-AUTH-002": 1,
+        "SGO-AUTH-002": 2,
         "SGO-AUTH-003": 2
       }
     },
@@ -875,13 +875,13 @@
       "surface_family": "Confined file capabilities, operation progress and lifetime",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W09",
-      "status": "denied",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-FILE-001",
         "SGO-FILE-002",
         "SGO-FILE-003"
       ],
-      "normative_text_digest": "6b234bf44f1b9e5ac62a344f1f0ea8a215009e6a5634a7a20bf0238ff44a97d1",
+      "normative_text_digest": "d26d3a622a0b911d6bca7e89583bcbfcbb45639a87a98b00c5a65c94b6728571",
       "admitted_in": [],
       "acceptance_case_ids": [
         "I01",
@@ -892,17 +892,17 @@
       "evidence": [],
       "subset0": "denied",
       "clause_digests": {
-        "SGO-FILE-001": "ff7764acd866851ddc03021a8b1fb0eeb9ffa3b88cd79be410971eece2749a3b",
-        "SGO-FILE-002": "5bf6c3ac76b116fde621a69aa302fd34f2c073f9e9ef30a26c61ab467c4907c1",
-        "SGO-FILE-003": "7176c1acf47a6413c57d753c403c75d0efb50bf2d54934869dd8c10710515832"
+        "SGO-FILE-001": "4c63d65dec0bd4ad5b94562d4f439c038b9bfe7121376cde4f703d2254fe3b0b",
+        "SGO-FILE-002": "d4d17d764c549f6bf50c1666d7700fe18e0bfd75e3389958a306a1d37e4beb08",
+        "SGO-FILE-003": "4876fd6f7d4f685a7039857d09b768566d82abfea57076fa05f261c2d151d0ae"
       },
       "clause_status": {
-        "SGO-FILE-001": "frozen",
-        "SGO-FILE-002": "draft",
-        "SGO-FILE-003": "draft"
+        "SGO-FILE-001": "superseded",
+        "SGO-FILE-002": "frozen",
+        "SGO-FILE-003": "frozen"
       },
       "clause_versions": {
-        "SGO-FILE-001": 1,
+        "SGO-FILE-001": 2,
         "SGO-FILE-002": 1,
         "SGO-FILE-003": 1
       }
@@ -912,12 +912,12 @@
       "surface_family": "Network capability, readiness, address policy and partial progress",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W09",
-      "status": "denied",
+      "status": "specified_not_admitted",
       "clause_ids": [
         "SGO-NET-001",
         "SGO-NET-002"
       ],
-      "normative_text_digest": "1f071ade4b957e7b604710e7287d8116031af57c7da96bb2cf9d805156a50480",
+      "normative_text_digest": "3645dd0053f78906bb02d884769da8b1a6021724c4b85f48bebfadf9f1614268",
       "admitted_in": [],
       "acceptance_case_ids": [
         "I02",
@@ -928,15 +928,15 @@
       "evidence": [],
       "subset0": "denied",
       "clause_digests": {
-        "SGO-NET-001": "4e105bdde46541e6eb4f47d01cf42a1e33ed499ec60381dea1ef594852c22ba7",
-        "SGO-NET-002": "00c39c6b949835ab1035b737f65f91607581d1fbd7d5dd794e06ec6165aa5f01"
+        "SGO-NET-001": "43ad25475ebf42449599a21e9cd2bba385bb89586308025767f8d96656483eea",
+        "SGO-NET-002": "286a303380f7bf575bf213564bb25f841b1abb73e72c3ed006f4045c0c684afd"
       },
       "clause_status": {
-        "SGO-NET-001": "frozen",
-        "SGO-NET-002": "draft"
+        "SGO-NET-001": "superseded",
+        "SGO-NET-002": "frozen"
       },
       "clause_versions": {
-        "SGO-NET-001": 1,
+        "SGO-NET-001": 2,
         "SGO-NET-002": 1
       }
     },

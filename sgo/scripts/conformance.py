@@ -187,7 +187,7 @@ def run_case(name, src, sgo):
     e = json.load(open(os.path.join(src, "expect.json")))
     with tempfile.TemporaryDirectory() as tmp:
         d = os.path.join(tmp, name)
-        shutil.copytree(src, d)
+        shutil.copytree(src, d, symlinks=True)  # fixtures may hold symlinks (I01): copy them as links
         if e["kind"] == "lab":
             return run_lab_case(src, d, sgo, e)
         build = [sgo, "build", "-o", os.path.join(tmp, "prog")] + e.get("build_args", [])

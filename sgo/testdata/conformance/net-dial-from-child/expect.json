@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-NET-002"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "MissingCapability",
+ "note": "task.Dial from a child task fails with MissingCapability before any effect."
+}

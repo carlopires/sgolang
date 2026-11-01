@@ -1,0 +1,107 @@
+package main
+
+import "sgo"
+
+// Directory operations of SGO-FILE-002 and the handle rules of SGO-FILE-003 on a file.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	d := root.Dir("data")
+	if err := d.Mkdir("logs"); err != nil {
+		return err
+	}
+	if err := d.Mkdir("logs"); err != nil {
+		if werr := out.WriteString("mkdir again: " + err.Error() + "\n"); werr != nil {
+			return werr
+		}
+	}
+	if err := d.WriteFile("logs/b.txt", "beta"); err != nil {
+		return err
+	}
+	if err := d.WriteFile("logs/a.txt", "alpha"); err != nil {
+		return err
+	}
+	l, lerr := d.List("logs")
+	if lerr != nil {
+		return lerr
+	}
+	names := ""
+	for i := 0; i < l.Len(); i++ {
+		names = names + " " + l.Name(i)
+	}
+	if werr := out.WriteString("list:" + names + "\n"); werr != nil {
+		return werr
+	}
+	if err := d.Remove("logs"); err != nil {
+		if werr := out.WriteString("remove dir: " + err.Error() + "\n"); werr != nil {
+			return werr
+		}
+	}
+	sub, serr := d.Sub("logs")
+	if serr != nil {
+		return serr
+	}
+	s, rerr := sub.ReadFile("a.txt")
+	if rerr != nil {
+		return rerr
+	}
+	f, ferr := sub.Open("b.txt")
+	if ferr != nil {
+		return ferr
+	}
+	part, perr := f.Read(2)
+	if perr != nil {
+		return perr
+	}
+	size, zerr := f.Size()
+	if zerr != nil {
+		return zerr
+	}
+	if werr := out.WriteString("sub read: " + s + ", " + part + " of a file of size " + itoa(size) + "\n"); werr != nil {
+		return werr
+	}
+	if err := f.Close(); err != nil {
+		return err
+	}
+	_, after := f.Read(1)
+	if werr := out.WriteString("read after close: " + after.Error() + "\n"); werr != nil {
+		return werr
+	}
+	if err := sub.Remove("a.txt"); err != nil {
+		return err
+	}
+	if err := sub.Remove("b.txt"); err != nil {
+		return err
+	}
+	if err := d.Remove("logs"); err != nil {
+		return err
+	}
+	_, gone := d.ReadFile("logs/a.txt")
+	return out.WriteString("after remove: " + gone.Error() + "\n")
+}
+
+func itoa(n int) string {
+	if n >= 10 {
+		return itoa(n/10) + itoa(n%10)
+	}
+	switch n {
+	case 0:
+		return "0"
+	case 1:
+		return "1"
+	case 2:
+		return "2"
+	case 3:
+		return "3"
+	case 4:
+		return "4"
+	case 5:
+		return "5"
+	case 6:
+		return "6"
+	case 7:
+		return "7"
+	case 8:
+		return "8"
+	}
+	return "9"
+}

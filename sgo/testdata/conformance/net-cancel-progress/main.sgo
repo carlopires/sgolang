@@ -1,0 +1,60 @@
+package main
+
+import "sgo"
+
+// I03, I04: a write blocked on a full socket is a cancellation point; cancelling its nursery ends
+// it with the cancellation error and the bytes already written (partial effect, so not NoEffect).
+// The connection belongs to the root task: cancelling the borrower's operation does not close it,
+// and the owner closes it after the join.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	l, err := root.Listen("127.0.0.1:47915")
+	if err != nil {
+		return err
+	}
+	c, derr := root.Dial("127.0.0.1:47915")
+	if derr != nil {
+		return derr
+	}
+	big := doubled("x", 23) // 8 MiB: more than the socket buffers hold
+	nursery (n) {
+		ll := l.LendTo(n)
+		cc := c.LendTo(n)
+		n.Spawn(func(task *sgo.Context) error {
+			s, aerr := ll.Accept()
+			if aerr != nil {
+				return aerr
+			}
+			if serr := task.Sleep(60000); !sgo.IsCancelled(serr) {
+				return sgo.NewError("the server's sleep was not cancelled")
+			}
+			return s.Close()
+		})
+		n.Spawn(func(task *sgo.Context) error {
+			wrote, werr := cc.Write(big)
+			if sgo.IsCancelled(werr) && sgo.Progress(werr) == wrote && wrote > 0 && wrote < len(big) && !sgo.NoEffect(werr) {
+				return out.WriteString("write cancelled after partial progress\n")
+			}
+			return sgo.NewError("unexpected write result")
+		})
+		if serr := root.Sleep(200); serr != nil {
+			return serr
+		}
+		n.Cancel()
+	}
+	if cerr := c.Close(); cerr != nil {
+		return cerr
+	}
+	if werr := out.WriteString("the owner closed the connection\n"); werr != nil {
+		return werr
+	}
+	return l.Close()
+}
+
+// doubled returns s concatenated with itself k times.
+func doubled(s string, k int) string {
+	for i := 0; i < k; i++ {
+		s = s + s
+	}
+	return s
+}

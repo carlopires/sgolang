@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+// Only directory grants declared in the main sgo.mod exist.
+func main(root *sgo.Context) error {
+	d := root.Dir("secrets")
+	_, err := d.ReadFile("key")
+	return err
+}

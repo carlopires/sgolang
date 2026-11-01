@@ -1,3 +1,3 @@
 module example.com/val-overflow-incdec
 
-sgo 0.4.0
+sgo 0.5.0

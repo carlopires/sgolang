@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-FILE-002"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "MissingCapability",
+ "stderr_message": "Dir.Create on a read-only handle",
+ "note": "An ro grant permits no write: MissingCapability before any effect."
+}

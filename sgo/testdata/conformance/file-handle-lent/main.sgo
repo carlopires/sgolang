@@ -1,0 +1,35 @@
+package main
+
+import "sgo"
+
+// I04: a file lent to a nursery is usable inside it; its owner cannot close it until the nursery
+// has closed (HandleLent, no effect), and then can.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	d := root.Dir("data")
+	f, err := d.Open("seed.txt")
+	if err != nil {
+		return err
+	}
+	msg := ""
+	nursery (n) {
+		ff := f.LendTo(n)
+		n.Spawn(func(task *sgo.Context) error {
+			s, rerr := ff.Read(4)
+			if rerr != nil {
+				return rerr
+			}
+			return out.WriteString("child read " + s + "\n")
+		})
+		if cerr := f.Close(); cerr != nil {
+			msg = cerr.Error()
+		}
+	}
+	if werr := out.WriteString("close while lent: " + msg + "\n"); werr != nil {
+		return werr
+	}
+	if cerr := f.Close(); cerr != nil {
+		return cerr
+	}
+	return out.WriteString("closed after the nursery\n")
+}

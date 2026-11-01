@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-NET-002",
+  "SGO-FILE-003"
+ ],
+ "exit": 0,
+ "stdout": "echo hello\n",
+ "note": "Listen, Dial, Accept, Write, Read, end of stream after the peer's Close, on granted loopback endpoints."
+}

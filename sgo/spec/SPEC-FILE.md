@@ -1,12 +1,12 @@
 # SPEC-FILE — Files
 
-Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-FILE`: `subset0` = `denied`).
+Ambient file-system access stays denied (SGO-FILE-001). Spec 0.5.0 admits confined directory grants and owned file handles (SGO-FILE-002, SGO-FILE-003; D52-D56, D59), with in-memory fakes in lab runs (D58).
 
 ### SGO-FILE-001 — Files are denied in subset 0
-- **version:** 1
-- **status:** frozen
-- **reference_closure:** SGO-ERR-001; D08; plan §8.3.
-- **grammar_and_types:** Denied: all file-system access: opening, reading, writing, listing, and stat of files or directories, including stdin. No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
+- **version:** 2
+- **status:** superseded
+- **reference_closure:** SGO-ERR-001, SGO-FILE-002, SGO-FILE-003; D08; plan §8.3.
+- **grammar_and_types:** Superseded in spec 0.5.0 by SGO-FILE-002 and SGO-FILE-003. Still denied: every file-system access outside the `sgo.Dir` and `sgo.File` API of those clauses: ambient packages (`os`, `io/ioutil`, `io/fs`, `path/filepath` file access, `syscall`), stdin, seek, rename, link, permissions, metadata, and any path resolved from the working directory or as a string prefix. No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
 - **preconditions:** n/a — denial clause; there is nothing to use.
 - **evaluation_and_value_semantics:** n/a — denied constructs never execute.
 - **ownership_and_lifecycle:** n/a — denied constructs never execute.
@@ -26,7 +26,7 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-FILE`: `subset0` 
 
 ### SGO-FILE-002 — Directory grants and confined paths (subset 3)
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-FILE-001, SGO-FILE-003, SGO-AUTH-002, SGO-TYPE-005, SGO-CAP-001, SGO-DEF-003, SGO-CANCEL-002, SGO-BUILD-001, SGO-LAB-002; D52, D53, D55, D56, D58, D59 (amended: `List`).
 - **grammar_and_types:** In the main module's `sgo.mod`: `grant dir NAME PATH ro|rw`, where NAME is a lower-case letter followed by at most 31 of `[a-z0-9_-]` and PATH is absolute or relative to the working directory when the program starts; each NAME at most once. API: `root.Dir(name string) *sgo.Dir`; on `d *sgo.Dir`: `Open(path string) (*sgo.File, error)`, `Create(path string) (*sgo.File, error)`, `ReadFile(path string) (string, error)`, `WriteFile(path, data string) error`, `Remove(path string) error`, `Mkdir(path string) error`, `List(path string) (*sgo.Listing, error)`, `Sub(path string) (*sgo.Dir, error)`, `ReadOnly() *sgo.Dir`, `LendTo(n *sgo.Nursery) *sgo.Dir`; on `l *sgo.Listing`: `Len() int`, `Name(i int) string`. `*sgo.Dir` and `*sgo.Listing` are capability handle types (SGO-TYPE-005). A path is a sequence of names separated by `/`: no empty name, `.`, `..`, NUL, or leading `/`; names of at most 255 bytes; at most 4096 bytes in total. `List("")` names the handle's own directory; `""` is not a path for any other operation. No seek, rename, link, permission, or metadata operation is admitted.
 - **preconditions:** `root.Dir` is called by the root task (children use a lent handle) with a declared NAME. `Create`, `WriteFile`, `Remove`, and `Mkdir` need a handle that is neither from an `ro` grant nor `ReadOnly`.
@@ -40,15 +40,15 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-FILE`: `subset0` 
 - **compile_link_checks:** `SGO_E_USAGE` for malformed or duplicate `grant dir` lines; the linker accepts only the driver's canonical grant text (`-sgoiogrants`). `SGO_E_CAPABILITY_MISUSE` for nil or comparison of the handles; `SGO_E_DISCARDED_ERROR` for unused errors; `SGO_E_UNADMITTED` for other members.
 - **runtime_guards:** Component-wise resolution with `O_NOFOLLOW` and chain verification; root-task check of `root.Dir`; read-only and revocation checks before any effect.
 - **tcb_assumptions:** The host's `openat`, `fstatat`, `mkdirat`, `unlinkat`, and directory reading (getdents64 on linux; libc on darwin) behave as documented; `src/runtime/sgo_fs.go`, `sgo_iodir.go`, `sgo_iogrant.go`, and the system call layers `sgo_io_sys_*`.
-- **positive_tests:** I01, I06; TestSGoResolve, TestSGoResolveRenameRace, TestSGoDirList; the model's I01 scenarios (`sgo/model/iopath_test.go`); fixtures to come.
-- **negative_tests:** S13; fixtures to come (traversal, symlink, undeclared grant, read-only write).
+- **positive_tests:** I01, I06; fixture:file-confined-paths, fixture:file-dir-ops, fixture:lab-file-dir-ops; TestSGoResolve, TestSGoResolveRenameRace, TestSGoDirList; the model's I01 scenarios (`sgo/model/iopath_test.go`).
+- **negative_tests:** S13; fixture:file-readonly-create, fixture:file-undeclared-grant, fixture:file-dir-from-child, fixture:file-grant-bad-mode, fixture:file-open.
 - **implementation_coverage:** W09: model `sgo/model/iopath.go`; runtime `src/runtime/sgo_fs.go`, `sgo_iodir.go`, `sgo_iogrant.go`, `sgo_iofake.go`; API `src/sgo/io.go`; driver `src/cmd/sgo/iogrant.go`; linker `-sgoiogrants`; admission lists.
-- **executed_evidence:** To come: `sgo/evidence/w09/README.md`.
+- **executed_evidence:** `sgo/evidence/w09/README.md` (model path and handle scenarios; runtime tests; the conformance cases above on darwin/arm64, linux/amd64, linux/arm64).
 - **supported_execution_configurations:** production; lab (an in-memory tree per grant, empty at the start of the run, with the same contracts and errors; every operation is a choice point; no host file is reached, D58).
 
 ### SGO-FILE-003 — I/O handles: ownership, progress, and closing (subset 3)
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-FILE-002, SGO-NET-002, SGO-SYNC-002, SGO-PERMIT-002, SGO-CANCEL-002, SGO-DEF-003, SGO-TYPE-005; D54, D55, D56.
 - **grammar_and_types:** `*sgo.File` with `Read(max int) (string, error)`, `Write(s string) (int, error)`, `Size() (int, error)`, `Close() error`, `LendTo(n *sgo.Nursery) *sgo.File`; the same contract applies to `*sgo.Conn` and `*sgo.Listener` (SGO-NET-002). `sgo.Progress(err error) int`, `sgo.NoEffect(err error) bool`, `sgo.IsEOF(err error) bool`. The handles are capability handle types (SGO-TYPE-005).
 - **preconditions:** Only the owner closes a handle. `LendTo(n)` is called by the owner, and `n` is a nursery the owner owns.
@@ -62,8 +62,8 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-FILE`: `subset0` 
 - **compile_link_checks:** `SGO_E_CAPABILITY_MISUSE` for nil or comparison; `SGO_E_DISCARDED_ERROR` for unused errors (including `Close`); `SGO_E_UNADMITTED` for other members.
 - **runtime_guards:** Ownership and lend checks before every operation; an in-progress counter for `Close`; abandonment resolution with tokens and permits.
 - **tcb_assumptions:** `src/runtime/sgo_io.go` and the obligation resolution of TCB-P12.
-- **positive_tests:** I03, I04, I05; TestSGoHandle; the model's handle scenarios (`sgo/model/iohandle_test.go`); fixtures to come.
-- **negative_tests:** I04, I05; the model's seeded bug (closing a lent handle); fixtures to come (foreign close, lend outside the owner's nurseries, use after close).
+- **positive_tests:** I03, I04, I05; fixture:file-handle-lent, fixture:file-handle-closed, fixture:file-dir-ops, fixture:net-cancel-progress; TestSGoHandle, TestSGoNet; the model's handle scenarios (`sgo/model/iohandle_test.go`).
+- **negative_tests:** I04, I05; fixture:file-handle-lent, fixture:file-handle-closed; the model's seeded bug (closing a lent handle); TestSGoHandle (foreign close, lend outside the owner's nurseries).
 - **implementation_coverage:** W09: model `sgo/model/iohandle.go`; runtime `src/runtime/sgo_io.go`, `sgo_ioapi.go`; API `src/sgo/io.go`.
-- **executed_evidence:** To come: `sgo/evidence/w09/README.md`.
+- **executed_evidence:** `sgo/evidence/w09/README.md` (model path and handle scenarios; runtime tests; the conformance cases above on darwin/arm64, linux/amd64, linux/arm64).
 - **supported_execution_configurations:** production; lab (fake handles with the same contract, D58).

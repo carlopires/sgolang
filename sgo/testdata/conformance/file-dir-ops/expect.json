@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-FILE-002",
+  "SGO-FILE-003"
+ ],
+ "exit": 0,
+ "stdout": "mkdir again: Exists: Dir.Mkdir\nlist: a.txt b.txt\nremove dir: NotEmpty: Dir.Remove\nsub read: alpha, be of a file of size 4\nread after close: HandleClosed: File.Read\nafter remove: NotFound: Dir.ReadFile\n",
+ "note": "Mkdir, WriteFile, List (sorted), Remove (NotEmpty), Sub, ReadFile, Open/Read/Size/Close, HandleClosed after Close."
+}

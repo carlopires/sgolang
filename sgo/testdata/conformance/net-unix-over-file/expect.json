@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-NET-002"
+ ],
+ "exit": 0,
+ "stdout": "AddressInUse: Listen; file still holds: precious\n",
+ "note": "D60: a Unix listen over a regular file fails with AddressInUse and leaves the file untouched."
+}

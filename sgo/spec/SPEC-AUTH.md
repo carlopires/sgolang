@@ -25,10 +25,10 @@ Capabilities for effects other than stdout (D24, D25; plan §8). Part of spec 0.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-AUTH-002 — Root grants declared in sgo.mod
-- **version:** 1
+- **version:** 2
 - **status:** frozen
-- **reference_closure:** SGO-IMP-001, SGO-TOOL-001, SGO-BUILD-001, SGO-AUTH-001; D25.
-- **grammar_and_types:** `sgo.mod` may contain lines `grant <kind>` for the kinds of SGO-AUTH-003, each at most once. `root.K(...)` on the root context returns the root handle of kind `K`.
+- **reference_closure:** SGO-FILE-002, SGO-NET-002, SGO-IMP-001, SGO-TOOL-001, SGO-BUILD-001, SGO-AUTH-001; D25.
+- **grammar_and_types:** `sgo.mod` may contain lines `grant <kind>` for the kinds of SGO-AUTH-003, each at most once. `root.K(...)` on the root context returns the root handle of kind `K`. Spec 0.5.0 adds the file and network grants `grant dir`, `grant connect`, and `grant listen` (SGO-FILE-002, SGO-NET-002); they are not effect kinds and do not enter ceilings: their handles come only from the root task's `root.Dir`, `root.Dial`, and `root.Listen`, and children receive lent handles. They are part of the build identity like the kinds.
 - **preconditions:** Only the root context provides root handles, as `Stdout` (SGO-PROC-003).
 - **evaluation_and_value_semantics:** The root task's ceiling is exactly the kinds granted in the main module's `sgo.mod`. `root.K(...)` for a kind that is not granted fails with `MissingCapability`. Dependencies cannot add grants: only the main module's `sgo.mod` counts.
 - **ownership_and_lifecycle:** Root handles live for the whole program.

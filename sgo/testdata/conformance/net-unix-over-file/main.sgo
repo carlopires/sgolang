@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+// D60: Listen frees a stale socket file, never any other file: a regular file at the path is
+// AddressInUse and stays as it was.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	_, err := root.Listen("unix:busy")
+	if err == nil {
+		return sgo.NewError("expected AddressInUse")
+	}
+	s, rerr := root.Dir("here").ReadFile("busy")
+	if rerr != nil {
+		return rerr
+	}
+	return out.WriteString(err.Error() + "; file still holds: " + s)
+}

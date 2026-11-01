@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-NET-002",
+  "SGO-FILE-003"
+ ],
+ "exit": 0,
+ "stdout": "echo hello\n",
+ "note": "D60: the echo over a Unix domain socket at a relative path, with PeerUID; closing the listener removes the socket file."
+}

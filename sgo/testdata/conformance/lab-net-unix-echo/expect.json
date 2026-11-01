@@ -1,0 +1,15 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-NET-002",
+  "SGO-LAB-002"
+ ],
+ "exit": 0,
+ "sweep": {
+  "seeds": "0..15",
+  "outcomes": [
+   "echo hello\n"
+  ]
+ },
+ "note": "I06, D60: the Unix echo in lab runs: keyed by path on the run's loopback network, no socket file, PeerUID a fixed value."
+}

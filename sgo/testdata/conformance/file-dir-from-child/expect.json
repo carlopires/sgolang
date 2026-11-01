@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-FILE-002"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "MissingCapability",
+ "note": "task.Dir from a child task fails with MissingCapability; children use a handle lent to them."
+}

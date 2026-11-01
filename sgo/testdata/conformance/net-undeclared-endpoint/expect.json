@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-NET-002"
+ ],
+ "exit": 2,
+ "stdout": "granted: ConnectionRefused: Dial\n",
+ "stderr_kind": "MissingCapability",
+ "stderr_message": "Dial \"127.0.0.1:47913\": no connect grant for this endpoint",
+ "note": "I02: the policy is checked on every Dial; a reconnect elsewhere does not inherit the first grant."
+}

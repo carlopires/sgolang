@@ -1,0 +1,14 @@
+package main
+
+import "sgo"
+
+// Endpoint grants are the root task's: a child cannot dial on its own.
+func main(root *sgo.Context) error {
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			_, err := task.Dial("127.0.0.1:47914")
+			return err
+		})
+	}
+	return nil
+}
