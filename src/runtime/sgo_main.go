@@ -33,7 +33,8 @@ func sgoEnterMain() unsafe.Pointer {
 	sgoEnforce.Store(true)
 	t := sgoEnterRoot()
 	t.ceiling = sgoRootCeiling
-	sgoLabBoot() // lab binaries only (sgo_lab_boot.go)
+	sgoLabBoot()      // lab binaries only (sgo_lab_boot.go)
+	sgoIOGrantsInit() // file and network grants; opens the granted directories (D52), not in lab runs
 	return unsafe.Pointer(&sgoContext{t: unsafe.Pointer(t)})
 }
 

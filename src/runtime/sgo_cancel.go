@@ -164,8 +164,11 @@ func sgoAppendUint(b []byte, v uint64) []byte {
 // itab pointers. A test binary of the runtime built by the upstream toolchain was observed to hold
 // two itabs for (*sgoCancelErr, error), which made a direct error-to-concrete assertion fail.
 func sgoIsCancelled(err error) bool {
-	_, ok := any(err).(*sgoCancelErr)
-	return ok
+	if _, ok := any(err).(*sgoCancelErr); ok {
+		return true
+	}
+	e, ok := any(err).(*sgoIOError) // an I/O operation ended by cancellation (D56)
+	return ok && e.kind == "Cancelled"
 }
 
 // sgoNurseryCancel is n.Cancel() (SGO-CANCEL-001): the caller must be able to spawn into s

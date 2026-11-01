@@ -107,3 +107,13 @@ func SGoNetWaiters() (n int) {
 	unlock(&sgoSleepLock)
 	return n
 }
+
+// SGoParseAddr parses a canonical IP:PORT as the runtime does for network grants.
+func SGoParseAddr(a string) (ip [16]byte, v6 bool, port int, ok bool) {
+	var g sgoNetGrant
+	ok = sgoParseAddr(a, &g)
+	return g.ip, g.v6, int(g.port), ok
+}
+
+// SGoFields splits as the grant parser does.
+func SGoFields(s string, n int) []string { return sgoFields(s, n) }

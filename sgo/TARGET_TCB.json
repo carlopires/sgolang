@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.4.0",
- "allowlist_digest": "6dd3128c7fe84b9c373bba5ae816c8faf72b370a984312acbc1a27993d6aba11",
+ "allowlist_digest": "d22dd8ae85684fe1f85d7605be7eb59f6e1ef5a27bfc0ea902574940fc37fa12",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -445,8 +445,8 @@
  ],
  "summary": {
   "packages": 31,
-  "files": 1056,
-  "files_changed_from_upstream": 40,
+  "files": 1060,
+  "files_changed_from_upstream": 44,
   "services": {
    "active": 5,
    "dormant": 5,
@@ -4456,7 +4456,7 @@
   },
   {
    "path": "src/runtime/sgo_cancel.go",
-   "sha256": "47fcba436aecb26370d182996da56f970f78c595719e7cc73ab68ad90beb5332",
+   "sha256": "37742353bf40ccec5d7a28bc6193bb6671bcacacff66df9674aed69c8a4f7732",
    "upstream_identical": false
   },
   {
@@ -4510,6 +4510,21 @@
    "upstream_identical": false
   },
   {
+   "path": "src/runtime/sgo_ioapi.go",
+   "sha256": "4864939a7d8fbbc73db27425d7bb6ef825049a907726d9c4f0271dc5c342df8e",
+   "upstream_identical": false
+  },
+  {
+   "path": "src/runtime/sgo_iodir.go",
+   "sha256": "77c94c752e383401d401ff4364eeaa0884b4c51f5915858324e2b7556765d393",
+   "upstream_identical": false
+  },
+  {
+   "path": "src/runtime/sgo_iogrant.go",
+   "sha256": "afc405cdcba0d62b324c5bd24f50b13a4a0e305c5ab30e09164ae2cd91ff2d64",
+   "upstream_identical": false
+  },
+  {
    "path": "src/runtime/sgo_lab.go",
    "sha256": "2faf241b8c819c2b784fe649cd05ae7ee9a03f03efada6aee8d075e4b56fbf64",
    "upstream_identical": false
@@ -4531,7 +4546,7 @@
   },
   {
    "path": "src/runtime/sgo_main.go",
-   "sha256": "813bcbfe6d346366d6865bd2b377b59e4d8f4367b5b706d593d285a701a91782",
+   "sha256": "fec6610834dfa88c35565a0de08b08f27878277555bc4f2a6b3df418921cd504",
    "upstream_identical": false
   },
   {
@@ -5707,6 +5722,11 @@
   {
    "path": "src/sgo/effects.go",
    "sha256": "e209ee4a11efd8388dd31f1b05104fd5bafd3b4afea847729d00142d837bcacf",
+   "upstream_identical": false
+  },
+  {
+   "path": "src/sgo/io.go",
+   "sha256": "dbc8e67e88e1096cf32299e6a1a718461af9d9d84e1977b10787b1be780575b4",
    "upstream_identical": false
   },
   {
