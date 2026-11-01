@@ -67,6 +67,9 @@ jobs:
       - name: Cross-package nurseries with and without inlining (X10)
         run: sgo/scripts/test-x10.py
 
+      - name: Compiled S-Go code reaches channels only through S-Go entry points (S12, W07)
+        run: sgo/scripts/test-native-lowering.py
+
       - name: No flag, mode, or environment reopens stock Go (S01, S15)
         run: sgo/scripts/test-flags.py
 
