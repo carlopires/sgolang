@@ -489,7 +489,7 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 ## D59 — File operations in 0.5.0 **[DEFAULT]** · APPROVED 2026-11-02
 
-**Recommendation.** `Dir`: `Open(path) (*File, error)` (read), `Create(path) (*File, error)` (write; creates or truncates; `rw` grants only), `ReadFile`/`WriteFile` (whole file, bounded size), `Remove(path)`, `Mkdir(path)`, `List(path) ([]string, error)` (sorted names), `Sub(path) (*Dir, error)` (attenuation to a subdirectory), `ReadOnly() *Dir`. `File`: `Read`, `Write`, `Close`, `Size`. No seek, rename, link, chmod, or metadata in 0.5.0.
+**Recommendation.** `Dir`: `Open(path) (*File, error)` (read), `Create(path) (*File, error)` (write; creates or truncates; `rw` grants only), `ReadFile`/`WriteFile` (whole file, bounded size), `Remove(path)`, `Mkdir(path)`, `List(path) ([]string, error)` (sorted names; **amended 2026-11-02 by the user: `List(path) (*sgo.Listing, error)` with `Len() int` and `Name(i int) string`, since `[]string` is not an admitted type**), `Sub(path) (*Dir, error)` (attenuation to a subdirectory), `ReadOnly() *Dir`. `File`: `Read`, `Write`, `Close`, `Size`. No seek, rename, link, chmod, or metadata in 0.5.0.
 
 ---
 
