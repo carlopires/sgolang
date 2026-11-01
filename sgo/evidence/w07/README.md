@@ -3,10 +3,10 @@
 | Field | Value |
 |---|---|
 | work_package_id | W07 |
-| state | PENDING: CI run IDs |
+| state | passed on darwin/arm64 (local, all commands below) and linux/amd64, linux/arm64: `sgo-w00` run 41300774616 at `209abde18b` (builds, compile-level and driver conformance with all 280 cases, identity, fmt, TCB, X10, native lowering, flag and mutation gates); `sgo-runtime` run 41303446976 and `sgo-spec` run 41303446970 at `58ca6a3b79` (S-Go runtime tests with -cpu=1,4, the race detector including the race gate, upstream runtime -short; spec, inventory, TCB, policy gates). `sgo-runtime` run 41302656249 at `05a53f2b16` failed under -race on a race in the new fault-injection test code, fixed in `58ca6a3b79` (below) |
 | spec_version | 0.3.0 frozen (93 clauses: 90 frozen, 3 superseded); W07 adds SGO-CHAN-002, SGO-CHAN-003, SGO-CHAN-004, SGO-SYNC-002 and amends SGO-TYPE-001, SGO-TYPE-005, SGO-CAP-001, SGO-DEF-003, SGO-IMP-001, SGO-AUTH-003, SGO-COMP-001 (`sgo/spec/CHANGELOG.md`) |
 | admission identity | registry content digest `10a823feff7a1669`; toolchain identity `83fee1764c753ec5` |
-| fork_commit | `209abde18b` (all commands below), plus the closure commit (fault-injected native outcome runs and this record) |
+| fork_commit | `209abde18b` (all commands below); `05a53f2b16` (closure: fault-injected native outcome runs, this record, ledgers); `58ca6a3b79` (test fix) |
 | upstream_commit | `2aae1000ea1d4b28923b96db28acf4e3b99d6aff` (go1.27.3) |
 | host_and_toolchain | macOS 15.3 arm64; stage-0 by bootstrap go1.26.10; `sgo version`: `devel-6a04cea16ca1 spec 0.3.0 admission 83fee1764c753ec5 upstream 2aae1000ea1d (host-built)` |
 | artifact_digests (sha256 prefix) | `sgo` 7be8afbef19032f7, `compile` 5d5b0941c658954f, `link` b8670ea32d4fcc64, `asm` 73c23712465ac0f9, `sgo/TARGET_TCB.json` 4f9586fdf4dfb4cc |

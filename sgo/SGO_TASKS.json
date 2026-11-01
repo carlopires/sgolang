@@ -556,7 +556,7 @@
         {
           "record": "sgo/evidence/w07/README.md",
           "recorded_at": "2026-11-02",
-          "platforms": "darwin/arm64 local (logs in sgo/evidence/w07/logs); linux/amd64, linux/arm64 CI (run IDs in the record)",
+          "platforms": "darwin/arm64 local (logs in sgo/evidence/w07/logs); linux/amd64, linux/arm64 CI: sgo-w00 41300774616 at 209abde18b, sgo-runtime 41303446976 and sgo-spec 41303446970 at 58ca6a3b79",
           "cases": {
             "H01": "passed (strict_native lane)",
             "H02": "passed (strict_native lane)",
@@ -585,7 +585,7 @@
         }
       ],
       "blockers": [],
-      "commit": "209abde18b",
+      "commit": "58ca6a3b79",
       "completion_note": "Spec 0.3.0 frozen. Executable model of native channels, select, cancellation unwind, Event, and CapacityLimiter with pinned outcome sets; runtime native operations on the TCB-P12 channel (TCB-P17) and Event/CapacityLimiter (TCB-P18) checked against the model with and without fault injection; compiler admission and lowering to the S-Go entry points only (test-native-lowering.py); cancellation unwind (D33), Deadlock record; race gate; D38 generator hand-off and module-path diagnostic; 40 new conformance cases, 3 reclassified."
     },
     {
