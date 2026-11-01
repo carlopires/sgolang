@@ -1644,9 +1644,11 @@
       ],
       "scenario": "Check PCG initialization, rotation, bounded sampling, and independent scheduler/data/fault streams.",
       "expected": "Known/reference vectors match and changing test-data draws does not consume the scheduler stream.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W08: passed - model TestLabPCGVectors (math/rand/v2 PCG-DXSM vectors, SplitMix64 streams); fixture lab-random (sgo/evidence/w08/README.md)"
+      ]
     },
     {
       "id": "D02",
@@ -1660,9 +1662,11 @@
       ],
       "scenario": "Execute identical manifests in fresh processes repeatedly.",
       "expected": "Canonical managed-event traces and semantic outcomes match; host metadata is kept outside the canonical trace.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W08: passed - fixture lab-repeat (two runs, identical trace; replay); test-lab.py determinism; runtime TestSGoLabStreams (50 streams equal the model) (sgo/evidence/w08/README.md)"
+      ]
     },
     {
       "id": "D03",
@@ -1676,9 +1680,11 @@
       ],
       "scenario": "Record each scheduling and select choice then replay.",
       "expected": "Replay validates eligible sets and chooses the recorded task/case, not a newly randomized alternative.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W08: passed - fixture lab-ready-set (pinned ready sets and picks); fixture lab-select-source-order (arms by source index, D50) (sgo/evidence/w08/README.md)"
+      ]
     },
     {
       "id": "D04",
@@ -1692,9 +1698,11 @@
       ],
       "scenario": "Change binary, source, flags, fixture, capability policy, architecture, or trace version.",
       "expected": "Replay rejects incompatible inputs before silently running a different experiment.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W08: passed - fixture lab-manifest-mismatch (SGO_E_LAB_MANIFEST before running); test-lab.py (sgo/evidence/w08/README.md)"
+      ]
     },
     {
       "id": "D05",
@@ -1708,9 +1716,11 @@
       ],
       "scenario": "Alter a recorded choice to an ineligible task or case.",
       "expected": "Replay stops at the first divergence with expected/actual sets and last matching event; no fallback occurs.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W08: passed - fixture lab-impossible-choice (SGO_E_LAB_DIVERGENCE with last matching event); runtime TestSGoLabReplay (LabReplayDivergence) (sgo/evidence/w08/README.md)"
+      ]
     },
     {
       "id": "D06",
@@ -1724,9 +1734,11 @@
       ],
       "scenario": "Block all tasks on timers including equal deadlines.",
       "expected": "Time jumps to the next event and tie ordering is canonical; no wall-clock sleep determines user order.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W08: passed - fixture lab-timer-ties (100 s virtual at once; fires in timer-creation order); fixture lab-wallclock (sgo/evidence/w08/README.md)"
+      ]
     },
     {
       "id": "D07",
@@ -1740,9 +1752,11 @@
       ],
       "scenario": "Keep a task runnable while another awaits a virtual deadline.",
       "expected": "Virtual time is not falsely advanced; checkpoint/event quota bounds the scheduled run.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W08: passed - fixture lab-runnable-time (16-seed sweep: time advances only when no task is ready); fixture lab-quota (sgo/evidence/w08/README.md)"
+      ]
     },
     {
       "id": "D08",
@@ -1756,9 +1770,11 @@
       ],
       "scenario": "Create a closed wait graph with no runnable task or pending event.",
       "expected": "A managed deadlock diagnostic includes live scope/operation identities, distinct from quota exhaustion.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W08: passed - fixture lab-deadlock (LabDeadlock record with LabWait wait graph); test-lab.py (sgo/evidence/w08/README.md)"
+      ]
     },
     {
       "id": "D09",
@@ -1772,9 +1788,11 @@
       ],
       "scenario": "Attempt real I/O, wall-clock/entropy access, uncontrolled map iteration, or foreign callbacks.",
       "expected": "UnsupportedLabEffect is raised or compilation rejects the path; no warning-only continuation claims replay.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W08: passed - fixture lab-entropy (UnsupportedLabEffect, status 2) (sgo/evidence/w08/README.md)"
+      ]
     },
     {
       "id": "D10",
@@ -1788,9 +1806,11 @@
       ],
       "scenario": "Repeat supported runs with deliberate allocation/GC pressure.",
       "expected": "Runtime activity does not change canonical eligible user decisions or effect outcomes under the recorded configuration.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W08: passed - fixture lab-gc (allocation-heavy run repeats and replays identically) (sgo/evidence/w08/README.md)"
+      ]
     },
     {
       "id": "D11",
@@ -1804,9 +1824,11 @@
       ],
       "scenario": "Run an uninstrumented hang and an instrumented quota-exhausting loop.",
       "expected": "The former is a host-hang sidecar failure; the latter has a deterministic managed budget outcome.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W08: passed - fixture lab-host-hang (watchdog: SGO_E_LAB_HANG, sidecar hang, no lab outcome); fixture lab-quota (sgo/evidence/w08/README.md)"
+      ]
     },
     {
       "id": "D12",
@@ -1820,9 +1842,11 @@
       ],
       "scenario": "Truncate or corrupt the header, event stream, or footer.",
       "expected": "Reader/replay detects missing completion/integrity and never reports a successful complete replay.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W08: passed - fixture lab-trace-integrity (footer mismatch refused, SGO_E_LAB_TRACE); test-lab.py (sgo/evidence/w08/README.md)"
+      ]
     },
     {
       "id": "D13",
@@ -1836,9 +1860,11 @@
       ],
       "scenario": "Sweep seeds over a deliberate boundary-ordering bug and save the first failure.",
       "expected": "A reproducible failure artifact is retained; a fresh process replays it; the fixed implementation passes the corresponding regression.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W08: passed - fixtures lab-find-bug (sweep finds the ordering bug, saves it, fresh-process replay reproduces it) and lab-find-bug-fixed (the fixed program passes the same sweep) (sgo/evidence/w08/README.md)"
+      ]
     },
     {
       "id": "I01",
@@ -2553,9 +2579,11 @@
       ],
       "scenario": "Run paired ownership, cancellation, cleanup, permission, and invalid-spawn scenarios under production and lab configurations.",
       "expected": "Both enforce the same invariants and failure contracts. Only specified scheduling/effect adapters and replay admission differ; lab denial never downgrades to production.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W08: passed - fixtures lab-pair-* (8 production cases: same outcome, records, output, and rejection under the lab), lab-rejects-like-production; test-lab.py (production binary ignores a manifest) (sgo/evidence/w08/README.md)"
+      ]
     },
     {
       "id": "S15",
