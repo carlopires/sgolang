@@ -37,8 +37,11 @@ type sgoHandle struct {
 	pd       *pollDesc    // sockets: the poller registration (sgo_net.go)
 	fake     *sgoFakeFile // lab: a fake file (sgo_iofake.go)
 	conn     *sgoFakeConn // lab: a fake connection or listener (sgo_netfake.go)
-	readOnly bool         // a directory opened from an ro grant, or ReadOnly
-	write    bool         // a file opened for writing
+	unix     bool         // a Unix domain socket (D60)
+	sockPath *byte        // a Unix listener: its socket file, removed at close (sgo_net.go)
+	sockID   sgoFileID
+	readOnly bool // a directory opened from an ro grant, or ReadOnly
+	write    bool // a file opened for writing
 	owner    *sgoTask
 	scope    *sgoScope // the owner's innermost nursery at open (nil: the task body)
 	closed   bool
@@ -160,6 +163,9 @@ func sgoHandleClose(h *sgoHandle) *sgoIOErr {
 
 func sgoHandleFree(h *sgoHandle) {
 	h.closed = true
+	if h.sockPath != nil {
+		sgoNetUnlinkSocket(h)
+	}
 	if h.pd != nil {
 		poll_runtime_pollUnblock(h.pd)
 		poll_runtime_pollClose(h.pd)

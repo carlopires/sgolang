@@ -78,7 +78,7 @@ func sgoSetGrants(ctxt *Link, s string) {
 
 // sgoSetIOGrants handles -sgoiogrants=lines: it sets runtime.sgoIOGrants, the file and network
 // grants (D52, D57). Only the driver's canonical form is accepted: sorted, unique lines
-// "dir NAME ro|rw PATH", "connect IP:PORT", "listen IP:PORT".
+// "dir NAME ro|rw PATH", "connect IP:PORT|unix:PATH", "listen IP:PORT|unix:PATH".
 func sgoSetIOGrants(ctxt *Link, s string) {
 	lines := strings.Split(s, "\n")
 	for i, l := range lines {
@@ -88,6 +88,9 @@ func sgoSetIOGrants(ctxt *Link, s string) {
 		case !ok:
 		case f[0] == "dir":
 			ok = len(f) == 4 && sgoGrantName.MatchString(f[1]) && (f[2] == "ro" || f[2] == "rw") && f[3] != "" && !strings.ContainsAny(f[3], "\n\x00")
+		case (f[0] == "connect" || f[0] == "listen") && len(f) == 2 && strings.HasPrefix(f[1], "unix:"):
+			p := f[1][len("unix:"):]
+			ok = p != "" && len(p) <= 103 && !strings.ContainsRune(p, 0)
 		case f[0] == "connect" || f[0] == "listen":
 			ap, err := netip.ParseAddrPort(f[len(f)-1])
 			ok = len(f) == 2 && err == nil && ap.String() == f[1] && ap.Port() != 0 && !ap.Addr().Is4In6() && ap.Addr().Zone() == ""

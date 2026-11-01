@@ -32,3 +32,6 @@ func sgoStatID(b *sgoStatBuf) (dev, ino uint64, isDir, isLink bool) {
 	mode := *(*uint32)(unsafe.Pointer(&b[24]))
 	return dev, ino, mode&0xF000 == 0x4000, mode&0xF000 == 0xA000
 }
+
+// sgoStatMode is st_mode (uint32 at 24).
+func sgoStatMode(b *sgoStatBuf) uint32 { return *(*uint32)(unsafe.Pointer(&b[24])) }

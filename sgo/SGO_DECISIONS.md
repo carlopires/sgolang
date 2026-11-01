@@ -491,6 +491,17 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation.** `Dir`: `Open(path) (*File, error)` (read), `Create(path) (*File, error)` (write; creates or truncates; `rw` grants only), `ReadFile`/`WriteFile` (whole file, bounded size), `Remove(path)`, `Mkdir(path)`, `List(path) ([]string, error)` (sorted names; **amended 2026-11-02 by the user: `List(path) (*sgo.Listing, error)` with `Len() int` and `Name(i int) string`, since `[]string` is not an admitted type**), `Sub(path) (*Dir, error)` (attenuation to a subdirectory), `ReadOnly() *Dir`. `File`: `Read`, `Write`, `Close`, `Size`. No seek, rename, link, chmod, or metadata in 0.5.0.
 
+## D60 — Unix domain sockets **[USER]** · APPROVED 2026-11-02
+
+**Why it matters.** Unix domain sockets are the first choice for inter-process communication on one host; D57 admitted only IP endpoints, and the SGO-NET-002 draft denied Unix sockets.
+
+**Decision (the recommendations, approved by the user).**
+1. **Grant by exact path in the main `sgo.mod`:** `grant connect unix:PATH` and `grant listen unix:PATH`, PATH absolute or relative to the working directory at start; `root.Dial("unix:PATH")` and `root.Listen("unix:PATH")` are checked against the grants exactly, on every call, then the path is given to the kernel. The path names an endpoint, not a tree: the kernel follows symlinks in it, and the spec says so.
+2. **Same machinery as TCP:** non-blocking stream sockets on the network poller, cancellable waits, the handle contract of D54-D56, `*sgo.Conn` and `*sgo.Listener`; in the lab, the run's loopback network keyed by the path.
+3. **Stale socket files:** `Listen` removes an existing file at PATH only if it is a socket, then binds; any other file there is `AddressInUse`. Closing a listener removes its socket file if the path still names the socket it created.
+4. **Scope:** stream sockets on file-system paths only, at most 103 bytes (the portable `sun_path` limit), checked by the driver. Denied: Linux abstract names, datagram and seqpacket sockets, and passing descriptors or credentials as messages (authority arriving outside the grants).
+5. **Peer identity:** `c.PeerUID() (int, error)` on a Unix connection returns the peer process's user ID (SO_PEERCRED on linux, getpeereid on darwin); on a TCP connection it returns an `Unsupported` error. In lab runs the peer is the run itself and PeerUID returns the fixed value 1000.
+
 ---
 
 ## Approval record
@@ -504,3 +515,4 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - 2026-11-02: user approved D50 as recommended (source-order select arm indices in the lab trace).
 - 2026-11-02: user approved the SPEC-LAB 0.4.0 clauses SGO-LAB-002 to SGO-LAB-006 as drafted ("looks good, continue"); frozen in spec 0.4.0 with the lab conformance lane (17 lab cases).
 - 2026-11-02: user approved D51–D59 as recommended ("looks good, continue"). Follow-up: spec 0.5.0 clauses for confined files and TCP endpoints (SPEC-FILE, SPEC-NET); W09 implementation, model first (D30).
+- 2026-11-02: user approved D60 as recommended (Unix domain sockets: exact path grants, socket-only stale removal, stream sockets on paths only, `PeerUID` in 0.5.0) and the SPEC-FILE/SPEC-NET 0.5.0 drafts otherwise; D60 is folded into 0.5.0 before freezing.

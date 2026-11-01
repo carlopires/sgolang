@@ -77,14 +77,14 @@ func sgoLoopback() (ip [16]byte) {
 
 // SGoListen listens on 127.0.0.1:port (0: a free port) and returns the handle and its port.
 func SGoListen(port int) (*SGoHandle, int, string) {
-	h, e := sgoNetListen(sgoLoopback(), false, uint16(port), "127.0.0.1")
+	h, e := sgoNetListen(&sgoNetGrant{ip: sgoLoopback(), port: uint16(port), addr: "127.0.0.1"})
 	if e != nil {
 		return nil, 0, e.kind
 	}
 	return h, sgoNetPort(h), ""
 }
 func SGoConnect(port int) (*SGoHandle, string) {
-	h, e := sgoNetConnect(sgoLoopback(), false, uint16(port), "127.0.0.1")
+	h, e := sgoNetConnect(&sgoNetGrant{ip: sgoLoopback(), port: uint16(port), addr: "127.0.0.1"})
 	return h, sgoIOErrKind(e)
 }
 func SGoAccept(h *SGoHandle) (*SGoHandle, string) {
@@ -126,4 +126,22 @@ func SGoDirList(dir, path string) ([]string, string) {
 	defer func() { sgoCloseFD(sgoDirGrants[0].fd); sgoDirGrants = sgoDirGrants[:0] }()
 	names, e := sgoDirList(0, path)
 	return names, sgoIOErrKind(e)
+}
+
+// SGoListenUnix and SGoConnectUnix use the Unix socket at path (D60).
+func SGoListenUnix(path string) (*SGoHandle, string) {
+	h, e := sgoNetListen(&sgoNetGrant{unix: true, path: path, addr: "unix:" + path})
+	return h, sgoIOErrKind(e)
+}
+func SGoConnectUnix(path string) (*SGoHandle, string) {
+	h, e := sgoNetConnect(&sgoNetGrant{unix: true, path: path, addr: "unix:" + path})
+	return h, sgoIOErrKind(e)
+}
+func SGoPeerUID(h *SGoHandle) (int, string) {
+	uid, e := sgoNetPeerUID(h)
+	return uid, sgoIOErrKind(e)
+}
+func SGoParseEndpoint(a string) bool {
+	var g sgoNetGrant
+	return sgoParseEndpoint(a, &g)
 }

@@ -17,14 +17,18 @@ import (
 // File and network grants of the main sgo.mod (W09, D52, D57):
 //
 //	grant dir NAME PATH ro|rw
-//	grant connect IP:PORT
-//	grant listen IP:PORT
+//	grant connect IP:PORT | unix:PATH
+//	grant listen IP:PORT | unix:PATH
 //
 // The driver keeps them in canonical form, sorted: "dir NAME ro|rw PATH", "connect IP:PORT",
 // "listen IP:PORT" (netip's canonical address form). The linker records the text for the runtime
 // (-sgoiogrants), and the build ID names its digest (/io=).
 
 var grantName = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,31}$`)
+
+// maxUnixPath is the portable limit of a Unix socket path: sun_path is 104 bytes on darwin,
+// including the terminating NUL.
+const maxUnixPath = 103
 
 // parseIOGrant handles a grant line for a directory or an endpoint (fields[1] is dir, connect,
 // or listen); it reports whether the line was one.
@@ -50,7 +54,20 @@ func (m *module) parseIOGrant(fields []string, text, at string) (bool, error) {
 		m.ioGrants = append(m.ioGrants, "dir "+name+" "+fields[4]+" "+path)
 	case "connect", "listen":
 		if len(fields) != 3 {
-			return true, usage(fmt.Sprintf("%q: an endpoint grant is \"grant %s IP:PORT\"", text, fields[1]))
+			return true, usage(fmt.Sprintf("%q: an endpoint grant is \"grant %s IP:PORT\" or \"grant %s unix:PATH\"", text, fields[1], fields[1]))
+		}
+		if path, ok := strings.CutPrefix(fields[2], "unix:"); ok {
+			// A Unix domain socket (D60): an exact path, absolute or relative to the working
+			// directory at start, within the portable sun_path limit.
+			if path == "" || len(path) > maxUnixPath || strings.ContainsRune(path, 0) {
+				return true, usage(fmt.Sprintf("%q is not a Unix socket endpoint (unix:PATH with a path of 1 to %d bytes, D60)", fields[2], maxUnixPath))
+			}
+			line := fields[1] + " unix:" + path
+			if slices.Contains(m.ioGrants, line) {
+				return true, usage(fmt.Sprintf("%s is granted twice", line))
+			}
+			m.ioGrants = append(m.ioGrants, line)
+			break
 		}
 		ap, err := netip.ParseAddrPort(fields[2])
 		if err != nil || ap.Port() == 0 || ap.Addr().Zone() != "" || ap.Addr().Is4In6() {

@@ -24,6 +24,7 @@ type sgoFakeConn struct {
 	pend    string   // the rest of a chunk longer than a Read's max
 	backlog *sgoChan // listeners: pending server ends (*sgoFakeConn)
 	addr    string
+	unix    bool
 }
 
 // sgoFakeListeners are the open fake listeners of the run (serialized by the baton).
@@ -36,7 +37,7 @@ func sgoFakeListen(g *sgoNetGrant) (*sgoHandle, *sgoIOErr) {
 			return nil, &sgoIOErr{kind: "AddressInUse"}
 		}
 	}
-	l := &sgoFakeConn{backlog: sgoChanNew(sgoFakeBacklog), addr: g.addr}
+	l := &sgoFakeConn{backlog: sgoChanNew(sgoFakeBacklog), addr: g.addr, unix: g.unix}
 	sgoFakeListeners = append(sgoFakeListeners, l)
 	h := sgoHandleNew(sgoHListener, -1, g.addr)
 	h.conn = l
@@ -59,8 +60,8 @@ func sgoFakeDial(g *sgoNetGrant) (*sgoHandle, *sgoIOErr) {
 		return nil, &sgoIOErr{kind: "ConnectionRefused"}
 	}
 	a, b := sgoChanNew(sgoFakeChunks), sgoChanNew(sgoFakeChunks)
-	client := &sgoFakeConn{in: a, out: b, addr: g.addr}
-	server := &sgoFakeConn{in: b, out: a, addr: g.addr}
+	client := &sgoFakeConn{in: a, out: b, addr: g.addr, unix: g.unix}
+	server := &sgoFakeConn{in: b, out: a, addr: g.addr, unix: g.unix}
 	p, err := sgoChanReserve(l.backlog, t) // a full backlog waits, as a real connect does
 	if err != nil {
 		if err == sgoErrReserveClosed {

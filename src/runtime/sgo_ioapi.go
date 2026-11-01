@@ -142,7 +142,7 @@ func sgo_dial(addr string) (unsafe.Pointer, error) {
 	if sgoLab != nil {
 		h, e = sgoFakeDial(g) // lab runs: the run's loopback network (D58)
 	} else {
-		h, e = sgoNetConnect(g.ip, g.v6, g.port, g.addr)
+		h, e = sgoNetConnect(g)
 	}
 	if e != nil {
 		return nil, sgoIOResult(e, "Dial")
@@ -161,7 +161,7 @@ func sgo_listen(addr string) (unsafe.Pointer, error) {
 	if sgoLab != nil {
 		h, e = sgoFakeListen(g)
 	} else {
-		h, e = sgoNetListen(g.ip, g.v6, g.port, g.addr)
+		h, e = sgoNetListen(g)
 	}
 	if e != nil {
 		return nil, sgoIOResult(e, "Listen")
@@ -182,4 +182,10 @@ func sgo_accept(h unsafe.Pointer) (unsafe.Pointer, error) {
 func sgo_dirList(g int, path string) ([]string, error) {
 	names, e := sgoDirList(g, path)
 	return names, sgoIOResult(e, "Dir.List")
+}
+
+//go:linkname sgo_peerUID sgo.runtime_peerUID
+func sgo_peerUID(h unsafe.Pointer) (int, error) {
+	uid, e := sgoNetPeerUID((*sgoHandle)(h))
+	return uid, sgoIOResult(e, "Conn.PeerUID")
 }

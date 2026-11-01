@@ -122,24 +122,28 @@ func sgoNetHandle(kind uint8, fd int32, name string) (*sgoHandle, *sgoIOErr) {
 	return h, nil
 }
 
-// sgoNetConnect connects to ip:port (ip in 16-byte form; v6 selects IPv6).
-func sgoNetConnect(ip [16]byte, v6 bool, port uint16, name string) (*sgoHandle, *sgoIOErr) {
+// sgoSockaddrBuf holds a sockaddr_un, sockaddr_in, or sockaddr_in6.
+type sgoSockaddrBuf [112]byte
+
+// sgoNetConnect connects to the endpoint of g.
+func sgoNetConnect(g *sgoNetGrant) (*sgoHandle, *sgoIOErr) {
 	if err := sgoTaskCancellation(sgoCurrent()); err != nil {
 		return nil, &sgoIOErr{"Cancelled", 0}
 	}
-	fd := sgoSocket(v6)
+	fd := sgoSocket(g)
 	if fd < 0 {
 		return nil, &sgoIOErr{sgoNetErrKind(fd), 0}
 	}
-	h, e := sgoNetHandle(sgoHConn, fd, name)
+	h, e := sgoNetHandle(sgoHConn, fd, g.addr)
 	if e != nil {
 		return nil, e
 	}
-	var sa [28]byte
-	n := sgoSockaddr(&sa, &ip, v6, port)
-	r := sgoConnectSys(fd, &sa, n)
+	h.unix = g.unix
+	sa := new(sgoSockaddrBuf)
+	n := sgoSockaddr(sa, g)
+	r := sgoConnectSys(fd, sa, n)
 	for r == -sgoEINTR {
-		r = sgoConnectSys(fd, &sa, n)
+		r = sgoConnectSys(fd, sa, n)
 	}
 	if r == -sgoEINPROGRESS {
 		h.ops.Add(1)
@@ -163,16 +167,31 @@ func sgoNetConnect(ip [16]byte, v6 bool, port uint16, name string) (*sgoHandle, 
 	return h, nil
 }
 
-// sgoNetListen listens on ip:port; port 0 binds a free port (sgoNetPort reports it).
-func sgoNetListen(ip [16]byte, v6 bool, port uint16, name string) (*sgoHandle, *sgoIOErr) {
-	fd := sgoSocket(v6)
+// sgoNetListen listens on the endpoint of g; IP port 0 binds a free port (sgoNetPort reports it).
+// A Unix endpoint's path is freed first if it names a socket (a stale one), never any other file
+// (D60); the listener removes its socket file when it closes, if the path still names it.
+func sgoNetListen(g *sgoNetGrant) (*sgoHandle, *sgoIOErr) {
+	var path *byte
+	if g.unix {
+		path = sgoCString(g.path)
+		var st sgoStatBuf
+		if sgoFstatat(sgoAT_FDCWD, path, &st, sgoAT_SYMLINK_NOFOLLOW) == 0 {
+			if sgoStatMode(&st)&0xF000 != 0xC000 {
+				return nil, &sgoIOErr{"AddressInUse", 0}
+			}
+			sgoUnlinkat(sgoAT_FDCWD, path, 0)
+		}
+	}
+	fd := sgoSocket(g)
 	if fd < 0 {
 		return nil, &sgoIOErr{sgoNetErrKind(fd), 0}
 	}
-	sgoSetsockoptInt(fd, sgoSOL_SOCKET, sgoSO_REUSEADDR, 1)
-	var sa [28]byte
-	n := sgoSockaddr(&sa, &ip, v6, port)
-	r := sgoBind(fd, &sa, n)
+	if !g.unix {
+		sgoSetsockoptInt(fd, sgoSOL_SOCKET, sgoSO_REUSEADDR, 1)
+	}
+	sa := new(sgoSockaddrBuf)
+	n := sgoSockaddr(sa, g)
+	r := sgoBind(fd, sa, n)
 	if r == 0 {
 		r = sgoListenSys(fd, 128)
 	}
@@ -180,7 +199,53 @@ func sgoNetListen(ip [16]byte, v6 bool, port uint16, name string) (*sgoHandle, *
 		sgoCloseFD(fd)
 		return nil, &sgoIOErr{sgoNetErrKind(r), 0}
 	}
-	return sgoNetHandle(sgoHListener, fd, name)
+	h, e := sgoNetHandle(sgoHListener, fd, g.addr)
+	if e == nil {
+		h.unix = g.unix
+	}
+	if e == nil && g.unix {
+		var st sgoStatBuf
+		if sgoFstatat(sgoAT_FDCWD, path, &st, sgoAT_SYMLINK_NOFOLLOW) == 0 {
+			dev, ino, _, _ := sgoStatID(&st)
+			h.sockPath, h.sockID = path, sgoFileID{dev, ino}
+		}
+	}
+	return h, e
+}
+
+// sgoNetUnlinkSocket removes the socket file of a closing Unix listener if its path still names
+// the socket the listener created.
+func sgoNetUnlinkSocket(h *sgoHandle) {
+	var st sgoStatBuf
+	if sgoFstatat(sgoAT_FDCWD, h.sockPath, &st, sgoAT_SYMLINK_NOFOLLOW) == 0 {
+		if dev, ino, _, _ := sgoStatID(&st); (sgoFileID{dev, ino}) == h.sockID {
+			sgoUnlinkat(sgoAT_FDCWD, h.sockPath, 0)
+		}
+	}
+	h.sockPath = nil
+}
+
+// sgoNetPeerUID is c.PeerUID(): the peer's user ID on a Unix connection (D60).
+func sgoNetPeerUID(h *sgoHandle) (int, *sgoIOErr) {
+	if e := sgoHandleBegin(h, "Conn.PeerUID"); e != nil {
+		return 0, e
+	}
+	defer sgoHandleEnd(h)
+	if h.conn != nil {
+		sgoLabPoint()
+		if h.conn.unix {
+			return 1000, nil // lab: the peer is the run itself; a fixed, documented value
+		}
+		return 0, &sgoIOErr{kind: "Unsupported"}
+	}
+	if !h.unix {
+		return 0, &sgoIOErr{kind: "Unsupported"}
+	}
+	uid, r := sgoPeerUID(h.fd)
+	if r < 0 {
+		return 0, &sgoIOErr{sgoNetErrKind(r), 0}
+	}
+	return uid, nil
 }
 
 // sgoNetPort is the local port of a socket handle.
@@ -206,7 +271,11 @@ func sgoNetAccept(h *sgoHandle) (*sgoHandle, *sgoIOErr) {
 		fd := sgoAccept(h.fd)
 		switch {
 		case fd >= 0:
-			return sgoNetHandle(sgoHConn, fd, h.name)
+			c, e := sgoNetHandle(sgoHConn, fd, h.name)
+			if c != nil {
+				c.unix = h.unix
+			}
+			return c, e
 		case fd == -sgoEINTR:
 			continue
 		case fd == -sgoEAGAIN:

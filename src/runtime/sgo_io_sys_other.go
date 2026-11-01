@@ -36,14 +36,17 @@ const (
 	sgoSOL_SOCKET, sgoSO_ERROR, sgoSO_REUSEADDR                       = 0, 0, 0
 )
 
-func sgoSockaddr(b *[28]byte, ip *[16]byte, v6 bool, port uint16) uintptr { return 0 }
-func sgoSocket(v6 bool) int32                                             { return -sgoENOSYS }
-func sgoConnectSys(fd int32, sa *[28]byte, n uintptr) int32               { return -sgoENOSYS }
-func sgoBind(fd int32, sa *[28]byte, n uintptr) int32                     { return -sgoENOSYS }
-func sgoListenSys(fd int32, backlog int32) int32                          { return -sgoENOSYS }
-func sgoAccept(fd int32) int32                                            { return -sgoENOSYS }
-func sgoSetsockoptInt(fd, level, name, v int32) int32                     { return -sgoENOSYS }
-func sgoGetsockoptInt(fd, level, name int32) (int32, int32)               { return 0, -sgoENOSYS }
-func sgoLocalPort(fd int32) (uint16, int32)                               { return 0, -sgoENOSYS }
+func sgoSockaddr(b *sgoSockaddrBuf, g *sgoNetGrant) uintptr       { return 0 }
+func sgoSocket(g *sgoNetGrant) int32                              { return -sgoENOSYS }
+func sgoConnectSys(fd int32, sa *sgoSockaddrBuf, n uintptr) int32 { return -sgoENOSYS }
+func sgoBind(fd int32, sa *sgoSockaddrBuf, n uintptr) int32       { return -sgoENOSYS }
+func sgoListenSys(fd int32, backlog int32) int32                  { return -sgoENOSYS }
+func sgoAccept(fd int32) int32                                    { return -sgoENOSYS }
+func sgoSetsockoptInt(fd, level, name, v int32) int32             { return -sgoENOSYS }
+func sgoGetsockoptInt(fd, level, name int32) (int32, int32)       { return 0, -sgoENOSYS }
+func sgoLocalPort(fd int32) (uint16, int32)                       { return 0, -sgoENOSYS }
 
 func sgoReadDirNames(fd int32) ([]string, int32) { return nil, -sgoENOSYS }
+
+func sgoPeerUID(fd int32) (int, int32) { return 0, -sgoENOSYS }
+func sgoStatMode(b *sgoStatBuf) uint32 { return 0 }

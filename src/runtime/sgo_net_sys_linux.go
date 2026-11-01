@@ -12,8 +12,10 @@ package runtime
 import "unsafe"
 
 const (
+	sgoAF_UNIX      = 1
 	sgoAF_INET      = 2
 	sgoAF_INET6     = 10
+	sgoSO_PEERCRED  = 17
 	sgoSOCK_STREAM  = 1
 	sgoSOCK_NB_CX   = 0x800 | 0x80000 // SOCK_NONBLOCK | SOCK_CLOEXEC
 	sgoSOL_SOCKET   = 1
@@ -31,9 +33,16 @@ const (
 	sgoEINPROGRESS  = 115
 )
 
-// sgoSockaddr fills b with a sockaddr_in or sockaddr_in6 and returns its length.
-func sgoSockaddr(b *[28]byte, ip *[16]byte, v6 bool, port uint16) uintptr {
-	*b = [28]byte{}
+// sgoSockaddr fills b with the sockaddr_un, sockaddr_in, or sockaddr_in6 of g and returns its
+// length.
+func sgoSockaddr(b *sgoSockaddrBuf, g *sgoNetGrant) uintptr {
+	*b = sgoSockaddrBuf{}
+	if g.unix {
+		b[0] = sgoAF_UNIX
+		copy(b[2:], g.path)
+		return uintptr(2 + len(g.path) + 1)
+	}
+	ip, v6, port := &g.ip, g.v6, g.port
 	b[2], b[3] = byte(port>>8), byte(port)
 	if !v6 {
 		b[0] = sgoAF_INET
@@ -45,21 +54,24 @@ func sgoSockaddr(b *[28]byte, ip *[16]byte, v6 bool, port uint16) uintptr {
 	return 28
 }
 
-func sgoSocket(v6 bool) int32 {
+func sgoSocket(g *sgoNetGrant) int32 {
 	af := uintptr(sgoAF_INET)
-	if v6 {
+	switch {
+	case g.unix:
+		af = sgoAF_UNIX
+	case g.v6:
 		af = sgoAF_INET6
 	}
 	return sgoSys(sgoSYS_socket, af, sgoSOCK_STREAM|sgoSOCK_NB_CX, 0, 0)
 }
 
-func sgoConnectSys(fd int32, sa *[28]byte, n uintptr) int32 {
+func sgoConnectSys(fd int32, sa *sgoSockaddrBuf, n uintptr) int32 {
 	r := sgoSys(sgoSYS_connect, uintptr(fd), uintptr(unsafe.Pointer(sa)), n, 0)
 	KeepAlive(sa)
 	return r
 }
 
-func sgoBind(fd int32, sa *[28]byte, n uintptr) int32 {
+func sgoBind(fd int32, sa *sgoSockaddrBuf, n uintptr) int32 {
 	r := sgoSys(sgoSYS_bind, uintptr(fd), uintptr(unsafe.Pointer(sa)), n, 0)
 	KeepAlive(sa)
 	return r
@@ -129,4 +141,18 @@ func sgoReadDirNames(fd int32) ([]string, int32) {
 			off += reclen
 		}
 	}
+}
+
+// sgoPeerUID is the user ID of the process at the other end of Unix socket fd (SO_PEERCRED:
+// struct ucred {pid, uid, gid int32}).
+func sgoPeerUID(fd int32) (int, int32) {
+	var cred [3]int32
+	n := int32(len(cred) * 4)
+	_, _, errno := sgoSyscall6(sgoSYS_getsockopt, uintptr(fd), sgoSOL_SOCKET, sgoSO_PEERCRED, uintptr(unsafe.Pointer(&cred)), uintptr(unsafe.Pointer(&n)), 0)
+	KeepAlive(&cred)
+	KeepAlive(&n)
+	if errno != 0 {
+		return 0, -int32(errno)
+	}
+	return int(uint32(cred[1])), 0
 }

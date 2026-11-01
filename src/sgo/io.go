@@ -25,6 +25,7 @@ func runtime_lend(h, scope unsafe.Pointer)
 func runtime_dial(addr string) (unsafe.Pointer, error)
 func runtime_listen(addr string) (unsafe.Pointer, error)
 func runtime_accept(h unsafe.Pointer) (unsafe.Pointer, error)
+func runtime_peerUID(h unsafe.Pointer) (int, error)
 
 // Progress returns the bytes an I/O operation transferred before err (0 for other errors).
 func Progress(err error) int {
@@ -191,7 +192,8 @@ func (f *File) LendTo(n *Nursery) *File { runtime_lend(f.h, n.s); return f }
 // Conn is a TCP connection, owned by the task that dialed or accepted it.
 type Conn struct{ h unsafe.Pointer }
 
-// Dial connects to addr (IP:PORT), which a connect grant must name exactly (D57).
+// Dial connects to addr (IP:PORT, or unix:PATH for a Unix domain socket), which a connect grant
+// must name exactly (D57, D60).
 func (c *Context) Dial(addr string) (*Conn, error) {
 	c.own()
 	if !runtime_isRoot(c.t) {
@@ -210,6 +212,10 @@ func (c *Conn) Read(max int) (string, error) { return runtime_read(c.h, max) }
 // Write writes all of s, or returns an error with the bytes written (Progress).
 func (c *Conn) Write(s string) (int, error) { return runtime_ioWrite(c.h, s) }
 
+// PeerUID returns the user ID of the process at the other end of a Unix domain socket
+// connection; on a TCP connection it returns an Unsupported error (D60).
+func (c *Conn) PeerUID() (int, error) { return runtime_peerUID(c.h) }
+
 // Close closes the connection.
 func (c *Conn) Close() error { return runtime_close(c.h, "Conn.Close") }
 
@@ -219,7 +225,8 @@ func (c *Conn) LendTo(n *Nursery) *Conn { runtime_lend(c.h, n.s); return c }
 // Listener accepts TCP connections on a granted endpoint.
 type Listener struct{ h unsafe.Pointer }
 
-// Listen listens on addr (IP:PORT), which a listen grant must name exactly (D57).
+// Listen listens on addr (IP:PORT, or unix:PATH), which a listen grant must name exactly (D57,
+// D60). A stale socket file at PATH is removed first; any other file there is AddressInUse.
 func (c *Context) Listen(addr string) (*Listener, error) {
 	c.own()
 	if !runtime_isRoot(c.t) {

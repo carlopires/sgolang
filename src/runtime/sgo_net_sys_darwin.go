@@ -15,6 +15,7 @@ import (
 )
 
 const (
+	sgoAF_UNIX      = 1
 	sgoAF_INET      = 2
 	sgoAF_INET6     = 30
 	sgoSOCK_STREAM  = 1
@@ -46,10 +47,17 @@ func sgoLibc(fn uintptr, args ...uintptr) int32 {
 	return int32(r)
 }
 
-// sgoSockaddr fills b with a sockaddr_in or sockaddr_in6 (BSD: length byte, family byte) and
-// returns its length.
-func sgoSockaddr(b *[28]byte, ip *[16]byte, v6 bool, port uint16) uintptr {
-	*b = [28]byte{}
+// sgoSockaddr fills b with the sockaddr_un, sockaddr_in, or sockaddr_in6 of g (BSD: length
+// byte, family byte) and returns its length.
+func sgoSockaddr(b *sgoSockaddrBuf, g *sgoNetGrant) uintptr {
+	*b = sgoSockaddrBuf{}
+	if g.unix {
+		n := 2 + len(g.path) + 1
+		b[0], b[1] = byte(n), sgoAF_UNIX
+		copy(b[2:], g.path)
+		return uintptr(n)
+	}
+	ip, v6, port := &g.ip, g.v6, g.port
 	b[2], b[3] = byte(port>>8), byte(port)
 	if !v6 {
 		b[0], b[1] = 16, sgoAF_INET
@@ -61,9 +69,12 @@ func sgoSockaddr(b *[28]byte, ip *[16]byte, v6 bool, port uint16) uintptr {
 	return 28
 }
 
-func sgoSocket(v6 bool) int32 {
+func sgoSocket(g *sgoNetGrant) int32 {
 	af := uintptr(sgoAF_INET)
-	if v6 {
+	switch {
+	case g.unix:
+		af = sgoAF_UNIX
+	case g.v6:
 		af = sgoAF_INET6
 	}
 	fd := sgoLibc(abi.FuncPCABI0(sgo_socket_trampoline), af, sgoSOCK_STREAM, 0)
@@ -74,13 +85,13 @@ func sgoSocket(v6 bool) int32 {
 	return fd
 }
 
-func sgoConnectSys(fd int32, sa *[28]byte, n uintptr) int32 {
+func sgoConnectSys(fd int32, sa *sgoSockaddrBuf, n uintptr) int32 {
 	r := sgoLibc(abi.FuncPCABI0(sgo_connect_trampoline), uintptr(fd), uintptr(unsafe.Pointer(sa)), n)
 	KeepAlive(sa)
 	return r
 }
 
-func sgoBind(fd int32, sa *[28]byte, n uintptr) int32 {
+func sgoBind(fd int32, sa *sgoSockaddrBuf, n uintptr) int32 {
 	r := sgoLibc(abi.FuncPCABI0(sgo_bind_trampoline), uintptr(fd), uintptr(unsafe.Pointer(sa)), n)
 	KeepAlive(sa)
 	return r
@@ -131,6 +142,22 @@ func sgo_accept_trampoline()
 func sgo_setsockopt_trampoline()
 func sgo_getsockopt_trampoline()
 func sgo_getsockname_trampoline()
+func sgo_getpeereid_trampoline()
+
+// sgoPeerUID is the user ID of the process at the other end of Unix socket fd (getpeereid).
+func sgoPeerUID(fd int32) (int, int32) {
+	var uid, gid uint32
+	r := sgoLibc(abi.FuncPCABI0(sgo_getpeereid_trampoline), uintptr(fd), uintptr(unsafe.Pointer(&uid)), uintptr(unsafe.Pointer(&gid)))
+	KeepAlive(&uid)
+	KeepAlive(&gid)
+	if r < 0 {
+		return 0, r
+	}
+	return int(uid), 0
+}
+
+// sgoStatMode is st_mode (uint16 at 4).
+func sgoStatMode(b *sgoStatBuf) uint32 { return uint32(*(*uint16)(unsafe.Pointer(&b[4]))) }
 
 //go:cgo_import_dynamic libc_socket socket "/usr/lib/libSystem.B.dylib"
 //go:cgo_import_dynamic libc_connect connect "/usr/lib/libSystem.B.dylib"
@@ -140,6 +167,7 @@ func sgo_getsockname_trampoline()
 //go:cgo_import_dynamic libc_setsockopt setsockopt "/usr/lib/libSystem.B.dylib"
 //go:cgo_import_dynamic libc_getsockopt getsockopt "/usr/lib/libSystem.B.dylib"
 //go:cgo_import_dynamic libc_getsockname getsockname "/usr/lib/libSystem.B.dylib"
+//go:cgo_import_dynamic libc_getpeereid getpeereid "/usr/lib/libSystem.B.dylib"
 
 // sgoReadDirNames returns the names in directory fd (closing fd), without "." and "..", or a
 // negated errno. libc's fdopendir takes fd; readdir_r fills a struct dirent (d_namlen uint16 at

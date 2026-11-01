@@ -110,3 +110,5 @@ TEXT runtime·sgo_readdir_r_trampoline(SB),NOSPLIT,$0-0
 	JMP	libc_readdir_r(SB)
 TEXT runtime·sgo_closedir_trampoline(SB),NOSPLIT,$0-0
 	JMP	libc_closedir(SB)
+TEXT runtime·sgo_getpeereid_trampoline(SB),NOSPLIT,$0-0
+	JMP	libc_getpeereid(SB)

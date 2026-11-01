@@ -8,8 +8,8 @@
 // (-sgoiogrants), which records it in sgoIOGrants: one grant per line,
 //
 //	dir NAME ro|rw PATH
-//	connect IP:PORT
-//	listen IP:PORT
+//	connect IP:PORT | unix:PATH
+//	listen IP:PORT | unix:PATH
 //
 // with IP in canonical form (dotted IPv4, or [IPv6]). When the program starts, each granted
 // directory is opened once, relative to the working directory at start unless PATH is absolute,
@@ -31,7 +31,9 @@ type sgoDirGrant struct {
 
 type sgoNetGrant struct {
 	listen bool
-	addr   string // canonical IP:PORT
+	addr   string // canonical IP:PORT, or unix:PATH
+	unix   bool   // a Unix domain socket at path (D60)
+	path   string
 	ip     [16]byte
 	v6     bool
 	port   uint16
@@ -71,7 +73,7 @@ func sgoIOGrantsInit() {
 			sgoDirGrants = append(sgoDirGrants, g)
 		case len(f) == 2 && (f[0] == "connect" || f[0] == "listen"):
 			g := sgoNetGrant{listen: f[0] == "listen", addr: f[1]}
-			if !sgoParseAddr(f[1], &g) {
+			if !sgoParseEndpoint(f[1], &g) {
 				throw("sgo: corrupt network grant")
 			}
 			sgoNetGrants = append(sgoNetGrants, g)
@@ -198,15 +200,33 @@ func sgoParseIP6(s string, ip *[16]byte) bool {
 	return true
 }
 
-// sgoNetGrantFor returns the grant permitting addr for listening or connecting, or nil.
+// sgoMaxUnixPath is the portable limit of a Unix socket path (sun_path is 104 bytes on darwin,
+// with the terminating NUL).
+const sgoMaxUnixPath = 103
+
+// sgoParseEndpoint parses unix:PATH or an IP:PORT.
+func sgoParseEndpoint(a string, g *sgoNetGrant) bool {
+	if len(a) >= 5 && a[:5] == "unix:" {
+		p := a[5:]
+		if p == "" || len(p) > sgoMaxUnixPath || sgoIndexByte(p, 0) >= 0 {
+			return false
+		}
+		g.unix, g.path = true, p
+		return true
+	}
+	return sgoParseAddr(a, g)
+}
+
+// sgoNetGrantFor returns the grant permitting addr for listening or connecting, or nil. IP
+// endpoints compare as IP and port; Unix endpoints compare their paths exactly.
 func sgoNetGrantFor(addr string, listen bool) *sgoNetGrant {
 	var g sgoNetGrant
-	if !sgoParseAddr(addr, &g) {
+	if !sgoParseEndpoint(addr, &g) {
 		return nil
 	}
 	for i := range sgoNetGrants {
 		ng := &sgoNetGrants[i]
-		if ng.listen == listen && ng.ip == g.ip && ng.v6 == g.v6 && ng.port == g.port {
+		if ng.listen == listen && ng.unix == g.unix && ng.path == g.path && ng.ip == g.ip && ng.v6 == g.v6 && ng.port == g.port {
 			return ng
 		}
 	}
