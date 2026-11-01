@@ -1,3 +1,3 @@
 module example.com/type-interface
 
-sgo 0.2.0
+sgo 0.3.0

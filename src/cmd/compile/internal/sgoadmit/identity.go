@@ -5,7 +5,7 @@ package sgoadmit
 // S-Go identity recorded in every compiled package and verified by importers and the linker
 // (SGO-IMP-002).
 const (
-	SpecVersion     = "0.2.0"
-	AdmissionDigest = "1fa10904931e4195"
+	SpecVersion     = "0.3.0"
+	AdmissionDigest = "83fee1764c753ec5"
 	ABI             = "sgo-abi-1" // S-Go ABI identity: lowering of nurseries, failures, checked arithmetic
 )

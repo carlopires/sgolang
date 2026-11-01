@@ -3,10 +3,10 @@
 Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §14, decision D15, plan §1.3.
 
 ### SGO-IMP-001 — User packages and the module
-- **version:** 1
+- **version:** 2
 - **status:** frozen
 - **reference_closure:** SGO-BIND-001, SGO-BIND-002, SGO-BIND-005, SGO-TOOL-001; D15.
-- **grammar_and_types:** A program is built from one module: a directory tree whose root contains an `sgo.mod` file declaring `module <path>` and `sgo <spec-version>`. Package import paths are `<module path>/<relative directory>`. Import cycles are a compile error, reported once, at the import declaration in the cycle's lexically first package (by import path) that names the next package of the cycle. Every package of the module is compiled under subset 0; there is no other mode, and no package outside the module except `sgo` can be imported.
+- **grammar_and_types:** A program is built from one module: a directory tree whose root contains an `sgo.mod` file declaring `module <path>` and `sgo <spec-version>`. Package import paths are `<module path>/<relative directory>`. A module path may not equal, contain, or lie under the import path of a target TCB package (for example `sgo`, `runtime`, or `internal/...`), since its packages would shadow trusted ones (D38). Import cycles are a compile error, reported once, at the import declaration in the cycle's lexically first package (by import path) that names the next package of the cycle. Every package of the module is compiled under subset 0; there is no other mode, and no package outside the module except `sgo` can be imported.
 - **preconditions:** `sgo.mod` names a spec version the toolchain implements; otherwise the build fails.
 - **evaluation_and_value_semantics:** n/a — build structure; subset 0 has no package initialization.
 - **ownership_and_lifecycle:** n/a — build structure.
@@ -15,11 +15,11 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §14, decision D15, plan §1.3.
 - **allowed_nondeterminism:** None: the build result does not depend on directory listing order.
 - **failure_and_partial_progress:** Any package failing admission fails the whole build; no partial program is linked.
 - **cancellation_and_cleanup:** n/a — build structure.
-- **compile_link_checks:** `SGO_E_IMPORT_CYCLE`, `SGO_E_SPEC_VERSION`, `SGO_E_UNADMITTED` (out-of-module import).
+- **compile_link_checks:** `SGO_E_USAGE` at the module directive for a module path that collides with a TCB package path; `SGO_E_IMPORT_CYCLE`, `SGO_E_SPEC_VERSION`, `SGO_E_UNADMITTED` (out-of-module import).
 - **runtime_guards:** n/a — build structure.
 - **tcb_assumptions:** n/a — toolchain only.
 - **positive_tests:** S09; fixture:imp-user-package.
-- **negative_tests:** S09, S15; fixture:imp-cycle, fixture:imp-spec-version-mismatch.
+- **negative_tests:** S09, S15; fixture:imp-cycle, fixture:imp-spec-version-mismatch, fixture:tcb-module-named-sgo.
 - **implementation_coverage:** none yet — W03 (sgo driver).
 - **executed_evidence:** none yet.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

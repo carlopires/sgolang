@@ -26,7 +26,7 @@ Denied in subsets 0 and 1 (spec 0.1.0 and 0.2.0, SGO-CHAN-001). Spec 0.3.0 admit
 
 ### SGO-CHAN-002 — Native channels (subset 2)
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-TYPE-001, SGO-TYPE-005, SGO-BIND-003, SGO-CHAN-003, SGO-CHAN-004, SGO-PERMIT-002, SGO-DEF-003, SGO-CANCEL-002, SGO-SPAWN-004; D31, D32, D35, D36; plan §7.
 - **grammar_and_types:** Channel types `chan T`, `<-chan T` (receive-only), and `chan<- T` (send-only), where the element type T is `int`, `bool`, `string`, `error`, or a channel type whose element type is one of these, recursively (D36). A bidirectional channel is assignable to either directional type. `make(chan T)` and `make(chan T, n)` (n of type int) are the only constructors. The send statement `ch <- v`, the receive operation `<-ch` and `v, ok := <-ch` (also `=`), `close(ch)`, and `for v := range ch` / `for range ch` are admitted with Go's typing rules: a receive-only channel cannot be sent to or closed, a send-only channel cannot be received from. Channel values are never nil: there is no nil value of a channel type, every variable is initialized (SGO-BIND-003), and a named result of channel type is a compile error. `len`, `cap`, and `==`/`!=` of channels are denied. A range clause whose operand is not a channel stays denied (SGO-COMP-001).
 - **preconditions:** `n >= 0` for `make(chan T, n)`. A channel value may be held by any number of tasks; it is synchronized and crosses task boundaries like a handle.
@@ -43,12 +43,12 @@ Denied in subsets 0 and 1 (spec 0.1.0 and 0.2.0, SGO-CHAN-001). Spec 0.3.0 admit
 - **positive_tests:** H01, H02, H11, H12, N04, N05, N07, N09; fixture:native-buffered-fifo, fixture:native-rendezvous, fixture:native-close-drain, fixture:native-range, fixture:native-directional, fixture:native-chan-of-chan, fixture:native-close-idempotent; the model's bounded histories (`sgo/model/nativemodel.go`) checked against the runtime (TestSGoNativeOutcomes).
 - **negative_tests:** S12; fixture:native-send-closed, fixture:native-negative-capacity, fixture:chan-type, fixture:chan-len-denied, fixture:chan-cap-denied, fixture:chan-compare-denied, fixture:chan-elem-denied, fixture:chan-named-result-denied, fixture:chan-recv-only-close, fixture:ctl-range.
 - **implementation_coverage:** W07: model `sgo/model/nativemodel.go`; runtime `src/runtime/sgo_native.go`, `sgo_native_ops.go`; lowering `typecheck/syms.go` (`sgoRuntimeName`); admission `sgoadmit/admit_expr.go`; type rules `types2/sgo.go`, `types2/sgo_flow.go`.
-- **executed_evidence:** PENDING: W07 evidence record.
+- **executed_evidence:** `sgo/evidence/w07/README.md` (model lane; runtime lane against the model's outcome sets with GC and stack movement, select stress, race gate; native-* and chan-*-denied conformance cases; objdump check of compiled S-Go code).
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-CHAN-003 — Cancellation unwind of blocked operations, and deadlock (subset 2)
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-CHAN-002, SGO-CHAN-004, SGO-CANCEL-001, SGO-CANCEL-002, SGO-SPAWN-004, SGO-DEF-004, SGO-DEF-005, SGO-NUR-004, SGO-PROC-002; D33.
 - **grammar_and_types:** n/a — a runtime rule of the operations of SGO-CHAN-002 and SGO-CHAN-004; it adds no syntax.
 - **preconditions:** A send, receive, range step, or `select` without `default` must wait (it cannot proceed now) while a scope linked to the task is CANCELLING (SGO-CANCEL-002), or becomes so while it waits.
@@ -65,12 +65,12 @@ Denied in subsets 0 and 1 (spec 0.1.0 and 0.2.0, SGO-CHAN-001). Spec 0.3.0 admit
 - **positive_tests:** H06, N03, N08; fixture:native-cancel-unwind, fixture:native-cancel-joins-children, fixture:native-cancel-child-failure-primary, fixture:native-range-cancel; TestSGoNativeCancelUnwind.
 - **negative_tests:** fixture:ctl-select (deadlock), fixture:native-deadlock.
 - **implementation_coverage:** W07: `src/runtime/sgo_native.go` (`sgoCancelUnwind`), `sgo_nursery.go` (`sgoUnwindNurseries`), `sgo_scope.go` (`sgoTaskMain`), `sgo_main.go` (`sgoUnwoundOut`, `sgoThrowExit`), `panic.go` (`fatal`).
-- **executed_evidence:** PENDING: W07 evidence record.
+- **executed_evidence:** `sgo/evidence/w07/README.md` (TestSGoNativeCancelUnwind; native-cancel-* and native-deadlock conformance cases).
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-CHAN-004 — select (subset 2)
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-CHAN-002, SGO-CHAN-003; D34.
 - **grammar_and_types:** `select { case ch <- v: ... case x := <-ch: ... case x, ok := <-ch: ... case <-ch: ... default: ... }` with Go's syntax and typing; at most one `default`; arms may name the same channel more than once. `select {}` is admitted.
 - **preconditions:** As SGO-CHAN-002 for each arm.
@@ -87,5 +87,5 @@ Denied in subsets 0 and 1 (spec 0.1.0 and 0.2.0, SGO-CHAN-001). Spec 0.3.0 admit
 - **positive_tests:** N01, N02, N03, N06; fixture:chan-select, fixture:select-ready-arms, fixture:select-default, fixture:select-eval-order, fixture:select-duplicate-arms, fixture:select-send-arm; TestSGoNativeSelectStress.
 - **negative_tests:** fixture:ctl-select, fixture:select-send-closed.
 - **implementation_coverage:** W07: `src/runtime/sgo_native_ops.go`; lowering through Go's select walk (`walk/select.go`) with the S-Go entry points (`typecheck/syms.go`).
-- **executed_evidence:** PENDING: W07 evidence record.
+- **executed_evidence:** `sgo/evidence/w07/README.md` (TestSGoNativeSelectStress; select-* conformance cases; race gate).
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

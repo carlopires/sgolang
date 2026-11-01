@@ -1,3 +1,3 @@
 module example.com/permit-negative-capacity
 
-sgo 0.2.0
+sgo 0.3.0

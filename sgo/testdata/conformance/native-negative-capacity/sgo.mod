@@ -1,3 +1,3 @@
 module example.com/native-negative-capacity
 
-sgo 0.2.0
+sgo 0.3.0

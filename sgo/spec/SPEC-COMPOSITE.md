@@ -3,10 +3,10 @@
 Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-COMPOSITE`: `subset0` = `denied`).
 
 ### SGO-COMP-001 — Composite types are denied in subset 0
-- **version:** 1
+- **version:** 2
 - **status:** frozen
 - **reference_closure:** SGO-ERR-001; D06, D20.
-- **grammar_and_types:** Denied: pointers and `&`/`*`, arrays, slices, maps, structs, `make`, `new`, `append`, `copy`, `delete`, `cap`, composite literals, indexing, slicing, and string indexing and `range`. No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
+- **grammar_and_types:** Denied: pointers and `&`/`*`, arrays, slices, maps, structs, `make` (except `make` of a channel type, SGO-CHAN-002), `new`, `append`, `copy`, `delete`, `cap`, composite literals, indexing, slicing, and string indexing and `range` (except `range` over a channel, SGO-CHAN-002). No form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
 - **preconditions:** n/a — denial clause; there is nothing to use.
 - **evaluation_and_value_semantics:** n/a — denied constructs never execute.
 - **ownership_and_lifecycle:** n/a — denied constructs never execute.
@@ -19,7 +19,7 @@ Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-COMPOSITE`: `subs
 - **runtime_guards:** n/a — rejected before execution.
 - **tcb_assumptions:** n/a — no runtime involvement.
 - **positive_tests:** n/a — denial clause; admission is planned for later subset (D06; map order per D20).
-- **negative_tests:** S16; fixture:type-slice, fixture:type-struct, fixture:type-pointer, fixture:val-string-index.
+- **negative_tests:** S16; fixture:type-slice, fixture:type-struct, fixture:type-pointer, fixture:val-string-index, fixture:ctl-range, fixture:val-string-range.
 - **implementation_coverage:** gate level only — `sgo/scripts/sgo-target` denies every program (W00); compiler-level denial is W03.
 - **executed_evidence:** W00 gate checks passed on darwin/arm64, linux/amd64, linux/arm64 (gate level; not construct-specific).
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

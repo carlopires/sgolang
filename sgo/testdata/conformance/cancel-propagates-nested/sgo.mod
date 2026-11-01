@@ -1,3 +1,3 @@
 module example.com/cancel-propagates-nested
 
-sgo 0.2.0
+sgo 0.3.0

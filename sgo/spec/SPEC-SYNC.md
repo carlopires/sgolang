@@ -26,7 +26,7 @@ Go's shared-memory synchronization stays denied in every subset (SGO-SYNC-001, D
 
 ### SGO-SYNC-002 — Event and CapacityLimiter (subset 2)
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-SYNC-001, SGO-TYPE-005, SGO-CAP-001, SGO-CANCEL-002, SGO-SPAWN-004, SGO-PERMIT-002, SGO-DEF-003, SGO-CHAN-003; D37, D39.
 - **grammar_and_types:** `ev := sgo.NewEvent() *sgo.Event` with `ev.Set()`, `err := ev.Wait(task *sgo.Context) error`, and `ev.IsSet() bool`. `lim := sgo.NewCapacityLimiter(n int) *sgo.CapacityLimiter` with `tok, err := lim.Acquire(task *sgo.Context) (*sgo.Token, error)` and `tok.Release()`. `*sgo.Event`, `*sgo.CapacityLimiter`, and `*sgo.Token` are capability handle types (SGO-TYPE-005): no nil value, no comparison. The error results of `Wait` and `Acquire` must be used (SGO-CTL-001). No other member, and no semaphore, lock, or condition variable, is admitted (D39).
 - **preconditions:** `n >= 1`. `Wait` and `Acquire` take the calling task's own context. A token is released only by the task that acquired it, at most once.
@@ -43,5 +43,5 @@ Go's shared-memory synchronization stays denied in every subset (SGO-SYNC-001, D
 - **positive_tests:** fixture:sync-event-wakes-all, fixture:sync-event-wait-cancelled, fixture:sync-event-set-no-cancel, fixture:sync-limiter-handoff, fixture:sync-limiter-acquire-cancelled, fixture:sync-token-abandoned; TestSGoEvent, TestSGoLimiter; the model's event and limiter histories (TestSGoNativeOutcomes).
 - **negative_tests:** fixture:sync-token-double-release, fixture:sync-token-foreign-release, fixture:sync-limiter-zero, fixture:sync-event-discarded-error, fixture:sync-token-compare-denied, fixture:sync-nil-event-denied, fixture:sync-mutex.
 - **implementation_coverage:** W07: model `sgo/model/nativemodel.go`; runtime `src/runtime/sgo_sync.go`; API `src/sgo/sync.go`; admission `sgoadmit/admit_expr.go` (`sgoMembers`, `sgoHandleTypes`); handle rules `types2/sgo.go` (`isSgoHandle`).
-- **executed_evidence:** PENDING: W07 evidence record.
+- **executed_evidence:** `sgo/evidence/w07/README.md` (model event and limiter histories; TestSGoEvent, TestSGoLimiter, race gate; sync-* conformance cases).
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

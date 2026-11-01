@@ -1,3 +1,3 @@
 module example.com/bind-package-mismatch
 
-sgo 0.2.0
+sgo 0.3.0

@@ -45,6 +45,9 @@ PRIMITIVES = [
     {"id": "TCB-P14", "name": "OS cryptographic randomness", "clauses": ["SGO-AUTH-003"], "upstream": ["readRandom"], "sgo": "W05: sgo_entropy (sgo_effects.go)", "callers": ["sgo package (Entropy.Bytes)"]},
     {"id": "TCB-P15", "name": "simulated key-value store", "clauses": ["SGO-AUTH-003"], "upstream": [], "sgo": "W05: copy-on-write map, sgo_storeGet/sgo_storePut (sgo_effects.go)", "callers": ["sgo package (SimStore)"]},
     {"id": "TCB-P16", "name": "task ceilings and root grants", "clauses": ["SGO-AUTH-001", "SGO-AUTH-002"], "upstream": [], "sgo": "W05: ceiling fixed by sgoAdmit, sgoRequire, sgoGrantsInit from the linker's -sgogrants (sgo_auth.go)", "callers": ["sgo package (every effect operation, SpawnWithout, root accessors)", "TCB-P01"]},
+    {"id": "TCB-P17", "name": "native channels and select", "clauses": ["SGO-CHAN-002", "SGO-CHAN-003", "SGO-CHAN-004"], "upstream": ["gopark", "goready", "mallocgc", "typedmemmove", "cheaprandn"], "sgo": "W07: sgomakechan, sgochansend1, sgochanrecv1/2, sgoclosechan, sgoselectgo/nbsend/nbrecv, sgoblock on the TCB-P12 channel; cancellation unwind sgoCancelUnwind (sgo_native.go, sgo_native_ops.go); Deadlock record (sgo_main.go)", "callers": ["compiled S-Go code (lowered by typecheck.LookupRuntime)", "TCB-P05 (unwinding joins)"]},
+    {"id": "TCB-P18", "name": "Event and CapacityLimiter", "clauses": ["SGO-SYNC-002"], "upstream": ["gopark", "goready"], "sgo": "W07: sgoEventSet/Wait/IsSet, sgoLimiterAcquire, sgoTokenRelease, token resolution (sgo_sync.go)", "callers": ["sgo package (Event, CapacityLimiter, Token)", "TCB-P12 (obligation resolution)"]},
+    {"id": "TCB-P19", "name": "generator ownership claim", "clauses": ["SGO-AUTH-003"], "upstream": ["atomic_casPointer"], "sgo": "W07: sgo_claimOwner (sgo_effects.go)", "callers": ["sgo package (Random methods)"]},
 ]
 
 # Every go statement in the runtime closure (OWN-6), keyed by callee and file.
