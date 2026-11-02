@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.6.0",
- "allowlist_digest": "bc1c33e98cac86e6c9014dabdc069a641361e19d0d6270838e64da3974582fe8",
+ "allowlist_digest": "0caac9b53f5e22d8ee2eb131f3c63668e0ae988e0bc27b2f9cc004102b867e84",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -5773,6 +5773,28 @@
    "path": "src/unsafe/unsafe.go",
    "sha256": "139f79859cb2c690b63b56afe5c385b694ca418ce2dead0ab9d6b1568fad933c",
    "upstream_identical": true
+  }
+ ],
+ "headers": [
+  {
+   "path": "src/runtime/cgo/abi_amd64.h",
+   "sha256": "7832f3b0a3d91852a53705f3df6d16d69e1e785cfd1d733ee33229411cd26717"
+  },
+  {
+   "path": "src/runtime/cgo/abi_arm64.h",
+   "sha256": "ea02dbdbe31f446716c290bbeb5b98f940ab71c1756c5a7da68711ef73e2b3ec"
+  },
+  {
+   "path": "src/runtime/cgo/abi_loong64.h",
+   "sha256": "febbf02e904bcebc3fa37b968d086722f2fadd6364c21dd65413dee9065bff76"
+  },
+  {
+   "path": "src/runtime/cgo/abi_ppc64x.h",
+   "sha256": "c805863eed3ec9d923afa76fb1948b6a3206cc55169ac9286537149671122d29"
+  },
+  {
+   "path": "src/runtime/cgo/abi_riscv64.h",
+   "sha256": "bd8e193f0dba85cc04814d1d5da68d103c75fe76aa60b25e3eb4f13e44058767"
   }
  ]
 }

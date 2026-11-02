@@ -149,6 +149,15 @@ func (t *toolchain) buildTCB(goos, goarch string) (map[string]string, error) {
 	fmt.Fprintf(h, "%s %s/%s %v\n", t.version, goos, goarch, ctx.ToolTags)
 	for _, p := range pkgs {
 		fmt.Fprintf(h, "pkg %s\n", p.path)
+		// The assembler inputs are verified here, the compiler's check covering only Go files; their
+		// headers enter the cache key, so an edited header cannot reuse a stale build.
+		asm, err := verifyAsm(t.goroot, p.sfile)
+		if err != nil {
+			return nil, err
+		}
+		for _, l := range asm {
+			fmt.Fprintf(h, "asm %s\n", l)
+		}
 		for _, f := range append(append([]string(nil), p.gofile...), p.sfile...) {
 			data, err := os.ReadFile(f)
 			if err != nil {

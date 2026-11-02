@@ -22,6 +22,7 @@ SPEC_VERSION = open(os.path.join(ROOT, "sgo", "spec", "VERSION")).read().strip()
 GOOS = {"Darwin": "darwin", "Linux": "linux"}[platform.system()]
 GOARCH = {"arm64": "arm64", "aarch64": "arm64", "x86_64": "amd64"}[platform.machine()]
 HOST = f"{GOOS}_{GOARCH}"
+ARCH = GOARCH
 
 MAIN = 'package main\n\nimport "sgo"\n\nfunc main(root *sgo.Context) error {\n\treturn nil\n}\n'
 
@@ -70,6 +71,14 @@ def main():
              "file runtime/sgo_extra.go is not in sgo/TARGET_TCB.json"),
             ("edited sgo package file", os.path.join(root, "src", "sgo", "sgo.go"), "edit",
              "file sgo/sgo.go differs from its digest"),
+            # The assembler does not check digests; the driver verifies every assembler input of
+            # the TCB, headers included, transitively (W10).
+            ("edited runtime assembly file", os.path.join(root, "src", "runtime", f"asm_{ARCH}.s"), "edit",
+             f"assembler input runtime/asm_{ARCH}.s differs from its digest"),
+            ("edited included header outside the TCB packages", os.path.join(root, "src", "runtime", "cgo", f"abi_{ARCH}.h"), "edit",
+             f"assembler input runtime/cgo/abi_{ARCH}.h differs from its digest"),
+            ("added runtime assembly file", os.path.join(root, "src", "runtime", "sgo_extra.s"), "add-asm",
+             "assembler input runtime/sgo_extra.s is not in sgo/TARGET_TCB.json"),
         ]
         for label, path, how, msg in cases:
             if how == "edit":
@@ -77,13 +86,17 @@ def main():
                 open(path, "ab").write(b"\n// unreviewed change\n")
                 build(label, path, msg)
                 open(path, "wb").write(orig)
+            elif how == "add-asm":
+                open(path, "w").write("#include \"textflag.h\"\n\nTEXT \u00b7sgoExtraAsm(SB),NOSPLIT,$0-0\n\tRET\n")
+                build(label, path, msg)
+                os.remove(path)
             else:
                 open(path, "w").write("package runtime\n\nfunc sgoExtra() {}\n")
                 build(label, path, msg)
                 os.remove(path)
             build(f"restored after {label}")
-    print("test-tcb: ok: clean build; edited runtime file, added runtime file, and edited sgo file "
-          "each fail with one SGO_E_TCB_DIGEST; restored trees build")
+    print("test-tcb: ok: clean build; edited runtime file, added runtime file, edited sgo file, edited and "
+          "added assembly file, and edited included header each fail with one SGO_E_TCB_DIGEST; restored trees build")
 
 
 if __name__ == "__main__":
