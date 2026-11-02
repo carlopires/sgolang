@@ -121,6 +121,18 @@ jobs:
       - name: B05/S01/S15 gate checks
         run: sgo/scripts/check-w00.sh
 
+      - name: D67 benchmarks (S-Go vs the reference toolchain, lab off vs on)
+        run: |
+          plat="$(uname -s | tr A-Z a-z)_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
+          sgo/scripts/bench.py --sgo "$PWD/pkg/tool/$plat/sgo"
+
+      - name: Upload W10 benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: w10-bench-${{ matrix.runner }}
+          path: sgo/evidence/w10/bench-*
+          retention-days: 90
+
       - name: B03 upstream baseline tests
         if: github.event_name == 'push' || inputs.full_tests
         run: sgo/scripts/test-reference.sh
