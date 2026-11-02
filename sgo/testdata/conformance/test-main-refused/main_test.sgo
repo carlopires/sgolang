@@ -1,0 +1,7 @@
+package main
+
+import "sgo"
+
+func TestMain(t *sgo.T) error {
+	return nil
+}

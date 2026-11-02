@@ -1,0 +1,7 @@
+package lib
+
+import "sgo"
+
+func TestNoError(t *sgo.T) {
+	t.Log("no result")
+}

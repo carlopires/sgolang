@@ -45,6 +45,8 @@ def main():
         e = json.load(open(os.path.join(src, "expect.json")))
         if e.get("procedure") or e.get("build_args") or e.get("build_env"):
             continue  # build-procedure cases (rebuild, flags) are covered by their own tests
+        if e.get("kind") == "test":
+            continue  # library packages under sgo test: there is no program to build
         n += 1
         with tempfile.TemporaryDirectory() as tmp:
             d = os.path.join(tmp, name)

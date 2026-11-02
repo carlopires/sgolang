@@ -1,0 +1,14 @@
+package lib
+
+import "sgo"
+
+func TestKeep(t *sgo.T) error {
+	if One() != 1 {
+		return sgo.NewError("One() != 1")
+	}
+	return nil
+}
+
+func TestDrop(t *sgo.T) error {
+	return sgo.NewError("not selected by -run, must not run")
+}

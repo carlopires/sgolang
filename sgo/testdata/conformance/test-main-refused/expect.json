@@ -1,0 +1,14 @@
+{
+ "kind": "test",
+ "clauses": [
+  "SGO-TEST-002"
+ ],
+ "exit": 2,
+ "diagnostics": [
+  {
+   "code": "SGO_E_USAGE",
+   "file": "main_test.sgo",
+   "position": "main_test.sgo:5:1"
+  }
+ ]
+}

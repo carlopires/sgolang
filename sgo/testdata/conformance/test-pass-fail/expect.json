@@ -1,0 +1,20 @@
+{
+ "kind": "test",
+ "clauses": [
+  "SGO-TEST-002"
+ ],
+ "exit": 1,
+ "test_results": {
+  "TestPass": {
+   "result": "PASS"
+  },
+  "TestError": {
+   "result": "FAIL",
+   "kind": "MainError"
+  },
+  "TestFailure": {
+   "result": "FAIL",
+   "kind": "DivideByZero"
+  }
+ }
+}

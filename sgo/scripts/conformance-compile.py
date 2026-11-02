@@ -68,7 +68,8 @@ def main():
             if only and name not in only:
                 continue
             e = json.load(open(os.path.join(d, "expect.json")))
-            files = sorted(f for f in os.listdir(d) if f.endswith(".sgo")) if os.path.isdir(d) else []
+            # _test.sgo files are part of a package only under sgo test (SGO-TEST-002).
+            files = sorted(f for f in os.listdir(d) if f.endswith(".sgo") and not f.endswith("_test.sgo")) if os.path.isdir(d) else []
             if eligible(d, e, "run"):
                 r = subprocess.run([COMPILE, "-p", "main", "-importcfg", cfg, "-o", os.path.join(tmp, "out.o")] + files,
                                    cwd=d, capture_output=True, text=True)

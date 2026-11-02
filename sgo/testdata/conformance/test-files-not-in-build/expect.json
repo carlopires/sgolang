@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-TEST-002",
+  "SGO-TOOL-002"
+ ],
+ "exit": 0,
+ "stdout": "built without test files\n"
+}

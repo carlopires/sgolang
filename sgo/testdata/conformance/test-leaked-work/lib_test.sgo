@@ -1,0 +1,27 @@
+package lib
+
+import "sgo"
+
+func TestResolved(t *sgo.T) error {
+	ch := sgo.NewChannel[int](Capacity())
+	p, err := ch.Reserve(t.Context())
+	if err != nil {
+		return err
+	}
+	p.Abort()
+	return nil
+}
+
+func TestLeak(t *sgo.T) error {
+	ch := sgo.NewChannel[int](Capacity())
+	_, err := ch.Reserve(t.Context())
+	return err
+}
+
+func TestLeakAndError(t *sgo.T) error {
+	ch := sgo.NewChannel[int](Capacity())
+	if _, err := ch.Reserve(t.Context()); err != nil {
+		return err
+	}
+	return sgo.NewError("error after a leak")
+}

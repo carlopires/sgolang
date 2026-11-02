@@ -1,0 +1,20 @@
+{
+ "kind": "test",
+ "clauses": [
+  "SGO-TEST-003"
+ ],
+ "exit": 1,
+ "test_results": {
+  "TestResolved": {
+   "result": "PASS"
+  },
+  "TestLeak": {
+   "result": "FAIL",
+   "kind": "LeakedWork"
+  },
+  "TestLeakAndError": {
+   "result": "FAIL",
+   "kind": "MainError"
+  }
+ }
+}

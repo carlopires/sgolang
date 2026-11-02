@@ -1,0 +1,17 @@
+{
+ "kind": "test",
+ "clauses": [
+  "SGO-TEST-002"
+ ],
+ "test_args": [
+  "-run",
+  "Keep",
+  "./..."
+ ],
+ "exit": 0,
+ "test_results": {
+  "TestKeep": {
+   "result": "PASS"
+  }
+ }
+}

@@ -1,0 +1,6 @@
+package main
+
+// Not part of the package outside sgo test: this would not compile.
+func broken() int {
+	return "no"
+}

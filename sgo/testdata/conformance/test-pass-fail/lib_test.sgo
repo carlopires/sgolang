@@ -1,0 +1,23 @@
+package lib
+
+import "sgo"
+
+func TestPass(t *sgo.T) error {
+	if Half(10) != 5 {
+		return sgo.NewError("Half(10) != 5")
+	}
+	return nil
+}
+
+func TestError(t *sgo.T) error {
+	t.Log("returning an error")
+	return sgo.NewError("deliberate")
+}
+
+func TestFailure(t *sgo.T) error {
+	zero := Half(1)
+	if 10/zero == 0 {
+		return nil
+	}
+	return nil
+}

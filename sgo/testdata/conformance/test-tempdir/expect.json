@@ -1,0 +1,15 @@
+{
+ "kind": "test",
+ "clauses": [
+  "SGO-TEST-002"
+ ],
+ "exit": 0,
+ "test_results": {
+  "TestWrite": {
+   "result": "PASS"
+  },
+  "TestFresh": {
+   "result": "PASS"
+  }
+ }
+}

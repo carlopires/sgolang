@@ -40,7 +40,12 @@ CASES = os.path.join(SGO, "testdata", "conformance")
 REGISTRY = os.path.join(SGO, "SGO_SPEC_ADMISSION.json")
 KEYS = {"kind", "clauses", "exit", "stdout", "stdout_any_of", "stderr_kind", "stderr_exact", "diagnostics",
         "build_args", "build_env", "run_env", "timeout_ms", "expect_watchdog", "procedure", "note", "no_module", "occurrence", "stderr_message",
-        "lab_args", "trace_events", "lab_checks", "sweep"}
+        "lab_args", "trace_events", "lab_checks", "sweep", "test_args", "test_results"}
+# Test cases (kind "test", W10, SPEC-TEST): run `sgo test -v` (with "test_args", default ./...) in the
+# module root and check the exit status and each test's result ("test_results": name -> {"result":
+# "PASS" or "FAIL", optionally "kind": the kind of the last diagnostic record the test printed}); a
+# test case with diagnostics expects sgo test to refuse the package with them.
+TEST_RESULTS = {"PASS", "FAIL"}
 # Lab cases (kind "lab", W08, SPEC-LAB): run with `sgo lab run` (or `sgo lab sweep` with "sweep"), and
 # check the program's result, the trace's canonical events ("trace_events", in order), and the
 # lab_checks; a lab case with diagnostics expects the same rejection as production (S14).
@@ -95,8 +100,19 @@ def validate_case(name, d, clauses):
         tracked = subprocess.run(["git", "-C", ROOT, "ls-files", "--error-unmatch", rel], capture_output=True).returncode == 0
         if not tracked:
             errs.append(f"{name}: {f} is not tracked by git (check .gitignore; use git add -f)")
-    if e.get("kind") not in ("run", "reject", "lab"):
-        errs.append(f"{name}: kind must be run, reject, or lab")
+    if e.get("kind") not in ("run", "reject", "lab", "test"):
+        errs.append(f"{name}: kind must be run, reject, lab, or test")
+    if e.get("kind") == "test":
+        if not isinstance(e.get("exit"), int):
+            errs.append(f"{name}: test case needs integer exit")
+        res = e.get("test_results")
+        if "diagnostics" not in e and (not isinstance(res, dict) or not res):
+            errs.append(f"{name}: test case needs test_results or diagnostics")
+        for t, r in (res or {}).items():
+            if not isinstance(r, dict) or r.get("result") not in TEST_RESULTS or set(r) - {"result", "kind"}:
+                errs.append(f"{name}: test_results[{t!r}] must be {{\"result\": PASS|FAIL[, \"kind\": ...]}}")
+    elif any(k in e for k in ("test_args", "test_results")):
+        errs.append(f"{name}: test keys in a {e.get('kind')} case")
     if e.get("kind") == "lab":
         for c in e.get("lab_checks", []):
             if c not in LAB_CHECKS:
@@ -119,7 +135,7 @@ def validate_case(name, d, clauses):
             errs.append(f"{name}: run case needs exactly one of stdout / stdout_any_of")
         if "diagnostics" in e:
             errs.append(f"{name}: run case cannot have diagnostics")
-    if e.get("kind") == "reject" or (e.get("kind") == "lab" and "diagnostics" in e):
+    if e.get("kind") == "reject" or (e.get("kind") in ("lab", "test") and "diagnostics" in e):
         if not e.get("diagnostics"):
             errs.append(f"{name}: reject case needs diagnostics")
         for dg in e.get("diagnostics", []):
@@ -190,6 +206,8 @@ def run_case(name, src, sgo):
         shutil.copytree(src, d, symlinks=True)  # fixtures may hold symlinks (I01): copy them as links
         if e["kind"] == "lab":
             return run_lab_case(src, d, sgo, e)
+        if e["kind"] == "test":
+            return run_test_case(src, d, sgo, e)
         build = [sgo, "build", "-o", os.path.join(tmp, "prog")] + e.get("build_args", [])
         benv = env_for(e.get("build_env"))
         if e.get("procedure") == "rebuild-after-edit":
@@ -232,6 +250,42 @@ def run_case(name, src, sgo):
                 if "stderr_" + key in e and rec.get(key) != e["stderr_" + key]:
                     return f"diagnostic {key} {rec.get(key)!r}, want {e['stderr_' + key]!r}"
         return ""
+
+
+TEST_LINE = re.compile(r"^--- (PASS|FAIL): (\S+) \(")
+
+
+def run_test_case(src, d, sgo, e):
+    """A test case: sgo test -v, then per-test results and record kinds (SPEC-TEST)."""
+    r = subprocess.run([sgo, "test", "-v"] + e.get("test_args", ["./..."]), cwd=d, env=env_for(e.get("run_env")),
+                       capture_output=True, text=True, timeout=e.get("timeout_ms", 120000) / 1000)
+    if r.returncode != e["exit"]:
+        return f"sgo test exit {r.returncode}, want {e['exit']}; {r.stdout[-300:]!r} {r.stderr.strip()[:300]!r}"
+    if "diagnostics" in e:
+        got = [(m.group(1), m.group(2)) for m in DIAG.finditer(r.stderr)]
+        want = [(position(src, dg), dg["code"]) for dg in e["diagnostics"]]
+        return "" if got == want else f"diagnostics {got}, want {want}"
+    got, kinds, cur = {}, {}, None
+    for line in r.stdout.splitlines():
+        m = TEST_LINE.match(line)
+        if m:
+            cur = m.group(2)
+            got[cur] = m.group(1)
+            continue
+        if cur and line.startswith("    {"):
+            try:
+                kinds[cur] = json.loads(line[4:]).get("kind")
+            except ValueError:
+                pass
+        elif not line.startswith("    "):
+            cur = None
+    want = {t: v["result"] for t, v in e["test_results"].items()}
+    if got != want:
+        return f"test results {got}, want {want}"
+    for t, v in e["test_results"].items():
+        if "kind" in v and kinds.get(t) != v["kind"]:
+            return f"{t}: record kind {kinds.get(t)!r}, want {v['kind']!r}"
+    return ""
 
 
 def lab_trace(path):

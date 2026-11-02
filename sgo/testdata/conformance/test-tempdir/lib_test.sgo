@@ -1,0 +1,25 @@
+package lib
+
+import "sgo"
+
+func TestWrite(t *sgo.T) error {
+	d := t.TempDir()
+	if err := d.WriteFile(Name(), "hello"); err != nil {
+		return err
+	}
+	s, err := d.ReadFile(Name())
+	if err != nil {
+		return err
+	}
+	if s != "hello" {
+		return sgo.NewError("read back " + s)
+	}
+	return nil
+}
+
+func TestFresh(t *sgo.T) error {
+	if _, err := t.TempDir().ReadFile(Name()); err == nil {
+		return sgo.NewError("another test's file is visible")
+	}
+	return nil
+}
