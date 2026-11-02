@@ -1,0 +1,98 @@
+// Package pipeline is the pipeline example (D66): a producer, a pool of workers, and a collector
+// connected by channels, with a capacity limiter bounding how many workers compute at once. The
+// first bad record cancels the whole pipeline: every task ends, and Run reports the record.
+package pipeline
+
+import "sgo"
+
+// Run sums the squares of the records 1..count. workers tasks square the records; at most limit of
+// them compute at the same time. A record equal to bad (0: none) cancels the pipeline, and Run
+// returns an error naming it.
+func Run(c *sgo.Context, count, workers, limit, bad int) (int, error) {
+	records := make(chan int)
+	// The collector is the nursery's owner: it receives through an sgo.Channel, whose Receive
+	// reports cancellation as an error, where a blocked native receive would unwind it (SGO-CHAN-003).
+	results := sgo.NewChannel[int](0)
+	failed := make(chan int, 1)
+	lim := sgo.NewCapacityLimiter(limit)
+	total := 0
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			defer close(records)
+			for i := 1; i <= count; i++ {
+				records <- i
+			}
+			return nil
+		})
+		for k := 0; k < workers; k++ {
+			n.Spawn(func(task *sgo.Context) error {
+				for r := range records {
+					if r == bad {
+						failed <- r
+						n.Cancel()
+						return nil
+					}
+					tok, err := lim.Acquire(task)
+					if err != nil {
+						return err
+					}
+					sq := r * r
+					tok.Release()
+					p, rerr := results.Reserve(task)
+					if rerr != nil {
+						return rerr
+					}
+					if cerr := p.Commit(sq); cerr != nil {
+						return cerr
+					}
+				}
+				return nil
+			})
+		}
+		for i := 0; i < count; i++ {
+			v, _, rerr := results.Receive(c)
+			if rerr != nil {
+				break // cancelled by a bad record: the nursery joins every task
+			}
+			total += v
+		}
+	}
+	select {
+	case r := <-failed:
+		return 0, sgo.NewError("bad record " + Itoa(r))
+	default:
+	}
+	return total, nil
+}
+
+// Itoa formats a non-negative int in decimal.
+func Itoa(v int) string {
+	if v < 10 {
+		return digit(v)
+	}
+	return Itoa(v/10) + digit(v%10)
+}
+
+func digit(d int) string {
+	switch d {
+	case 0:
+		return "0"
+	case 1:
+		return "1"
+	case 2:
+		return "2"
+	case 3:
+		return "3"
+	case 4:
+		return "4"
+	case 5:
+		return "5"
+	case 6:
+		return "6"
+	case 7:
+		return "7"
+	case 8:
+		return "8"
+	}
+	return "9"
+}

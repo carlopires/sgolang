@@ -1,0 +1,2 @@
+sum of squares 1..100: 338350
+cancelled: bad record 37

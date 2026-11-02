@@ -1,0 +1,25 @@
+// The pipeline example (D66): sum the squares of 1..100 with four workers, two computing at
+// once; then the same pipeline with a bad record at 37, which cancels it.
+package main
+
+import (
+	"sgo"
+
+	"example.com/pipeline/pipeline"
+)
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	sum, err := pipeline.Run(root, 100, 4, 2, 0)
+	if err != nil {
+		return err
+	}
+	if werr := out.WriteString("sum of squares 1..100: " + pipeline.Itoa(sum) + "\n"); werr != nil {
+		return werr
+	}
+	_, err = pipeline.Run(root, 100, 4, 2, 37)
+	if err == nil {
+		return sgo.NewError("the bad record did not stop the pipeline")
+	}
+	return out.WriteString("cancelled: " + err.Error() + "\n")
+}

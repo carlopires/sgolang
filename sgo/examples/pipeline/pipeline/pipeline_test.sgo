@@ -1,0 +1,64 @@
+package pipeline
+
+import "sgo"
+
+func TestSum(t *sgo.T) error {
+	sum, err := Run(t.Context(), 100, 4, 2, 0)
+	if err != nil {
+		return err
+	}
+	if sum != 338350 {
+		return sgo.NewError("sum " + Itoa(sum) + ", want 338350")
+	}
+	return nil
+}
+
+func TestOneWorkerNoParallelism(t *sgo.T) error {
+	sum, err := Run(t.Context(), 10, 1, 1, 0)
+	if err != nil {
+		return err
+	}
+	if sum != 385 {
+		return sgo.NewError("sum " + Itoa(sum) + ", want 385")
+	}
+	return nil
+}
+
+func TestManyWorkersFewRecords(t *sgo.T) error {
+	sum, err := Run(t.Context(), 3, 16, 4, 0)
+	if err != nil {
+		return err
+	}
+	if sum != 14 {
+		return sgo.NewError("sum " + Itoa(sum) + ", want 14")
+	}
+	return nil
+}
+
+// A bad record cancels the pipeline; every task ends (the test's quiescence check, D64) and Run
+// names the record.
+func TestBadRecordCancels(t *sgo.T) error {
+	_, err := Run(t.Context(), 100, 4, 2, 37)
+	if err == nil {
+		return sgo.NewError("the bad record did not stop the pipeline")
+	}
+	if err.Error() != "bad record 37" {
+		return sgo.NewError("error " + err.Error())
+	}
+	return nil
+}
+
+func TestBadFirstRecord(t *sgo.T) error {
+	_, err := Run(t.Context(), 100, 4, 2, 1)
+	if err == nil || err.Error() != "bad record 1" {
+		return sgo.NewError("the first record did not stop the pipeline")
+	}
+	return nil
+}
+
+func TestItoa(t *sgo.T) error {
+	if Itoa(0) != "0" || Itoa(7) != "7" || Itoa(338350) != "338350" {
+		return sgo.NewError("Itoa")
+	}
+	return nil
+}
