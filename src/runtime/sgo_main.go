@@ -35,6 +35,7 @@ func sgoEnterMain() unsafe.Pointer {
 	t.ceiling = sgoRootCeiling
 	sgoLabBoot()      // lab binaries only (sgo_lab_boot.go)
 	sgoIOGrantsInit() // file and network grants; opens the granted directories (D52), not in lab runs
+	sgoTestBoot()     // test binaries only: the test selection and its directory (sgo_test_boot.go)
 	return unsafe.Pointer(&sgoContext{t: unsafe.Pointer(t)})
 }
 
@@ -45,6 +46,7 @@ func sgoExitMain(v any) {
 	if t == nil || t.id != 0 || len(t.nest) != 0 {
 		sgoDefect("main returned with an open nursery or outside the root task") // OWN-3
 	}
+	sgoTestEnd(t) // test binaries only: obligations the test left fail it with LeakedWork (D64)
 	if v == nil {
 		if sgoLab != nil {
 			sgoProgramExit(0, "") // a lab binary ends here, after the trace is written

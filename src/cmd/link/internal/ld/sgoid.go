@@ -192,9 +192,17 @@ func (ctxt *Link) sgoCheckIdentity() {
 // sgoLab is set by -sgolab: the program is linked for the lab execution configuration (D41).
 var sgoLab bool
 
+// sgoTest is set by -sgotest: the program is an S-Go test binary (D62).
+var sgoTest bool
+
 func sgoConfigName() string {
-	if sgoLab {
+	switch {
+	case sgoLab && sgoTest:
+		return "lab-test"
+	case sgoLab:
 		return "lab"
+	case sgoTest:
+		return "test"
 	}
 	return "prod"
 }

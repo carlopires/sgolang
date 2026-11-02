@@ -228,12 +228,17 @@ func Main(arch *sys.Arch, theArch Arch) {
 	// S-Go: the lab execution configuration (D41), written by sgo lab: every S-Go package must be
 	// compiled with -sgolab, and the runtime is marked as a lab binary.
 	flag.BoolVar(&sgoLab, "sgolab", false, "link an S-Go program for the lab execution configuration")
+	// S-Go: a test binary (D62), written by sgo test: the runtime reads a test selection on fd 3.
+	flag.BoolVar(&sgoTest, "sgotest", false, "link an S-Go test binary")
 	objabi.Flagcount("v", "print link trace", &ctxt.Debugvlog)
 	objabi.Flagfn1("importcfg", "read import configuration from `file`", ctxt.readImportCfg)
 
 	objabi.Flagparse(usage)
 	if sgoLab {
 		addstrdata1(ctxt, "runtime.sgoLabBuild=lab") // the runtime boots the lab (sgo_lab_boot.go)
+	}
+	if sgoTest {
+		addstrdata1(ctxt, "runtime.sgoTestBuild=test") // the runtime reads a test selection (sgo_test_boot.go)
 	}
 	counter.CountFlags("link/flag:", *flag.CommandLine)
 
