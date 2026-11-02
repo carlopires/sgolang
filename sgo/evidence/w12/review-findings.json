@@ -103,10 +103,10 @@
       "title": "Allocation under c.lock in sgoChanReserve",
       "location": "runtime/sgo_chan.go:236",
       "clause": "sgo/docs/runtime-design.md §3",
-      "status": "open",
-      "resolution": null,
+      "status": "fixed",
+      "resolution": "sgoChanReserve allocates the permit once before lock(&c.lock) and reuses it across retries (the task's scope cannot change while it is blocked); the order of c.reserved++ and sgoPermitLink is unchanged. The audit of the other allocation sites under runtime locks (sgo_native_ops.go, sgo_ready.go) and the static check script are still open.",
       "fix_commit": null,
-      "regression_test": null
+      "regression_test": "runtime lane TestSGoChan*/TestSGoPermit* and the race lane on TestSGoChan; conformance; test-lab. The static 'no allocation between lock and unlock' check is pending (part of R9)."
     }
   ],
   "self_findings": [

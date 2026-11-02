@@ -234,13 +234,16 @@ func sgoChanReserve(c *sgoChan, t *sgoTask) (*sgoPermit, error) {
 		return nil, err
 	}
 	w := &sgoChanWait{task: t}
+	// Allocated before taking c.lock: no allocation under a runtime lock (runtime-design §3,
+	// W12 R9). The task's current scope does not change while it is blocked here, so the permit is
+	// reused across retries; on the closed and cancelled exits it is dropped.
+	p := &sgoPermit{ch: c, owner: t, scope: t.currentScope(), state: sgoPermitReserved}
 	lock(&c.lock)
 	for {
 		if c.closed {
 			unlock(&c.lock)
 			return nil, sgoErrReserveClosed
 		}
-		p := &sgoPermit{ch: c, owner: t, scope: t.currentScope(), state: sgoPermitReserved}
 		if c.cap > 0 && int64(len(c.queue))+c.reserved < c.cap {
 			c.reserved++
 			sgoChanCheck(c)
