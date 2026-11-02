@@ -112,3 +112,17 @@ TEXT runtime·sgo_closedir_trampoline(SB),NOSPLIT,$0-0
 	JMP	libc_closedir(SB)
 TEXT runtime·sgo_getpeereid_trampoline(SB),NOSPLIT,$0-0
 	JMP	libc_getpeereid(SB)
+
+// ftruncate(fd int32 @0) to length 0. The scheduler is told by the Go caller (entersyscall).
+TEXT runtime·sgo_ftruncate_trampoline(SB),NOSPLIT,$0
+	MOVD	$0, R1
+	MOVW	0(R0), R0
+	BL	libc_ftruncate(SB)
+	MOVD	$-1, R1
+	CMP	R0, R1
+	BNE	noerr
+	BL	libc_error(SB)
+	MOVW	(R0), R0
+	NEG	R0, R0
+noerr:
+	RET

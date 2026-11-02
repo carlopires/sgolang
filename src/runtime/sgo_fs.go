@@ -63,6 +63,9 @@ func sgoErrKind(e int32) string {
 		return "IsDirectory"
 	case sgoENOTEMPTY:
 		return "NotEmpty"
+	case sgoENXIO:
+		// open(O_WRONLY|O_NONBLOCK) of a FIFO without a reader, or of a device (W12 R4).
+		return "NotRegularFile"
 	}
 	return "IOError"
 }

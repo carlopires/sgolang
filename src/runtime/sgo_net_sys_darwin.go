@@ -173,22 +173,25 @@ func sgoStatMode(b *sgoStatBuf) uint32 { return uint32(*(*uint16)(unsafe.Pointer
 // negated errno. libc's fdopendir takes fd; readdir_r fills a struct dirent (d_namlen uint16 at
 // 18, d_name at 21 on darwin/arm64).
 func sgoReadDirNames(fd int32) ([]string, int32) {
-	dir, _, errno := syscall_rawsyscalln(abi.FuncPCABI0(sgo_fdopendir_trampoline), uintptr(fd))
+	// The buffers are on the heap: syscall_syscalln may grow the stack before it enters the
+	// system call, so their addresses must not be stack addresses. syscall_syscalln tells the
+	// scheduler about each call (W12 R4).
+	dir, _, errno := syscall_syscalln(abi.FuncPCABI0(sgo_fdopendir_trampoline), uintptr(fd))
 	if dir == 0 {
 		sgoCloseFD(fd)
 		return nil, -int32(errno)
 	}
 	var names []string
-	var ent [1048]byte
-	var res uintptr
+	ent := new([1048]byte)
+	res := new(uintptr)
 	r := int32(0)
 	for {
-		e, _, _ := syscall_rawsyscalln(abi.FuncPCABI0(sgo_readdir_r_trampoline), dir, uintptr(unsafe.Pointer(&ent[0])), uintptr(unsafe.Pointer(&res)))
+		e, _, _ := syscall_syscalln(abi.FuncPCABI0(sgo_readdir_r_trampoline), dir, uintptr(unsafe.Pointer(&ent[0])), uintptr(unsafe.Pointer(res)))
 		if e != 0 {
 			r = -int32(e)
 			break
 		}
-		if res == 0 {
+		if *res == 0 {
 			break
 		}
 		n := int(*(*uint16)(unsafe.Pointer(&ent[18])))
@@ -196,9 +199,9 @@ func sgoReadDirNames(fd int32) ([]string, int32) {
 			names = append(names, name)
 		}
 	}
-	KeepAlive(&ent)
-	KeepAlive(&res)
-	syscall_rawsyscalln(abi.FuncPCABI0(sgo_closedir_trampoline), dir)
+	KeepAlive(ent)
+	KeepAlive(res)
+	syscall_syscalln(abi.FuncPCABI0(sgo_closedir_trampoline), dir)
 	return names, r
 }
 

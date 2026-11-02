@@ -21,10 +21,11 @@
       "title": "S-Go programs honour GODEBUG, GOTRACEBACK, GOGC, GOMEMLIMIT and GOMAXPROCS",
       "location": "runtime/proc.go schedinit; runtime1.go; mgcpacer.go",
       "clause": "SGO-PROC-004",
-      "status": "fixed",
+      "status": "verified",
       "resolution": "The S-Go linker marks every binary it links (addstrdata1 runtime.sgoLinked=1, before schedinit). In such a binary gogetenv returns \"\" for every key (GODEBUG, GOTRACEBACK, GOGC, GOMEMLIMIT, GOMAXPROCS, GOROOT) and getGodebugEarly returns only the build's godebugDefault, so cpuinit and the debug variables use fixed defaults. Upstream-linked binaries (runtime lane) are unchanged. GOMAXPROCS is ignored too (D84, user decision); D82's rationale corrected.",
-      "fix_commit": null,
-      "regression_test": "conformance proc-env-ignored (panic record exact under GODEBUG=schedtrace,inittrace,gctrace,invalidptr=0,sbrk=1; GOGC=1; GOMEMLIMIT=1; GOTRACEBACK=crash; GOMAXPROCS=1) and proc-env-ignored-ok (stderr exactly empty); mutant without the linker marker fails both (schedtrace/inittrace output); runtime lane TestSGoEnvUpstreamLinked"
+      "fix_commit": "bc8027270a",
+      "regression_test": "conformance proc-env-ignored (panic record exact under GODEBUG=schedtrace,inittrace,gctrace,invalidptr=0,sbrk=1; GOGC=1; GOMEMLIMIT=1; GOTRACEBACK=crash; GOMAXPROCS=1) and proc-env-ignored-ok (stderr exactly empty); mutant without the linker marker fails both (schedtrace/inittrace output); runtime lane TestSGoEnvUpstreamLinked",
+      "verified_by": "reviewer at bc8027270a (linux/amd64): p4 under hostile env prints only the record; proc-hello with inittrace/gctrace stderr empty; gogetenv sites audited; conformance 341/341; runtime lane ok. Reviewer request: note next to the linker marker that it relies on 'this linker links only S-Go programs', enforced by R3's required -buildid and sgoCheckIdentity."
     },
     {
       "id": "R3",
@@ -43,10 +44,10 @@
       "title": "Dir.Open/Create on a FIFO wedges the program; the drain budget never fires",
       "location": "runtime/sgo_io_sys_linux.go, sgo_io_sys_darwin*, sgo_fs.go, sgo_io.go",
       "clause": "SGO-DRAIN-002, SGO-FILE-003, D55",
-      "status": "open",
-      "resolution": null,
+      "status": "fixed",
+      "resolution": "(1) Dir.Open/Create open the last component with O_NONBLOCK, fstat it, close and report NotRegularFile (no effect) for anything but a regular file (IsDirectory kept for directories), and clear O_NONBLOCK on success; ENXIO maps to NotRegularFile. (2) Every file system call that can block goes through entersyscall/exitsyscall: linux sgoSys (openat, fstatat, mkdirat, unlinkat, getdents64, ftruncate, and the socket calls), darwin sgoOpenat/Fstatat/Fstat/Mkdirat/Unlinkat/Ftruncate, darwin readdir through syscall_syscalln with heap buffers. No caller holds a runtime lock. D55 unchanged: file calls are still not cancellation points. The NotRegularFile kind and the regular-files-only rule join SPEC-FILE in the 0.7.0 change (doc item D-R4).",
       "fix_commit": null,
-      "regression_test": null
+      "regression_test": "conformance file-open-fifo (runner mkfifo; Open and Create -> NotRegularFile with NoEffect, under a 5 s watchdog); runtime lane TestSGoBlockedOpenDoesNotStallGC (blocking openat on a FIFO through a test hook while 20 GCs run; the mutant without entersyscall hangs until the 60 s test timeout); linux/amd64 and linux/arm64 vet of the runtime"
     },
     {
       "id": "R5",
@@ -69,7 +70,8 @@
       "status": "open",
       "resolution": null,
       "fix_commit": null,
-      "regression_test": null
+      "regression_test": null,
+      "note": "Partly addressed by R4's change: Create now opens without O_TRUNC and truncates only after the chain verification succeeded, so a file reached through a raced path is never truncated (it may still be created). openat2 and Mkdir/Remove re-verification remain."
     },
     {
       "id": "R7",
@@ -173,6 +175,12 @@
       "for": "R1",
       "text": "reviewer suggestion: test-tcb case mapping a pinned TCB archive under a user import path in an importcfg (expected refused by importer/linker)",
       "status": "open"
+    },
+    {
+      "id": "D-R4",
+      "for": "R4",
+      "text": "SPEC-FILE: Open/Create admit regular files only; NotRegularFile joins the error kinds; lab fake and model state the same rule",
+      "status": "open, with the 0.7.0 change"
     }
   ]
 }

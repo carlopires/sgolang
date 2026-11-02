@@ -23,12 +23,17 @@ const (
 	sgoO_NOFOLLOW  = 0x100
 	sgoO_DIRECTORY = 0x100000
 	sgoO_CLOEXEC   = 0x1000000
+	sgoO_NONBLOCK  = 0x4
+
+	sgoF_GETFL = 3
+	sgoF_SETFL = 4
 
 	sgoAT_FDCWD            = -2
 	sgoAT_SYMLINK_NOFOLLOW = 0x20
 	sgoAT_REMOVEDIR        = 0x80
 
 	sgoENOENT    = 2
+	sgoENXIO     = 6
 	sgoEINTR     = 4
 	sgoEEXIST    = 17
 	sgoENOTDIR   = 20
@@ -52,7 +57,9 @@ func sgoStatID(b *sgoStatBuf) (dev, ino uint64, isDir, isLink bool) {
 //go:nosplit
 //go:cgo_unsafe_args
 func sgoOpenat(dirfd int32, path *byte, flags, mode int32) int32 {
+	entersyscall()
 	ret := libcCall(unsafe.Pointer(abi.FuncPCABI0(sgo_openat_trampoline)), unsafe.Pointer(&dirfd))
+	exitsyscall()
 	KeepAlive(path)
 	return ret
 }
@@ -61,7 +68,9 @@ func sgo_openat_trampoline()
 //go:nosplit
 //go:cgo_unsafe_args
 func sgoFstatat(dirfd int32, path *byte, st *sgoStatBuf, flags int32) int32 {
+	entersyscall()
 	ret := libcCall(unsafe.Pointer(abi.FuncPCABI0(sgo_fstatat_trampoline)), unsafe.Pointer(&dirfd))
+	exitsyscall()
 	KeepAlive(path)
 	KeepAlive(st)
 	return ret
@@ -71,7 +80,9 @@ func sgo_fstatat_trampoline()
 //go:nosplit
 //go:cgo_unsafe_args
 func sgoFstat(fd int32, st *sgoStatBuf) int32 {
+	entersyscall()
 	ret := libcCall(unsafe.Pointer(abi.FuncPCABI0(sgo_fstat_trampoline)), unsafe.Pointer(&fd))
+	exitsyscall()
 	KeepAlive(st)
 	return ret
 }
@@ -80,7 +91,9 @@ func sgo_fstat_trampoline()
 //go:nosplit
 //go:cgo_unsafe_args
 func sgoMkdirat(dirfd int32, path *byte, mode int32) int32 {
+	entersyscall()
 	ret := libcCall(unsafe.Pointer(abi.FuncPCABI0(sgo_mkdirat_trampoline)), unsafe.Pointer(&dirfd))
+	exitsyscall()
 	KeepAlive(path)
 	return ret
 }
@@ -89,11 +102,32 @@ func sgo_mkdirat_trampoline()
 //go:nosplit
 //go:cgo_unsafe_args
 func sgoUnlinkat(dirfd int32, path *byte, flags int32) int32 {
+	entersyscall()
 	ret := libcCall(unsafe.Pointer(abi.FuncPCABI0(sgo_unlinkat_trampoline)), unsafe.Pointer(&dirfd))
+	exitsyscall()
 	KeepAlive(path)
 	return ret
 }
 func sgo_unlinkat_trampoline()
+
+// sgoFtruncate truncates fd to zero length.
+//
+//go:nosplit
+//go:cgo_unsafe_args
+func sgoFtruncate(fd int32) int32 {
+	entersyscall()
+	ret := libcCall(unsafe.Pointer(abi.FuncPCABI0(sgo_ftruncate_trampoline)), unsafe.Pointer(&fd))
+	exitsyscall()
+	return ret
+}
+func sgo_ftruncate_trampoline()
+
+// sgoClearNonblock clears O_NONBLOCK on fd.
+func sgoClearNonblock(fd int32) {
+	if fl, _ := fcntl(fd, sgoF_GETFL, 0); fl >= 0 {
+		fcntl(fd, sgoF_SETFL, fl&^sgoO_NONBLOCK)
+	}
+}
 
 // sgoCloseFD closes fd.
 func sgoCloseFD(fd int32) { closefd(fd) }
@@ -103,6 +137,7 @@ func sgoCloseFD(fd int32) { closefd(fd) }
 //go:cgo_import_dynamic libc_fstat fstat "/usr/lib/libSystem.B.dylib"
 //go:cgo_import_dynamic libc_mkdirat mkdirat "/usr/lib/libSystem.B.dylib"
 //go:cgo_import_dynamic libc_unlinkat unlinkat "/usr/lib/libSystem.B.dylib"
+//go:cgo_import_dynamic libc_ftruncate ftruncate "/usr/lib/libSystem.B.dylib"
 
 // sgoStatSize is st_size (int64 at 96: after the four timespecs).
 func sgoStatSize(b *sgoStatBuf) int64 { return *(*int64)(unsafe.Pointer(&b[96])) }

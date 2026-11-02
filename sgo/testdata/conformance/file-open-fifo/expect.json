@@ -1,0 +1,14 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-FILE-002",
+  "SGO-FILE-003"
+ ],
+ "exit": 0,
+ "stdout": "open: NotRegularFile: Dir.Open\ncreate: NotRegularFile: Dir.Create\n",
+ "mkfifo": [
+  "data/fifo"
+ ],
+ "timeout_ms": 5000,
+ "note": "W12 R4: a FIFO in a granted directory used to block Open and Create forever while holding a processor, stalling GC and the drain budget."
+}

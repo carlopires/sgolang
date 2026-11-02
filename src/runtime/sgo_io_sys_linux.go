@@ -15,12 +15,16 @@ import (
 )
 
 const (
-	sgoO_RDONLY  = 0x0
-	sgoO_WRONLY  = 0x1
-	sgoO_CREAT   = 0x40
-	sgoO_EXCL    = 0x80
-	sgoO_TRUNC   = 0x200
-	sgoO_CLOEXEC = 0x80000
+	sgoO_RDONLY   = 0x0
+	sgoO_WRONLY   = 0x1
+	sgoO_CREAT    = 0x40
+	sgoO_EXCL     = 0x80
+	sgoO_TRUNC    = 0x200
+	sgoO_CLOEXEC  = 0x80000
+	sgoO_NONBLOCK = 0x800
+
+	sgoF_GETFL = 3
+	sgoF_SETFL = 4
 
 	sgoAT_FDCWD            = -100
 	sgoAT_SYMLINK_NOFOLLOW = 0x100
@@ -28,6 +32,7 @@ const (
 	sgoAT_EMPTY_PATH       = 0x1000
 
 	sgoENOENT    = 2
+	sgoENXIO     = 6
 	sgoEINTR     = 4
 	sgoEEXIST    = 17
 	sgoENOTDIR   = 20
@@ -47,10 +52,16 @@ func sgoSyscall6(num, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2, errno uintptr) {
 	return linux.Syscall6(num, a1, a2, a3, a4, a5, a6)
 }
 
+// sgoSys tells the scheduler about the call (entersyscall): a file system call can block for
+// long (a FIFO, NFS, FUSE), and a blocked call holding its P would stall stop-the-world and every
+// other task (W12 R4). No caller holds a runtime lock.
+//
 //go:nosplit
 //go:uintptrkeepalive
 func sgoSys(num, a1, a2, a3, a4 uintptr) int32 {
+	entersyscall()
 	r, _, errno := linux.Syscall6(num, a1, a2, a3, a4, 0, 0)
+	exitsyscall()
 	if errno != 0 {
 		return -int32(errno)
 	}
@@ -85,6 +96,16 @@ func sgoUnlinkat(dirfd int32, path *byte, flags int32) int32 {
 	r := sgoSys(sgoSYS_unlinkat, uintptr(int64(dirfd)), uintptr(unsafe.Pointer(path)), uintptr(flags), 0)
 	KeepAlive(path)
 	return r
+}
+
+// sgoFtruncate truncates fd to zero length.
+func sgoFtruncate(fd int32) int32 { return sgoSys(sgoSYS_ftruncate, uintptr(fd), 0, 0, 0) }
+
+// sgoClearNonblock clears O_NONBLOCK on fd.
+func sgoClearNonblock(fd int32) {
+	if fl, _ := fcntl(fd, sgoF_GETFL, 0); fl >= 0 {
+		fcntl(fd, sgoF_SETFL, fl&^sgoO_NONBLOCK)
+	}
 }
 
 // sgoCloseFD closes fd.

@@ -145,3 +145,13 @@ func SGoParseEndpoint(a string) bool {
 	var g sgoNetGrant
 	return sgoParseEndpoint(a, &g)
 }
+
+// SGoOpenBlocking opens path read-only *without* O_NONBLOCK through the adapter's openat, so a
+// FIFO without a writer blocks inside the system call (W12 R4 test hook). It returns the fd or
+// the negated errno.
+func SGoOpenBlocking(path string) int32 {
+	return sgoOpenat(sgoAT_FDCWD, sgoCString(path), sgoO_RDONLY|sgoO_CLOEXEC, 0)
+}
+
+// SGoCloseFD closes fd.
+func SGoCloseFD(fd int32) { sgoCloseFD(fd) }

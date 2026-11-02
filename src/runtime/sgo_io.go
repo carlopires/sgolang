@@ -303,7 +303,11 @@ func sgoFileSize(h *sgoHandle) (int, *sgoIOErr) {
 	return int(sgoStatSize(&st)), nil
 }
 
-// sgoDirOpenFile opens path in directory h: for reading, or (write) created or truncated.
+// sgoDirOpenFile opens path in directory h: for reading, or (write) created or truncated. Only
+// regular files are opened (W12 R4): the last component is opened with O_NONBLOCK, so a FIFO or
+// device cannot block the open, and anything that is not a regular file is closed again and
+// reported as NotRegularFile with no effect. Create truncates only after the resolution has been
+// verified (W12 R6): a file reached through a raced path is never truncated.
 func sgoDirOpenFile(h *sgoHandle, path string, write bool) (*sgoHandle, *sgoIOErr) {
 	op := "Dir.Open"
 	if write {
@@ -313,21 +317,36 @@ func sgoDirOpenFile(h *sgoHandle, path string, write bool) (*sgoHandle, *sgoIOEr
 		return nil, e
 	}
 	defer sgoHandleEnd(h)
-	flags := int32(sgoO_RDONLY)
+	flags := int32(sgoO_RDONLY | sgoO_NONBLOCK)
 	if write {
 		if h.readOnly {
 			return nil, &sgoIOErr{"ReadOnly", 0}
 		}
-		flags = sgoO_WRONLY | sgoO_CREAT | sgoO_TRUNC
+		flags = sgoO_WRONLY | sgoO_CREAT | sgoO_NONBLOCK
 	}
 	fd, kind := sgoResolve(h.fd, path, flags, 0o644)
 	if kind != "" {
 		return nil, &sgoIOErr{kind, 0}
 	}
-	if _, isDir, _ := sgoFdID(fd); isDir {
+	var st sgoStatBuf
+	if sgoFstat(fd, &st) < 0 {
+		sgoCloseFD(fd)
+		return nil, &sgoIOErr{"IOError", 0}
+	}
+	switch sgoStatMode(&st) & 0xF000 {
+	case 0x8000: // regular file
+	case 0x4000:
 		sgoCloseFD(fd)
 		return nil, &sgoIOErr{"IsDirectory", 0}
+	default:
+		sgoCloseFD(fd)
+		return nil, &sgoIOErr{"NotRegularFile", 0}
 	}
+	if write && sgoFtruncate(fd) < 0 {
+		sgoCloseFD(fd)
+		return nil, &sgoIOErr{"IOError", 0}
+	}
+	sgoClearNonblock(fd)
 	f := sgoHandleNew(sgoHFile, fd, path)
 	f.write = write
 	return f, nil

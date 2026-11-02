@@ -20,6 +20,7 @@ const (
 	sgoSYS_fstatat     = 262 // newfstatat
 	sgoSYS_mkdirat     = 258
 	sgoSYS_unlinkat    = 263
+	sgoSYS_ftruncate   = 77
 
 	sgoO_NOFOLLOW  = 0x20000
 	sgoO_DIRECTORY = 0x10000

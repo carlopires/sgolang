@@ -12,7 +12,9 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"syscall"
 	"testing"
+	"time"
 )
 
 // recovered runs f and returns the error it panicked with, or nil.
@@ -192,5 +194,41 @@ func TestSGoDirList(t *testing.T) {
 	runtime.SGoSortStrings(s)
 	if !slices.Equal(s, ref) {
 		t.Errorf("sort: %q", s)
+	}
+}
+
+// TestSGoBlockedOpenDoesNotStallGC: a task blocked in the adapter's openat (a FIFO with no writer)
+// must not stop the world from stopping: the adapter tells the scheduler about the system call
+// (entersyscall). Before W12 R4 the call held its P and the first GC waited for it forever.
+func TestSGoBlockedOpenDoesNotStallGC(t *testing.T) {
+	fifo := filepath.Join(t.TempDir(), "fifo")
+	if err := syscall.Mkfifo(fifo, 0o600); err != nil {
+		t.Skip("mkfifo:", err)
+	}
+	opened := make(chan int32, 1)
+	go func() { opened <- runtime.SGoOpenBlocking(fifo) }()
+	time.Sleep(50 * time.Millisecond) // let the open block in the kernel
+	done := make(chan struct{})
+	go func() {
+		for i := 0; i < 20; i++ {
+			runtime.GC()
+		}
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(20 * time.Second):
+		t.Fatal("GC did not complete while a task was blocked in the adapter's openat")
+	}
+	// Unblock the reader: open the FIFO for writing.
+	w, err := os.OpenFile(fifo, os.O_WRONLY, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer w.Close()
+	if fd := <-opened; fd < 0 {
+		t.Fatalf("blocking open failed: %d", fd)
+	} else {
+		runtime.SGoCloseFD(fd)
 	}
 }

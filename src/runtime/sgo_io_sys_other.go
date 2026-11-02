@@ -16,6 +16,7 @@ const (
 	sgoENOENT, sgoEINTR, sgoEEXIST, sgoENOTDIR, sgoEISDIR, sgoELOOP, sgoENOTEMPTY = 2, 4, 17, 20, 21, 40, 39
 	sgoAT_FDCWD                                                                   = -100
 	sgoENOSYS                                                                     = 38
+	sgoO_NONBLOCK, sgoENXIO                                                       = 0, 6
 )
 
 type sgoStatBuf [256]byte
@@ -27,6 +28,8 @@ func sgoFstat(fd int32, st *sgoStatBuf) int32                               { re
 func sgoMkdirat(dirfd int32, path *byte, mode int32) int32                  { return -sgoENOSYS }
 func sgoUnlinkat(dirfd int32, path *byte, flags int32) int32                { return -sgoENOSYS }
 func sgoCloseFD(fd int32)                                                   {}
+func sgoFtruncate(fd int32) int32                                           { return -sgoENOSYS }
+func sgoClearNonblock(fd int32)                                             {}
 
 func sgoStatSize(b *sgoStatBuf) int64 { return 0 }
 

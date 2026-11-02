@@ -1,0 +1,22 @@
+package main
+
+import "sgo"
+
+// W12 R4: only regular files are opened. A FIFO (made by the runner, nobody writes or reads it)
+// must not block Open or Create: both fail at once with NotRegularFile and no effect.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	d := root.Dir("data")
+	_, oerr := d.Open("fifo")
+	if oerr == nil {
+		return sgo.NewError("Open of a FIFO succeeded")
+	}
+	_, cerr := d.Create("fifo")
+	if cerr == nil {
+		return sgo.NewError("Create of a FIFO succeeded")
+	}
+	if !sgo.NoEffect(oerr) || !sgo.NoEffect(cerr) {
+		return sgo.NewError("a refused open reported an effect")
+	}
+	return out.WriteString("open: " + oerr.Error() + "\ncreate: " + cerr.Error() + "\n")
+}

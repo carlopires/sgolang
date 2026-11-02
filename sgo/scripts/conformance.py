@@ -27,6 +27,8 @@ Case layout: sgo/testdata/conformance/<name>/{sgo.mod, *.sgo, ..., expect.json}.
   procedure          (optional) "rebuild-after-edit": build once, replace each X with X.next, build again;
                      the expectations apply to the second build
   no_module          (optional) true if the case deliberately has no sgo.mod
+  mkfifo             (optional) [paths relative to the case]: named pipes created in the case's copy
+                     before building (git cannot hold a FIFO; W12 R4)
 Positions are computed from "at": the first occurrence (or "occurrence": n) of the text in the file,
 reported as file:line:col with 1-based columns counted in bytes.
 """
@@ -42,7 +44,7 @@ SGO = os.path.join(ROOT, "sgo")
 CASES = os.path.join(SGO, "testdata", "conformance")
 REGISTRY = os.path.join(SGO, "SGO_SPEC_ADMISSION.json")
 KEYS = {"kind", "clauses", "exit", "stdout", "stdout_any_of", "stderr_kind", "stderr_exact", "diagnostics",
-        "build_args", "build_env", "run_env", "timeout_ms", "expect_watchdog", "procedure", "note", "no_module", "occurrence", "stderr_message",
+        "build_args", "build_env", "run_env", "timeout_ms", "expect_watchdog", "procedure", "note", "no_module", "mkfifo", "occurrence", "stderr_message",
         "lab_args", "trace_events", "lab_checks", "sweep", "test_args", "test_results"}
 # Test cases (kind "test", W10, SPEC-TEST): run `sgo test -v` (with "test_args", default ./...) in the
 # module root and check the exit status and each test's result ("test_results": name -> {"result":
@@ -207,6 +209,8 @@ def run_case(name, src, sgo):
     with tempfile.TemporaryDirectory() as tmp:
         d = os.path.join(tmp, name)
         shutil.copytree(src, d, symlinks=True)  # fixtures may hold symlinks (I01): copy them as links
+        for f in e.get("mkfifo", []):
+            os.mkfifo(os.path.join(d, f))
         if e["kind"] == "lab":
             return run_lab_case(src, d, sgo, e)
         if e["kind"] == "test":
