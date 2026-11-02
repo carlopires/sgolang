@@ -546,6 +546,26 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation.** (1) `sgo.StartTest` is admitted only in the main package `sgo test` generates: the compiler admits it only under `-sgotestmain`, which only the driver passes for that file, so user code calling it is rejected at compile time (`SGO_E_UNADMITTED`). (2) A test that returns an error and leaves obligations keeps its error as the primary outcome, with the abandoned obligations in the record's chain; `LeakedWork` only when the test returned nil (SGO-TEST-003). (3) Tests of package `main` are refused in 0.6.0 (`SGO_E_USAGE`: move the code under test to a library package). (4) The watchdog is a fixed 60 s with no flag. (5) Tests under the lab configuration are not in 0.6.0.
 
+## D70 — W11 preregistration **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** Fixed before any measurement (F08). **Workloads:** the D67 set (spawn/join, rendezvous, buffered, cancellation fan-out, live tasks, empty nursery), deep recursion (1, 4, and 7 MiB of frames), large single frames (64 KiB to 1 MiB), idle tasks at 10k, 50k, and 100k, and the three D66 examples. **Metrics:** wall, CPU, peak RSS, virtual size, mapping count, time to exhaustion and its outcome. **Samples:** 20 fresh processes per row; on note2 (linux/amd64) pinned to fixed cores with `taskset`, kernel and load recorded. **Adoption threshold:** the candidate is adopted only if (a) every correctness case F01-F05 and F07 passes on all three targets, (b) P50 peak RSS or P50 wall improves by at least 20% on the idle-task and example workloads, and (c) no other row regresses by more than 5% at P50. Otherwise W11 ends `investigated_not_adopted` (D74).
+
+## D71 — Experimental identity `vstack` **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** The prototype is a third execution configuration, as the lab is (D41): build-tagged runtime files, a separate `vstack` section in `TARGET_TCB.json` with its own digests, `config=vstack` in package identities and build IDs, selected only by an explicit driver flag (`sgo build -vstack`), never by environment. The linker refuses to mix `vstack` with `prod`, `lab`, or `test` packages. The default runtime and its TCB digests do not change.
+
+## D72 — Prototype scope **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** One demand-paged reservation per task (8 MiB, tunable) with an OS guard region below it (PROT_NONE, at least 64 KiB, larger than the largest admitted frame probe); the function prologue's stack-bound check and every preemption check stay, the bound now only reporting overflow (`StackExhausted`, SGO-STACK) instead of growing; no stack copying or shrinking; a freed stack is released with `madvise(MADV_DONTNEED)` (linux) or `MADV_FREE_REUSABLE` (darwin) before reuse, so no data survives (F07); g0 and signal stacks keep the upstream implementation (F05). Large frames probe the guard page by page (F02).
+
+## D73 — Platform limits are reported, not hidden **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** Idle-task density (F06) is measured at the host's defaults and recorded with them: linux at the stock `vm.max_map_count` 65530 (set with sudo on note2, restored afterwards) and at note2's raised 1048576; overcommit mode 0; darwin with its 16 KiB pages. Exhaustion must end the program with a defined failure (mapping or reservation refused: `StackExhausted` or `RuntimeDefect` with the cause), never a crash in unrelated memory. CI runners measure only at their defaults.
+
+## D74 — Outcome rule **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** If D70's threshold is met with every correctness case passing, adoption is proposed to the user as a separate decision (it would change the default runtime and its TCB). If correctness holds but the benefit is not met, W11 closes `investigated_not_adopted`: the architecture note, prototype, correctness results, and measurements are kept behind the `vstack` identity, unused by default. A correctness failure that cannot be fixed within the prototype's scope closes W11 `investigated_not_adopted` with that failure as the evidence.
+
 ---
 
 ## Approval record
