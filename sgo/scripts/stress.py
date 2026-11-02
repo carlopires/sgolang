@@ -120,7 +120,7 @@ def production_lane(count, cpus, results):
     for label, args in [("native", ["-count", str(count), "-cpu", cpus]),
                         ("race", ["-race", "-count", str(max(1, count // 5)), "-cpu", cpus])]:
         t0 = time.time()
-        r = subprocess.run([lane] + args + ["-run", PROD_TESTS, "runtime"], cwd=ROOT, capture_output=True, text=True)
+        r = subprocess.run([lane] + args + ["-timeout", "120m", "-run", PROD_TESTS, "runtime"], cwd=ROOT, capture_output=True, text=True)
         ok = r.returncode == 0 and re.search(r"^ok\s+runtime", r.stdout, re.M) is not None
         results["production"][label] = {"count": int(args[args.index("-count") + 1]), "cpus": cpus, "ok": ok,
                                          "seconds": round(time.time() - t0, 1)}

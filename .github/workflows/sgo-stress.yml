@@ -1,0 +1,34 @@
+# S-Go W12 stress (D80): lab sweeps of every runnable lab conformance case and each example over 1000
+# seeds, and the production runtime tests at -count=20 for GOMAXPROCS 1, 4, 16 (and under the race
+# detector at -count=4), on both linux targets. Run on demand; the summary is uploaded.
+name: sgo-stress
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stress:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 240
+    env:
+      SGO_CACHE: ${{ github.workspace }}/../sgo-cache
+      SGO_OUT: ${{ github.workspace }}/.sgo-out
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage-0 toolchain
+        run: sgo/scripts/build-stage0.sh
+      - name: Stress (D80)
+        run: sgo/scripts/stress.py --seeds 1000 --count 20 --cpus 1,4,16
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stress-${{ matrix.runner }}
+          path: ${{ github.workspace }}/.sgo-out/evidence/w12/
+          retention-days: 90
