@@ -2,5 +2,31 @@
   "schema": "W12 review findings (D75); see sgo/docs/w12-review-brief.md",
   "reviewer": "sgolang-reviewer (job:note2/id:77bfab38c5a3)",
   "review_commit": null,
-  "findings": []
+  "findings": [],
+  "self_findings": [
+    {
+      "id": "SR1",
+      "severity": "major",
+      "source": "implementer self-check while building GUARANTEES.json (D76)",
+      "location": "sgo/SGO_TEST_MATRIX.json",
+      "claim": "Matrix status fields record what ran",
+      "finding": "17 cases (I01-I07, T01-T06, T08, S01, S15, S19) had executed '<WP>: passed' evidence from their last required work package (W09/W10) but still had implementation_status pending / execution_status unrun. The W09 and W10 closures appended evidence without flipping the status fields.",
+      "resolution": "Flipped only cases whose last required work package has a '<WP>: passed' evidence entry (checked by the script that made the change). T07 stays pending (PARTIAL, D82). guarantee-check.py (D76) will fail on the inconsistency in either direction.",
+      "status": "fixed",
+      "fix_commit": null,
+      "regression_test": "guarantee-check.py (status vs evidence consistency)"
+    },
+    {
+      "id": "SR2",
+      "severity": "major",
+      "source": "implementer self-check while building GUARANTEES.json (D76)",
+      "location": "sgo/SGO_SPEC_ADMISSION.json (status, warning, rows[].status, rows[].admitted_in, rows[].evidence)",
+      "claim": "Q04: every accepted feature is explicit in the closed registry",
+      "finding": "The registry still carries its 0.1.0 text ('No row is admitted') and every implemented family is 'specified_not_admitted' with empty admitted_in and evidence, although W03-W10 implemented, enforced and tested them. The registry understates what the toolchain accepts. Row status is part of the admission digest, so correcting it moves every identity.",
+      "resolution": null,
+      "status": "open",
+      "fix_commit": null,
+      "regression_test": "guarantee-check.py (registry status vs guarantees)"
+    }
+  ]
 }
