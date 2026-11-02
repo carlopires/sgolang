@@ -1,0 +1,15 @@
+{"exit":2,"guard":65536,"mode":"guard","page":16384,"signal":"signal -1","signaled":false}
+{"advice":7,"lo":"0x127f64000","madvise_error":"\u003cnil\u003e","mode":"reuse","pages":512,"pages_with_old_data":512,"rss_after":13172736,"rss_before":13058048}
+{"event":"checkpoint","guard":65536,"maps":-1,"mode":"density","n":1000,"page":16384,"rss":21331968,"secs":0.004982791,"size":8388608,"vsz":430161575936}
+{"event":"checkpoint","guard":65536,"maps":-1,"mode":"density","n":2000,"page":16384,"rss":38600704,"secs":0.010317625,"size":8388608,"vsz":438615719936}
+{"event":"checkpoint","guard":65536,"maps":-1,"mode":"density","n":4000,"page":16384,"rss":72384512,"secs":0.019363833,"size":8388608,"vsz":455592034304}
+{"event":"checkpoint","guard":65536,"maps":-1,"mode":"density","n":8000,"page":16384,"rss":139182080,"secs":0.033934375,"size":8388608,"vsz":489408610304}
+{"event":"checkpoint","guard":65536,"maps":-1,"mode":"density","n":16000,"page":16384,"rss":272007168,"secs":0.065723375,"size":8388608,"vsz":557042925568}
+{"event":"checkpoint","guard":65536,"maps":-1,"mode":"density","n":32000,"page":16384,"rss":536657920,"secs":0.124825166,"size":8388608,"vsz":692311277568}
+{"event":"checkpoint","guard":65536,"maps":-1,"mode":"density","n":64000,"page":16384,"rss":1064386560,"secs":0.237758083,"size":8388608,"vsz":962844983296}
+{"event":"checkpoint","guard":65536,"maps":-1,"mode":"density","n":128000,"page":16384,"rss":2121482240,"secs":0.450867458,"size":8388608,"vsz":1503911870464}
+{"event":"checkpoint","guard":65536,"maps":-1,"mode":"density","n":256000,"page":16384,"rss":4235493376,"secs":1.265096875,"size":8388608,"vsz":2586042302464}
+{"event":"checkpoint","guard":65536,"maps":-1,"mode":"density","n":512000,"page":16384,"rss":8463958016,"secs":2.198945583,"size":8388608,"vsz":4750370619392}
+{"event":"checkpoint","guard":65536,"maps":-1,"mode":"density","n":1024000,"page":16384,"rss":7968047104,"secs":4.774148208,"size":8388608,"vsz":9078960062464}
+{"event":"checkpoint","guard":65536,"maps":-1,"mode":"density","n":2000000,"page":16384,"rss":3115843584,"secs":9.467144166,"size":8388608,"vsz":17330340151296}
+{"event":"done","mode":"density","n":2000000}
