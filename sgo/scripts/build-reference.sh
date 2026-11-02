@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 # build-reference.sh [--worktree DIR] [--label NAME]
 #
 # Build the UNTOUCHED upstream commit from UPSTREAM.lock.json in an isolated, detached git

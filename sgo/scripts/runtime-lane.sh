@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 # runtime-lane.sh [go test args...]
 #
 # Runtime test lane (stage map "RL"): an isolated worktree at the locked upstream commit, built once

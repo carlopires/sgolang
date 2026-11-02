@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 # build-stage0.sh — B04: build the host-built stage-0 toolchain (stage H1 in sgo/docs/stage-map.md)
 # from the fork checkout using ONLY the pinned bootstrap Go. Runs `dist bootstrap -sgo-stage0`, which
 # stops after toolchain1; no stage that compiles Go with the fork's compiler runs. make.bash is not used.

@@ -29,6 +29,8 @@ jobs:
         run: sgo/scripts/adoption-check.py
       - name: Target policy report (W05; effect kinds, handle types, denied routes agree)
         run: sgo/scripts/policy-report.py
+      - name: Licensing against the upstream pin (D81)
+        run: sgo/scripts/license-audit.py
       - name: Conformance cases (validate + runner self-test)
         run: |
           sgo/scripts/conformance.py validate

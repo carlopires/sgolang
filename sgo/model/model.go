@@ -1,3 +1,7 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 // Package model is the executable reference model (oracle) of S-Go subset-0 structured concurrency
 // (W01 step 5). It is a pure state machine: no goroutines, no clocks. Every step function names the
 // clause it implements. Explore (explore.go) enumerates every interleaving of small programs and

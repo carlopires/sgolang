@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 """test-mutations.py - the specification and inventory gates reject defective inputs (S02, S03, S18).
 
 Each mutation is applied to a scratch copy of the repository (src, sgo, pkg/tool; a git repository

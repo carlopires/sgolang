@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 """test-flags.py - no flag, mode, or environment of the driver, compiler, or linker reopens stock
 Go semantics (S01, S15; SGO-TOOL-001, SGO-TCB-002, SGO-BUILD-001).
 

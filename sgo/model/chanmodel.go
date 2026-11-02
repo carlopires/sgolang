@@ -1,3 +1,7 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package model
 
 // Executable reference model of typed managed channels with send permits (SGO-PERMIT-002 draft,

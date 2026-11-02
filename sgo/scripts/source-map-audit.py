@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 """source-map-audit.py — B06: resolve every symbol/file named by the original phase documents and
 the plan §10.3 source map against the actual checkout. Writes sgo/docs/source-map.md.
 

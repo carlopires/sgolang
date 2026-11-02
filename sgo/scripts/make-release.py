@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 """make-release.py — the S-Go release archive (D61, W10).
 
     make-release.py [--out DIR]

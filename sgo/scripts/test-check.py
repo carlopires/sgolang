@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 """test-check.py — sgo check agrees with sgo build (W10, D63, T03).
 
 For every conformance case, sgo check and sgo build run on a copy of the case:

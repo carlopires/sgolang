@@ -1,3 +1,7 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 // Package pipeline is the pipeline example (D66): a producer, a pool of workers, and a collector
 // connected by channels, with a capacity limiter bounding how many workers compute at once. The
 // first bad record cancels the whole pipeline: every task ends, and Run reports the record.

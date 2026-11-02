@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 """adoption-check.py — S04 / D19: the upstream Go-spec sections that S-Go clauses adapt are recorded with
 digests in sgo/docs/clause-adoption-ledger.json; this check recomputes them from doc/go_spec.html at the
 locked upstream commit.

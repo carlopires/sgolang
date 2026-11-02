@@ -1,3 +1,7 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 // Package service is the service example (D66): a Unix-socket service started with n.Start and
 // ready only once it listens, clients that each send a request and check the reply, and an
 // orderly shutdown by cancellation that closes every connection, including one that is idle in

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 """rejection-report.py — the intentional rejection report over the upstream language tests (D68, T05).
 
     rejection-report.py [--sgo PATH] [--check]

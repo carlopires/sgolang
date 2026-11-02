@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 # fetch-bootstrap.sh — install the pinned host bootstrap Go (UPSTREAM.lock.json "bootstrap")
 # into $SGO_CACHE/bootstrap/, verifying the published SHA-256 before extraction.
 # Prints the resulting GOROOT_BOOTSTRAP on stdout. Never uses a Go found on PATH.

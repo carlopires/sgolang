@@ -1,12 +1,12 @@
 {
   "command": "go vet ./... && go test -count=1 -v ./... (sgo/model)",
   "exit_status": "0",
-  "finished_at": "2026-10-30T18:22:15Z",
+  "finished_at": "2026-11-02T12:57:17Z",
   "go": "go version go1.26.10 darwin/arm64",
   "mutations_detected": "8",
   "platform": "darwin-arm64",
-  "started_at": "2026-10-30T18:22:14Z",
+  "started_at": "2026-11-02T12:57:15Z",
   "subtests_passed": "18",
   "tests_failed": "0",
-  "tests_passed": "4"
+  "tests_passed": "28"
 }

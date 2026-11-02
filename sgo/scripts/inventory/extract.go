@@ -1,3 +1,7 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 // Command extract lists the compiler/runtime surfaces that S-Go admission must cover (W01 step 3).
 // It parses the fork's own sources with go/parser and prints one JSON object per surface:
 // {"kind":..., "name":..., "file":..., "line":...}. Built and run with the pinned bootstrap Go.

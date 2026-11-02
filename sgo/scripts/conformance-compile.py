@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 """conformance-compile.py — W03 progress meter: run the conformance *reject* cases directly against the
 stage-0 compiler (no sgo driver yet). Eligible cases: kind "reject", all sources in the case root,
 no build_args/procedure/build_env. Each case's files are compiled as package main with an importcfg

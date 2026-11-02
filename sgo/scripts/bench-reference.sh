@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 # bench-reference.sh [--count N] — W00 benchmark baseline in the untouched reference worktree.
 # Covers the runtime areas S-Go changes: task creation, channels, select, stacks, scheduling.
 # Output: sgo/evidence/w00/bench-reference-<platform>.txt (benchstat-compatible) + .json metadata.

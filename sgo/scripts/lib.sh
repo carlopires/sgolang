@@ -1,3 +1,6 @@
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 # sgo/scripts/lib.sh — shared helpers for S-Go W00 build scripts. Source, do not execute.
 #
 # Rules (plan §10.2, test cases B05/S01/S15):

@@ -39,6 +39,18 @@
       "status": "fixed",
       "fix_commit": null,
       "regression_test": "guarantee-check.py (clause progress fields)"
+    },
+    {
+      "id": "SR4",
+      "severity": "minor",
+      "source": "license-audit.py (D81)",
+      "location": "76 added files: sgo/model, sgo/scripts, sgo/bench, sgo/examples",
+      "claim": "Every file added by S-Go carries the S-Go BSD header (D81)",
+      "finding": "76 added source files (model, scripts, benchmarks, and the shipped examples) had no license header. LICENSE/PATENTS and vendored code were unchanged, no foreign license or copyright marker was found, and no upstream header was removed.",
+      "resolution": "license-audit.py --fix inserted the header (after any #! line). Model tests, test-fmt (354 files) and test-examples (pipeline, service, replay) pass afterwards. No TCB file changed. license-audit.py runs in sgo-spec CI.",
+      "status": "fixed",
+      "fix_commit": null,
+      "regression_test": "license-audit.py (mutation: LICENSE edit, SPDX marker, missing header all caught)"
     }
   ]
 }

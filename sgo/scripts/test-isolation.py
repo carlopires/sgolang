@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 """test-isolation.py — W10 parts of T01, T02, S01, S15, S19 (release tooling).
 
 Runs against a toolchain (stage-0 by default, or a release's bin/sgo with --sgo):

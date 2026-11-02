@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 # test-model.sh — W01 step 5: run the executable model (sgo/model) with the pinned bootstrap Go.
 # Writes sgo/evidence/w01/model-<platform>.json.
 source "$(dirname "$0")/lib.sh"

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 """policy-report.py - the S-Go target policy report (W05 deliverable; SGO-AUTH-001..003, SGO-TCB-002).
 
 Writes sgo/docs/policy.md from the sources that enforce the policy, and checks that they agree:

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 """conformance.py — S-Go conformance cases (SGO-TEST-001).
 
     conformance.py validate             check every case and that every fixture a clause names exists

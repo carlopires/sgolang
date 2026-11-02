@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright 2026 The S-Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
 # test-host-pkg.sh [--src ROOT] PKGDIR [go test flags...]
 #
 # Host test lane (stage H1 in sgo/docs/stage-map.md): run the unit tests of a fork *host* package

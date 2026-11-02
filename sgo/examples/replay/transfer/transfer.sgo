@@ -1,3 +1,7 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 // Package transfer is the replay example (D66): a transfer in three steps, each done by a task
 // of its own and reported to a log. The steps must be logged in order: debit, credit, commit.
 // Buggy waits for the debit before the credit, but lets the commit run as soon as the debit is
