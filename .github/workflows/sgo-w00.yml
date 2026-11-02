@@ -80,6 +80,7 @@ jobs:
           cd "$RUNNER_TEMP"
           env -i HOME="$inst/home" PATH=/usr/bin:/bin python3 "$GITHUB_WORKSPACE/sgo/scripts/test-examples.py" \
             --sgo "$top/bin/sgo" --examples "$top/examples"
+          env -i HOME="$inst/home" PATH=/usr/bin:/bin python3 "$GITHUB_WORKSPACE/sgo/scripts/test-isolation.py" --sgo "$top/bin/sgo"
 
       - name: Package identity checks (SGO-IMP-002; stale and foreign objects)
         run: sgo/scripts/test-identity.py
