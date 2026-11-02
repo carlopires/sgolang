@@ -1,0 +1,16 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-003",
+  "SGO-PERMIT-002"
+ ],
+ "exit": 0,
+ "sweep": {
+  "seeds": "0..63",
+  "expect": "ok\n",
+  "outcomes": [
+   "ok\n"
+  ]
+ },
+ "note": "A C == 0 receiver's claimed senders are ready at the decision before it parks; before the fix 26 of these 64 schedules ended LabDeadlock with the receiver and a sender both waiting."
+}

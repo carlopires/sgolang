@@ -147,7 +147,8 @@ func sgoChanReady(wake *sgoChanWait) {
 // sgoChanPark parks the caller as waiter w on list l of c. Called with c.lock held; returns with
 // c.lock held and w unregistered. It reports false, without parking, if the task is cancelled.
 // With wakeSenders (a C == 0 receiver), the waiting senders are claimed after w is listed, so a
-// sender that retries finds w, and they are readied only after w is parked and the locks released.
+// sender that retries finds w, and they are readied only after w is parked and the locks released
+// (in the lab, before the decision that precedes the park).
 func sgoChanPark(c *sgoChan, l *sgoWaitList, w *sgoChanWait, reason waitReason, wakeSenders bool) bool {
 	w.g, w.ch = getg(), c
 	w.state.Store(sgoWaitWaiting)
@@ -171,6 +172,12 @@ func sgoChanPark(c *sgoChan, l *sgoWaitList, w *sgoChanWait, reason waitReason, 
 	}
 	sgoChanWaiters = w
 	if sgoLab != nil {
+		// The claimed senders must be ready before the decision: readied only by the park commit,
+		// after it, they would be missing from it, and with no other task ready the run would end
+		// LabDeadlock while a sender was about to be woken. In the lab, readying only marks a task
+		// ready; one chosen before its own park commit aborts that park (sgoLabCommit).
+		sgoChanReady(w.pre)
+		w.pre = nil
 		sgoLabBlock(w.task, reason.String()) // the decision before parking (sgo_lab_sched.go)
 	}
 	gopark(sgoChanParkUnlock, unsafe.Pointer(w), reason, traceBlockChanRecv, 1)

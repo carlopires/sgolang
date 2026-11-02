@@ -1,0 +1,31 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	ch := sgo.NewChannel[int](0)
+	total := 0
+	nursery (n) {
+		for k := 0; k < 2; k++ {
+			n.Spawn(func(task *sgo.Context) error {
+				p, err := ch.Reserve(task)
+				if err != nil {
+					return err
+				}
+				return p.Commit(1)
+			})
+		}
+		for i := 0; i < 2; i++ {
+			v, _, err := ch.Receive(root)
+			if err != nil {
+				return err
+			}
+			total += v
+		}
+	}
+	if total != 2 {
+		return sgo.NewError("bad total")
+	}
+	return out.WriteString("ok\n")
+}
