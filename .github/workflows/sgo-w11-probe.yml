@@ -1,0 +1,42 @@
+# S-Go W11: run the host-only stack-layout probe (sgo/w11/probe) on the Linux CI targets.
+# Manual only; changes no toolchain or runtime code. Output is printed and uploaded.
+name: sgo-w11-probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      SGO_CACHE: ${{ github.workspace }}/../sgo-cache
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build probe with the pinned bootstrap
+        run: |
+          boot="$(sgo/scripts/fetch-bootstrap.sh)"
+          cd sgo/w11/probe
+          env -i HOME="$HOME" PATH=/usr/bin:/bin GOROOT="$boot" GOTOOLCHAIN=local GO111MODULE=off \
+            CGO_ENABLED=0 GOCACHE=/tmp/w11gocache "$boot/bin/go" build -o /tmp/probe main.go
+          "$boot/bin/go" version
+      - name: Run probe (guard, reuse, density at the runner's max_map_count)
+        run: |
+          plat="linux-$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
+          mmc=$(cat /proc/sys/vm/max_map_count)
+          echo "max_map_count=$mmc page=$(getconf PAGESIZE) mem=$(grep MemTotal /proc/meminfo)"
+          out=probe-$plat.jsonl
+          { /tmp/probe guard; /tmp/probe reuse;
+            /tmp/probe density -max 600000 | sed "s/^{/{\"max_map_count\":$mmc,/"; } > $out 2>&1 || true
+          cat $out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w11-probe-${{ matrix.runner }}
+          path: probe-*.jsonl

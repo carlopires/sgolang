@@ -566,6 +566,38 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation.** If D70's threshold is met with every correctness case passing, adoption is proposed to the user as a separate decision (it would change the default runtime and its TCB). If correctness holds but the benefit is not met, W11 closes `investigated_not_adopted`: the architecture note, prototype, correctness results, and measurements are kept behind the `vstack` identity, unused by default. A correctness failure that cannot be fixed within the prototype's scope closes W11 `investigated_not_adopted` with that failure as the evidence.
 
+## D75 — Fresh-context review (Q01) **[NEEDS USER]** · PROPOSED 2026-11-02
+
+**Recommendation.** You start a **new reviewer job** that has never seen this work, with read-only use of the repository at a pinned commit. I write the brief `sgo/docs/w12-review-brief.md`: the constitution, the spec, the diff against the upstream pin restricted to S-Go changes, the plan's checklist (root paths, lock order, linearization points, failure propagation, exception edges, policy bypasses, replay scope, published claims), and how to build and run things. The reviewer reports findings to this job as messages. Each finding becomes a row in `sgo/evidence/w12/review-findings.json` (id, severity blocker/major/minor, location, claim, resolution, fix commit, verifying test). Every blocker and major finding is fixed with a regression test, or the release is withheld. Minor findings are fixed or listed as limitations, but never if they are compatibility escapes. The reviewer re-checks the fixes. **Fallback** if you can't start a new job: the note2 helper, which wrote no S-Go code, reviews after a context reset, and the evidence records that the reviewer had seen test runs.
+
+## D76 — `GUARANTEES.json` and traceability (Q04, S20) **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** `sgo/GUARANTEES.json` (plan §10.1) is the single published claim set. Each guarantee has an id, a statement, the frozen clauses it rests on, its enforcement (compiler check, link check, runtime check, lab), the acceptance cases and evidence paths, the targets, and a **scope** taken from a closed list (S20): `admission` (statically rejected), `runtime_enforced` (checked at run time with a specified failure), `model_explored` (bounded model exploration, stating the bounds), `tested` (executed cases only). No guarantee claims proof of program correctness, termination, or all schedules. The file also states the stack implementation (upstream growable stacks; W11 `investigated_not_adopted`), the bootstrap and upstream identities, and the known limitations. `guarantee-check.py` (CI) fails if any of these holds: a guarantee cites a non-frozen clause, a case that isn't implemented and passed, or a missing evidence file; an admitted family in `SGO_SPEC_ADMISSION.json` has no guarantee; a limitation names a compatibility escape. `sgo/docs/GUARANTEES.md` is generated from the JSON and answers plan §15.2's six questions.
+
+## D77 — No-legacy-path audit (S17, release blockers) **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** The audit covers what ships: the release archive (`sgo`, `compile`, `asm`, `link`, the TCB sources) and every flag, environment variable, and input those tools accept. A script, `legacy-audit.py`, enumerates each tool's flag table and environment reads from the source. Each one must be classified as S-Go-specified, refused (with a test), or inert (with a test showing no effect). Anything unclassified fails. Reachable inherited paths, such as a `.go` input or a stock build mode, need a rejection fixture. The source tree may keep unshipped upstream code (`cmd/go`, `gofmt`, …) because the archive excludes it (`make-release.py` refuses other executables). The archive's contents check therefore becomes part of the audit.
+
+## D78 — Release qualification and reproduction (Q03) **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** A CI workflow, `sgo-release`, builds `sgo-<spec>-<os>-<arch>.tar.gz` on the three targets: `macos-14` (darwin/arm64), `ubuntu-24.04`, and `ubuntu-24.04-arm`. It also produces the source archive (`git archive` of the release commit), one combined diff against the upstream pin, and `SHA256SUMS`. A **second job, on fresh runners with no checkout**, downloads only those artifacts, verifies the checksums, follows the written install instructions, then builds, runs, and tests the three examples and replays a shipped trace. A clean bootstrap from the source archive (stage-0 build plus the conformance lane) runs on linux/amd64. Publishing a tag or GitHub release is **your decision**: the workflow uploads artifacts only.
+
+## D79 — Negative-fixture honesty (Q02) **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** `test-negative.py` picks one representative per plan §12.3 category: orphan on closure, duplicate permit commit, capacity leak, lost wakeup, policy bypass (undeclared effect, capability forgery), replay divergence (edited trace or seed), unreported partial I/O, and incorrect return/defer. It checks each fails with its **specified** code and clause, not merely a non-zero exit. A harness self-test flips each expectation and requires the harness to report a failure, which proves it can't pass vacuously. Cases already in conformance are reused, and only missing categories get new fixtures.
+
+## D80 — Upstream tests and stress (W12 re-run) **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** Re-run at the release commit: the full upstream suite on the reference toolchain (B03, both linux targets), the runtime lane including the race lane on all three targets, all conformance lanes, and stress. Lab stress is 1000 seeds per lab conformance case, plus a sweep over each example. Production stress is the native, cancellation, and I/O runtime tests at `-count=20` under `GOMAXPROCS` 1, 4, and 16. Reduced counts on a noisy host are recorded (plan §12.2), and no scenario is dropped.
+
+## D81 — Licensing (W12) **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** The release carries Go's `LICENSE` and `PATENTS` unchanged. Every file added by S-Go carries the BSD-style "S-Go Authors" header, and `license-audit.py` checks this for each added path in the diff against the pin. Vendored modules stay as upstream ships them. The audit also confirms that no code was adapted from outside Go, including the model, scripts, and examples. If any is found, it is listed with its license, or removed.
+
+## D82 — Remaining partial evidence **[DEFAULT]** · PROPOSED 2026-11-02
+
+**Recommendation.** T07's allocation counts stay unmeasured, and T07 stays **PARTIAL** as a stated limitation in `GUARANTEES.json`. S-Go programs can't read runtime statistics: `runtime` isn't admitted, and `GODEBUG` is ignored by design (SGO-PROC). Adding a hook only to count allocations would widen the TCB for a benchmark. This is a measurement gap, not a guarantee or a compatibility escape, so it doesn't block release. F03–F05 stay unrun for the W11 reason (no prototype). The open parts of S04 (drift in an adopted clause; a blanket same-as-Go rule) and S20 are completed by `adoption-check.py` mutation cases and D76's scope checks.
+
 ---
 
 ## Approval record
@@ -583,3 +615,4 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - 2026-11-02: user approved D61-D68 as recommended ("approved"; D62 option (a), one process per test). Follow-up: spec 0.6.0 clauses for `sgo test` and `sgo check`; W10 implementation.
 - 2026-11-02: user approved D69 as recommended ("the recommendations are good") together with the drafts SGO-TOOL-002, SGO-TEST-002, SGO-TEST-003. Follow-up: StartTest restricted to the generated main (`-sgotestmain`), test conformance cases, freeze in spec 0.6.0.
 - 2026-11-02: user approved D70-D74 as recommended ("approved; go ahead"), including D70's adoption threshold (>= 20% P50 RSS or wall on the idle-task and example workloads, no other row worse than 5%, every correctness case passing on all three targets). Follow-up: W11 architecture note, stack-mapping probe (darwin locally, linux/amd64 on note2), `vstack` prototype.
+- 2026-11-02: user chose option A after the probe stage ("ok, option A"). W11 closes `investigated_not_adopted` without building the D71/D72 prototype, because the probe measured the layout's lower bound at 2-6x the baseline's memory per idle task on all three targets, so D70's threshold can't be met. F03-F05 stay unrun (they need the prototype). Default runtime unchanged (growable stacks, SGO-STACK-001). Evidence: `sgo/evidence/w11/README.md`.
