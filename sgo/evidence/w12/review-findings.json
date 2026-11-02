@@ -21,10 +21,10 @@
       "title": "S-Go programs honour GODEBUG, GOTRACEBACK, GOGC, GOMEMLIMIT and GOMAXPROCS",
       "location": "runtime/proc.go schedinit; runtime1.go; mgcpacer.go",
       "clause": "SGO-PROC-004",
-      "status": "open",
-      "resolution": null,
+      "status": "fixed",
+      "resolution": "The S-Go linker marks every binary it links (addstrdata1 runtime.sgoLinked=1, before schedinit). In such a binary gogetenv returns \"\" for every key (GODEBUG, GOTRACEBACK, GOGC, GOMEMLIMIT, GOMAXPROCS, GOROOT) and getGodebugEarly returns only the build's godebugDefault, so cpuinit and the debug variables use fixed defaults. Upstream-linked binaries (runtime lane) are unchanged. GOMAXPROCS is ignored too (D84, user decision); D82's rationale corrected.",
       "fix_commit": null,
-      "regression_test": null
+      "regression_test": "conformance proc-env-ignored (panic record exact under GODEBUG=schedtrace,inittrace,gctrace,invalidptr=0,sbrk=1; GOGC=1; GOMEMLIMIT=1; GOTRACEBACK=crash; GOMAXPROCS=1) and proc-env-ignored-ok (stderr exactly empty); mutant without the linker marker fails both (schedtrace/inittrace output); runtime lane TestSGoEnvUpstreamLinked"
     },
     {
       "id": "R3",

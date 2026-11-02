@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.6.0",
- "allowlist_digest": "0caac9b53f5e22d8ee2eb131f3c63668e0ae988e0bc27b2f9cc004102b867e84",
+ "allowlist_digest": "81e208dfa9b6cc4802828d2e10491bcda5e049d8bd47da8c14a19e951058f83b",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -417,7 +417,7 @@
   {
    "callee": "updateMaxProcsGoroutine",
    "file": "src/runtime/proc.go",
-   "line": 7138,
+   "line": 7142,
    "status": "active",
    "purpose": "scheduler: GOMAXPROCS updates from CPU limits"
   },
@@ -446,7 +446,7 @@
  "summary": {
   "packages": 31,
   "files": 1064,
-  "files_changed_from_upstream": 48,
+  "files_changed_from_upstream": 49,
   "services": {
    "active": 5,
    "dormant": 5,
@@ -2941,8 +2941,8 @@
   },
   {
    "path": "src/runtime/env_posix.go",
-   "sha256": "351f359fab6974c595ab72454ee246b0ebd82c3ca8bec599e33f49d6d9cefeb1",
-   "upstream_identical": true
+   "sha256": "1a607f8f27c708d3b05de6540f68e6d3273224790f9f938ffa49d31e6e53617c",
+   "upstream_identical": false
   },
   {
    "path": "src/runtime/error.go",
@@ -4041,7 +4041,7 @@
   },
   {
    "path": "src/runtime/proc.go",
-   "sha256": "bc984e8fd98c49623eaf6f2e16eff59659de925d880d89f4d0787adbb5b41458",
+   "sha256": "cb2197cc64309f1ff11ac40d592fce3d401b2a34cc351b4fc50d3b0e9ee6d86f",
    "upstream_identical": false
   },
   {
@@ -4551,7 +4551,7 @@
   },
   {
    "path": "src/runtime/sgo_main.go",
-   "sha256": "9f9e3f8731b29610f1716a6d291f7237255643b5773e071ec9b3615ab7d4b44f",
+   "sha256": "c7f1b44b860227edd355b27f741a21feca178c10bf17a9892745a92da9284458",
    "upstream_identical": false
   },
   {

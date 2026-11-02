@@ -596,8 +596,16 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 ## D82 — Remaining partial evidence **[DEFAULT]** · APPROVED 2026-11-02
 
-**Recommendation.** T07's allocation counts stay unmeasured, and T07 stays **PARTIAL** as a stated limitation in `GUARANTEES.json`. S-Go programs can't read runtime statistics: `runtime` isn't admitted, and `GODEBUG` is ignored by design (SGO-PROC). Adding a hook only to count allocations would widen the TCB for a benchmark. This is a measurement gap, not a guarantee or a compatibility escape, so it doesn't block release. F03–F05 stay unrun for the W11 reason (no prototype). The open parts of S04 (drift in an adopted clause; a blanket same-as-Go rule) and S20 are completed by `adoption-check.py` mutation cases and D76's scope checks.
+**Recommendation.** T07's allocation counts stay unmeasured, and T07 stays **PARTIAL** as a stated limitation in `GUARANTEES.json`. S-Go programs can't read runtime statistics: `runtime` isn't admitted, and since W12 R2 (D84) the runtime ignores `GODEBUG` too (it did not before R2; the reviewer found it). Adding a hook only to count allocations would widen the TCB for a benchmark. This is a measurement gap, not a guarantee or a compatibility escape, so it doesn't block release. F03–F05 stay unrun for the W11 reason (no prototype). The open parts of S04 (drift in an adopted clause; a blanket same-as-Go rule) and S20 are completed by `adoption-check.py` mutation cases and D76's scope checks.
 
+
+## D83 — Release registry version **[NEEDS USER]** · APPROVED 2026-11-02
+
+**Recommendation.** Spec **0.7.0** is the release registry: the rows of `SGO_SPEC_ADMISSION.json` that W03–W10 implemented, enforced and tested become `admitted` (SR2), and the review's clause wording fixes (D-R1 for SGO-TCB-002, D-R5 for SGO-MEM-002, and any later ones) take new clause versions. No feature is added. The admission digest and every identity move once, at this version change, with a CHANGELOG entry.
+
+## D84 — `GOMAXPROCS` in S-Go programs (W12 R2) **[NEEDS USER]** · APPROVED 2026-11-02
+
+**Recommendation.** An S-Go program's runtime reads no environment setting at all: `GODEBUG`, `GOTRACEBACK`, `GOGC`, `GOMEMLIMIT`, `GOMAXPROCS`, and `GOROOT` are ignored, and the build's fixed defaults apply (`GOMAXPROCS` = the CPU count). No spec amendment is needed, since this is what SGO-PROC-004 already says. The S-Go linker marks every binary (`runtime.sgoLinked`) so this holds from the first instruction. Binaries linked by the upstream linker (the runtime test lane) keep upstream behavior. D80's stress runs at 1, 4 and 16 processors vary the CPU set (`taskset` on linux), not an environment variable. D82's rationale is corrected: GODEBUG was **not** ignored before R2; allocation counts stay unmeasured because S-Go programs cannot read runtime statistics and a benchmark-only hook would widen the TCB.
 ---
 
 ## Approval record
@@ -617,3 +625,4 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - 2026-11-02: user approved D70-D74 as recommended ("approved; go ahead"), including D70's adoption threshold (>= 20% P50 RSS or wall on the idle-task and example workloads, no other row worse than 5%, every correctness case passing on all three targets). Follow-up: W11 architecture note, stack-mapping probe (darwin locally, linux/amd64 on note2), `vstack` prototype.
 - 2026-11-02: user chose option A after the probe stage ("ok, option A"). W11 closes `investigated_not_adopted` without building the D71/D72 prototype, because the probe measured the layout's lower bound at 2-6x the baseline's memory per idle task on all three targets, so D70's threshold can't be met. F03-F05 stay unrun (they need the prototype). Default runtime unchanged (growable stacks, SGO-STACK-001). Evidence: `sgo/evidence/w11/README.md`.
 - 2026-11-02: user approved D75-D82 as recommended ("approved"). For D75 the reviewer is the existing job `sgolang-reviewer` on note2 (`job:note2/id:77bfab38c5a3`), which has its own clone and context and has not worked on S-Go code. Follow-up: review brief `sgo/docs/w12-review-brief.md`, findings ledger `sgo/evidence/w12/review-findings.json`, then D76-D81 in parallel with the review.
+- 2026-11-02: user approved D83 (spec 0.7.0 as the release registry) and D84 (S-Go programs ignore GOMAXPROCS like every other runtime environment setting) as recommended ("ok, continue").

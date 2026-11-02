@@ -234,6 +234,10 @@ func Main(arch *sys.Arch, theArch Arch) {
 	objabi.Flagfn1("importcfg", "read import configuration from `file`", ctxt.readImportCfg)
 
 	objabi.Flagparse(usage)
+	// S-Go: this linker links only S-Go programs (sgoCheckIdentity refuses anything else), so every
+	// binary is marked before the runtime starts: an S-Go program ignores the environment's runtime
+	// settings (GODEBUG, GOTRACEBACK, GOGC, GOMEMLIMIT, GOMAXPROCS; SGO-PROC-004, W12 R2).
+	addstrdata1(ctxt, "runtime.sgoLinked=1")
 	if sgoLab {
 		addstrdata1(ctxt, "runtime.sgoLabBuild=lab") // the runtime boots the lab (sgo_lab_boot.go)
 	}

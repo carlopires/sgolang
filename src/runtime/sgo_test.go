@@ -498,3 +498,21 @@ func TestSGoGoexitIsDefect(t *testing.T) {
 		}
 	}
 }
+
+// TestSGoEnvUpstreamLinked: a binary linked by the upstream linker (this test binary) is not an
+// S-Go program, so the runtime keeps reading its environment (W12 R2); S-Go binaries are covered
+// by the proc-env-ignored conformance cases.
+func TestSGoEnvUpstreamLinked(t *testing.T) {
+	if runtime.SGoIsProgram() {
+		t.Fatal("test binary linked by the upstream linker is marked as an S-Go program")
+	}
+	// gogetenv reads the environment captured at process start, so compare with a variable the
+	// test process was started with.
+	want := os.Getenv("PATH")
+	if want == "" {
+		t.Skip("PATH not set in the test environment")
+	}
+	if got := runtime.SGoGetenv("PATH"); got != want {
+		t.Fatalf("gogetenv(PATH) in an upstream-linked binary = %q, want %q", got, want)
+	}
+}

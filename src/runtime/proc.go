@@ -804,6 +804,10 @@ func cpuinit(env string) {
 //
 // Returns nil, false if OS doesn't provide env vars early in the init sequence.
 func getGodebugEarly() (string, bool) {
+	if sgoIsProgram() {
+		// S-Go: only the build's godebugDefault applies; GODEBUG is ignored (SGO-PROC-004).
+		return "", true
+	}
 	const prefix = "GODEBUG="
 	var env string
 	switch GOOS {

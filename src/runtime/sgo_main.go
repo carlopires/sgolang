@@ -17,6 +17,16 @@ import "unsafe"
 // sgoProgram is set when an S-Go program's root task starts.
 var sgoProgram bool
 
+// sgoLinked is set by the S-Go linker (-X-style string data, ld/main.go) in every binary it
+// links, so it is known before schedinit. Binaries linked by the upstream linker (the runtime
+// test lane) leave it empty and keep upstream environment handling.
+var sgoLinked string
+
+// sgoIsProgram reports whether this binary is an S-Go program: then the runtime reads no
+// environment setting (GODEBUG, GOTRACEBACK, GOGC, GOMEMLIMIT, GOMAXPROCS, GOROOT), and only the
+// build's fixed defaults apply (SGO-PROC-004, W12 R2).
+func sgoIsProgram() bool { return sgoLinked != "" }
+
 // sgoContext mirrors sgo.Context (struct{ t unsafe.Pointer }); the root context is made here.
 type sgoContext struct{ t unsafe.Pointer }
 

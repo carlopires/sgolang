@@ -7,6 +7,10 @@ package runtime
 import "unsafe"
 
 func gogetenv(key string) string {
+	if sgoIsProgram() {
+		// An S-Go program's runtime reads no environment setting (SGO-PROC-004, W12 R2).
+		return ""
+	}
 	env := environ()
 	if env == nil {
 		throw("getenv before env init")

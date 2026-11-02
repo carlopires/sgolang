@@ -1,0 +1,17 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	s := ""
+	for i := 0; i < 5000; i = i + 1 {
+		s = s + "x"
+	}
+	if err := root.Sleep(30); err != nil {
+		return err
+	}
+	if len(s) != 5000 {
+		return sgo.NewError("wrong length")
+	}
+	return nil
+}

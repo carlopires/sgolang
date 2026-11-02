@@ -207,3 +207,9 @@ func SGoReadyWaiters() int {
 	unlock(&sgoSleepLock)
 	return n
 }
+
+// SGoIsProgram exposes sgoIsProgram: false in binaries linked by the upstream linker (W12 R2).
+func SGoIsProgram() bool { return sgoIsProgram() }
+
+// SGoGetenv exposes gogetenv, which an S-Go program answers with "" for every key (W12 R2).
+func SGoGetenv(key string) string { return gogetenv(key) }

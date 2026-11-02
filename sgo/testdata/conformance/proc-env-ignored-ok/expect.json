@@ -1,0 +1,17 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PROC-004"
+ ],
+ "exit": 0,
+ "stdout": "",
+ "stderr_exact": "",
+ "run_env": {
+  "GODEBUG": "schedtrace=1,inittrace=1,gctrace=1,invalidptr=0,sbrk=1,panicnil=1",
+  "GOGC": "1",
+  "GOMEMLIMIT": "1",
+  "GOTRACEBACK": "crash",
+  "GOMAXPROCS": "1"
+ },
+ "note": "W12 R2: a successful run under the same environment writes nothing to stderr."
+}
