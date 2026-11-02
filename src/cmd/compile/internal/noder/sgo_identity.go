@@ -69,12 +69,23 @@ func sgoIdentityLine(contract string) string {
 // sgoConfig is the execution configuration of the package being compiled: lab objects (step
 // instrumentation, D43) and production objects never mix (D41, SGO-IMP-002). Trusted target code
 // is not instrumented and is the same in both configurations: "tcb".
+// sgoImportConfig is the configuration the S-Go packages this package imports were compiled for:
+// a generated test main imports packages compiled as for any production program (D69).
+func sgoImportConfig() string {
+	if c := sgoConfig(); c != "testmain" {
+		return c
+	}
+	return "prod"
+}
+
 func sgoConfig() string {
 	switch {
 	case !base.SGo:
 		return "tcb"
 	case base.Flag.SGoLab:
 		return "lab"
+	case base.Flag.SGoTestMain:
+		return "testmain" // linked only as the main package of a test binary (D69)
 	}
 	return "prod"
 }
@@ -110,9 +121,9 @@ func sgoCheckImports(m posMap, noders []*noder, pkg *types2.Package) map[string]
 				path, strings.TrimSpace(line[:strings.LastIndex(line, " ")]), strings.TrimSpace(want))
 		default:
 			config, contract, _ := strings.Cut(line[len(want):], " ")
-			if config != "tcb" && config != sgoConfig() {
+			if config != "tcb" && config != sgoImportConfig() {
 				base.ErrorfAt(pos, 0, "SGO_E_SPEC_MISMATCH: package %s was compiled for the %s configuration, this package for %s (D41, SGO-IMP-002)",
-					path, config, sgoConfig())
+					path, config, sgoImportConfig())
 				continue
 			}
 			contracts[path] = contract

@@ -1,0 +1,13 @@
+package main
+
+import "sgo"
+
+// D69: StartTest is admitted only in the main package that sgo test generates.
+func main(root *sgo.Context) error {
+	t, i := sgo.StartTest(root)
+	if i != 0 {
+		return sgo.NewError("unexpected test index")
+	}
+	t.Log("not a test")
+	return nil
+}

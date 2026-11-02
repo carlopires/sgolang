@@ -212,7 +212,8 @@ func (t *toolchain) testPackage(m *module, rel, goos, goarch string, verbose boo
 		return false, err
 	}
 	mainArchive := filepath.Join(work, "testmain.a")
-	if err := t.runTool(work, env, "compile", "-o", mainArchive, "-p", "main", "-importcfg", importcfg,
+	// -sgotestmain: only this generated package may call sgo.StartTest (D69).
+	if err := t.runTool(work, env, "compile", "-sgotestmain", "-o", mainArchive, "-p", "main", "-importcfg", importcfg,
 		"-pack", "-complete", "-trimpath", work+"=>", "testmain.sgo"); err != nil {
 		return false, err
 	}

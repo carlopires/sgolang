@@ -20,8 +20,8 @@ type T struct {
 	dir *Dir
 }
 
-// StartTest returns the test state and the index of the selected test. It is called by the main
-// function sgo test generates; outside a test binary it is a MissingCapability failure.
+// StartTest returns the test state and the index of the selected test. It is admitted only in the
+// main package sgo test generates (D69); outside a test binary it is a MissingCapability failure.
 func StartTest(root *Context) (*T, int) {
 	root.own()
 	i, g, ok := runtime_testStart(root.t)

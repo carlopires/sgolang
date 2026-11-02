@@ -542,6 +542,10 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation.** Two separate lanes, never mixed: the untouched upstream suite runs only with the reference toolchain (B03, as today), and an **intentional rejection report** runs `sgo check` over the upstream language tests (`test/*.go`, copied as `.sgo`), records each file's outcome (admitted, or the first rejection code and clause), and classifies them by clause. A file that `sgo check` admits and that has an expected output is built and run by S-Go and must match; an unexplained mismatch blocks the release. No upstream test is changed or added to a target lane to keep it green.
 
+## D69 — sgo test details for spec 0.6.0 **[DEFAULT]** · APPROVED 2026-11-02
+
+**Recommendation.** (1) `sgo.StartTest` is admitted only in the main package `sgo test` generates: the compiler admits it only under `-sgotestmain`, which only the driver passes for that file, so user code calling it is rejected at compile time (`SGO_E_UNADMITTED`). (2) A test that returns an error and leaves obligations keeps its error as the primary outcome, with the abandoned obligations in the record's chain; `LeakedWork` only when the test returned nil (SGO-TEST-003). (3) Tests of package `main` are refused in 0.6.0 (`SGO_E_USAGE`: move the code under test to a library package). (4) The watchdog is a fixed 60 s with no flag. (5) Tests under the lab configuration are not in 0.6.0.
+
 ---
 
 ## Approval record
@@ -557,3 +561,4 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - 2026-11-02: user approved D51–D59 as recommended ("looks good, continue"). Follow-up: spec 0.5.0 clauses for confined files and TCP endpoints (SPEC-FILE, SPEC-NET); W09 implementation, model first (D30).
 - 2026-11-02: user approved D60 as recommended (Unix domain sockets: exact path grants, socket-only stale removal, stream sockets on paths only, `PeerUID` in 0.5.0) and the SPEC-FILE/SPEC-NET 0.5.0 drafts otherwise; D60 is folded into 0.5.0 before freezing.
 - 2026-11-02: user approved D61-D68 as recommended ("approved"; D62 option (a), one process per test). Follow-up: spec 0.6.0 clauses for `sgo test` and `sgo check`; W10 implementation.
+- 2026-11-02: user approved D69 as recommended ("the recommendations are good") together with the drafts SGO-TOOL-002, SGO-TEST-002, SGO-TEST-003. Follow-up: StartTest restricted to the generated main (`-sgotestmain`), test conformance cases, freeze in spec 0.6.0.

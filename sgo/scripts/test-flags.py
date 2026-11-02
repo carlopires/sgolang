@@ -67,6 +67,7 @@ def main():
             ("-complete omitted", None, {}),
             ("GOEXPERIMENT=noregabiargs", [], {"GOEXPERIMENT": "noregabiargs"}),
             ("GODEBUG=panicnil=1", [], {"GODEBUG": "panicnil=1"}),
+            ("-sgotestmain", ["-sgotestmain"], {}),  # admits only sgo.StartTest (D69)
         ]
         for label, flags, extra in variants:
             base = ["-o", os.path.join(tmp, "x.a"), "-p", "main", "-pack", "-importcfg", cfgp]
@@ -96,6 +97,22 @@ def main():
                  "-buildmode=exe", main_a], tmp, env)
         if r.returncode != 0:
             sys.exit(f"test-flags: plain link failed:\n{r.stdout}{r.stderr}")
+        # D69: -sgotestmain compiles only package main, and such a package links only as the main
+        # package of a test binary; a test binary's main must be one.
+        r = run([os.path.join(TOOLS, "compile"), "-sgotestmain", "-o", os.path.join(tmp, "lib.a"), "-p", "example.com/m/lib",
+                 "-pack", "-complete", "-importcfg", cfgp, "main.sgo"], mod, env)
+        if r.returncode == 0 or "SGO_E_USAGE: -sgotestmain" not in r.stdout + r.stderr:
+            problems.append(f"compile -sgotestmain -p example.com/m/lib: want SGO_E_USAGE:\n{r.stdout}{r.stderr}")
+        tm_a = os.path.join(tmp, "testmain.a")
+        r = run([os.path.join(TOOLS, "compile"), "-sgotestmain", "-o", tm_a, "-p", "main", "-pack", "-complete",
+                 "-importcfg", cfgp, "main.sgo"], mod, env)
+        if r.returncode != 0:
+            problems.append(f"compile -sgotestmain -p main failed:\n{r.stdout}{r.stderr}")
+        for label, flags, a in (("testmain without -sgotest", [], tm_a), ("-sgotest with a production main", ["-sgotest"], main_a)):
+            r = run([os.path.join(TOOLS, "link"), "-o", os.path.join(tmp, "t"), "-importcfg", cfgp, "-buildmode=exe"] +
+                    flags + [a], tmp, env)
+            if r.returncode == 0 or "SGO_E_SPEC_MISMATCH" not in r.stdout + r.stderr:
+                problems.append(f"link {label}: want SGO_E_SPEC_MISMATCH:\n{r.stdout}{r.stderr}")
         refused = [("-buildmode=c-shared", ["-buildmode=c-shared"]),
                    ("-buildmode=c-archive", ["-buildmode=c-archive"]),
                    ("-buildmode=plugin", ["-buildmode=plugin"]),

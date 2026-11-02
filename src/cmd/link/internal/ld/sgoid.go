@@ -140,7 +140,16 @@ func (ctxt *Link) sgoCheckIdentity() {
 		id := &ident{head: strings.Join(f[:4], " "), config: f[4], contract: f[5], imports: map[string]string{}}
 		// S-Go code is compiled for one execution configuration, the one being linked (D41);
 		// trusted target code ("tcb") is the same in both.
-		if want := sgoConfigName(); id.config != "tcb" && id.config != want {
+		// The main package of a test binary is the one sgo test generates (-sgotestmain, D69), and
+		// only it: a testmain package is never linked into any other program.
+		switch want := sgoConfigName(); {
+		case lib.Pkg == "main" && sgoTest:
+			if id.config != "testmain" {
+				Errorf("sgo:1:1: SGO_E_SPEC_MISMATCH: the main package of a test binary must be the one sgo test generates, not one compiled for %s (D69)", id.config)
+			}
+		case id.config == "testmain":
+			Errorf("sgo:1:1: SGO_E_SPEC_MISMATCH: package %s is a generated test main; it is linked only into a test binary (D69)", lib.Pkg)
+		case id.config != "tcb" && id.config != want:
 			Errorf("sgo:1:1: SGO_E_SPEC_MISMATCH: package %s was compiled for the %s configuration, the program is linked for %s (D41, SGO-IMP-002)", lib.Pkg, id.config, want)
 		}
 		for _, l := range lines[1:] {

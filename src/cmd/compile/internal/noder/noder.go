@@ -70,6 +70,11 @@ func LoadPackage(filenames []string) {
 	}
 	sgoMode = !sgoadmit.Trusted(filenames)
 	base.SGo = sgoMode
+	if base.Flag.SGoTestMain && (!sgoMode || base.Ctxt.Pkgpath != "main" || base.Flag.SGoLab) {
+		fmt.Fprintf(os.Stderr, "sgo:1:1: SGO_E_USAGE: -sgotestmain compiles only an S-Go package main, not for the lab (D69)\n")
+		base.ErrorExit()
+	}
+	sgoadmit.TestMain = base.Flag.SGoTestMain
 
 	var lines uint
 	var m posMap
