@@ -1,0 +1,73 @@
+// Package transfer is the replay example (D66): a transfer in three steps, each done by a task
+// of its own and reported to a log. The steps must be logged in order: debit, credit, commit.
+// Buggy waits for the debit before the credit, but lets the commit run as soon as the debit is
+// done, so on some schedules it is logged before the credit. Fixed also makes the commit wait for
+// the credit. In production the bug shows rarely; sgo lab sweep finds a schedule that shows it,
+// and sgo lab replay reproduces that schedule exactly (D46, D48).
+package transfer
+
+import "sgo"
+
+// Buggy runs the transfer with the ordering bug and returns its log.
+func Buggy(c *sgo.Context) (string, error) {
+	return run(c, false)
+}
+
+// Fixed runs the transfer with every step waiting for the one before it and returns its log.
+func Fixed(c *sgo.Context) (string, error) {
+	return run(c, true)
+}
+
+func run(c *sgo.Context, fixed bool) (string, error) {
+	log := sgo.NewChannel[string](3)
+	debited := make(chan bool, 2)
+	credited := make(chan bool, 1)
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			if err := report(task, log, "debit"); err != nil {
+				return err
+			}
+			debited <- true // one for the credit and one for the commit
+			debited <- true
+			return nil
+		})
+		n.Spawn(func(task *sgo.Context) error {
+			<-debited
+			if err := report(task, log, "credit"); err != nil {
+				return err
+			}
+			credited <- true
+			return nil
+		})
+		n.Spawn(func(task *sgo.Context) error {
+			<-debited
+			if fixed {
+				<-credited // the fix: the commit also waits for the credit
+			}
+			return report(task, log, "commit")
+		})
+	}
+	log.Close()
+	got := ""
+	for {
+		s, ok, err := log.Receive(c)
+		if err != nil {
+			return "", err
+		}
+		if !ok {
+			return got, nil
+		}
+		if got != "" {
+			got += " "
+		}
+		got += s
+	}
+}
+
+func report(task *sgo.Context, log *sgo.Channel[string], step string) error {
+	p, err := log.Reserve(task)
+	if err != nil {
+		return err
+	}
+	return p.Commit(step)
+}

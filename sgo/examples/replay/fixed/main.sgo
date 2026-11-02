@@ -1,0 +1,16 @@
+// The fixed transfer of the replay example: prints its log.
+package main
+
+import (
+	"sgo"
+
+	"example.com/replay/transfer"
+)
+
+func main(root *sgo.Context) error {
+	got, err := transfer.Fixed(root)
+	if err != nil {
+		return err
+	}
+	return root.Stdout().WriteString(got + "\n")
+}

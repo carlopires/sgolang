@@ -1,0 +1,24 @@
+{"sgolab":"1","build":"sgo1/spec=0.6.0/admission=a1bd4853d4c541d8/config=lab/drain=none/grants=none/target=darwin-arm64/toolchain=devel-eb56b3df747d/upstream=2aae1000ea1d4b28923b96db28acf4e3b99d6aff","seed":7,"policy":"random","k":1024,"quota":100000000,"epoch":0}
+{"e":"choose","ready":[0],"pick":0}
+{"e":"choose","ready":[0,1],"pick":1}
+{"e":"choose","ready":[0,1],"pick":1}
+{"e":"choose","ready":[0,1],"pick":1}
+{"e":"choose","ready":[0,1],"pick":1}
+{"e":"end","task":1,"outcome":"Succeeded"}
+{"e":"choose","ready":[0],"pick":0}
+{"e":"choose","ready":[0,2],"pick":0}
+{"e":"choose","ready":[0,2,3],"pick":0}
+{"e":"choose","ready":[2,3],"pick":3}
+{"e":"choose","ready":[2,3],"pick":2}
+{"e":"choose","ready":[2,3],"pick":3}
+{"e":"choose","ready":[2,3],"pick":2}
+{"e":"choose","ready":[2,3],"pick":3}
+{"e":"end","task":3,"outcome":"Succeeded"}
+{"e":"choose","ready":[2],"pick":2}
+{"e":"choose","ready":[2],"pick":2}
+{"e":"end","task":2,"outcome":"Succeeded"}
+{"e":"choose","ready":[0],"pick":0}
+{"e":"choose","ready":[0],"pick":0}
+{"e":"write","task":0,"text":"debit commit credit\n"}
+{"e":"outcome","status":0,"kind":""}
+{"end":true,"events":22,"status":0,"sha256":"5b497c2746be8c9098962854448f0a1bcab92f12d9a2cbf49e09170e65948db2"}

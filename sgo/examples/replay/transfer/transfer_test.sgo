@@ -1,0 +1,30 @@
+package transfer
+
+import "sgo"
+
+// The fixed transfer logs its steps in order on every run.
+func TestFixedOrder(t *sgo.T) error {
+	for i := 0; i < 200; i++ {
+		got, err := Fixed(t.Context())
+		if err != nil {
+			return err
+		}
+		if got != "debit credit commit" {
+			return sgo.NewError("log " + got)
+		}
+	}
+	return nil
+}
+
+// The buggy transfer always logs all three steps, debit first; only the order of the last two
+// depends on the schedule (sgo lab sweep finds the bad one).
+func TestBuggyLogsEveryStep(t *sgo.T) error {
+	got, err := Buggy(t.Context())
+	if err != nil {
+		return err
+	}
+	if got != "debit credit commit" && got != "debit commit credit" {
+		return sgo.NewError("log " + got)
+	}
+	return nil
+}
