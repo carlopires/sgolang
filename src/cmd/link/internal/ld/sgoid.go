@@ -192,17 +192,15 @@ func (ctxt *Link) sgoCheckIdentity() {
 // sgoLab is set by -sgolab: the program is linked for the lab execution configuration (D41).
 var sgoLab bool
 
-// sgoTest is set by -sgotest: the program is an S-Go test binary (D62).
+// sgoTest is set by -sgotest: the program is an S-Go test binary (D62). It marks only the
+// runtime; the packages are compiled as for any program of the configuration, so it does not
+// change the configuration the identity check expects (the driver names it in the build ID).
 var sgoTest bool
 
+// sgoConfigName is the execution configuration the linked packages must have been compiled for.
 func sgoConfigName() string {
-	switch {
-	case sgoLab && sgoTest:
-		return "lab-test"
-	case sgoLab:
+	if sgoLab {
 		return "lab"
-	case sgoTest:
-		return "test"
 	}
 	return "prod"
 }
