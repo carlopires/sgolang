@@ -1,0 +1,16 @@
+// The service example (D66): a Unix-socket service with two workers answers five clients and is
+// shut down by cancellation while a sixth client sits idle on an open connection.
+package main
+
+import (
+	"sgo"
+
+	"example.com/service/service"
+)
+
+func main(root *sgo.Context) error {
+	if err := service.Run(root, "unix:svc.sock", 2, 5); err != nil {
+		return err
+	}
+	return root.Stdout().WriteString("served 5 clients; shut down with an idle connection open\n")
+}

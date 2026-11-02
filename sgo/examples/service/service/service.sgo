@@ -1,0 +1,157 @@
+// Package service is the service example (D66): a Unix-socket service started with n.Start and
+// ready only once it listens, clients that each send a request and check the reply, and an
+// orderly shutdown by cancellation that closes every connection, including one that is idle in
+// the middle of a request.
+package service
+
+import "sgo"
+
+// Run listens on addr, starts the service with workers accepting tasks, runs clients clients
+// against it, and shuts it down by cancelling its nursery. Before the shutdown one more client
+// connects and sends nothing, so a worker may be blocked reading it when the shutdown comes. Run
+// must be called by the root task: only the root holds the network grants (SGO-NET-002).
+func Run(root *sgo.Context, addr string, workers, clients int) error {
+	l, err := root.Listen(addr)
+	if err != nil {
+		return err
+	}
+	replies := sgo.NewChannel[string](clients)
+	nursery (n) {
+		ll := l.LendTo(n)
+		// Start returns once the service signals readiness: after its workers are accepting.
+		if serr := n.Start(func(task *sgo.Context, ready *sgo.Ready) error {
+			return serve(task, ll, workers, ready)
+		}); serr != nil {
+			return serr
+		}
+		if cerr := runClients(root, addr, 0, clients, replies); cerr != nil {
+			return cerr
+		}
+		idle, derr := root.Dial(addr)
+		if derr != nil {
+			return derr
+		}
+		n.Cancel() // shutdown: every worker's Accept or Read reports cancellation
+		if cerr := idle.Close(); cerr != nil {
+			return cerr
+		}
+	}
+	return l.Close()
+}
+
+// runClients runs clients i..count-1 at the same time: each in a nursery of its own, nested in
+// the previous one, so that the root, which dials and owns every connection, closes each after the
+// client using it has ended; the innermost level collects the replies.
+func runClients(root *sgo.Context, addr string, i, count int, replies *sgo.Channel[string]) error {
+	if i == count {
+		for k := 0; k < count; k++ {
+			got, _, rerr := replies.Receive(root)
+			if rerr != nil {
+				return rerr
+			}
+			if got != "ok" {
+				return sgo.NewError(got)
+			}
+		}
+		return nil
+	}
+	c, derr := root.Dial(addr)
+	if derr != nil {
+		return derr
+	}
+	nursery (cn) {
+		cc := c.LendTo(cn)
+		req := "hello " + Itoa(i)
+		cn.Spawn(func(task *sgo.Context) error {
+			return client(task, cc, req, "hi, "+req, replies)
+		})
+		if err := runClients(root, addr, i+1, count, replies); err != nil {
+			return err
+		}
+	}
+	return c.Close()
+}
+
+// serve is the service: workers tasks accept connections on the lent listener and answer them
+// until the service is cancelled. It is ready once the workers are started (the listener has
+// been listening since Run opened it).
+func serve(task *sgo.Context, ll *sgo.Listener, workers int, ready *sgo.Ready) error {
+	nursery (m) {
+		for k := 0; k < workers; k++ {
+			m.Spawn(func(w *sgo.Context) error {
+				for {
+					c, aerr := ll.Accept()
+					if aerr != nil {
+						return aerr
+					}
+					if herr := handle(c); herr != nil {
+						return herr
+					}
+				}
+			})
+		}
+		ready.Signal()
+	}
+	return nil
+}
+
+// handle answers one request on c, which the calling worker owns and always closes, also when the
+// read is cancelled by the shutdown.
+func handle(c *sgo.Conn) error {
+	defer func() { _ = c.Close() }()
+	req, rerr := c.Read(100)
+	if rerr != nil {
+		return rerr
+	}
+	_, werr := c.Write("hi, " + req)
+	return werr
+}
+
+// client sends req on the lent connection cc and reports "ok", or what went wrong, on replies.
+func client(task *sgo.Context, cc *sgo.Conn, req, want string, replies *sgo.Channel[string]) error {
+	result := "ok"
+	if _, werr := cc.Write(req); werr != nil {
+		result = "write: " + werr.Error()
+	} else if got, rerr := cc.Read(100); rerr != nil {
+		result = "read: " + rerr.Error()
+	} else if got != want {
+		result = "reply " + got + ", want " + want
+	}
+	p, perr := replies.Reserve(task)
+	if perr != nil {
+		return perr
+	}
+	return p.Commit(result)
+}
+
+// Itoa formats a non-negative int in decimal.
+func Itoa(v int) string {
+	if v < 10 {
+		return digit(v)
+	}
+	return Itoa(v/10) + digit(v%10)
+}
+
+func digit(d int) string {
+	switch d {
+	case 0:
+		return "0"
+	case 1:
+		return "1"
+	case 2:
+		return "2"
+	case 3:
+		return "3"
+	case 4:
+		return "4"
+	case 5:
+		return "5"
+	case 6:
+		return "6"
+	case 7:
+		return "7"
+	case 8:
+		return "8"
+	}
+	return "9"
+}

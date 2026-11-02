@@ -1,0 +1,25 @@
+package service
+
+import "sgo"
+
+// The service answers every client, and the shutdown ends every task, the worker blocked on the
+// idle connection included; every connection is closed (the test's quiescence check, D64).
+func TestServeAndShutdown(t *sgo.T) error {
+	return Run(t.Context(), "unix:svc.sock", 2, 5)
+}
+
+func TestOneWorkerManyClients(t *sgo.T) error {
+	return Run(t.Context(), "unix:svc.sock", 1, 8)
+}
+
+func TestMoreWorkersThanClients(t *sgo.T) error {
+	return Run(t.Context(), "unix:svc.sock", 6, 2)
+}
+
+// A second service on the same path after a shutdown: the first released its socket.
+func TestRestart(t *sgo.T) error {
+	if err := Run(t.Context(), "unix:svc.sock", 2, 2); err != nil {
+		return err
+	}
+	return Run(t.Context(), "unix:svc.sock", 2, 2)
+}
