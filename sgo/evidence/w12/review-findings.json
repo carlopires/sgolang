@@ -220,7 +220,7 @@
       "id": "D-R3",
       "for": "R3",
       "text": "legacy-audit.py (D77) reads the two allowlists (base/sgoflags.go, ld/sgoidcfg.go) and diffs them against the upstream flag tables, so a new upstream flag is classified deliberately; also: link-side GOEXPERIMENT refusal, GOFIPS140 classification (compile and link), -goversion refused with SGO_E_USAGE (+ test-flags row)",
-      "status": "open (D77 work)"
+      "status": "done: legacy-audit.py classifies every flag table; link and asm refuse target settings incl. GOFIPS140; -goversion refused (audit)"
     },
     {
       "id": "D-R6",
@@ -235,5 +235,5 @@
       "status": "done in spec 0.7.0"
     }
   ],
-  "review_state": "all findings verified (R1-R10, R6b); spec 0.7.0 freeze applies D-R1/R4/R5/R6/R8 and SR2; open: D-R1b test, D-R3 (D77), D77-D80"
+  "review_state": "all findings verified (R1-R10, R6b). Spec 0.7.0 freeze (ebefd11571) applied D-R1/R4/R5/R6/R8 and SR2; D77 legacy-audit.py (77ba1bfb25, 5a8111504a) and D79 test-negative.py (d13f44aef4) in CI; all sent for reviewer re-check (msg_584a524226cb4d5697b2a15b71454d51). Open: D77 remainder (sgo driver flag table, archive contents via make-release, D-R1b), D78, D80."
 }
