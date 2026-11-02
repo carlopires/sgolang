@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": "0.5.0",
-  "admission_digest": "96653dc6ca2003afffa045c412af87ffcf3e1432c7ab04082356a0d7d1ff69c9",
+  "spec_version": "0.6.0",
+  "admission_digest": "b25d4765ab53b004f0e2adf7a9f13d73fa2522518d5fc5b1e29c6841bfec3dd8",
   "status": "subset0_frozen_not_admitted",
   "warning": "Spec 0.1.0 is frozen: every row's clauses are fixed by digest. No row is admitted: admission requires implementation, enforcement, and executed evidence (constitution §6), starting in W03.",
   "default_decision": "reject",
@@ -152,7 +152,7 @@
         "SGO-TYPE-005",
         "SGO-TYPE-006"
       ],
-      "normative_text_digest": "2de181d37b3c1a9359d00e6f3c984f726b238beffd1fb36ede201e733b38c5e9",
+      "normative_text_digest": "f67140684e18cf4736b44aeee4bbd41d8990bd20662274a8e7aade1683eb4081",
       "admitted_in": [],
       "acceptance_case_ids": [
         "X10",
@@ -162,11 +162,11 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-TYPE-001": "6bb4b4c1230f94dee4579a6739e3af7aa825bd8cb51ff66968c2d925b0f71dbf",
+        "SGO-TYPE-001": "54c2f7fce51902b6c5f9d3d70144c181e1ca994c1e0975cc1e5b4320a7e1d71b",
         "SGO-TYPE-002": "8f0be92070475862d6095c90b28a2b0e63d24f6a3f9062b278fed9f01b61d1e2",
         "SGO-TYPE-003": "a1e06f6a06fccd6bc4d5a83ecf208d1a612639b582bf70abef98331e8b841343",
         "SGO-TYPE-004": "ed7f04b19e34d997c1d626f4056021977c51e644d9adc52207ca5a149f9d4819",
-        "SGO-TYPE-005": "8af5f290011224c77bdd571d49537474ff4529802b12b35e871bf1b3d16d74e0",
+        "SGO-TYPE-005": "69b3904d8fdaa89bab09eb3ea66a912cf72ba0bc60e2d4c9dde2ec1817b31c2c",
         "SGO-TYPE-006": "782ac892c2affcdc43a6c63e4007c4e2bf47c7f98583e0f194194c9b7febc992"
       },
       "clause_status": {
@@ -178,11 +178,11 @@
         "SGO-TYPE-006": "frozen"
       },
       "clause_versions": {
-        "SGO-TYPE-001": 4,
+        "SGO-TYPE-001": 5,
         "SGO-TYPE-002": 1,
         "SGO-TYPE-003": 1,
         "SGO-TYPE-004": 1,
-        "SGO-TYPE-005": 4,
+        "SGO-TYPE-005": 5,
         "SGO-TYPE-006": 1
       }
     },
@@ -1001,7 +1001,7 @@
         "SGO-TOOL-001",
         "SGO-TOOL-002"
       ],
-      "normative_text_digest": "4eb1cdc6cee16ded78477888ca7aa2674cf116c2b9de54894df923c3c2293233",
+      "normative_text_digest": "4fd1ca7c211d0dd1de494d2c3f65523c5da5de3f2ee14b913d653665512dd5c1",
       "admitted_in": [],
       "acceptance_case_ids": [
         "T01",
@@ -1014,15 +1014,15 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-TOOL-001": "a5153f1fc319ffcac0a4276a8ad0be8cda9ead285e9a914fa529625af08e3fb8",
-        "SGO-TOOL-002": "2e99353ef01a8a8cfe2c30f1ab556b66d89ca81b00993e1951b06bc667356fe8"
+        "SGO-TOOL-001": "78b45888d746fe4fa49bfebc42843c0c26aa4a81e7ca35f00b40ab9e24e93b12",
+        "SGO-TOOL-002": "f897511a1292e60b070dc690bbf6d5048a55fb92fd6923b571f86e77483b9458"
       },
       "clause_status": {
         "SGO-TOOL-001": "frozen",
-        "SGO-TOOL-002": "draft"
+        "SGO-TOOL-002": "frozen"
       },
       "clause_versions": {
-        "SGO-TOOL-001": 1,
+        "SGO-TOOL-001": 2,
         "SGO-TOOL-002": 1
       }
     },
@@ -1404,7 +1404,7 @@
         "SGO-TEST-002",
         "SGO-TEST-003"
       ],
-      "normative_text_digest": "5f2b9f0daa0fb9c82acb2d75a89c85c01deb5c71e84e6733e76709038f5b0995",
+      "normative_text_digest": "6afb8572e5fe27dc59130ea7b4bc5deb22b7f7bb6e166327ebab0cb3629bae67",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S01",
@@ -1415,13 +1415,13 @@
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-TEST-001": "db988520f433af67d5245dc178a5b0cb25eb0b5c99b3fdee7d4edc0fc0f11a24",
-        "SGO-TEST-002": "36dd08ab971d685c1953e2df6ed39f1fb542c7b913cd7a4fb4024a2df5cbc766",
-        "SGO-TEST-003": "9543b4b70e8882950dd49a6680856b520e27b3bd620c47862f8bdec67f85ca1a"
+        "SGO-TEST-002": "343ac262ffc70b599947d8ca9d47c51355e3b31db99e8d1069c809d0a9389fb4",
+        "SGO-TEST-003": "79ddc3380e4d931ce8227e13d43b186cac5e1f76823205ea8d3a5f8c02390cd8"
       },
       "clause_status": {
         "SGO-TEST-001": "frozen",
-        "SGO-TEST-002": "draft",
-        "SGO-TEST-003": "draft"
+        "SGO-TEST-002": "frozen",
+        "SGO-TEST-003": "frozen"
       },
       "clause_versions": {
         "SGO-TEST-001": 1,

@@ -21,6 +21,7 @@ import sys
 import tempfile
 
 ROOT = subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip()
+SPEC_VERSION = open(os.path.join(ROOT, "sgo", "spec", "VERSION")).read().strip()
 
 CALC = """package calc
 
@@ -151,7 +152,7 @@ def main():
         mod, tdir = os.path.join(tmp, "tm"), os.path.join(tmp, "tmpdir")
         os.makedirs(tdir)
         env = {"PATH": "/usr/bin:/bin", "HOME": os.environ.get("HOME", "/tmp"), "TMPDIR": tdir}
-        write(mod, "sgo.mod", "module example.com/tm\n\nsgo 0.5.0\ngrant dir data data ro\n")
+        write(mod, "sgo.mod", "module example.com/tm\n\nsgo " + SPEC_VERSION + "\ngrant dir data data ro\n")
         write(mod, "data/seed.txt", "seed\n")
         write(mod, "calc/calc.sgo", CALC)
         write(mod, "calc/calc_test.sgo", CALC_TEST)

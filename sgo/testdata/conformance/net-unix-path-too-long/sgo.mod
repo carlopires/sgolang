@@ -1,4 +1,4 @@
 module example.com/net-unix-path-too-long
 
-sgo 0.5.0
+sgo 0.6.0
 grant listen unix:/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

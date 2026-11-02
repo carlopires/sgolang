@@ -26,7 +26,7 @@ Subset 0. Derived from decision D10 and `SGO_SPEC_SUBSET0.md` §16.
 
 ### SGO-TEST-002 — sgo test
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-TOOL-001, SGO-TOOL-002, SGO-PROC-001, SGO-PROC-002, SGO-AUTH-002, SGO-FILE-002, SGO-ERR-002, SGO-IMP-002, SGO-TEST-003; D62, D69.
 - **grammar_and_types:** `sgo test [-v] [-run regexp] [packages]` (packages as in SGO-TOOL-002). A test file is a file of the package directory whose name ends in `_test.sgo`; it has the package's own package clause and is part of the package only under `sgo test` of that package. A test is a top-level function `func TestX(t *sgo.T) error` in a test file, where `X` is empty or does not start with a lower-case letter; `sgo.T` is a capability handle (SGO-TYPE-005) with methods `Context() *sgo.Context`, `TempDir() *sgo.Dir`, and `Log(s string)`. A function whose name has that form but another signature is `SGO_E_TEST_SIGNATURE` at its declaration. The package must not be `main` or `sgo` (`SGO_E_USAGE`).
 - **preconditions:** As SGO-TOOL-002.
@@ -40,15 +40,15 @@ Subset 0. Derived from decision D10 and `SGO_SPEC_SUBSET0.md` §16.
 - **compile_link_checks:** The test files are compiled under the same admission and checks as the rest of the package; `SGO_E_TEST_SIGNATURE` as above. The generated main package records the configuration `testmain` in its identity (SGO-IMP-002); the linker accepts a `testmain` package only as the main package of a test binary (`-sgotest`), and a test binary only with one (`SGO_E_SPEC_MISMATCH`).
 - **runtime_guards:** The runtime of a test binary refuses to start without a test selection on descriptor 3 (`Defect`).
 - **tcb_assumptions:** `runtime/sgo_test_boot.go` and `src/sgo/test.go` (TARGET_TCB.json).
-- **positive_tests:** T04; `sgo/scripts/test-test.py` (pass, -run, -v, TempDir fresh per test and removed, module grants).
-- **negative_tests:** T04; fixture:test-starttest-denied; `sgo/scripts/test-test.py` (returned error, checked failure, wrong signature, unknown flag, test files absent from build and check, watchdog); `sgo/scripts/test-flags.py` (`-sgotestmain` and `-sgotest` refusals).
+- **positive_tests:** T04; fixture:test-pass-fail, fixture:test-tempdir, fixture:test-run-filter, fixture:test-files-not-in-build; `sgo/scripts/test-test.py` (pass, -run, -v, TempDir fresh per test and removed, module grants).
+- **negative_tests:** T04; fixture:test-starttest-denied, fixture:test-signature, fixture:test-main-refused, fixture:test-pass-fail; `sgo/scripts/test-test.py` (returned error, checked failure, wrong signature, unknown flag, test files absent from build and check, watchdog); `sgo/scripts/test-flags.py` (`-sgotestmain` and `-sgotest` refusals).
 - **implementation_coverage:** `src/cmd/sgo/test.go`, `src/cmd/sgo/module.go` (test files), linker `-sgotest`, `src/runtime/sgo_test_boot.go`, `src/sgo/test.go`.
-- **executed_evidence:** PENDING — W10 evidence record.
+- **executed_evidence:** `sgo/evidence/w10/README.md` (the scripts and conformance cases above on darwin/arm64, linux/amd64, linux/arm64).
 - **supported_execution_configurations:** production; tests under the lab configuration are not in 0.6.0.
 
 ### SGO-TEST-003 — Test quiescence
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-TEST-002, SGO-PERMIT-002, SGO-SYNC-002, SGO-FILE-003, SGO-ERR-002; D64.
 - **grammar_and_types:** n/a — runtime rule of test binaries.
 - **preconditions:** A test binary's root task has returned from the test.
@@ -62,8 +62,8 @@ Subset 0. Derived from decision D10 and `SGO_SPEC_SUBSET0.md` §16.
 - **compile_link_checks:** n/a — runtime rule.
 - **runtime_guards:** `LeakedWork` as above.
 - **tcb_assumptions:** `runtime/sgo_test_boot.go`.
-- **positive_tests:** T04; `sgo/scripts/test-test.py` (a test that resolves its obligations passes).
-- **negative_tests:** T04; `sgo/scripts/test-test.py` (a test leaving a permit fails with LeakedWork and a PermitAbandoned chain).
+- **positive_tests:** T04; fixture:test-leaked-work; `sgo/scripts/test-test.py` (a test that resolves its obligations passes).
+- **negative_tests:** T04; fixture:test-leaked-work; `sgo/scripts/test-test.py` (a test leaving a permit fails with LeakedWork and a PermitAbandoned chain).
 - **implementation_coverage:** `sgoTestEnd` in `src/runtime/sgo_test_boot.go`.
-- **executed_evidence:** PENDING — W10 evidence record.
+- **executed_evidence:** `sgo/evidence/w10/README.md` (the scripts and conformance cases above on darwin/arm64, linux/amd64, linux/arm64).
 - **supported_execution_configurations:** production test binaries.

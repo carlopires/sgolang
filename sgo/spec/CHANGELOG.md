@@ -2,6 +2,21 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.6.0 — 2026-11-02
+
+Tooling: `sgo check` and `sgo test` (W10, D61-D64, D69). Programs keep their meaning; the admission digest and toolchain identity change, so objects built for 0.5.0 are refused by a 0.6.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.6.0`. A test binary's build ID names the configuration `test`, and the main package `sgo test` generates records the configuration `testmain` in its identity; neither appears in any other program.
+
+New frozen clauses:
+
+- SGO-TOOL-002 v1 — `sgo check [-json] [packages]`: the front end of `sgo build` without code generation, with exactly the diagnostics `build` reports (D63).
+- SGO-TEST-002 v1 — `sgo test [-v] [-run regexp] [packages]`: `func TestX(t *sgo.T) error` in `_test.sgo` files, which are part of a package only under `sgo test`; one process per test with its selection on descriptor 3, a fresh `T.TempDir`, the module's grants, and a fixed 60 s watchdog; `sgo.StartTest` admitted only in the generated main (`-sgotestmain`); tests of package `main` and lab tests are not in 0.6.0 (D62, D69).
+- SGO-TEST-003 v1 — test quiescence: obligations a test's root task leaves are resolved and fail a test that returned nil with `LeakedWork`; a returned error stays primary with them in its chain (D64, D69).
+
+Amended:
+
+- SGO-TOOL-001 v2 — the command list names `sgo lab` (spec 0.4.0), `sgo check`, and `sgo test`; any other command or flag is still rejected.
+- SGO-TYPE-001 v5 and SGO-TYPE-005 v5 — `*sgo.T` is a capability handle type.
+
 ## 0.5.0 — 2026-11-02
 
 Confined files and network endpoints (W09, D51-D60). Programs without I/O grants keep their meaning; the admission digest and toolchain identity change, so objects built for 0.4.0 are refused by a 0.5.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.5.0`. A program with file or network grants records their digest in its build ID (`io=`).

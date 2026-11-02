@@ -1,3 +1,3 @@
 module example.com/lab-repeat
 
-sgo 0.5.0
+sgo 0.6.0

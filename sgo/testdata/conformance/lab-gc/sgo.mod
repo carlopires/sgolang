@@ -1,3 +1,3 @@
 module example.com/lab-gc
 
-sgo 0.5.0
+sgo 0.6.0

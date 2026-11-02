@@ -3,10 +3,10 @@
 Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §16, the user's naming decision (driver `sgo`), resolution R7, plan §10.2.
 
 ### SGO-TOOL-001 — The sgo driver
-- **version:** 1
+- **version:** 2
 - **status:** frozen
 - **reference_closure:** SGO-IMP-001, SGO-IMP-002, SGO-DRAIN-002, SGO-ERR-001, SGO-BUILD-001; R7.
-- **grammar_and_types:** The S-Go driver is the executable `sgo`. Subset-0 commands: `sgo build [-o out] [-drain-budget=<ms>] [-target=<os>/<arch>] [packages]`, `sgo run [-drain-budget=<ms>] <main package>`, `sgo version`, `sgo fmt [files]`. Any other command or flag is rejected. In particular there is no flag, environment variable, file name, build tag, or pragma that changes the language, disables a check, selects a different compiler, or enables Go compatibility (S01).
+- **grammar_and_types:** The S-Go driver is the executable `sgo`. Subset-0 commands: `sgo build [-o out] [-drain-budget=<ms>] [-target=<os>/<arch>] [packages]`, `sgo run [-drain-budget=<ms>] <main package>`, `sgo version`, `sgo fmt [files]`; spec 0.4.0 adds `sgo lab run|replay|sweep` (SGO-LAB-002) and spec 0.6.0 adds `sgo check` (SGO-TOOL-002) and `sgo test` (SGO-TEST-002). Any other command or flag is rejected. In particular there is no flag, environment variable, file name, build tag, or pragma that changes the language, disables a check, selects a different compiler, or enables Go compatibility (S01).
 - **preconditions:** The working directory is inside a module (SGO-IMP-001).
 - **evaluation_and_value_semantics:** `build` compiles every package of the requested main package's import graph under the current spec, then links a binary whose build metadata records spec version, admission digest, drain budget, target, and toolchain identity. `run` builds into a temporary location and executes the binary, propagating its exit status. `version` prints the S-Go version, spec version, admission digest, and upstream base commit. `fmt` formats `.sgo` files and refuses any file it cannot parse as S-Go.
 - **ownership_and_lifecycle:** Build caches are keyed by every identity of SGO-IMP-002 and kept separate from any Go build cache.
@@ -26,7 +26,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §16, the user's naming decision (d
 
 ### SGO-TOOL-002 — sgo check
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-TOOL-001, SGO-IMP-001, SGO-IMP-002, SGO-ERR-001; D63.
 - **grammar_and_types:** `sgo check [-json] [packages]`, where a package is a directory of the module or `./...` (every package of the module, excluding `testdata`, `_`- and `.`-prefixed directories, and nested modules); the default is the current directory. Any other flag is `SGO_E_USAGE`.
 - **preconditions:** The working directory is inside a module (SGO-IMP-001).
@@ -40,8 +40,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §16, the user's naming decision (d
 - **compile_link_checks:** All of the compile-time checks of the packages checked; no link-time check (SGO-IMP-002 contract and TCB digest checks of the link are not run).
 - **runtime_guards:** n/a — toolchain.
 - **tcb_assumptions:** The driver and compiler as in SGO-TOOL-001.
-- **positive_tests:** T03; `sgo/scripts/test-check.py` (every conformance case: check and build agree).
+- **positive_tests:** T03; fixture:test-files-not-in-build; `sgo/scripts/test-check.py` (every conformance case: check and build agree).
 - **negative_tests:** T03; `sgo/scripts/test-check.py` (rejection cases report identical diagnostics; a dependency that does not check stops its dependents).
 - **implementation_coverage:** `src/cmd/sgo/check.go`; compiler flag `-sgocheck` (stops after type checking, writing export data only).
-- **executed_evidence:** PENDING — W10 evidence record.
+- **executed_evidence:** `sgo/evidence/w10/README.md` (the scripts and conformance cases above on darwin/arm64, linux/amd64, linux/arm64).
 - **supported_execution_configurations:** production (lab binaries are produced only by `sgo lab`).
