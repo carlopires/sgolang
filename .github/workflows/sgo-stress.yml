@@ -22,6 +22,8 @@ jobs:
       SGO_OUT: ${{ github.workspace }}/.sgo-out
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the runtime lane builds the upstream tools at the locked commit
       - name: Stage-0 toolchain
         run: sgo/scripts/build-stage0.sh
       - name: Stress (D80)
