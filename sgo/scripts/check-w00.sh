@@ -90,8 +90,10 @@ deny() { # deny ID NAME ARGS...
 	out="$(env "${hostile[@]}" "$gate" "$@" 2>&1)"
 	st=$?
 	set -e
-	if [ $st -eq 2 ] && echo "$out" | grep -q 'SGO_E_UNADMITTED' && [ ! -e "$marker" ]; then
-		record "$id" "$name" pass "exit=2 SGO_E_UNADMITTED"
+	# The W00 gate never compiles: before any row is admitted it reports SGO_E_UNADMITTED, and since
+	# spec 0.7.0 admits rows it reports SGO_E_NO_DRIVER (the real entry point is cmd/sgo, W03).
+	if [ $st -eq 2 ] && echo "$out" | grep -Eq 'SGO_E_UNADMITTED|SGO_E_NO_DRIVER' && [ ! -e "$marker" ]; then
+		record "$id" "$name" pass "exit=2 $(echo "$out" | grep -Eo 'SGO_E_UNADMITTED|SGO_E_NO_DRIVER' | head -1)"
 	else
 		record "$id" "$name" fail "exit=$st marker=$([ -e "$marker" ] && echo yes || echo no) out=$(echo "$out" | head -2 | tr '\n' ' ')"
 	fi
