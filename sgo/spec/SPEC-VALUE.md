@@ -20,8 +20,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §4 and decisions D02–D04.
 - **tcb_assumptions:** n/a — generated code; no runtime primitive beyond the failure path (SGO-TCB-001).
 - **positive_tests:** S16; fixture:val-int-arith.
 - **negative_tests:** S16; fixture:val-overflow-add, fixture:val-overflow-minint-div, fixture:val-div-zero, fixture:val-shift-range.
-- **implementation_coverage:** none yet — W03 (SSA lowering of checked arithmetic).
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/ssagen/sgo.go`, `src/runtime/sgo_api.go`, `src/cmd/compile/internal/types2/sgo.go`.
+- **executed_evidence:** conformance fixtures val-div-zero, val-int-arith, val-overflow-add, val-overflow-minint-div, val-shift-range (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-VAL-002 — Strings
@@ -42,8 +42,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §4 and decisions D02–D04.
 - **tcb_assumptions:** Runtime string allocation and concatenation primitives (SGO-TCB-001).
 - **positive_tests:** S16; fixture:val-strings.
 - **negative_tests:** S16; fixture:val-string-index, fixture:val-string-range.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/ssagen/sgo.go`, `src/runtime/sgo_api.go`, `src/cmd/compile/internal/types2/sgo.go`.
+- **executed_evidence:** conformance fixtures val-string-index, val-string-range, val-strings (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-VAL-003 — Booleans
@@ -64,8 +64,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §4 and decisions D02–D04.
 - **tcb_assumptions:** n/a — generated code.
 - **positive_tests:** S16; fixture:val-bool.
 - **negative_tests:** S16; fixture:val-int-condition.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/ssagen/sgo.go`, `src/runtime/sgo_api.go`, `src/cmd/compile/internal/types2/sgo.go`.
+- **executed_evidence:** conformance fixtures val-bool, val-int-condition (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-VAL-004 — Constants
@@ -86,8 +86,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §4 and decisions D02–D04.
 - **tcb_assumptions:** n/a — compiler only.
 - **positive_tests:** S16; fixture:val-constants.
 - **negative_tests:** S16; fixture:val-const-overflow, fixture:val-const-div-zero.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/ssagen/sgo.go`, `src/runtime/sgo_api.go`, `src/cmd/compile/internal/types2/sgo.go`.
+- **executed_evidence:** conformance fixtures val-const-div-zero, val-const-overflow, val-constants (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-VAL-005 — Evaluation order
@@ -108,6 +108,6 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §4 and decisions D02–D04.
 - **tcb_assumptions:** n/a — generated code.
 - **positive_tests:** S16, X05; fixture:val-eval-order.
 - **negative_tests:** S16; fixture:val-eval-order-failure-point.
-- **implementation_coverage:** none yet — W03 (and an audit of upstream SSA reordering).
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/ssagen/sgo.go`, `src/runtime/sgo_api.go`, `src/cmd/compile/internal/types2/sgo.go`.
+- **executed_evidence:** conformance fixtures val-eval-order, val-eval-order-failure-point (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

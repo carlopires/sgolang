@@ -20,8 +20,8 @@ Subset 0. Derived from decision D10 and `SGO_SPEC_SUBSET0.md` §16.
 - **tcb_assumptions:** n/a — host tooling.
 - **positive_tests:** S03; fixture:proc-hello.
 - **negative_tests:** S03; fixture:lex-bare-go.
-- **implementation_coverage:** none yet — runner in W01 step 6, execution from W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W01, W03: `sgo/scripts/conformance.py`.
+- **executed_evidence:** conformance fixtures lex-bare-go, proc-hello (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w01/README.md`; `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-TEST-002 — sgo test

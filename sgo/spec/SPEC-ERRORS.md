@@ -42,8 +42,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §15, decision D16, resolution R9.
 - **tcb_assumptions:** Runtime failure reporting replaced by this format; upstream tracebacks are not printed (SGO-TCB-001).
 - **positive_tests:** S08; fixture:err-record-panic, fixture:nur-two-failures-lowest-id.
 - **negative_tests:** n/a — format rule; positive fixtures compare the record byte for byte.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/sgoadmit/admit.go`, `src/runtime/sgo_record.go`, `src/runtime/sgo_main.go`.
+- **executed_evidence:** conformance fixtures err-record-panic, nur-two-failures-lowest-id (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-ERR-003 — Resource exhaustion and runtime defects
@@ -64,6 +64,6 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §15, decision D16, resolution R9.
 - **tcb_assumptions:** Upstream stack-overflow and out-of-memory detection, with their reports replaced by this record (SGO-TCB-001).
 - **positive_tests:** S08; fixture:err-stack-overflow-exit-4.
 - **negative_tests:** n/a — fail-stop rule; checked by the positive fixture.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/sgoadmit/admit.go`, `src/runtime/sgo_record.go`, `src/runtime/sgo_main.go`.
+- **executed_evidence:** conformance fixtures err-stack-overflow-exit-4 (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

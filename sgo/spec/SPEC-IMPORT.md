@@ -20,8 +20,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §14, decision D15, plan §1.3.
 - **tcb_assumptions:** n/a — toolchain only.
 - **positive_tests:** S09; fixture:imp-user-package.
 - **negative_tests:** S09, S15; fixture:imp-cycle, fixture:imp-spec-version-mismatch, fixture:tcb-module-named-sgo.
-- **implementation_coverage:** none yet — W03 (sgo driver).
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/noder/sgo_identity.go`, `src/cmd/compile/internal/sgoadmit/identity.go`, `src/cmd/sgo/module.go`, `src/cmd/sgo/build.go`.
+- **executed_evidence:** conformance fixtures imp-cycle, imp-spec-version-mismatch, imp-user-package, tcb-module-named-sgo (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-IMP-002 — Contract identity of compiled packages

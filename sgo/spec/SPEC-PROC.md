@@ -20,8 +20,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §13, decisions D08, D09, D16, reso
 - **tcb_assumptions:** Runtime start-up runs no user code before `main` (no `init`, SGO-BIND-003) (SGO-TCB-001).
 - **positive_tests:** S06; fixture:proc-main-ok.
 - **negative_tests:** S01; fixture:proc-go-main, fixture:proc-no-main.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/noder/sgo_main.go`, `src/runtime/sgo_main.go`, `src/sgo/sgo.go`.
+- **executed_evidence:** conformance fixtures proc-go-main, proc-main-ok, proc-no-main (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-PROC-002 — Exit status
@@ -42,8 +42,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §13, decisions D08, D09, D16, reso
 - **tcb_assumptions:** Process exit primitive (SGO-TCB-001).
 - **positive_tests:** S08; fixture:proc-main-ok, fixture:proc-main-error-exit-1, fixture:nur-child-error-exit-1, fixture:def-panic-exit-2.
 - **negative_tests:** n/a — mapping rule; each status has a positive fixture.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/noder/sgo_main.go`, `src/runtime/sgo_main.go`, `src/sgo/sgo.go`.
+- **executed_evidence:** conformance fixtures def-panic-exit-2, nur-child-error-exit-1, proc-main-error-exit-1, proc-main-ok (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-PROC-003 — Stdout capability
@@ -64,8 +64,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §13, decisions D08, D09, D16, reso
 - **tcb_assumptions:** The stdout adapter performs complete writes under a lock (SGO-TCB-001).
 - **positive_tests:** S06, S13; fixture:proc-hello, fixture:proc-writer-passed-to-child.
 - **negative_tests:** S06, S13; fixture:proc-child-stdout, fixture:proc-println.
-- **implementation_coverage:** none yet — W03/W05.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03, W05: `src/cmd/compile/internal/noder/sgo_main.go`, `src/runtime/sgo_main.go`, `src/sgo/sgo.go`.
+- **executed_evidence:** conformance fixtures proc-child-stdout, proc-hello, proc-println, proc-writer-passed-to-child (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`; `sgo/evidence/w05/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-PROC-004 — Arguments and environment
@@ -86,6 +86,6 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §13, decisions D08, D09, D16, reso
 - **tcb_assumptions:** The runtime does not change user-visible behavior based on environment variables; upstream `GODEBUG`/`GOTRACEBACK`-style settings are ignored or fixed at build time (SGO-TCB-001).
 - **positive_tests:** n/a — denial clause.
 - **negative_tests:** S13; fixture:bind-import-fmt, fixture:proc-godebug-ignored.
-- **implementation_coverage:** gate level only — every program is denied at W00.
-- **executed_evidence:** none yet for this clause specifically.
+- **implementation_coverage:** W00: `src/cmd/compile/internal/noder/sgo_main.go`, `src/runtime/sgo_main.go`, `src/sgo/sgo.go`.
+- **executed_evidence:** conformance fixtures bind-import-fmt, proc-godebug-ignored (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w00/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

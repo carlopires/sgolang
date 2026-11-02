@@ -20,8 +20,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §1, decisions D14/D19, and resolut
 - **tcb_assumptions:** n/a — compiler only.
 - **positive_tests:** S02; fixture:lex-utf8-ok.
 - **negative_tests:** S01, S19; fixture:lex-bad-utf8, fixture:lex-go-extension.
-- **implementation_coverage:** none yet — W03 (cmd/compile/internal/syntax scanner, go/scanner, sgo driver).
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/syntax/scanner.go`, `src/cmd/compile/internal/syntax/parser.go`, `src/cmd/sgo/build.go`.
+- **executed_evidence:** conformance fixtures lex-bad-utf8, lex-go-extension, lex-utf8-ok (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-LEX-002 — Tokens, comments, and semicolons
@@ -42,8 +42,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §1, decisions D14/D19, and resolut
 - **tcb_assumptions:** n/a — compiler only.
 - **positive_tests:** X01, X03; fixture:lex-semicolons.
 - **negative_tests:** X01; fixture:lex-denied-operators.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/syntax/scanner.go`, `src/cmd/compile/internal/syntax/parser.go`, `src/cmd/sgo/build.go`.
+- **executed_evidence:** conformance fixtures lex-denied-operators, lex-semicolons (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-LEX-003 — Reserved words
@@ -86,6 +86,6 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §1, decisions D14/D19, and resolut
 - **tcb_assumptions:** n/a — compiler only.
 - **positive_tests:** S16; fixture:lex-literals.
 - **negative_tests:** S16; fixture:lex-float-literal, fixture:lex-unicode-escape, fixture:lex-legacy-octal.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/syntax/scanner.go`, `src/cmd/compile/internal/syntax/parser.go`, `src/cmd/sgo/build.go`.
+- **executed_evidence:** conformance fixtures lex-float-literal, lex-legacy-octal, lex-literals, lex-unicode-escape (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

@@ -20,8 +20,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §8, decision D11, plan §4.3–§4
 - **tcb_assumptions:** Scope records are GC-rooted heap objects (plan §5.3, GC-1).
 - **positive_tests:** X02, X04; fixture:nur-basic, fixture:nur-pass-handle.
 - **negative_tests:** X02; fixture:nur-anonymous, fixture:nur-assign-binder.
-- **implementation_coverage:** none yet — W02 (runtime), W03 (compiler).
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W02, W03: `src/cmd/compile/internal/syntax/parser.go`, `src/cmd/compile/internal/types2/sgo.go`, `src/runtime/sgo_scope.go`, `src/runtime/sgo_nursery.go`.
+- **executed_evidence:** conformance fixtures nur-anonymous, nur-assign-binder, nur-basic, nur-pass-handle (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w02/README.md`; `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-NUR-002 — Lifecycle states
@@ -42,8 +42,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §8, decision D11, plan §4.3–§4
 - **tcb_assumptions:** Scope state machine implemented as specified (SGO-TCB-001); checked by the executable model.
 - **positive_tests:** O01, O03; fixture:nur-basic.
 - **negative_tests:** n/a — illegal transitions are model and mutation tests (W01 step 5), not source fixtures.
-- **implementation_coverage:** none yet — W01 model, W02 runtime.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W01, W02: `src/cmd/compile/internal/syntax/parser.go`, `src/cmd/compile/internal/types2/sgo.go`, `src/runtime/sgo_scope.go`, `src/runtime/sgo_nursery.go`.
+- **executed_evidence:** conformance fixtures nur-basic (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w01/README.md`; `sgo/evidence/w02/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-NUR-003 — Join
@@ -64,8 +64,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §8, decision D11, plan §4.3–§4
 - **tcb_assumptions:** Park/unpark of the owner and child completion publication (SGO-TCB-001).
 - **positive_tests:** O01, O02, O04; fixture:nur-join-all, fixture:nur-child-spawns-during-join.
 - **negative_tests:** n/a — behavioral; mutation tests in the model show a join that returns early is detected.
-- **implementation_coverage:** none yet — W02.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W02: `src/cmd/compile/internal/syntax/parser.go`, `src/cmd/compile/internal/types2/sgo.go`, `src/runtime/sgo_scope.go`, `src/runtime/sgo_nursery.go`.
+- **executed_evidence:** conformance fixtures nur-child-spawns-during-join, nur-join-all (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w02/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-NUR-004 — Outcome
@@ -86,8 +86,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §8, decision D11, plan §4.3–§4
 - **tcb_assumptions:** Stable creation IDs assigned at registration (SGO-SPAWN-003).
 - **positive_tests:** O05, S08; fixture:nur-child-error-exit-1, fixture:def-child-panic-cancels-siblings, fixture:nur-two-failures-lowest-id.
 - **negative_tests:** n/a — behavioral; checked by positive fixtures of exact outcomes.
-- **implementation_coverage:** none yet — W02/W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W02, W03: `src/cmd/compile/internal/syntax/parser.go`, `src/cmd/compile/internal/types2/sgo.go`, `src/runtime/sgo_scope.go`, `src/runtime/sgo_nursery.go`.
+- **executed_evidence:** conformance fixtures def-child-panic-cancels-siblings, nur-child-error-exit-1, nur-two-failures-lowest-id (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w02/README.md`; `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-NUR-005 — Nesting
@@ -108,6 +108,6 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §8, decision D11, plan §4.3–§4
 - **tcb_assumptions:** Per-task scope stack in runtime records (SGO-TCB-001).
 - **positive_tests:** O06, S07; fixture:nur-nested, fixture:nur-inner-cancel-not-outer.
 - **negative_tests:** S07; fixture:spawn-into-outer-from-inner.
-- **implementation_coverage:** none yet — W02/W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W02, W03: `src/cmd/compile/internal/syntax/parser.go`, `src/cmd/compile/internal/types2/sgo.go`, `src/runtime/sgo_scope.go`, `src/runtime/sgo_nursery.go`.
+- **executed_evidence:** conformance fixtures nur-inner-cancel-not-outer, nur-nested, spawn-into-outer-from-inner (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w02/README.md`; `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

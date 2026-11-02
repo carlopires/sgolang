@@ -20,8 +20,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §11, resolution R7, plan §6.3–�
 - **tcb_assumptions:** The runtime never kills an individual task (SGO-TCB-001).
 - **positive_tests:** C06; fixture:drain-cooperative-child.
 - **negative_tests:** C07; fixture:drain-noncooperative-budget.
-- **implementation_coverage:** none yet — W04.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W04: `src/runtime/sgo_nursery.go`, `src/runtime/sgo_main.go`, `src/cmd/sgo/test.go`, `src/cmd/sgo/lab.go`.
+- **executed_evidence:** conformance fixtures drain-cooperative-child, drain-noncooperative-budget (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w04/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-DRAIN-002 — Drain budget
@@ -42,8 +42,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §11, resolution R7, plan §6.3–�
 - **tcb_assumptions:** Monotonic clock and timer primitives on all targets (SGO-TCB-001, D22).
 - **positive_tests:** C07; fixture:drain-noncooperative-budget.
 - **negative_tests:** S01; fixture:drain-budget-env-ignored.
-- **implementation_coverage:** none yet — W04 (runtime), W03 (driver flag).
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03, W04: `src/runtime/sgo_nursery.go`, `src/runtime/sgo_main.go`, `src/cmd/sgo/test.go`, `src/cmd/sgo/lab.go`.
+- **executed_evidence:** conformance fixtures drain-budget-env-ignored, drain-noncooperative-budget (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`; `sgo/evidence/w04/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-DRAIN-003 — Host watchdog
@@ -64,6 +64,6 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §11, resolution R7, plan §6.3–�
 - **tcb_assumptions:** n/a — host tool, not target code.
 - **positive_tests:** C08; fixture:drain-noncooperative-no-budget.
 - **negative_tests:** n/a — runner behavior; checked by the runner's own tests.
-- **implementation_coverage:** none yet — W01 step 6 (runner).
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W01: `src/runtime/sgo_nursery.go`, `src/runtime/sgo_main.go`, `src/cmd/sgo/test.go`, `src/cmd/sgo/lab.go`.
+- **executed_evidence:** conformance fixtures drain-noncooperative-no-budget (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w01/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

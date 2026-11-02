@@ -27,6 +27,18 @@
       "status": "open",
       "fix_commit": null,
       "regression_test": "guarantee-check.py (registry status vs guarantees)"
+    },
+    {
+      "id": "SR3",
+      "severity": "minor",
+      "source": "guarantee-check.py (D76)",
+      "location": "sgo/spec/SPEC-*.md (implementation_coverage, executed_evidence)",
+      "claim": "Each frozen clause records where it is implemented and what ran",
+      "finding": "62 frozen clauses still said 'none yet' in their progress fields although implemented and tested in W02-W10. These fields are excluded from clause digests, so the text was stale but no identity was wrong.",
+      "resolution": "sgo/scripts/fill-progress.py filled the fields from the work packages already named, the family's implementation files, the clause's own fixtures, and the work-package evidence READMEs. No digest changed (spec-tool update leaves SGO_SPEC_ADMISSION.json untouched). guarantee-check.py fails if any frozen clause says 'none yet'.",
+      "status": "fixed",
+      "fix_commit": null,
+      "regression_test": "guarantee-check.py (clause progress fields)"
     }
   ]
 }

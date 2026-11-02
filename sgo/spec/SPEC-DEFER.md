@@ -20,8 +20,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §7, decisions D12, D13, resolution
 - **tcb_assumptions:** Upstream defer machinery (open-coded and runtime defers) runs each deferred call exactly once (SGO-TCB-001).
 - **positive_tests:** X09; fixture:def-lifo, fixture:def-after-nursery.
 - **negative_tests:** X09; fixture:def-error-result, fixture:def-scope-finalizer.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/runtime/panic.go`, `src/runtime/sgo_nursery.go`, `src/runtime/sgo_record.go`.
+- **executed_evidence:** conformance fixtures def-after-nursery, def-error-result, def-lifo, def-scope-finalizer (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-DEF-002 — panic
@@ -42,8 +42,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §7, decisions D12, D13, resolution
 - **tcb_assumptions:** Upstream panic machinery, restricted to the behavior described here (SGO-TCB-001).
 - **positive_tests:** S08; fixture:def-panic-exit-2.
 - **negative_tests:** S08; fixture:def-recover, fixture:def-panic-int.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/runtime/panic.go`, `src/runtime/sgo_nursery.go`, `src/runtime/sgo_record.go`.
+- **executed_evidence:** conformance fixtures def-panic-exit-2, def-panic-int, def-recover (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-DEF-003 — Checked failure kinds
@@ -64,8 +64,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §7, decisions D12, D13, resolution
 - **tcb_assumptions:** An admitted program cannot reach an upstream-only failure (e.g. nil map write, index out of range), because the constructs that cause them are denied. If the runtime nevertheless raises one, that is a TCB defect: the process terminates as fail-stop with exit status 4 and kind `RuntimeDefect` (SGO-ERR-003); it is never reported as an ordinary panic.
 - **positive_tests:** S08; fixture:val-overflow-add, fixture:wait-negative-sleep, fixture:proc-child-stdout, fixture:native-send-closed.
 - **negative_tests:** n/a — a list of kinds; each kind has negative fixtures in its defining clause.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/runtime/panic.go`, `src/runtime/sgo_nursery.go`, `src/runtime/sgo_record.go`.
+- **executed_evidence:** conformance fixtures native-send-closed, proc-child-stdout, val-overflow-add, wait-negative-sleep (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-DEF-004 — Failure during unwinding
@@ -86,8 +86,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §7, decisions D12, D13, resolution
 - **tcb_assumptions:** Upstream panic-in-defer handling is restricted to this rule (SGO-TCB-001).
 - **positive_tests:** S08; fixture:def-panic-in-defer.
 - **negative_tests:** n/a — behavioral rule checked by positive fixtures of the chain contents.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/runtime/panic.go`, `src/runtime/sgo_nursery.go`, `src/runtime/sgo_record.go`.
+- **executed_evidence:** conformance fixtures def-panic-in-defer (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-DEF-005 — Unwinding to the task boundary
@@ -108,6 +108,6 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §7, decisions D12, D13, resolution
 - **tcb_assumptions:** Upstream stack unwinding and Goexit-free task completion (SGO-TCB-001).
 - **positive_tests:** X12, S08; fixture:def-child-panic-cancels-siblings, fixture:def-panic-exit-2.
 - **negative_tests:** n/a — behavioral rule checked by positive fixtures.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/runtime/panic.go`, `src/runtime/sgo_nursery.go`, `src/runtime/sgo_record.go`.
+- **executed_evidence:** conformance fixtures def-child-panic-cancels-siblings, def-panic-exit-2 (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

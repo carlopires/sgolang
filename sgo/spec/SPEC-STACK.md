@@ -20,6 +20,6 @@ Subset 0. Derived from plan §5.3, §1.2 (growable stacks first), invariants GC-
 - **tcb_assumptions:** Upstream stack growth, copying, and GC stack scanning (SGO-TCB-001).
 - **positive_tests:** X12; fixture:stack-deep-recursion-ok.
 - **negative_tests:** n/a — overflow is fail-stop; checked by fixture:err-stack-overflow-exit-4 under SGO-ERR-003.
-- **implementation_coverage:** upstream mechanism unchanged; audit in W02.
-- **executed_evidence:** none yet for S-Go records; upstream stack tests passed in W00 B03.
+- **implementation_coverage:** W02: `src/runtime/stack.go`, `src/runtime/proc.go`.
+- **executed_evidence:** conformance fixtures err-stack-overflow-exit-4, stack-deep-recursion-ok (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w02/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

@@ -20,6 +20,6 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §12.
 - **tcb_assumptions:** Upstream runtime timers and the target monotonic clock: `clock_gettime(CLOCK_MONOTONIC)` on Linux, `mach_absolute_time`-based libSystem calls on darwin (SGO-TCB-001, D22).
 - **positive_tests:** C09; fixture:wait-sleep.
 - **negative_tests:** S17; fixture:timer-time-package.
-- **implementation_coverage:** none yet — W04.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W04: `src/runtime/sgo_api.go`, `src/runtime/sgo_effects.go`, `src/sgo/sgo.go`.
+- **executed_evidence:** conformance fixtures timer-time-package, wait-sleep (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w04/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

@@ -1,0 +1,330 @@
+{
+  "schema_version": 1,
+  "purpose": "The published S-Go claim set (plan §10.1, D76). Every statement here is checked by sgo/scripts/guarantee-check.py against the frozen clauses, SGO_TEST_MATRIX.json and the evidence files. Nothing outside this file is a guarantee.",
+  "scope_vocabulary": {
+    "admission": "statically rejected by the compiler, driver or linker",
+    "runtime_enforced": "checked at run time with a specified failure",
+    "model_explored": "explored over all interleavings of bounded model scenarios (bounds stated); not a proof for unbounded programs",
+    "tested": "executed acceptance cases and fixtures only"
+  },
+  "not_claimed": [
+    "Proof that an arbitrary S-Go program is correct, terminates, or behaves correctly under all schedules",
+    "Compatibility with Go programs or the Go ecosystem",
+    "Instruction-level replay of arbitrary code",
+    "Behavior on targets other than darwin/arm64, linux/amd64, linux/arm64"
+  ],
+  "identity": {
+    "upstream": "go1.27.3 (sgo/UPSTREAM.lock.json)",
+    "bootstrap": "go1.26.10, recorded by digest in sgo/scripts/fetch-bootstrap.sh",
+    "spec_version_file": "sgo/spec/VERSION",
+    "admission_digest_file": "sgo/SGO_SPEC_ADMISSION.json",
+    "tcb_manifest": "sgo/TARGET_TCB.json"
+  },
+  "stack_implementation": {
+    "kind": "upstream growable stacks",
+    "clause": "SGO-STACK-001",
+    "w11_outcome": "investigated_not_adopted",
+    "evidence": "sgo/evidence/w11/README.md"
+  },
+  "targets": [
+    "darwin/arm64",
+    "linux/amd64",
+    "linux/arm64"
+  ],
+  "guarantees": [
+    {
+      "id": "G-LANG",
+      "families": [
+        "SPEC-LEX",
+        "SPEC-BIND",
+        "SPEC-TYPE",
+        "SPEC-VALUE",
+        "SPEC-CONTROL"
+      ],
+      "statement": "A program compiles only if every construct it uses is in the closed S-Go subset (spec 0.6.0): .sgo sources, int/bool/string/error, function values, the admitted statements. Integer overflow, division by zero, and out-of-range string indexing are checked failures with a specified record, never wraparound or undefined behavior.",
+      "scope": [
+        "admission",
+        "runtime_enforced",
+        "tested"
+      ],
+      "implementation": [
+        "src/cmd/compile/internal/syntax/",
+        "src/cmd/compile/internal/types2/sgo.go",
+        "src/cmd/compile/internal/types2/sgo_flow.go",
+        "src/cmd/compile/internal/sgoadmit/admit.go",
+        "src/cmd/compile/internal/sgoadmit/admit_expr.go",
+        "src/cmd/compile/internal/ssagen/sgo.go"
+      ]
+    },
+    {
+      "id": "G-DENY",
+      "families": [
+        "SPEC-FLOAT",
+        "SPEC-COMPOSITE",
+        "SPEC-USERTYPE",
+        "SPEC-IFACE",
+        "SPEC-GENERIC",
+        "SPEC-REFLECT",
+        "SPEC-NATIVE",
+        "SPEC-RANDOM"
+      ],
+      "statement": "Floating point, composite and user-defined types, interfaces, generics, reflection, math/rand, unsafe, cgo, assembly, go:linkname, plugins and raw system calls are rejected at compile time with SGO_E_UNADMITTED; there is no flag, build mode or environment setting that admits them.",
+      "scope": [
+        "admission",
+        "tested"
+      ],
+      "implementation": [
+        "src/cmd/compile/internal/types2/sgo.go",
+        "src/cmd/compile/internal/sgoadmit/admit.go",
+        "src/cmd/sgo/build.go"
+      ]
+    },
+    {
+      "id": "G-MEM",
+      "families": [
+        "SPEC-MEM"
+      ],
+      "statement": "Variables are task-local; a closure passed to another task may capture only effectively-final variables, so admitted programs have no data races on variables. Communication between tasks happens only through channels, permits, Event and CapacityLimiter, whose operations are synchronizing.",
+      "scope": [
+        "admission",
+        "tested"
+      ],
+      "implementation": [
+        "src/cmd/compile/internal/types2/sgo.go",
+        "src/cmd/compile/internal/types2/sgo_flow.go"
+      ]
+    },
+    {
+      "id": "G-OWN",
+      "families": [
+        "SPEC-NURSERY",
+        "SPEC-SPAWN",
+        "SPEC-WAIT"
+      ],
+      "statement": "Every task is started in a nursery through its explicit *sgo.Nursery handle and is owned by exactly one nursery; a nursery statement does not complete until all its children have finished (no orphan on any exit, including return, break, panic and cancellation). There is no bare go statement.",
+      "scope": [
+        "admission",
+        "runtime_enforced",
+        "model_explored",
+        "tested"
+      ],
+      "implementation": [
+        "src/runtime/sgo_nursery.go",
+        "src/runtime/sgo_scope.go",
+        "src/runtime/sgo_record.go",
+        "src/runtime/sgo_api.go",
+        "src/cmd/compile/internal/types2/sgo.go",
+        "src/cmd/compile/internal/noder/sgo_main.go"
+      ],
+      "model_bounds": "sgo/model (model.go, explore.go): all interleavings of the 18 W01 scenarios (sgo/evidence/w01/README.md)"
+    },
+    {
+      "id": "G-FAIL",
+      "families": [
+        "SPEC-DEFER",
+        "SPEC-ERRORS",
+        "SPEC-PROC"
+      ],
+      "statement": "A child failure cancels its siblings and is reported to the owner; the primary error of a nursery is chosen deterministically (lowest creation id), other errors are chained. A panic unwinds defers and nested nurseries to the task boundary. The process exit status is specified (0 success; 1 an error or child error out of main; 2 any other failure kind such as a panic or checked failure; 3 drain budget exceeded; 4 resource exhaustion or runtime defect), and statuses 1-4 write exactly one diagnostic record.",
+      "scope": [
+        "runtime_enforced",
+        "model_explored",
+        "tested"
+      ],
+      "implementation": [
+        "src/runtime/sgo_nursery.go",
+        "src/runtime/sgo_main.go",
+        "src/runtime/panic.go",
+        "src/runtime/sgo_record.go"
+      ],
+      "model_bounds": "sgo/model (model.go, explore.go): all interleavings of the 18 W01 scenarios (sgo/evidence/w01/README.md)"
+    },
+    {
+      "id": "G-CANCEL",
+      "families": [
+        "SPEC-CANCEL",
+        "SPEC-DRAIN",
+        "SPEC-TIMER"
+      ],
+      "statement": "Cancellation is sticky and propagates from a nursery to its descendants; it is observed at the specified checkpoints (blocking operations, sleep, join, Checkpoint). A task that does not cooperate within the drain budget makes the process fail-stop with a diagnostic (exit 3) instead of resuming with the task hidden. Non-cooperative code between checkpoints is not interrupted.",
+      "scope": [
+        "runtime_enforced",
+        "model_explored",
+        "tested"
+      ],
+      "implementation": [
+        "src/runtime/sgo_cancel.go",
+        "src/runtime/sgo_nursery.go",
+        "src/runtime/sgo_scope.go"
+      ],
+      "model_bounds": "sgo/model (model.go, explore.go): all interleavings of the 18 W01 scenarios (sgo/evidence/w01/README.md)",
+      "limitations": [
+        "A task in a loop without checkpoints is detected only by the drain budget, not interrupted (SGO-DRAIN-002)."
+      ]
+    },
+    {
+      "id": "G-CHAN",
+      "families": [
+        "SPEC-CHAN",
+        "SPEC-PERMIT",
+        "SPEC-READY",
+        "SPEC-SYNC"
+      ],
+      "statement": "Native channels, select, typed managed channels with send permits, readiness handshakes, Event and CapacityLimiter: each operation has a single commit point; a value is delivered at most once; a reserved permit is committed, aborted, or resolved when its task ends (no capacity leak); a blocked operation of a cancelled task unwinds; a global deadlock is reported, not hung.",
+      "scope": [
+        "admission",
+        "runtime_enforced",
+        "model_explored",
+        "tested"
+      ],
+      "implementation": [
+        "src/runtime/sgo_chan.go",
+        "src/runtime/sgo_native.go",
+        "src/runtime/sgo_native_ops.go",
+        "src/runtime/sgo_ready.go",
+        "src/runtime/sgo_sync.go",
+        "src/cmd/compile/internal/walk/select.go",
+        "src/sgo/chan.go",
+        "src/sgo/ready.go",
+        "src/sgo/sync.go"
+      ],
+      "model_bounds": "sgo/model chanmodel/nativemodel: all interleavings of the bounded scenarios, largest 71,549 states (sgo/evidence/w06/README.md, w07/README.md)"
+    },
+    {
+      "id": "G-AUTH",
+      "families": [
+        "SPEC-AUTH",
+        "SPEC-CAP"
+      ],
+      "statement": "Effects (clock, wall clock, random, entropy, files, network, simulated store) require a capability that flows from the root grants declared in sgo.mod; a task's authority can only be attenuated, never widened; handles are opaque and cannot be compared or forged; a dependency cannot use an effect its package does not declare.",
+      "scope": [
+        "admission",
+        "runtime_enforced",
+        "tested"
+      ],
+      "implementation": [
+        "src/runtime/sgo_auth.go",
+        "src/runtime/sgo_effects.go",
+        "src/cmd/sgo/module.go",
+        "src/sgo/auth.go",
+        "src/sgo/effects.go",
+        "src/cmd/compile/internal/types2/sgo.go"
+      ]
+    },
+    {
+      "id": "G-IO",
+      "families": [
+        "SPEC-FILE",
+        "SPEC-NET"
+      ],
+      "statement": "File access is confined beneath declared directory grants (no '..', absolute-path, prefix or symlink escape, re-verified against concurrent renames); network access is limited to declared TCP endpoints and Unix socket paths. Reads and writes report partial progress; cancelling a shared handle's borrower leaves the owner's handle intact; closed handles are not reused.",
+      "scope": [
+        "admission",
+        "runtime_enforced",
+        "model_explored",
+        "tested"
+      ],
+      "implementation": [
+        "src/runtime/sgo_io.go",
+        "src/runtime/sgo_iodir.go",
+        "src/runtime/sgo_fs.go",
+        "src/runtime/sgo_iogrant.go",
+        "src/runtime/sgo_ioapi.go",
+        "src/runtime/sgo_net.go",
+        "src/cmd/sgo/iogrant.go",
+        "src/sgo/io.go"
+      ],
+      "model_bounds": "sgo/model iopath/iohandle: path resolution with renames (14 scenarios) and handle generations (sgo/evidence/w09/README.md)",
+      "limitations": [
+        "Confinement re-verifies the resolved chain; it is not atomic against another process renaming directories concurrently (openat2 RESOLVE_BENEATH is not used)."
+      ]
+    },
+    {
+      "id": "G-LAB",
+      "families": [
+        "SPEC-LAB"
+      ],
+      "statement": "A lab build (sgo lab) runs on a deterministic scheduler with virtual time and simulated effects: the same seed and manifest give the same canonical trace, a trace replays exactly, and a divergent or altered trace or a trace of another build is refused. Replay covers managed events (scheduling choices, timers, effect results), not instruction-level replay of arbitrary code. Lab and production artifacts cannot be mixed.",
+      "scope": [
+        "admission",
+        "runtime_enforced",
+        "model_explored",
+        "tested"
+      ],
+      "implementation": [
+        "src/runtime/sgo_lab.go",
+        "src/runtime/sgo_lab_run.go",
+        "src/runtime/sgo_lab_sched.go",
+        "src/runtime/sgo_lab_boot.go",
+        "src/runtime/sgo_iofake.go",
+        "src/runtime/sgo_netfake.go",
+        "src/cmd/compile/internal/walk/sgo_lab.go",
+        "src/cmd/sgo/lab.go",
+        "src/cmd/sgo/lab_cmds.go"
+      ],
+      "model_bounds": "sgo/model labmodel: pinned stream goldens and bounded scenarios (sgo/evidence/w08/README.md)"
+    },
+    {
+      "id": "G-TRUST",
+      "families": [
+        "SPEC-IMPORT",
+        "SPEC-TCB",
+        "SPEC-STACK"
+      ],
+      "statement": "Only the trusted files pinned by SHA-256 in TARGET_TCB.json may use unrestricted Go; the driver verifies every trusted Go, assembly and header input before building, and a user package cannot claim a trusted path. Compiled packages carry the spec, admission and TCB identity; stale or foreign objects are refused at import and link. Task stacks are upstream Go's growable stacks (fixed virtual stacks were investigated in W11 and not adopted).",
+      "scope": [
+        "admission",
+        "runtime_enforced",
+        "tested"
+      ],
+      "implementation": [
+        "src/cmd/sgo/tcb.go",
+        "src/cmd/sgo/tcbasm.go",
+        "src/cmd/sgo/tcbtable.go",
+        "src/cmd/compile/internal/sgoadmit/identity.go",
+        "src/cmd/compile/internal/sgoadmit/tcbtable.go",
+        "src/cmd/compile/internal/noder/sgo_identity.go",
+        "src/cmd/link/internal/ld/sgoid.go"
+      ]
+    },
+    {
+      "id": "G-TOOL",
+      "families": [
+        "SPEC-TOOL",
+        "SPEC-BUILD",
+        "SPEC-TEST"
+      ],
+      "statement": "The release is a single-language toolchain: sgo build/run/check/test/fmt/lab plus compile, asm and link, with no go command and no flag, mode or environment variable that reopens stock Go semantics. sgo check and sgo build agree; sgo test runs each test in its own process with its own root nursery and fails tests that leave work behind.",
+      "scope": [
+        "admission",
+        "tested"
+      ],
+      "implementation": [
+        "src/cmd/sgo/main.go",
+        "src/cmd/sgo/build.go",
+        "src/cmd/sgo/check.go",
+        "src/cmd/sgo/test.go",
+        "src/cmd/sgo/fmt.go",
+        "src/cmd/sgo/toolchain.go",
+        "sgo/scripts/make-release.py"
+      ]
+    }
+  ],
+  "known_limitations": [
+    {
+      "id": "L1",
+      "text": "Benchmarks report wall, CPU and peak RSS but no allocation counts (T07 PARTIAL, D82).",
+      "case": "T07"
+    },
+    {
+      "id": "L2",
+      "text": "Fixed-stack experiment cases F03-F05 were not run because no prototype was built (W11 investigated_not_adopted).",
+      "case": "F03 F04 F05"
+    },
+    {
+      "id": "L3",
+      "text": "No language server; editors get sgo check and sgo fmt only (T03).",
+      "case": "T03"
+    }
+  ]
+}

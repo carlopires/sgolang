@@ -20,8 +20,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §12, resolution R8, plan §6.2, in
 - **tcb_assumptions:** Runtime timers and park/unpark with the atomic park-unlock handshake (plan §6.2, SGO-TCB-001).
 - **positive_tests:** C01, C09; fixture:wait-sleep, fixture:cancel-wakes-sleep.
 - **negative_tests:** C09; fixture:wait-negative-sleep.
-- **implementation_coverage:** none yet — W04.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W04: `src/runtime/sgo_api.go`, `src/runtime/sgo_nursery.go`.
+- **executed_evidence:** conformance fixtures cancel-wakes-sleep, wait-negative-sleep, wait-sleep (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w04/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-WAIT-002 — Join is a managed wait
@@ -42,6 +42,6 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §12, resolution R8, plan §6.2, in
 - **tcb_assumptions:** Park/unpark (SGO-TCB-001).
 - **positive_tests:** O02, O04; fixture:nur-join-all.
 - **negative_tests:** n/a — protocol property; checked by the executable model and mutation tests.
-- **implementation_coverage:** none yet — W02.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W02: `src/runtime/sgo_api.go`, `src/runtime/sgo_nursery.go`.
+- **executed_evidence:** conformance fixtures nur-join-all (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w02/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

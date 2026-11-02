@@ -20,8 +20,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §2, decisions D07, D15, and resolu
 - **tcb_assumptions:** n/a — compiler only.
 - **positive_tests:** S02; fixture:bind-two-files.
 - **negative_tests:** S03; fixture:bind-package-mismatch.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`.
+- **executed_evidence:** conformance fixtures bind-package-mismatch, bind-two-files (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-BIND-002 — Imports
@@ -42,8 +42,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §2, decisions D07, D15, and resolu
 - **tcb_assumptions:** n/a — compiler only.
 - **positive_tests:** S09; fixture:bind-import-sgo, fixture:imp-user-package.
 - **negative_tests:** S13, S17; fixture:bind-import-fmt, fixture:bind-import-alias, fixture:bind-unused-import.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`.
+- **executed_evidence:** conformance fixtures bind-import-alias, bind-import-fmt, bind-import-sgo, bind-unused-import, imp-user-package (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-BIND-003 — Declarations
@@ -64,8 +64,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §2, decisions D07, D15, and resolu
 - **tcb_assumptions:** n/a — compiler only.
 - **positive_tests:** S16; fixture:bind-declarations.
 - **negative_tests:** S16, S17; fixture:bind-package-var, fixture:bind-init-func, fixture:bind-uninitialized-var, fixture:bind-iota.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`.
+- **executed_evidence:** conformance fixtures bind-declarations, bind-init-func, bind-iota, bind-package-var, bind-uninitialized-var (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-BIND-004 — Scope and shadowing
@@ -86,8 +86,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §2, decisions D07, D15, and resolu
 - **tcb_assumptions:** n/a — compiler only.
 - **positive_tests:** X02; fixture:bind-scopes.
 - **negative_tests:** X02; fixture:bind-shadow-err, fixture:bind-shadow-predeclared, fixture:bind-unused-var.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`.
+- **executed_evidence:** conformance fixtures bind-scopes, bind-shadow-err, bind-shadow-predeclared, bind-unused-var (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-BIND-005 — Exported names
@@ -108,6 +108,6 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §2, decisions D07, D15, and resolu
 - **tcb_assumptions:** n/a — compiler only.
 - **positive_tests:** S09; fixture:imp-user-package.
 - **negative_tests:** S09; fixture:bind-unexported.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`.
+- **executed_evidence:** conformance fixtures bind-unexported, imp-user-package (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

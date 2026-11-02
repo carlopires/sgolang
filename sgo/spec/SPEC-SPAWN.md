@@ -20,8 +20,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 - **tcb_assumptions:** Task creation primitive (SGO-TCB-001).
 - **positive_tests:** S06, S08; fixture:spawn-basic, fixture:spawn-helper-with-handle.
 - **negative_tests:** S06; fixture:spawn-wrong-callback-type.
-- **implementation_coverage:** none yet — W02/W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W02, W03: `src/cmd/compile/internal/types2/sgo.go`, `src/runtime/sgo_api.go`, `src/runtime/sgo_nursery.go`.
+- **executed_evidence:** conformance fixtures spawn-basic, spawn-helper-with-handle, spawn-wrong-callback-type (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w02/README.md`; `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-SPAWN-002 — Admission checks
@@ -42,8 +42,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 - **tcb_assumptions:** Scope membership and current-scope tracking (SGO-TCB-001).
 - **positive_tests:** S07, O04; fixture:nur-child-spawns-during-join, fixture:spawn-cancelling-no-child.
 - **negative_tests:** S06, S07; fixture:spawn-after-close, fixture:spawn-into-outer-from-inner, fixture:spawn-unrelated-task.
-- **implementation_coverage:** none yet — W02.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W02: `src/cmd/compile/internal/types2/sgo.go`, `src/runtime/sgo_api.go`, `src/runtime/sgo_nursery.go`.
+- **executed_evidence:** conformance fixtures nur-child-spawns-during-join, spawn-after-close, spawn-cancelling-no-child, spawn-into-outer-from-inner, spawn-unrelated-task (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w02/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-SPAWN-003 — Registration and start
@@ -64,8 +64,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 - **tcb_assumptions:** Task creation and the goroutine underneath it are sealed runtime primitives (SGO-TCB-001); no other task creation path exists (OWN-6).
 - **positive_tests:** O01, S06; fixture:spawn-basic, fixture:spawn-creation-ids.
 - **negative_tests:** S06; fixture:proc-child-stdout.
-- **implementation_coverage:** none yet — W02.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W02: `src/cmd/compile/internal/types2/sgo.go`, `src/runtime/sgo_api.go`, `src/runtime/sgo_nursery.go`.
+- **executed_evidence:** conformance fixtures proc-child-stdout, spawn-basic, spawn-creation-ids (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w02/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-SPAWN-004 — Child outcomes
@@ -86,8 +86,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 - **tcb_assumptions:** Outcome publication is atomic with live-count decrement (SGO-TCB-001).
 - **positive_tests:** S08, O05; fixture:nur-child-error-exit-1, fixture:spawn-cancelled-outcome, fixture:def-child-panic-cancels-siblings.
 - **negative_tests:** n/a — behavioral; checked by exact-outcome fixtures and model histories.
-- **implementation_coverage:** none yet — W02.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W02: `src/cmd/compile/internal/types2/sgo.go`, `src/runtime/sgo_api.go`, `src/runtime/sgo_nursery.go`.
+- **executed_evidence:** conformance fixtures def-child-panic-cancels-siblings, nur-child-error-exit-1, spawn-cancelled-outcome (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w02/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-SPAWN-005 — No bare go

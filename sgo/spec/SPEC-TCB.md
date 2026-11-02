@@ -20,8 +20,8 @@ Subset 0. Derived from plan §8.1, §10.2, stage map §2 (T0), invariant OWN-6, 
 - **tcb_assumptions:** This clause is the TCB boundary; it relies on SGO-TCB-002 for how the runtime source itself is admitted.
 - **positive_tests:** S11; fixture:spawn-basic, fixture:wait-sleep, fixture:proc-hello.
 - **negative_tests:** S11; inventory check failure on an unlisted runtime call (W01 step 3).
-- **implementation_coverage:** none yet — W01 step 4 (manifest), W02–W04 (implementation).
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W01, W02, W04: `src/cmd/sgo/tcb.go`, `src/cmd/sgo/tcbasm.go`, `src/cmd/compile/internal/sgoadmit/tcbtable.go`, `sgo/TARGET_TCB.json`.
+- **executed_evidence:** conformance fixtures proc-hello, spawn-basic, wait-sleep (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w01/README.md`; `sgo/evidence/w02/README.md`; `sgo/evidence/w04/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-TCB-002 — Admission of the runtime source

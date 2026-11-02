@@ -20,6 +20,6 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §13, decision D09, invariants CAP-
 - **tcb_assumptions:** Handles cannot be forged (no unsafe code, reflection, or conversions are admitted) (SGO-TCB-001).
 - **positive_tests:** S06; fixture:cap-pass-handles, fixture:proc-writer-passed-to-child.
 - **negative_tests:** S06, S13; fixture:proc-child-stdout, fixture:spawn-unrelated-task.
-- **implementation_coverage:** none yet — W03/W05.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03, W05: `src/runtime/sgo_auth.go`, `src/cmd/compile/internal/types2/sgo.go`, `src/sgo/sgo.go`.
+- **executed_evidence:** conformance fixtures cap-pass-handles, proc-child-stdout, proc-writer-passed-to-child, spawn-unrelated-task (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`; `sgo/evidence/w05/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

@@ -20,8 +20,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §5 and decision D01.
 - **tcb_assumptions:** The garbage collector keeps captured variables alive while reachable and never moves them observably (SGO-TCB-001).
 - **positive_tests:** S16; fixture:mem-locals.
 - **negative_tests:** S16; fixture:bind-package-var, fixture:type-pointer.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo_flow.go`, `src/cmd/compile/internal/types2/sgo.go`.
+- **executed_evidence:** conformance fixtures bind-package-var, mem-locals, type-pointer (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-MEM-002 — Captured variables are effectively final
@@ -42,8 +42,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §5 and decision D01.
 - **tcb_assumptions:** n/a — compiler only.
 - **positive_tests:** X11, S16; fixture:mem-capture-final.
 - **negative_tests:** X11, S16; fixture:mem-capture-mutated, fixture:mem-capture-loop-var, fixture:mem-capture-assigned-in-literal.
-- **implementation_coverage:** none yet — W03 (types2 check).
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo_flow.go`, `src/cmd/compile/internal/types2/sgo.go`.
+- **executed_evidence:** conformance fixtures mem-capture-assigned-in-literal, mem-capture-final, mem-capture-loop-var, mem-capture-mutated (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-MEM-003 — No data races
@@ -64,8 +64,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §5 and decision D01.
 - **tcb_assumptions:** The runtime itself is free of data races on the objects behind capability handles (SGO-TCB-001).
 - **positive_tests:** S16; fixture:mem-share-immutable.
 - **negative_tests:** S16; fixture:mem-capture-mutated.
-- **implementation_coverage:** none yet — follows from W03 checks.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo_flow.go`, `src/cmd/compile/internal/types2/sgo.go`.
+- **executed_evidence:** conformance fixtures mem-capture-mutated, mem-share-immutable (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-MEM-004 — Happens-before
@@ -86,6 +86,6 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §5 and decision D01.
 - **tcb_assumptions:** Task creation, completion, cancellation, and the writer use synchronization that establishes these edges on every admitted target, including arm64's weaker memory model (D22).
 - **positive_tests:** O01, O02; fixture:mem-join-visibility.
 - **negative_tests:** n/a — ordering is checked by the executable model's history checks (W01 step 5) rather than by rejection fixtures.
-- **implementation_coverage:** none yet — W02.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W02: `src/cmd/compile/internal/types2/sgo_flow.go`, `src/cmd/compile/internal/types2/sgo.go`.
+- **executed_evidence:** conformance fixtures mem-join-visibility (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w02/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

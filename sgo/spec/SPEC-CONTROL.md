@@ -20,8 +20,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §6, decision D14, resolutions R3/R
 - **tcb_assumptions:** n/a — generated code.
 - **positive_tests:** X04, X07; fixture:ctl-statements, fixture:ctl-labeled-loops.
 - **negative_tests:** X08, S17; fixture:ctl-goto, fixture:ctl-range, fixture:ctl-discarded-error, fixture:ctl-select.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/types2/sgo_flow.go`, `src/runtime/sgo_nursery.go`.
+- **executed_evidence:** conformance fixtures ctl-discarded-error, ctl-goto, ctl-labeled-loops, ctl-range, ctl-select, ctl-statements (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-CTL-002 — Switch
@@ -42,8 +42,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §6, decision D14, resolutions R3/R
 - **tcb_assumptions:** n/a — generated code.
 - **positive_tests:** S16; fixture:ctl-switch.
 - **negative_tests:** S16; fixture:ctl-fallthrough, fixture:ctl-duplicate-case.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/types2/sgo_flow.go`, `src/runtime/sgo_nursery.go`.
+- **executed_evidence:** conformance fixtures ctl-duplicate-case, ctl-fallthrough, ctl-switch (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-CTL-003 — Terminating statements and unreachable code
@@ -64,8 +64,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §6, decision D14, resolutions R3/R
 - **tcb_assumptions:** n/a — compiler only.
 - **positive_tests:** X05; fixture:ctl-terminating.
 - **negative_tests:** X05; fixture:ctl-missing-return, fixture:ctl-unreachable.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/types2/sgo_flow.go`, `src/runtime/sgo_nursery.go`.
+- **executed_evidence:** conformance fixtures ctl-missing-return, ctl-terminating, ctl-unreachable (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-CTL-004 — Exits that cross nurseries
@@ -86,6 +86,6 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §6, decision D14, resolutions R3/R
 - **tcb_assumptions:** Nursery join primitive (SGO-TCB-001).
 - **positive_tests:** X04, X05, X06, X07, X12; fixture:ctl-return-from-nursery, fixture:ctl-break-out-of-nursery, fixture:ctl-nursery-in-loop.
 - **negative_tests:** X08; fixture:ctl-goto.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/types2/sgo_flow.go`, `src/runtime/sgo_nursery.go`.
+- **executed_evidence:** conformance fixtures ctl-break-out-of-nursery, ctl-goto, ctl-nursery-in-loop, ctl-return-from-nursery (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

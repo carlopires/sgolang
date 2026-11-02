@@ -20,8 +20,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 - **tcb_assumptions:** The runtime represents `int` as 64 bits on every admitted target.
 - **positive_tests:** S16; fixture:type-admitted.
 - **negative_tests:** S16, S17; fixture:type-float, fixture:type-slice, fixture:type-struct, fixture:type-interface, fixture:type-generic.
-- **implementation_coverage:** none yet — W03 (types2 admission filter).
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`.
+- **executed_evidence:** conformance fixtures type-admitted, type-float, type-generic, type-interface, type-slice, type-struct (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-TYPE-002 — Identity and assignability
@@ -42,8 +42,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 - **tcb_assumptions:** n/a — compiler only.
 - **positive_tests:** S16; fixture:type-assign.
 - **negative_tests:** S16; fixture:type-mismatch, fixture:type-nil-func, fixture:type-conversion.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`.
+- **executed_evidence:** conformance fixtures type-assign, type-conversion, type-mismatch, type-nil-func (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-TYPE-003 — Function values
@@ -64,8 +64,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 - **tcb_assumptions:** Closure representation and calling convention of the upstream compiler (SPEC-TCB).
 - **positive_tests:** X11; fixture:type-func-values.
 - **negative_tests:** X11; fixture:type-variadic, fixture:type-func-compare.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`.
+- **executed_evidence:** conformance fixtures type-func-compare, type-func-values, type-variadic (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-TYPE-004 — Sendability
@@ -86,8 +86,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 - **tcb_assumptions:** Capability handles are safe for concurrent use (SGO-TCB-001).
 - **positive_tests:** S16; fixture:mem-share-immutable.
 - **negative_tests:** S16; fixture:mem-capture-mutated.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`.
+- **executed_evidence:** conformance fixtures mem-capture-mutated, mem-share-immutable (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-TYPE-005 — Opaque capability types
@@ -108,8 +108,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 - **tcb_assumptions:** The runtime never hands out a handle to an object of a different kind (SGO-TCB-001).
 - **positive_tests:** S06; fixture:cap-pass-handles.
 - **negative_tests:** S06; fixture:cap-nil-context, fixture:cap-compare-nursery, fixture:sync-nil-event-denied, fixture:sync-token-compare-denied.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`.
+- **executed_evidence:** conformance fixtures cap-compare-nursery, cap-nil-context, cap-pass-handles, sync-nil-event-denied, sync-token-compare-denied (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-TYPE-006 — Sealed error
@@ -130,6 +130,6 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 - **tcb_assumptions:** n/a — error values are ordinary runtime objects.
 - **positive_tests:** S08; fixture:type-errors.
 - **negative_tests:** S08; fixture:type-error-compare, fixture:type-nil-error-call.
-- **implementation_coverage:** none yet — W03.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`.
+- **executed_evidence:** conformance fixtures type-error-compare, type-errors, type-nil-error-call (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

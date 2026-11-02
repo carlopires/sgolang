@@ -20,8 +20,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §10, resolution R1, plan §6.1, in
 - **tcb_assumptions:** Cancellation propagation through the runtime scope tree (SGO-TCB-001).
 - **positive_tests:** C01, C02, S07; fixture:cancel-basic, fixture:cancel-idempotent, fixture:cancel-propagates-nested.
 - **negative_tests:** S07; fixture:cancel-unrelated-task.
-- **implementation_coverage:** none yet — W04.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W04: `src/runtime/sgo_cancel.go`, `src/runtime/sgo_scope.go`, `src/runtime/sgo_api.go`.
+- **executed_evidence:** conformance fixtures cancel-basic, cancel-idempotent, cancel-propagates-nested, cancel-unrelated-task (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w04/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-CANCEL-002 — Observation at checkpoints
@@ -42,8 +42,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §10, resolution R1, plan §6.1, in
 - **tcb_assumptions:** Per-task cancellation state readable without locks on the fast path (SGO-TCB-001).
 - **positive_tests:** C01, C03; fixture:cancel-checkpoint-loop.
 - **negative_tests:** C03; fixture:cancel-foreign-context.
-- **implementation_coverage:** none yet — W04.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W04: `src/runtime/sgo_cancel.go`, `src/runtime/sgo_scope.go`, `src/runtime/sgo_api.go`.
+- **executed_evidence:** conformance fixtures cancel-checkpoint-loop, cancel-foreign-context (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w04/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-CANCEL-003 — Cancellation errors
@@ -64,8 +64,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §10, resolution R1, plan §6.1, in
 - **tcb_assumptions:** n/a — ordinary runtime values.
 - **positive_tests:** C04; fixture:spawn-cancelled-outcome.
 - **negative_tests:** C04; fixture:cancel-newerror-not-cancelled.
-- **implementation_coverage:** none yet — W04.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W04: `src/runtime/sgo_cancel.go`, `src/runtime/sgo_scope.go`, `src/runtime/sgo_api.go`.
+- **executed_evidence:** conformance fixtures cancel-newerror-not-cancelled, spawn-cancelled-outcome (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w04/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-CANCEL-004 — Owner and ancestry
@@ -86,6 +86,6 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §10, resolution R1, plan §6.1, in
 - **tcb_assumptions:** Per-task scope stack (SGO-TCB-001).
 - **positive_tests:** C05, S07; fixture:cancel-owner-woken-by-child-failure, fixture:nur-inner-cancel-not-outer, fixture:cancel-consumed-at-boundary.
 - **negative_tests:** n/a — behavioral; checked by positive fixtures and model histories.
-- **implementation_coverage:** none yet — W04.
-- **executed_evidence:** none yet.
+- **implementation_coverage:** W04: `src/runtime/sgo_cancel.go`, `src/runtime/sgo_scope.go`, `src/runtime/sgo_api.go`.
+- **executed_evidence:** conformance fixtures cancel-consumed-at-boundary, cancel-owner-woken-by-child-failure, nur-inner-cancel-not-outer (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w04/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
