@@ -70,32 +70,9 @@ func checkPackages(dirs []string, jsonOut bool) error {
 	if err := t.checkModulePath(m, goos, goarch); err != nil {
 		return err
 	}
-	var rels []string
-	for _, d := range dirs {
-		if d == "./..." {
-			all, err := m.packageDirs()
-			if err != nil {
-				return err
-			}
-			rels = append(rels, all...)
-			continue
-		}
-		abs := d
-		if !filepath.IsAbs(d) {
-			abs = filepath.Join(cwd, d)
-		}
-		if r, err := filepath.EvalSymlinks(abs); err == nil {
-			abs = r
-		}
-		st, err := os.Stat(abs)
-		if err != nil || !st.IsDir() {
-			return usage("no package %s", d)
-		}
-		rel, err := filepath.Rel(m.root, abs)
-		if err != nil || strings.HasPrefix(rel, "..") {
-			return usage("%s is outside the module %s", abs, m.root)
-		}
-		rels = append(rels, rel)
+	rels, err := m.resolveDirs(cwd, dirs)
+	if err != nil {
+		return err
 	}
 	archives, err := t.buildTCB(goos, goarch)
 	if err != nil {
@@ -171,6 +148,39 @@ func (t *toolchain) checkPkg(m *module, p *pkg, archives map[string]string, work
 
 // packageDirs returns every directory of the module holding .sgo files (excluding testdata and
 // directories whose name starts with "." or "_"), relative to the module root, sorted.
+// resolveDirs maps package arguments (directories, or ./... for every package of the module) to
+// directories relative to the module root.
+func (m *module) resolveDirs(cwd string, dirs []string) ([]string, error) {
+	var rels []string
+	for _, d := range dirs {
+		if d == "./..." {
+			all, err := m.packageDirs()
+			if err != nil {
+				return nil, err
+			}
+			rels = append(rels, all...)
+			continue
+		}
+		abs := d
+		if !filepath.IsAbs(d) {
+			abs = filepath.Join(cwd, d)
+		}
+		if r, err := filepath.EvalSymlinks(abs); err == nil {
+			abs = r
+		}
+		st, err := os.Stat(abs)
+		if err != nil || !st.IsDir() {
+			return nil, usage("no package %s", d)
+		}
+		rel, err := filepath.Rel(m.root, abs)
+		if err != nil || strings.HasPrefix(rel, "..") {
+			return nil, usage("%s is outside the module %s", abs, m.root)
+		}
+		rels = append(rels, rel)
+	}
+	return rels, nil
+}
+
 func (m *module) packageDirs() ([]string, error) {
 	seen := map[string]bool{}
 	err := filepath.WalkDir(m.root, func(path string, d fs.DirEntry, err error) error {

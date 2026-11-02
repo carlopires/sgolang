@@ -16,7 +16,7 @@ There is no ambient authority. A program's root grants are the `grant` lines of 
 
 Attenuation: `SimStore.ReadOnly`, `SimStore.Prefix`; every handle has `LendTo(n)`, revoked when `n` closes (SGO-AUTH-003).
 
-Capability handle types (opaque, used only behind `*`, never nil, never compared; SGO-TYPE-005): `*sgo.CapacityLimiter`, `*sgo.Channel`, `*sgo.Clock`, `*sgo.Conn`, `*sgo.Context`, `*sgo.Dir`, `*sgo.Entropy`, `*sgo.Event`, `*sgo.File`, `*sgo.Listener`, `*sgo.Listing`, `*sgo.Nursery`, `*sgo.Random`, `*sgo.Ready`, `*sgo.SendPermit`, `*sgo.SimStore`, `*sgo.Token`, `*sgo.WallClock`, `*sgo.Writer` (`Channel` and `SendPermit` only instantiated, SGO-PERMIT-002).
+Capability handle types (opaque, used only behind `*`, never nil, never compared; SGO-TYPE-005): `*sgo.CapacityLimiter`, `*sgo.Channel`, `*sgo.Clock`, `*sgo.Conn`, `*sgo.Context`, `*sgo.Dir`, `*sgo.Entropy`, `*sgo.Event`, `*sgo.File`, `*sgo.Listener`, `*sgo.Listing`, `*sgo.Nursery`, `*sgo.Random`, `*sgo.Ready`, `*sgo.SendPermit`, `*sgo.SimStore`, `*sgo.T`, `*sgo.Token`, `*sgo.WallClock`, `*sgo.Writer` (`Channel` and `SendPermit` only instantiated, SGO-PERMIT-002).
 
 ## Trusted computing base
 

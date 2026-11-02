@@ -25,6 +25,7 @@ type module struct {
 	pathAt   string   // position of the module directive in sgo.mod
 	grants   []string // granted effect kinds, in canonical order (SGO-AUTH-002)
 	ioGrants []string // file and network grants, canonical and sorted (iogrant.go)
+	testDir  string   // sgo test: the package whose _test.sgo files are loaded ("" otherwise)
 }
 
 // grantKinds are the effect kinds a grant line may name (SGO-AUTH-003), in canonical order.
@@ -193,6 +194,9 @@ func (m *module) loadPkg(dir string, from *importRef) (*pkg, error) {
 		}
 		ext := filepath.Ext(e.Name())
 		if ext == ".sgo" {
+			if strings.HasSuffix(e.Name(), "_test.sgo") && (m.testDir == "" || filepath.Clean(dir) != filepath.Clean(m.testDir)) {
+				continue // test files belong only to sgo test of their own package (D62)
+			}
 			p.files = append(p.files, filepath.Clean(name))
 		} else if sourceExts[ext] {
 			return nil, unadmittedInput(filepath.Clean(name))

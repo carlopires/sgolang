@@ -151,8 +151,8 @@ func buildProgram(arg, target string, drain int64, lab bool, output func(*module
 		archives[p.path] = a
 	}
 	exe := filepath.Join(work, "prog")
-	lastBuildID = t.buildInfo(goos, goarch, drain, m.grants, ioDigest(m.ioGrants), lab)
-	if err := t.link(archives, archives[main.path], exe, lastBuildID, drain, m.grants, m.ioGrants, lab, env); err != nil {
+	lastBuildID = t.buildInfo(goos, goarch, drain, m.grants, ioDigest(m.ioGrants), lab, false)
+	if err := t.link(archives, archives[main.path], exe, lastBuildID, drain, m.grants, m.ioGrants, lab, false, env); err != nil {
 		return "", err
 	}
 	out := output(m, main)
@@ -203,7 +203,7 @@ func (t *toolchain) compileUser(m *module, p *pkg, isMain, lab bool, archives ma
 // version, admission digest, drain budget, root grants (SGO-AUTH-002), target, toolchain
 // identity, and upstream base commit. It is the binary's build ID, which the linker writes
 // verbatim in every executable format. A lab binary's ID also names its configuration (D41).
-func (t *toolchain) buildInfo(goos, goarch string, drain int64, grants []string, io string, lab bool) string {
+func (t *toolchain) buildInfo(goos, goarch string, drain int64, grants []string, io string, lab, test bool) string {
 	budget := "none"
 	if drain > 0 {
 		budget = fmt.Sprint(drain)
@@ -213,8 +213,13 @@ func (t *toolchain) buildInfo(goos, goarch string, drain int64, grants []string,
 		g = strings.Join(grants, ",")
 	}
 	config := ""
-	if lab {
+	switch {
+	case lab && test:
+		config = "/config=lab-test"
+	case lab:
 		config = "/config=lab"
+	case test:
+		config = "/config=test" // a test binary (D62): never mistaken for a production program
 	}
 	if io != "" {
 		g += "/io=" + io // digest of the file and network grants (D52)
@@ -225,7 +230,7 @@ func (t *toolchain) buildInfo(goos, goarch string, drain int64, grants []string,
 
 // link links the program; a drain budget is passed with the linker's dedicated -sgodrainbudget
 // flag, which sets the runtime's budget (-X is refused for S-Go programs).
-func (t *toolchain) link(archives map[string]string, main, exe, buildInfo string, drain int64, grants, ioGrants []string, lab bool, env []string) error {
+func (t *toolchain) link(archives map[string]string, main, exe, buildInfo string, drain int64, grants, ioGrants []string, lab, test bool, env []string) error {
 	importcfg := exe + ".importcfg"
 	if err := writeImportcfg(importcfg, archives); err != nil {
 		return err
@@ -242,6 +247,9 @@ func (t *toolchain) link(archives map[string]string, main, exe, buildInfo string
 	}
 	if lab {
 		args = append(args, "-sgolab")
+	}
+	if test {
+		args = append(args, "-sgotest")
 	}
 	return t.runTool(filepath.Dir(exe), env, "link", append(args, main)...)
 }

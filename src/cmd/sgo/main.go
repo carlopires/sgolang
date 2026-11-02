@@ -10,6 +10,8 @@
 //
 //	sgo build [-o out] [-target=<os>/<arch>] [package]
 //	sgo run <main package>
+//	sgo check [-json] [packages]
+//	sgo test [-v] [-run regexp] [packages] (test.go: one process per test, D62)
 //	sgo version
 //	sgo fmt [files]
 //	sgo lab run|replay|sweep ... (lab.go: the lab execution configuration, D41)
@@ -57,7 +59,7 @@ func main() {
 
 func run(args []string) error {
 	if len(args) == 0 {
-		return usage("missing command (sgo build | run | check | lab | version)")
+		return usage("missing command (sgo build | run | check | test | lab | version)")
 	}
 	switch cmd, rest := args[0], args[1:]; cmd {
 	case "build":
@@ -73,6 +75,8 @@ func run(args []string) error {
 		return cmdFmt(rest)
 	case "lab":
 		return cmdLab(rest)
+	case "test":
+		return cmdTest(rest)
 	case "check":
 		return cmdCheck(rest)
 	default:

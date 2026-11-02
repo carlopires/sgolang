@@ -60,6 +60,11 @@ jobs:
           plat="$(uname -s | tr A-Z a-z)_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
           sgo/scripts/test-check.py --sgo "$PWD/pkg/tool/$plat/sgo"
 
+      - name: sgo test, one process per test, LeakedWork, TempDir, watchdog (D62, D64, T04)
+        run: |
+          plat="$(uname -s | tr A-Z a-z)_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
+          sgo/scripts/test-test.py --sgo "$PWD/pkg/tool/$plat/sgo"
+
       - name: Package identity checks (SGO-IMP-002; stale and foreign objects)
         run: sgo/scripts/test-identity.py
 
