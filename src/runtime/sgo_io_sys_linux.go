@@ -23,6 +23,7 @@ const (
 	sgoO_TRUNC    = 0x200
 	sgoO_CLOEXEC  = 0x80000
 	sgoO_NONBLOCK = 0x800
+	sgoO_PATH     = 0x200000
 
 	sgoF_GETFL = 3
 	sgoF_SETFL = 4
@@ -110,20 +111,41 @@ const (
 	sgoEXDEV                 = 18
 )
 
-// sgoNoOpenat2 is set once openat2 is unavailable: ENOSYS (kernels before 5.6), or EPERM from a
-// seccomp filter that blocks the call (it cannot come from the open itself for these flags).
-// Tasks read and write it concurrently.
-var sgoNoOpenat2 atomic.Bool
+// sgoNoOpenat2 is true when openat2 is unavailable. It is decided once, by sgoOpenat2Probe, with an
+// open that cannot fail for file-specific reasons (W12 R6b): an EPERM from a real open (an
+// immutable or append-only file) is that open's error, never a reason to stop using openat2.
+// SGoForceWalk sets it in tests. Tasks read it concurrently.
+var (
+	sgoNoOpenat2     atomic.Bool
+	sgoOpenat2Probed atomic.Bool
+)
 
-// sgoOpenBeneath opens path (relative, '/'-separated) beneath dirfd with openat2 and
-// RESOLVE_BENEATH|RESOLVE_NO_SYMLINKS|RESOLVE_NO_MAGICLINKS: the kernel guarantees the object
-// opened is inside dirfd's tree even against concurrent renames (D53, W12 R6). It returns the fd
-// or the negated errno; ok is false when the kernel has no openat2 (the caller walks instead).
-//
-// It keeps the walk's outcomes exactly (W12 R6 reopen): openat2 rejects a mode without O_CREAT
-// (EINVAL), so mode is dropped then; and O_DIRECTORY on a trailing symlink would give ENOTDIR
-// instead of ELOOP, so O_DIRECTORY is checked with fstat after the open instead.
+// sgoOpenat2Probe decides availability: openat2(dirfd, ".", O_PATH, RESOLVE_BENEATH) fails only
+// with ENOSYS (kernel before 5.6) or EPERM (a seccomp filter blocking the call).
+func sgoOpenat2Probe(dirfd int32) {
+	dot := [2]byte{'.', 0}
+	how := &sgoOpenHow{flags: sgoO_PATH | sgoO_CLOEXEC, resolve: sgoRESOLVE_BENEATH}
+	r := sgoSys(sgoSYS_openat2, uintptr(int64(dirfd)), uintptr(unsafe.Pointer(&dot[0])), uintptr(unsafe.Pointer(how)), unsafe.Sizeof(*how))
+	KeepAlive(how)
+	if r >= 0 {
+		sgoCloseFD(r)
+	} else if r == -38 || r == -1 { // ENOSYS, EPERM
+		sgoNoOpenat2.Store(true)
+	}
+	sgoOpenat2Probed.Store(true)
+}
+
+// sgoOpenat2Calls counts openat2 opens (not probes); sgoOpenat2Fault, when non-zero, is returned
+// once instead of the next open's result. Both are for runtime tests only (W12 R6b).
+var (
+	sgoOpenat2Calls atomic.Int64
+	sgoOpenat2Fault atomic.Int32
+)
+
 func sgoOpenBeneath(dirfd int32, path *byte, flags, mode int32) (fd int32, ok bool) {
+	if !sgoOpenat2Probed.Load() {
+		sgoOpenat2Probe(dirfd)
+	}
 	if sgoNoOpenat2.Load() {
 		return 0, false
 	}
@@ -137,9 +159,12 @@ func sgoOpenBeneath(dirfd int32, path *byte, flags, mode int32) (fd int32, ok bo
 	r := sgoSys(sgoSYS_openat2, uintptr(int64(dirfd)), uintptr(unsafe.Pointer(path)), uintptr(unsafe.Pointer(how)), unsafe.Sizeof(*how))
 	KeepAlive(path)
 	KeepAlive(how)
-	if r == -38 || r == -1 { // ENOSYS, EPERM (seccomp)
-		sgoNoOpenat2.Store(true)
-		return 0, false
+	sgoOpenat2Calls.Add(1)
+	if f := sgoOpenat2Fault.Swap(0); f != 0 {
+		if r >= 0 {
+			sgoCloseFD(r)
+		}
+		r = -f
 	}
 	if r >= 0 && wantDir {
 		var st sgoStatBuf

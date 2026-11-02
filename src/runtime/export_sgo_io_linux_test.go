@@ -8,4 +8,13 @@ package runtime
 
 // SGoForceWalk makes resolution skip openat2 (as on a kernel without it) while on is true, so a
 // test can run the same cases through both paths (W12 R6).
-func SGoForceWalk(on bool) { sgoNoOpenat2.Store(on) }
+func SGoForceWalk(on bool) {
+	sgoOpenat2Probed.Store(true)
+	sgoNoOpenat2.Store(on)
+}
+
+// SGoOpenat2 reports whether resolution uses openat2 and how many openat2 opens ran.
+func SGoOpenat2() (on bool, calls int64) { return !sgoNoOpenat2.Load(), sgoOpenat2Calls.Load() }
+
+// SGoOpenat2FaultOnce makes the next openat2 open return -errno (W12 R6b).
+func SGoOpenat2FaultOnce(errno int32) { sgoOpenat2Fault.Store(errno) }

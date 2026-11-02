@@ -8,3 +8,6 @@ package runtime
 
 // SGoForceWalk has nothing to switch: without openat2 resolution always walks (W12 R6).
 func SGoForceWalk(on bool) {}
+
+func SGoOpenat2() (on bool, calls int64) { return false, 0 }
+func SGoOpenat2FaultOnce(errno int32)    {}
