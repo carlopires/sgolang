@@ -15,6 +15,7 @@ status nonzero.
     conformance-compile.py [-v] [case ...]
 """
 
+import sgoargs
 import json
 import os
 import re
@@ -53,6 +54,7 @@ def eligible(d, e, kind="reject"):
 
 
 def main():
+    sgoargs.check(flags={"-v": "bool"}, positional="any")  # strict command line (W12 R14)
     verbose = "-v" in sys.argv
     only = [a for a in sys.argv[1:] if not a.startswith("-")]
     if not os.path.exists(COMPILE):

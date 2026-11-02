@@ -12,6 +12,7 @@ locked upstream commit.
 A section's text is the HTML from its heading to the next heading of the same or higher level.
 Adapted wording is reproduced in the S-Go clause itself; the clause never refers to the Go spec for meaning.
 """
+import sgoargs
 import hashlib
 import json
 import os
@@ -86,6 +87,7 @@ def build(write):
 
 
 def main():
+    sgoargs.check(flags={"--write": "bool"})  # strict command line (W12 R14)
     new = build("--write" in sys.argv)
     if "--write" in sys.argv:
         json.dump(new, open(LEDGER, "w"), indent=1)

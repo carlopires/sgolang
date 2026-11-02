@@ -16,6 +16,7 @@ changed or added to a target lane to make a number better.
 Writes sgo/evidence/w10/rejection-report.json (per file) and .md (by code); --check compares the
 outcomes with the committed report instead of writing it.
 """
+import sgoargs
 import collections
 import concurrent.futures
 import json
@@ -58,6 +59,7 @@ def one(sgo, name, tmp):
 
 
 def main():
+    sgoargs.check(flags={"--check": "bool", "--sgo": "value"})  # strict command line (W12 R14)
     args = sys.argv[1:]
     sgo = os.path.join(ROOT, "pkg", "tool", f"{GOOS}_{GOARCH}", "sgo")
     check = "--check" in args

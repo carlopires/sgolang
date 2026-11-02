@@ -11,6 +11,7 @@ committed trace replays to the buggy output, and replaying it against ./fixed di
 
     test-examples.py [--sgo PATH] [--examples DIR]
 """
+import sgoargs
 import json
 import os
 import shutil
@@ -29,6 +30,7 @@ EXAMPLES = {
 
 
 def main():
+    sgoargs.check(flags={"--sgo": "value", "--examples": "value"})  # strict command line (W12 R14)
     args = sys.argv[1:]
     sgo = os.path.join(ROOT, "pkg", "tool", "darwin_arm64", "sgo")
     examples = os.path.join(ROOT, "sgo", "examples")

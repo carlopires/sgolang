@@ -16,6 +16,7 @@ Writes sgo/docs/policy.md from the sources that enforce the policy, and checks t
     policy-report.py           check that sgo/docs/policy.md is current (CI)
     policy-report.py --write   rewrite it
 """
+import sgoargs
 import json
 import os
 import re
@@ -173,6 +174,7 @@ def render():
 
 
 def main():
+    sgoargs.check(flags={"--write": "bool"})  # strict command line (W12 R14)
     text, errs = render()
     for e in errs:
         print(f"policy-report: {e}", file=sys.stderr)

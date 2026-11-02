@@ -17,6 +17,7 @@ On scratch modules:
 
     test-test.py [--sgo PATH] [--no-hang]
 """
+import sgoargs
 import os
 import re
 import subprocess
@@ -139,6 +140,7 @@ def write(d, rel, s):
 
 
 def main():
+    sgoargs.check(flags={"--sgo": "value", "--no-hang": "bool"})  # strict command line (W12 R14)
     args = sys.argv[1:]
     sgo = os.path.join(ROOT, "pkg", "tool", "darwin_arm64", "sgo")
     if args[:1] == ["--sgo"]:

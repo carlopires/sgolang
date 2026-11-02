@@ -11,6 +11,7 @@
 The package closure is computed with the untouched reference toolchain (W00) for darwin/arm64,
 linux/amd64, and linux/arm64 when it is available; otherwise the stored closure is reused.
 """
+import sgoargs
 import hashlib
 import json
 import os
@@ -289,6 +290,7 @@ def identity_source(package="sgoadmit"):
 
 
 def main():
+    sgoargs.check(flags={"--write": "bool"})  # strict command line (W12 R14)
     stored = json.load(open(MANIFEST)) if os.path.exists(MANIFEST) else None
     write = "--write" in sys.argv
     new = build(stored["packages"] if stored else None, write)

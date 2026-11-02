@@ -13,6 +13,7 @@ not check stops its dependents.
 
     test-check.py [--sgo PATH] [case ...]
 """
+import sgoargs
 import json
 import os
 import re
@@ -36,6 +37,7 @@ def snapshot(d):
 
 
 def main():
+    sgoargs.check(flags={"--sgo": "value"})  # strict command line (W12 R14)
     args = sys.argv[1:]
     sgo = os.path.join(ROOT, "pkg", "tool", "darwin_arm64", "sgo")
     if args[:1] == ["--sgo"]:

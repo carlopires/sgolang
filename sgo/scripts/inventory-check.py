@@ -10,6 +10,7 @@
 Surfaces are extracted from the fork's sources by sgo/scripts/inventory/extract.go, built with the
 pinned bootstrap Go. Rules come from sgo/spec/INVENTORY.map (format documented there).
 """
+import sgoargs
 import collections
 import hashlib
 import json
@@ -68,6 +69,7 @@ def load_rules(errors):
 
 
 def main():
+    sgoargs.check(flags={"--write": "bool"})  # strict command line (W12 R14)
     write = "--write" in sys.argv
     errors = []
     registry = json.load(open(REGISTRY))

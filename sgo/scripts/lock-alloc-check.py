@@ -15,6 +15,7 @@ comment `lock-alloc: ok (<reason>)` on the same line; a function whose doc comme
 A function documented as running under a lock its caller holds ("under c.lock", "Called with
 l.lock held", "the caller holds c.lock") is checked as if that lock were held from its first line.
 """
+import sgoargs
 import glob, re, sys
 
 LOCK = re.compile(r'(?<![A-Za-z_])(lock\(&|sgoSelLock\()')
@@ -71,6 +72,7 @@ def check(path):
 
 
 def main():
+    sgoargs.check(positional="any")  # strict command line (W12 R14)
     files = sys.argv[1:] or sorted(p for p in glob.glob('src/runtime/sgo_*.go') if not p.endswith('_test.go'))
     bad = [m for p in files for m in check(p)]
     for m in bad:

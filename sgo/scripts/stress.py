@@ -20,6 +20,7 @@ Reduced counts on a noisy host are allowed and recorded (plan §12.2); no scenar
 JSON summary is written to --out (default $SGO_OUT/evidence/w12/stress-<os>-<arch>.json).
 """
 import json
+import sgoargs
 import os
 import re
 import shutil
@@ -130,10 +131,14 @@ def production_lane(count, cpus, results):
 
 
 def main():
+    sgoargs.check(flags={"--seeds": "value", "--count": "value", "--cpus": "value", "--skip-production": "bool",
+                         "--out": "value"})  # strict command line (W12 R14)
     seeds, count, cpus = int(arg("--seeds", "1000")), int(arg("--count", "20")), arg("--cpus", "1,4,16")
     out = arg("--out", os.path.join(os.environ.get("SGO_OUT") or os.path.expanduser("~/.cache/sgolang/out"),
                                     "evidence", "w12", f"stress-{GOOS}-{GOARCH}.json"))
-    results = {"platform": f"{GOOS}/{GOARCH}", "skipped": SKIP, "lab": {}, "production": {}}
+    results = {"platform": f"{GOOS}/{GOARCH}", "skipped": SKIP, "lab": {}, "production": {},
+               "options": {"seeds": seeds, "count": count, "cpus": cpus,
+                           "skip_production": "--skip-production" in sys.argv}}
     with tempfile.TemporaryDirectory() as home:
         env = {"HOME": home, "PATH": "/usr/bin:/bin", "SGO_CACHE": os.path.join(home, "cache")}
         problems = lab_lane(seeds, env, results)

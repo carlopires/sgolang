@@ -159,10 +159,18 @@
     {
       "id": "R13",
       "severity": "minor",
-      "status": "fixed",
+      "status": "verified",
       "finding": "make-release.py ignored unknown arguments and wrote the archive into the repository root",
       "fix": "argparse with exactly --out (default $SGO_OUT/release, created if missing); an unknown argument exits 2 writing nothing; --help exits 0",
       "regression_test": "legacy-audit.py: make-release.py --bogus-flag exits 2 and writes no archive; --help exits 0 and writes none"
+    },
+    {
+      "id": "R14",
+      "severity": "minor",
+      "status": "fixed",
+      "finding": "stress.py (and other evidence-writing scripts) ignored unknown arguments: a misspelt reduction flag ran a different workload and recorded the default",
+      "fix": "sgoargs.check: every script that writes evidence or artifacts (18) refuses an unknown argument with exit 2 before running, answers --help with exit 0, and refuses --opt=value forms its parser would misread; stress.py records its parsed options in the summary",
+      "regression_test": "legacy-audit.py runs each of the 18 scripts with --bogus-flag (exit 2, nothing written, under 20 s) and --help (exit 0)"
     }
   ],
   "self_findings": [

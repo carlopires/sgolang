@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | work_package_id | W12 |
-| state | in progress. Every review finding (R1–R12, R6b) is fixed and verified by the reviewer on linux/amd64; R13 is fixed (`17054fecb6`) and awaiting the reviewer's re-check. D77, D78, D79 are done; D80 passed on darwin/arm64 and runs on linux in `sgo-stress` run 41523619092 (PENDING). Closing evidence is recorded below as it lands |
+| state | in progress. Every review finding (R1–R12, R6b) is fixed and verified by the reviewer on linux/amd64; R13 is verified; R14 is fixed and awaiting the reviewer's re-check. D77, D78, D79 are done; D80 passed on darwin/arm64, on both linux targets in CI (`sgo-stress` run 41527740442), and on the reviewer's linux/amd64 host. Closing evidence is recorded below as it lands |
 | spec_version | 0.7.0 frozen (104 clauses: 98 frozen, 6 superseded): the release registry (D83) with 30 families admitted and 8 denied; amended SGO-TCB-002 v2, SGO-MEM-002 v2, SGO-PROC-004 v2, SGO-FILE-002 v3 (`sgo/spec/CHANGELOG.md`) |
 | admission identity | admission digest `3eb9134114d04921` (SHA-256 of `sgo/SGO_SPEC_ADMISSION.json`, recorded by the toolchain and every binary); registry `rows_digest` `f7289798757c5538` (R12) |
 | decisions | D75–D84 approved 2026-11-02 |
@@ -28,7 +28,8 @@
 | R10 | minor (doc) | lock order in runtime-design §5 `2bb64c63b6` | verified |
 | R11 | minor | a raced walk-mode `Create` that created a file reports `PathRaced` `b8176fd831` | verified |
 | R12 | minor (doc) | one meaning of admission digest; `spec-tool.py check` asserts it `b8176fd831` | verified |
-| R13 | minor | `make-release.py` refuses unknown arguments, never writes into the tree `17054fecb6` | fixed, re-check pending |
+| R13 | minor | `make-release.py` refuses unknown arguments, never writes into the tree `17054fecb6` | verified |
+| R14 | minor | every evidence- or artifact-writing script refuses unknown arguments (`sgoargs.py`); `stress.py` records its options | fixed, re-check pending |
 
 The reviewer's closing summary lists what was not reviewed or only partly: the deep socket error and partial-write paths, the darwin syscall layer (no darwin host), the lab scheduler internals, the model as an independent model, the compiler lowering beyond conformance, and linux/arm64 (CI only). These are stated limits of this review, not claims.
 
@@ -51,7 +52,8 @@ The reviewer's closing summary lists what was not reviewed or only partly: the d
 | Platform | Lab (30 cases × 1000 seeds, twice, + examples) | Production `-count=20 -cpu=1,4,16` | Race `-count=4 -cpu=1,4,16` |
 |---|---|---|---|
 | darwin/arm64 (local) | ok, 2m50s | ok, 129 s | ok, 767 s, no `DATA RACE` |
-| linux/amd64, linux/arm64 | `sgo-stress` run 41523619092: PENDING | PENDING | PENDING |
+| linux/amd64, linux/arm64 (CI) | `sgo-stress` run 41527740442 (both runners): ok | ok | ok |
+| linux/amd64 (reviewer, note2, 24 CPUs, kernel 7.2, at `4295158d33`) | ok | ok, 370 s | ok, 827 s |
 
 ## Commands
 

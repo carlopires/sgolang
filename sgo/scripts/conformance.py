@@ -32,6 +32,7 @@ Case layout: sgo/testdata/conformance/<name>/{sgo.mod, *.sgo, ..., expect.json}.
 Positions are computed from "at": the first occurrence (or "occurrence": n) of the text in the file,
 reported as file:line:col with 1-based columns counted in bytes.
 """
+import sgoargs
 import json
 import os
 import re
@@ -498,6 +499,7 @@ def selftest():
 
 
 def main():
+    sgoargs.check(flags={"--sgo": "value", "--pending": "value"}, positional="any")  # strict command line (W12 R14)
     if len(sys.argv) < 2 or sys.argv[1] not in ("validate", "run", "selftest"):
         print(__doc__)
         return 2

@@ -29,6 +29,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 
 from sgotool import GOARCH, GOOS, ROOT, buildid
 
@@ -41,6 +42,12 @@ ALLOWLIST_SRC = {
     "asm": ("src/cmd/asm/main.go", r"sgoAsmFlags\s*=\s*\[\]string\{([^}]*)\}"),
     "link": ("src/cmd/link/internal/ld/sgoidcfg.go", r"sgoLinkFlags\s*=\s*\[\]string\{([^}]*)\}"),
 }
+# Scripts that write evidence or artifacts: each must refuse an unknown argument (exit 2) and answer
+# --help (exit 0) without running.
+STRICT_SCRIPTS = ["stress.py", "make-release.py", "bench.py", "conformance.py", "conformance-compile.py",
+                  "guarantee-check.py", "inventory-check.py", "license-audit.py", "lock-alloc-check.py",
+                  "policy-report.py", "rejection-report.py", "spec-tool.py", "tcb-manifest.py", "adoption-check.py",
+                  "test-check.py", "test-examples.py", "test-isolation.py", "test-test.py"]
 ENV_DIRS = ["src/cmd/sgo", "src/cmd/compile", "src/cmd/asm", "src/cmd/link", "src/cmd/internal", "src/internal/buildcfg"]
 ENV_RE = re.compile(r'(?:os\.Getenv|os\.LookupEnv|envOr|syscall\.Getenv)\("([A-Za-z0-9_]+)"')
 
@@ -309,6 +316,17 @@ def main():
             if r.returncode == 0 or "SGO_E_USAGE" not in r.stdout + r.stderr:
                 problems.append(f"sgo {' '.join(cmd)} -gcflags=-l: exit {r.returncode}, want SGO_E_USAGE")
         checked["driver_commands"] = len(drv["commands"])
+
+        # The scripts that write evidence or artifacts refuse what they do not specify (W12 R13, R14).
+        for sc in STRICT_SCRIPTS:
+            path = os.path.join(ROOT, "sgo", "scripts", sc)
+            for args, want in ((["--bogus-flag"], 2), (["--help"], 0)):
+                t0 = time.time()
+                r = run([sys.executable, path] + args, ROOT, {**dict(os.environ), "SGO_OUT": os.path.join(bench.tmp, "strict")})
+                wrote = os.path.exists(os.path.join(bench.tmp, "strict"))
+                if r.returncode != want or wrote or time.time() - t0 > 20:
+                    problems.append(f"{sc} {args[0]}: exit {r.returncode} (want {want}), wrote output {wrote}, "
+                                    f"{time.time() - t0:.0f}s")
 
         # The release archive: four executables, the TCB sources, nothing else (D77, D61).
         problems += check_archive(bench.tmp)

@@ -18,6 +18,7 @@ Runs against a toolchain (stage-0 by default, or a release's bin/sgo with --sgo)
 
     test-isolation.py [--sgo PATH]
 """
+import sgoargs
 import glob
 import os
 import platform
@@ -38,6 +39,7 @@ BAD = "package lib\n\nfunc f() {}\n\nfunc G() {\n\tgo f()\n}\n"
 
 
 def main():
+    sgoargs.check(flags={"--sgo": "value"})  # strict command line (W12 R14)
     args = sys.argv[1:]
     sgo = os.path.join(ROOT, "pkg", "tool", f"{GOOS}_{GOARCH}", "sgo")
     if args[:1] == ["--sgo"]:

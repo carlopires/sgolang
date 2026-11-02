@@ -19,6 +19,7 @@ Digests are SHA-256 over the clause's normative text (heading through the line b
 excluding the progress fields status, implementation_coverage, and executed_evidence), with LF line
 endings, trailing whitespace stripped, and trailing blank lines removed.
 """
+import sgoargs
 import hashlib
 import json
 import os
@@ -222,6 +223,7 @@ def frozen_changes(old, clauses):
 
 
 def main():
+    sgoargs.check(positional={"check", "update", "list"}, max_positional=1)  # strict command line (W12 R14)
     mode = sys.argv[1] if len(sys.argv) > 1 else "check"
     registry, required, families, cases, clauses, spec_version = load()
     errors = validate(required, families, cases, clauses)

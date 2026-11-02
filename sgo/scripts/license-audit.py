@@ -17,6 +17,7 @@ Checks, for the diff from the upstream commit in sgo/UPSTREAM.lock.json to the w
 Algorithms re-implemented from published descriptions (SplitMix64, PCG32 in the lab and model)
 are not copied code and need no notice.
 """
+import sgoargs
 import json
 import os
 import re
@@ -72,6 +73,7 @@ def add_header(path, text):
 
 
 def main():
+    sgoargs.check(flags={"--fix": "bool"})  # strict command line (W12 R14)
     fix = "--fix" in sys.argv[1:]
     base = pin()
     errs, fixed = [], []

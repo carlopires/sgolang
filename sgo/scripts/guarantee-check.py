@@ -20,6 +20,7 @@ Checks:
     passed, and a passed case must cite evidence files that exist;
   - stack: stack_implementation agrees with W11's status in SGO_TASKS.json.
 """
+import sgoargs
 import json
 import os
 import re
@@ -212,6 +213,7 @@ def render():
 
 
 def main():
+    sgoargs.check(flags={"--release": "bool"}, positional={"render"}, max_positional=1)  # strict command line (W12 R14)
     if sys.argv[1:] == ["render"]:
         render()
         return 0

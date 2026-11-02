@@ -17,6 +17,7 @@ Results are evidence only: no claim without samples, and no check is removed to 
 Not measured: allocation counts (no allocation profile without changing the programs) and virtual
 size (not reported by wait4).
 """
+import sgoargs
 import json
 import os
 import platform
@@ -61,6 +62,7 @@ def summary(samples):
 
 
 def main():
+    sgoargs.check(flags={"--runs": "value", "--sgo": "value"})  # strict command line (W12 R14)
     args = sys.argv[1:]
     runs = 20
     sgo = os.path.join(ROOT, "pkg", "tool", f"{GOOS}_{GOARCH}", "sgo")
