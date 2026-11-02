@@ -41,6 +41,10 @@ func (ctxt *Link) sgoCheckConfig() {
 			Errorf("sgo:1:1: %s", msg)
 		}
 	})
+	// The target configuration is the one the driver pins (D77, W12 R3).
+	for _, e := range buildcfg.SGoTargetConfigErrs() {
+		Errorf("sgo:1:1: SGO_E_USAGE: %s", e)
+	}
 	if sgoXFlags != 0 {
 		Errorf("sgo:1:1: SGO_E_USAGE: -X string overrides are not admitted (SGO-TOOL-001)")
 	}

@@ -32,6 +32,7 @@ func main() {
 	GOARCH := buildcfg.GOARCH
 
 	flags.Parse()
+	sgoCheckToolInput()
 	counter.Inc("asm/invocations")
 	counter.CountFlags("asm/flag:", *flag.CommandLine)
 
@@ -127,5 +128,31 @@ func main() {
 		buf.Close()
 		os.Remove(*flags.OutputFile)
 		os.Exit(1)
+	}
+}
+
+// sgoAsmFlags are the assembler flags the sgo driver writes when it assembles trusted target code
+// (cmd/sgo tcb.go); every other flag is refused (D77, W12 R3): refuse-by-default, so a flag added
+// upstream stays refused until it is added here deliberately.
+var sgoAsmFlags = []string{"o", "p", "std", "I", "D", "trimpath", "gensymabis"}
+
+// sgoCheckToolInput refuses, with SGO_E_USAGE and exit status 2, an assembler flag or target setting
+// the driver never uses.
+func sgoCheckToolInput() {
+	var bad []string
+	flag.CommandLine.Visit(func(f *flag.Flag) {
+		for _, a := range sgoAsmFlags {
+			if f.Name == a {
+				return
+			}
+		}
+		bad = append(bad, fmt.Sprintf("asm flag -%s is not admitted (SGO-TOOL-001)", f.Name))
+	})
+	bad = append(bad, buildcfg.SGoTargetConfigErrs()...)
+	for _, b := range bad {
+		fmt.Fprintf(os.Stderr, "sgo:1:1: SGO_E_USAGE: %s\n", b)
+	}
+	if len(bad) > 0 {
+		os.Exit(2)
 	}
 }

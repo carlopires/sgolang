@@ -53,20 +53,9 @@ func SGoCheckToolInput(sgo bool) {
 	if v := os.Getenv("GOCOMPILEDEBUG"); v != "" {
 		sgoUsage("GOCOMPILEDEBUG is not admitted (SGO-TOOL-001)")
 	}
-	// The target configuration is the one the driver pins (toolchain.go): no experiments, and the
-	// baseline microarchitecture level.
-	if base, err := buildcfg.ParseGOEXPERIMENT(buildcfg.GOOS, buildcfg.GOARCH, ""); os.Getenv("GOEXPERIMENT") != "" || err == nil && buildcfg.Experiment.Flags != base.Flags {
-		sgoUsage("GOEXPERIMENT=%s is not admitted; S-Go targets use the default experiment set (SGO-BUILD-001)", buildcfg.Experiment.String())
-	}
-	switch buildcfg.GOARCH {
-	case "amd64":
-		if buildcfg.GOAMD64 != 1 {
-			sgoUsage("GOAMD64=v%d is not admitted; the S-Go target is v1 (SGO-BUILD-001)", buildcfg.GOAMD64)
-		}
-	case "arm64":
-		if g := buildcfg.GOARM64; g.Version != "v8.0" || g.LSE || g.Crypto {
-			sgoUsage("GOARM64=%s is not admitted; the S-Go target is v8.0 (SGO-BUILD-001)", g)
-		}
+	// The target configuration is the one the driver pins (toolchain.go).
+	for _, e := range buildcfg.SGoTargetConfigErrs() {
+		sgoUsage("%s", e)
 	}
 	if sgoUsageErrors > 0 {
 		os.Exit(2)
