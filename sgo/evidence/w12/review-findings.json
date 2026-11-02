@@ -88,7 +88,7 @@
       "title": "Running build scripts dirties tracked evidence files",
       "location": "sgo/scripts/build-stage0.sh, lib.sh",
       "clause": "D77 / reviewer tree hygiene",
-      "status": "fixed",
+      "status": "verified",
       "resolution": null,
       "fix_commit": null,
       "regression_test": "CI clean-tree steps; locally build-stage0 + checks leave sgo/evidence unchanged",
@@ -100,11 +100,12 @@
       "title": "Driver reuses cached TCB archives on a 'complete' marker alone; SGO_CACHE unclassified",
       "location": "src/cmd/sgo/tcb.go cacheRoot, reuse",
       "clause": "SGO-TCB-002, D77",
-      "status": "fixed",
+      "status": "verified",
       "resolution": null,
       "fix_commit": null,
       "regression_test": "test-tcb: one flipped byte in the cached runtime.a is rebuilt byte for byte; mutant (manifest presence only) fails",
-      "fix": "a TCB cache entry ends with manifest.sha256 (sha256 of each archive); an entry is reused only if it lists exactly the expected archives and each matches, otherwise it is removed and rebuilt. SGO_CACHE and TMPDIR classification goes to the D77 audit"
+      "fix": "a TCB cache entry ends with manifest.sha256 (sha256 of each archive); an entry is reused only if it lists exactly the expected archives and each matches, otherwise it is removed and rebuilt. SGO_CACHE and TMPDIR classification goes to the D77 audit",
+      "scope": "integrity against corruption, stale and partial entries; not tamper-proof against a writer of $SGO_CACHE (who can also replace the tool binaries). Tamper resistance would need archive digests recorded outside the cache (optional)."
     },
     {
       "id": "R9",
@@ -226,6 +227,12 @@
       "for": "R6",
       "text": "SPEC-FILE concurrency text: linux 5.6+ resolves with openat2 (kernel guarantee); darwin and older linux verify the walk, so a file can be created (never truncated) outside the grant through a raced path; Mkdir/Remove report PathRaced (an effect that happened); model iopath admits exactly these outcomes",
       "status": "open, with the 0.7.0 change"
+    },
+    {
+      "id": "D-R8",
+      "for": "0.7.0 / D77 limitations",
+      "text": "State the TCB cache check as integrity against corruption, stale and partial entries, not tamper resistance: the manifest lives in the user-writable cache with the archives."
     }
-  ]
+  ],
+  "review_state": "all findings verified (R1-R10, R6b) at f247f1219a; open: 0.7.0 freeze (SR2, D-R1/R3/R4/R5/R6/R8, guarantee-check in CI) and D77-D80"
 }
