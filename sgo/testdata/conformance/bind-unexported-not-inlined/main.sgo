@@ -1,0 +1,13 @@
+package main
+
+import (
+	"example.com/bind-unexported-not-inlined/lib"
+	"sgo"
+)
+
+func main(root *sgo.Context) error {
+	if lib.count(3) != 3 {
+		return sgo.NewError("count")
+	}
+	return nil
+}

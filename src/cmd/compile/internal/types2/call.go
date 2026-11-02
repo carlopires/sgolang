@@ -730,6 +730,14 @@ func (check *Checker) selector(x *operand, e *syntax.SelectorExpr, wantType bool
 				check.objDecl(exp)
 			} else {
 				exp = pkg.scope.Lookup(sel)
+				if exp == nil && check.conf.SGo && isValidName(sel) && !isExported(sel) {
+					// S-Go: an unexported name of another package is reported as such whether or
+					// not the package's export data happens to carry it (it carries unexported
+					// objects only when the back end needs them, e.g. for inlining), so the
+					// diagnostic does not depend on code generation (sgo check, T03).
+					check.errorf(e.Sel, UnexportedName, "name %s not exported by package %s", sel, pkg.name)
+					goto Error
+				}
 				if exp == nil {
 					if !pkg.fake && isValidName(sel) {
 						// Try to give a better error message when selector matches an object name ignoring case.

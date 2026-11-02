@@ -1,0 +1,11 @@
+package lib
+
+// count is recursive, so it is never inlined and its body is not in the export data.
+func count(n int) int {
+	if n == 0 {
+		return 0
+	}
+	return 1 + count(n-1)
+}
+
+func Count(n int) int { return count(n) }

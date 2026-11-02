@@ -123,6 +123,7 @@ type CmdFlags struct {
 	Spectre            string       "help:\"enable spectre mitigations in `list` (all, index, ret)\""
 	Std                bool         "help:\"compiling standard library\""
 	SGoLab             bool         "help:\"compile S-Go code for the lab execution configuration (D41, D43)\""
+	SGoCheck           bool         "help:\"S-Go: run only the front end and write export data, no code (sgo check, D63)\""
 	SymABIs            string       "help:\"read symbol ABIs from `file`\""
 	TraceProfile       string       "help:\"write an execution trace to `file`\""
 	TrimPath           string       "help:\"remove `prefix` from recorded source file paths\""

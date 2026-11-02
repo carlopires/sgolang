@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-BIND-005"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNEXPORTED",
+   "at": "count(3)"
+  }
+ ],
+ "note": "An unexported name of another package is SGO_E_UNEXPORTED whether or not its export data carries it (a recursive function is not inlined); check and build agree (T03)."
+}

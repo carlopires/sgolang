@@ -217,6 +217,17 @@ func Main(archInit func(*ssagen.ArchInfo)) {
 	// Parse and typecheck input.
 	noder.LoadPackage(flag.Args())
 
+	// S-Go: sgo check (D63) stops after the front end (parsing, admission, type checking, and
+	// the S-Go checks, which all report there): it writes an archive with the export data only,
+	// so dependents can be checked, and no code. The archive has no linker object, so it can
+	// never be linked.
+	if base.Flag.SGoCheck {
+		base.ExitIfErrors()
+		dumpobj1(base.Flag.LowerO, modeCompilerObj)
+		base.FlushErrors()
+		return
+	}
+
 	// As a convenience to users (toolchain maintainers, in particular),
 	// when compiling a package named "main", we default the package
 	// path to "main" if the -p flag was not specified.

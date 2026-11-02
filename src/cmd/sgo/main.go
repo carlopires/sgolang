@@ -57,7 +57,7 @@ func main() {
 
 func run(args []string) error {
 	if len(args) == 0 {
-		return usage("missing command (sgo build | run | lab | version)")
+		return usage("missing command (sgo build | run | check | lab | version)")
 	}
 	switch cmd, rest := args[0], args[1:]; cmd {
 	case "build":
@@ -73,6 +73,8 @@ func run(args []string) error {
 		return cmdFmt(rest)
 	case "lab":
 		return cmdLab(rest)
+	case "check":
+		return cmdCheck(rest)
 	default:
 		return usage("unknown command %q", cmd)
 	}
