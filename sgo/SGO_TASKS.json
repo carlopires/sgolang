@@ -730,7 +730,7 @@
         "W11"
       ],
       "risk": "high",
-      "status": "pending",
+      "status": "done",
       "plan_section": "11/W12",
       "deliverables": [
         "Fresh-context review and fixes",
@@ -750,10 +750,13 @@
         "S18",
         "S20"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w12/README.md",
+        "sgo/evidence/w12/review-findings.json"
+      ],
       "blockers": [],
       "commit": null,
-      "completion_note": "Implementation and executed evidence are required. Writing code or test descriptions does not pass this work package."
+      "completion_note": "Independent review R1-R14 (+R6b) fixed and verified by the reviewer on linux; spec 0.7.0 release registry; D76 guarantees, D77 legacy audit, D78 release qualification, D79 negative fixtures, D80 stress, D81 licensing in CI. Publishing a release is the owner's decision (D78)."
     }
   ],
   "language_policy": "One specification-defined S-Go language; no Go compatibility path. Bare go rejected; explicit nursery capabilities; missing contracts rejected transitively. Host/reference tools are external build dependencies.",

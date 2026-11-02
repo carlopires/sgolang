@@ -2299,9 +2299,11 @@
       ],
       "scenario": "Review actual diffs, root paths, lock order, unwind barriers, policies, and claims from a fresh context.",
       "expected": "All correctness/claim blockers are resolved or the release is explicitly withheld.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W12: passed - independent review by sgolang-reviewer (fresh context, linux/amd64): R1-R14 and R6b fixed with regression tests and mutants, each verified by the reviewer; sgo/evidence/w12/review-findings.json; sgo/evidence/w12/README.md"
+      ]
     },
     {
       "id": "Q02",
@@ -2314,9 +2316,11 @@
       ],
       "scenario": "Verify representative intentional orphan/duplicate-commit/bypass/replay-divergence fixtures.",
       "expected": "They fail for the intended reason; no false-green harness suppresses them.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W12: passed - test-negative.py: 15 plan 12.3 representatives fail with their specified code and clause, self-test changes each code; in sgo-w00 CI; sgo/evidence/w12/README.md"
+      ]
     },
     {
       "id": "Q03",
@@ -2329,9 +2333,11 @@
       ],
       "scenario": "Use release instructions/checksums in a clean environment.",
       "expected": "The supported toolchain/examples/replay can be built/run without hidden local state.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W12: passed - sgo-release run 41506985922: archives on three targets, source archive, combined diff, SHA256SUMS; verify-release.sh on fresh runners with no checkout (INSTALL.md); bootstrap from the source archive; sgo/evidence/w12/README.md"
+      ]
     },
     {
       "id": "Q04",
@@ -2344,9 +2350,11 @@
       ],
       "scenario": "Compare every published guarantee with task/test/evidence status.",
       "expected": "Every accepted feature and published guarantee has normative clauses, enforcement, and executed evidence. Unknown/unimplemented features are rejected, not merely listed outside guarantees; stack and bootstrap identities are explicit.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W12: passed - SGO_SPEC_ADMISSION.json 0.7.0 (30 admitted, 8 denied); guarantee-check.py in sgo-spec CI; sgo/evidence/w12/README.md"
+      ]
     },
     {
       "id": "S01",
@@ -2423,10 +2431,11 @@
       ],
       "scenario": "Adopt a specific frozen upstream clause, then change its content or omit a normative dependency; also try a blanket same-as-Go rule.",
       "expected": "Only a bounded, digest-locked, closed, conflict-resolved clause set can be admitted; drift and blanket inheritance fail review/admission.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages"
+        "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages",
+        "W12: passed - adoption-check.py with mutation cases in test-mutations.py; sgo/evidence/w12/README.md"
       ]
     },
     {
@@ -2572,7 +2581,8 @@
       "evidence": [
         "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages",
         "W02 part passed: sgo/evidence/w02/README.md",
-        "W05: passed - W05 part: TCB-P12..P16 in the versioned manifest, test-tcb.py, native-linkname (sgo/evidence/w05/README.md)"
+        "W05: passed - W05 part: TCB-P12..P16 in the versioned manifest, test-tcb.py, native-linkname (sgo/evidence/w05/README.md)",
+        "W12: passed - test-tcb.py: byte copies under user paths (R1), altered cached archive rebuilt (R8), pinned archive under a user import path refused (D-R1b); sgo/evidence/w12/README.md"
       ]
     },
     {
@@ -2696,11 +2706,12 @@
       ],
       "scenario": "Mark an unimplemented feature experimental/unsupported in documentation but leave an inherited execution path reachable.",
       "expected": "The negative fixture fails release qualification until the path rejects. Documentation and experimental labels cannot waive admission.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
         "W03: W03 part passed (W09/W12 release qualification) - every subset-0 denial has a reject fixture; admitted-but-unimplemented W04 operations fail closed with SpawnContractViolation (sgo/evidence/w03/README.md)",
-        "W09: W09 part passed - SGO-FILE-001 and SGO-NET-001 superseded with every access outside the new APIs still rejected; undeclared grants fail closed (sgo/evidence/w09/README.md)"
+        "W09: W09 part passed - SGO-FILE-001 and SGO-NET-001 superseded with every access outside the new APIs still rejected; undeclared grants fail closed (sgo/evidence/w09/README.md)",
+        "W12: passed - legacy-audit.py (D77): every flag and environment input of the shipped tools classified and tested, driver flags, release archive, strict scripts (R13, R14); sgo/evidence/w12/README.md"
       ]
     },
     {
@@ -2718,11 +2729,12 @@
       ],
       "scenario": "Change a spawn/effect clause without updating frontend checks, package summaries, manifest identities, or tests.",
       "expected": "Consistency/identity checks reject stale artifacts and block the release until specification, enforcement, and evidence are reconciled.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
         "W03: W03 part passed (W10/W12) - test-mutations (frozen clause change; amended registry refused by the toolchain); identity in packages, binaries, driver (sgo/evidence/w03/README.md)",
-        "W10: passed - test-mutations; the 0.6.0 freeze moved every identity (sgo/evidence/w10/README.md)"
+        "W10: passed - test-mutations; the 0.6.0 freeze moved every identity (sgo/evidence/w10/README.md)",
+        "W12: passed - spec-tool.py refuses a frozen clause changed without a version bump (SGO-FILE-002 v3), test-mutations amendment cases; sgo/evidence/w12/README.md"
       ]
     },
     {
@@ -2758,10 +2770,11 @@
       ],
       "scenario": "Compare claims of valid specification, static checking, runtime enforcement, model exploration, test evidence, and full functional proof.",
       "expected": "Each claim states its actual scope. Contract coverage is not mislabeled as proof of arbitrary program correctness, termination, or all schedules.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
       "evidence": [
-        "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages"
+        "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages",
+        "W12: passed - guarantee-check.py refuses proof claims and checks scope vocabulary and model bounds; sgo/evidence/w12/README.md"
       ]
     }
   ]

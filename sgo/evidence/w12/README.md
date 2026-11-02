@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | work_package_id | W12 |
-| state | in progress. Every review finding (R1–R12, R6b) is fixed and verified by the reviewer on linux/amd64; R13 is verified; R14 is fixed and awaiting the reviewer's re-check. D77, D78, D79 are done; D80 passed on darwin/arm64, on both linux targets in CI (`sgo-stress` run 41527740442), and on the reviewer's linux/amd64 host. Closing evidence is recorded below as it lands |
+| state | passed. Every review finding (R1–R14, R6b) is fixed and verified by the reviewer on linux/amd64 (final re-check at `b7017e333d`); no finding is open. D76–D81 done: guarantees and their check, the legacy audit, release qualification (`sgo-release` run 41506985922), negative-fixture honesty, stress (darwin/arm64 local; linux both targets in `sgo-stress` run 41527740442; the reviewer's linux/amd64 host), licensing. Linux CI at `b7017e333d`: `sgo-spec`, `sgo-w00` run 41533037108 passed on both runners, every step (conformance, legacy audit, negative fixtures, release install, gates, B03, clean tree) |
 | spec_version | 0.7.0 frozen (104 clauses: 98 frozen, 6 superseded): the release registry (D83) with 30 families admitted and 8 denied; amended SGO-TCB-002 v2, SGO-MEM-002 v2, SGO-PROC-004 v2, SGO-FILE-002 v3 (`sgo/spec/CHANGELOG.md`) |
 | admission identity | admission digest `3eb9134114d04921` (SHA-256 of `sgo/SGO_SPEC_ADMISSION.json`, recorded by the toolchain and every binary); registry `rows_digest` `f7289798757c5538` (R12) |
 | decisions | D75–D84 approved 2026-11-02 |
@@ -29,9 +29,9 @@
 | R11 | minor | a raced walk-mode `Create` that created a file reports `PathRaced` `b8176fd831` | verified |
 | R12 | minor (doc) | one meaning of admission digest; `spec-tool.py check` asserts it `b8176fd831` | verified |
 | R13 | minor | `make-release.py` refuses unknown arguments, never writes into the tree `17054fecb6` | verified |
-| R14 | minor | every evidence- or artifact-writing script refuses unknown arguments (`sgoargs.py`); `stress.py` records its options | fixed, re-check pending |
+| R14 | minor | every evidence- or artifact-writing script refuses unknown arguments (`sgoargs.py`); `stress.py` records its options `b7017e333d` | verified |
 
-The reviewer's closing summary lists what was not reviewed or only partly: the deep socket error and partial-write paths, the darwin syscall layer (no darwin host), the lab scheduler internals, the model as an independent model, the compiler lowering beyond conformance, and linux/arm64 (CI only). These are stated limits of this review, not claims.
+The reviewer's closing summary (and its final message: no open finding; additions since the summary were the 0.7.0 clause texts, D77, D79, D78 on a locally built archive, and D80 on its host) lists what was not reviewed or only partly: the deep socket error and partial-write paths, the darwin syscall layer (no darwin host), the lab scheduler internals, the model as an independent model, the compiler lowering beyond conformance, and linux/arm64 (CI only). These are stated limits of this review, not claims.
 
 ## Acceptance cases
 

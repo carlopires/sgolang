@@ -134,8 +134,13 @@ def main():
     sgoargs.check(flags={"--seeds": "value", "--count": "value", "--cpus": "value", "--skip-production": "bool",
                          "--out": "value"})  # strict command line (W12 R14)
     seeds, count, cpus = int(arg("--seeds", "1000")), int(arg("--count", "20")), arg("--cpus", "1,4,16")
+    # A reduced run never replaces the summary of the default run: its default name records how it
+    # differs (reviewer's note after R14).
+    suffix = "".join([f"-seeds{seeds}" if seeds != 1000 else "", f"-count{count}" if count != 20 else "",
+                      f"-cpus{cpus.replace(',', '_')}" if cpus != "1,4,16" else "",
+                      "-noprod" if "--skip-production" in sys.argv else ""])
     out = arg("--out", os.path.join(os.environ.get("SGO_OUT") or os.path.expanduser("~/.cache/sgolang/out"),
-                                    "evidence", "w12", f"stress-{GOOS}-{GOARCH}.json"))
+                                    "evidence", "w12", f"stress-{GOOS}-{GOARCH}{suffix}.json"))
     results = {"platform": f"{GOOS}/{GOARCH}", "skipped": SKIP, "lab": {}, "production": {},
                "options": {"seeds": seeds, "count": count, "cpus": cpus,
                            "skip_production": "--skip-production" in sys.argv}}

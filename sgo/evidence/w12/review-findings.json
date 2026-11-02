@@ -167,7 +167,7 @@
     {
       "id": "R14",
       "severity": "minor",
-      "status": "fixed",
+      "status": "verified",
       "finding": "stress.py (and other evidence-writing scripts) ignored unknown arguments: a misspelt reduction flag ran a different workload and recorded the default",
       "fix": "sgoargs.check: every script that writes evidence or artifacts (18) refuses an unknown argument with exit 2 before running, answers --help with exit 0, and refuses --opt=value forms its parser would misread; stress.py records its parsed options in the summary",
       "regression_test": "legacy-audit.py runs each of the 18 scripts with --bogus-flag (exit 2, nothing written, under 20 s) and --help (exit 0)"
@@ -267,5 +267,5 @@
       "status": "done in spec 0.7.0"
     }
   ],
-  "review_state": "all findings verified (R1-R10, R6b). Spec 0.7.0 freeze (ebefd11571) applied D-R1/R4/R5/R6/R8 and SR2; D77 legacy-audit.py (77ba1bfb25, 5a8111504a) and D79 test-negative.py (d13f44aef4) in CI; all sent for reviewer re-check (msg_584a524226cb4d5697b2a15b71454d51). Open: D77 remainder (sgo driver flag table, archive contents via make-release, D-R1b), D78, D80."
+  "review_state": "complete: every finding (R1-R14, R6b) verified by the reviewer on linux/amd64 at b7017e333d; no finding open"
 }
