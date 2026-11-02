@@ -516,3 +516,44 @@ func conservationRound(t *testing.T, capacity, seed int64) {
 		t.Fatalf("cap %d: not quiescent: reserved=%d senders=%d receivers=%d", capacity, reserved, s, r)
 	}
 }
+
+// TestSGoChanRingStable: a buffered channel queues values in the ring allocated when it was made;
+// 10 000 commit/receive pairs keep FIFO order, never replace the ring, and leave only queued values
+// in it (W12 R9: values were once appended to a slice under c.lock, which reallocated).
+func TestSGoChanRingStable(t *testing.T) {
+	root(t, func() {
+		ch := runtime.SGoChanNew(4)
+		addr, n, _ := runtime.SGoChanRing(ch)
+		if n != 4 || addr == 0 {
+			t.Fatalf("ring of a cap-4 channel: len %d", n)
+		}
+		send := func(v int) {
+			p, err := runtime.SGoReserve(ch)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := runtime.SGoCommit(p, v); err != nil {
+				t.Fatal(err)
+			}
+		}
+		next, want := 0, 0
+		for ; next < 3; next++ {
+			send(next)
+		}
+		for i := 0; i < 10000; i++ {
+			send(next)
+			next++
+			v, ok, err := runtime.SGoReceive(ch)
+			if err != nil || !ok || v != want {
+				t.Fatalf("receive %d: %d %v %v, want %d", i, v, ok, err, want)
+			}
+			want++
+		}
+		if a, m, live := runtime.SGoChanRing(ch); a != addr || m != 4 || live != 3 {
+			t.Errorf("ring after 10000 pairs: addr changed %v, len %d, live slots %d (want 3)", a != addr, m, live)
+		}
+		if r, _, _ := runtime.SGoChanRing(runtime.SGoChanNew(0)); r != 0 {
+			t.Errorf("a rendezvous channel has a ring")
+		}
+	})
+}

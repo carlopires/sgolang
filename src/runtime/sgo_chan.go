@@ -39,7 +39,9 @@ const (
 type sgoChan struct {
 	lock     mutex
 	cap      int64
-	queue    []unsafe.Pointer // committed values not yet received (C > 0), FIFO
+	buf      []unsafe.Pointer // ring of committed values not yet received (C > 0), FIFO; allocated at creation
+	head     int64            // index in buf of the oldest queued value
+	count    int64            // queued values
 	reserved int64            // reservations not yet terminal
 	closed   bool
 	senders  sgoWaitList
@@ -119,7 +121,7 @@ var (
 )
 
 func sgoChanNew(capacity int64) *sgoChan {
-	return &sgoChan{cap: capacity}
+	return &sgoChan{cap: capacity, buf: sgoChanBuf(capacity)}
 }
 
 // sgoChanClaimAll claims every waiting waiter of l (state Waiting -> Done), unlinks it, and adds it
@@ -244,7 +246,7 @@ func sgoChanReserve(c *sgoChan, t *sgoTask) (*sgoPermit, error) {
 			unlock(&c.lock)
 			return nil, sgoErrReserveClosed
 		}
-		if c.cap > 0 && int64(len(c.queue))+c.reserved < c.cap {
+		if c.cap > 0 && c.count+c.reserved < c.cap {
 			c.reserved++
 			sgoChanCheck(c)
 			unlock(&c.lock)
@@ -294,7 +296,7 @@ func sgoChanCommit(p *sgoPermit, v unsafe.Pointer) error {
 		wake = sgoPermitReleasePeer(p, wake)
 	case c.cap > 0:
 		p.state = sgoPermitCommitted
-		c.queue = append(c.queue, v)
+		c.qpush(v)
 		wake = sgoChanClaimAll(&c.recvs, wake)
 	default:
 		p.state = sgoPermitCommitted
@@ -370,10 +372,8 @@ func sgoChanReceive(c *sgoChan, t *sgoTask) (unsafe.Pointer, bool, error) {
 	w := &sgoChanWait{task: t}
 	lock(&c.lock)
 	for {
-		if c.cap > 0 && len(c.queue) > 0 {
-			v := c.queue[0]
-			c.queue[0] = nil
-			c.queue = c.queue[1:]
+		if c.cap > 0 && c.count > 0 {
+			v := c.qpop()
 			wake := sgoChanClaimAll(&c.senders, nil)
 			sgoChanCheck(c)
 			unlock(&c.lock)
@@ -423,10 +423,10 @@ func sgoChanCheck(c *sgoChan) {
 	if c.reserved < 0 {
 		throw("sgo: negative channel reservation count")
 	}
-	if c.cap > 0 && int64(len(c.queue))+c.reserved > c.cap {
+	if c.cap > 0 && c.count+c.reserved > c.cap {
 		throw("sgo: channel capacity exceeded")
 	}
-	if c.cap == 0 && len(c.queue) != 0 {
+	if c.cap == 0 && c.count != 0 {
 		throw("sgo: rendezvous channel holds a queued value")
 	}
 }
@@ -540,4 +540,37 @@ func sgo_chanReceive(ch, task unsafe.Pointer) (unsafe.Pointer, bool, error) {
 //go:linkname sgo_chanClose sgo.runtime_chanClose
 func sgo_chanClose(ch unsafe.Pointer) {
 	sgoChanClose((*sgoChan)(ch))
+}
+
+// sgoChanBuf allocates the value ring of a channel of capacity C when it is created, so queueing a
+// value needs no allocation while c.lock is held (W12 R9). A rendezvous channel (C == 0) has no ring.
+func sgoChanBuf(capacity int64) []unsafe.Pointer {
+	if capacity <= 0 {
+		return nil
+	}
+	return make([]unsafe.Pointer, capacity)
+}
+
+// qpush appends v to the ring; the caller holds c.lock and has checked count < cap.
+func (c *sgoChan) qpush(v unsafe.Pointer) {
+	if c.count >= int64(len(c.buf)) {
+		throw("sgo: channel ring overflow")
+	}
+	c.buf[(c.head+c.count)%int64(len(c.buf))] = v
+	c.count++
+}
+
+// qpop removes and returns the oldest queued value, clearing its slot so the GC does not keep a
+// received value alive; the caller holds c.lock and has checked count > 0.
+func (c *sgoChan) qpop() unsafe.Pointer {
+	v := c.buf[c.head]
+	c.buf[c.head] = nil
+	c.head = (c.head + 1) % int64(len(c.buf))
+	c.count--
+	return v
+}
+
+// qat returns the i-th oldest queued value (tests and diagnostics).
+func (c *sgoChan) qat(i int64) unsafe.Pointer {
+	return c.buf[(c.head+i)%int64(len(c.buf))]
 }

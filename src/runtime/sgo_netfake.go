@@ -152,13 +152,17 @@ func sgoFakeConnClose(h *sgoHandle) {
 	sgoChanClose(c.backlog)
 	// The pending connections are taken directly: closing must not depend on the closer's
 	// cancellation state, and a closed channel accepts no new ones.
-	lock(&c.backlog.lock)
-	q := c.backlog.queue
-	c.backlog.queue = nil
-	sgoChanCheck(c.backlog)
-	unlock(&c.backlog.lock)
-	for _, v := range q {
-		s := (*sgoFakeConn)(v)
+	// They are popped one at a time, so nothing is collected under the lock (W12 R9).
+	for {
+		lock(&c.backlog.lock)
+		if c.backlog.count == 0 {
+			sgoChanCheck(c.backlog)
+			unlock(&c.backlog.lock)
+			return
+		}
+		s := (*sgoFakeConn)(c.backlog.qpop())
+		sgoChanCheck(c.backlog)
+		unlock(&c.backlog.lock)
 		sgoChanClose(s.in)
 		sgoChanClose(s.out)
 	}

@@ -150,7 +150,23 @@ func SGoReceive(c *SGoChan) (int, bool, error) {
 	}
 	return *(*int)(v), true, nil
 }
-func SGoClose(c *SGoChan)                { sgoChanClose(c) }
+func SGoClose(c *SGoChan) { sgoChanClose(c) }
+
+// SGoChanRing reports the address of the value ring, its length, and how many of its slots hold a
+// value (a received value's slot is cleared) (W12 R9).
+func SGoChanRing(c *SGoChan) (addr uintptr, n int, live int) {
+	lock(&c.lock)
+	defer unlock(&c.lock)
+	if len(c.buf) == 0 {
+		return 0, 0, 0
+	}
+	for _, v := range c.buf {
+		if v != nil {
+			live++
+		}
+	}
+	return uintptr(unsafe.Pointer(&c.buf[0])), len(c.buf), live
+}
 func SGoPermitState(p *SGoPermit) string { return sgoPermitName(p.state) }
 
 // SGoChanQueued reports the values committed and not yet received.
@@ -158,8 +174,8 @@ func SGoChanQueued(c *SGoChan) []int {
 	lock(&c.lock)
 	defer unlock(&c.lock)
 	out := []int{}
-	for _, v := range c.queue {
-		out = append(out, *(*int)(v))
+	for i := int64(0); i < c.count; i++ {
+		out = append(out, *(*int)(c.qat(i)))
 	}
 	return out
 }

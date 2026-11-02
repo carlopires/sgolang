@@ -28,8 +28,8 @@ func sgoNativeTrySend(c *sgoChan, box unsafe.Pointer) (*sgoChanWait, int) {
 			return r, sgoDone
 		}
 	}
-	if int64(len(c.queue)) < c.cap {
-		c.queue = append(c.queue, box)
+	if c.count < c.cap {
+		c.qpush(box)
 		sgoChanCheck(c)
 		return nil, sgoDone
 	}
@@ -39,14 +39,12 @@ func sgoNativeTrySend(c *sgoChan, box unsafe.Pointer) (*sgoChanWait, int) {
 // sgoNativeTryRecv receives without waiting, under c.lock: the oldest queued value (refilling the
 // buffer from a waiting sender), a waiting sender's value, or closed (ok == false).
 func sgoNativeTryRecv(c *sgoChan) (box unsafe.Pointer, ok bool, wake *sgoChanWait, ready bool) {
-	if len(c.queue) > 0 {
-		box = c.queue[0]
-		c.queue[0] = nil
-		c.queue = c.queue[1:]
+	if c.count > 0 {
+		box = c.qpop()
 		for s := c.senders.first; s != nil; s = s.next {
 			if s.claim(sgoWaitDone) {
 				c.senders.remove(s)
-				c.queue = append(c.queue, s.box)
+				c.qpush(s.box)
 				s.box, wake = nil, s
 				sgoLabSelectWoken(s)
 				break
@@ -250,9 +248,9 @@ func sgoSelCanProceed(c *sgoChan, send bool) bool {
 				return true
 			}
 		}
-		return int64(len(c.queue)) < c.cap
+		return c.count < c.cap
 	}
-	if len(c.queue) > 0 {
+	if c.count > 0 {
 		return true
 	}
 	for s := c.senders.first; s != nil; s = s.next {
@@ -324,7 +322,7 @@ func sgoselectgo(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs in
 		// stream (D34, D43).
 		for i := range cas {
 			if sgoSelCanProceed(cas[i].c, i < nsends) {
-				arms = append(arms, src[i])
+				arms = append(arms, src[i]) // lock-alloc: ok (preallocated, bounded by len(cas))
 			}
 		}
 		sgoSortInt32(arms)

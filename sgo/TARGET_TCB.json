@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.6.0",
- "allowlist_digest": "287b30399f1beb8d602138ed2cbf81d614c8f4f04fc9654654898c2de85a6ea9",
+ "allowlist_digest": "52ae225d4525152fed8469ad01008aed34a4ed255f707497b9325911ae4cd906",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -4456,12 +4456,12 @@
   },
   {
    "path": "src/runtime/sgo_cancel.go",
-   "sha256": "37742353bf40ccec5d7a28bc6193bb6671bcacacff66df9674aed69c8a4f7732",
+   "sha256": "0e561700317bfdd8b444defe5ec22cc89b0f9592e9163000253984e3ea9d2ea9",
    "upstream_identical": false
   },
   {
    "path": "src/runtime/sgo_chan.go",
-   "sha256": "3b3e28ef0865297a3a636e41d1c47661c89e7677d773d6c8e3c5bb9909f511a7",
+   "sha256": "2c309167dd31553c2e741903043356a447b0bc8f9147ea1b5c3626b5cb2cefd6",
    "upstream_identical": false
   },
   {
@@ -4541,12 +4541,12 @@
   },
   {
    "path": "src/runtime/sgo_lab_run.go",
-   "sha256": "a9e366963eda5680cb437d8e6494a8f423864969d78e2c24b7d4c28c952f4bef",
+   "sha256": "86731be85a6ac9bae47bc7139be08a1857249e27fb193b13e966f2aa5c609640",
    "upstream_identical": false
   },
   {
    "path": "src/runtime/sgo_lab_sched.go",
-   "sha256": "fbe7816c7cc571128e8d0ccaa31a86c48f9c861b22588bf09e447e0d7d6d405c",
+   "sha256": "9a7a3ae8489fc9c618cbe3ba0f2c16e1b00582d0fbcacdfb27d8d502379f4edd",
    "upstream_identical": false
   },
   {
@@ -4556,12 +4556,12 @@
   },
   {
    "path": "src/runtime/sgo_native.go",
-   "sha256": "98ba58e1cee5a3fdfb16b204efef29bea2f823041016b0956daec89966747cc3",
+   "sha256": "c2eed5197a99042a8f5aa9c73abc4990357d2cd6fa20405dfcf76c1a0e817646",
    "upstream_identical": false
   },
   {
    "path": "src/runtime/sgo_native_ops.go",
-   "sha256": "2f7c124bc784ec1e5f339d1f89950fe59e8502e5df9d131cacb8c76c56e37110",
+   "sha256": "01eb985ef8fe94d9c1f00f2aa5907b93bfc34bcdc47a7cc5214c33cab2af4559",
    "upstream_identical": false
   },
   {
@@ -4581,7 +4581,7 @@
   },
   {
    "path": "src/runtime/sgo_netfake.go",
-   "sha256": "100d4a5f343adf7e1cd7bfb621fdafb49a8e21c0cc2a1a3b2ec631fbf813da34",
+   "sha256": "06a9746b721ded6654530740361f6c4fd654c0aed66777eb94344013407d03c5",
    "upstream_identical": false
   },
   {

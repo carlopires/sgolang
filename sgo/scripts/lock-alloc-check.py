@@ -7,15 +7,20 @@
 A line-based check over src/runtime/sgo_*.go (tests excluded). Within a function it tracks the
 locks taken (lock(&...), sgoSelLock) and released (unlock(&...), sgoSelUnlock) by indentation: an
 unlock inside a deeper block (an early-return branch, or an unlock-allocate-relock retry) releases
-the lock only until that block closes or the lock is retaken at that depth. It reports make(, new(
-and &sgoT{ composite literals on lines where a lock is held. A deliberate exception carries the
-comment `lock-alloc: ok (<reason>)` on the same line.
+the lock only until that block closes or the lock is retaken at that depth. It reports make(, new(,
+append( (slice growth, W12 R9 residual) and &sgoT{ composite literals on lines where a lock is held. A deliberate exception carries the
+comment `lock-alloc: ok (<reason>)` on the same line; a function whose doc comment says
+`lock-alloc: bounded (<reason>)` may append into storage it preallocated or sized.
+
+A function documented as running under a lock its caller holds ("under c.lock", "Called with
+l.lock held", "the caller holds c.lock") is checked as if that lock were held from its first line.
 """
 import glob, re, sys
 
 LOCK = re.compile(r'(?<![A-Za-z_])(lock\(&|sgoSelLock\()')
 UNLOCK = re.compile(r'(?<![A-Za-z_])(unlock\(&|sgoSelUnlock\()')
-ALLOC = re.compile(r'\bmake\(|\bnew\(|&sgo[A-Za-z0-9_]+\{')
+CALLER_HELD = re.compile(r'under c\.lock|[Cc]alled with [a-z.]*lock held|caller holds [a-z.]*lock\b|[Cc]alled under [a-z.]*lock')
+ALLOC = re.compile(r'\bmake\(|\bnew\(|\bappend\(|&sgo[A-Za-z0-9_]+\{')
 
 
 def indent(line):
@@ -25,11 +30,21 @@ def indent(line):
 def check(path):
     out = []
     stack = []  # (kind, depth): 'held' or 'rel'
+    doc = []
+    bounded = False
     for no, line in enumerate(open(path, encoding='utf-8'), 1):
         code = line.split('//')[0]
-        if line.startswith('func '):
-            stack = []
+        if line.startswith('//'):
+            doc.append(line)
             continue
+        if line.startswith('func '):
+            text = ' '.join(doc)
+            stack = [('held', 0)] if CALLER_HELD.search(text) else []
+            bounded = 'lock-alloc: bounded' in text
+            doc = []
+            continue
+        if not line.startswith('\t'):
+            doc = []
         if not code.strip():
             continue
         d = indent(line)
@@ -38,7 +53,8 @@ def check(path):
         if code.strip() == '}':
             continue
         held = bool(stack) and stack[-1][0] == 'held'
-        if held and ALLOC.search(code) and 'lock-alloc: ok' not in line:
+        m = ALLOC.search(code)
+        if held and m and 'lock-alloc: ok' not in line and not (bounded and m.group(0) == 'append('):
             out.append(f'{path}:{no}: allocation under a runtime lock: {line.strip()}')
         for m in re.finditer(r'(?<![A-Za-z_])(unlock\(&|sgoSelUnlock\(|lock\(&|sgoSelLock\()', code):
             if m.group(1) in ('unlock(&', 'sgoSelUnlock('):

@@ -360,6 +360,8 @@ func sgoDrainStart(s *sgoScope) {
 // (SGO-DRAIN-002): one DrainBudgetExceeded record naming the scope, its live children, and the
 // cause, then exit status 3. Stdout stays locked, so a write in progress completes and no later
 // write starts; deferred calls of live tasks do not run. It does not allocate.
+// lock-alloc: bounded (the record is built in a 512-byte stack buffer; the child list stops 64 bytes
+// short of its end and the rest is fixed text and numbers).
 func sgoDrainFire(arg any, _ uintptr, _ int64) {
 	s := arg.(*sgoScope)
 	lock(&s.lock)

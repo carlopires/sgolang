@@ -162,5 +162,5 @@ func sgomakechan(t *chantype, size int) *sgoChan {
 	if size < 0 {
 		panic(error(&sgoFailure{"InvalidArgument", "make of a channel with a negative capacity", ""}))
 	}
-	return &sgoChan{cap: int64(size), elem: t.Elem, native: true}
+	return &sgoChan{cap: int64(size), buf: sgoChanBuf(int64(size)), elem: t.Elem, native: true}
 }

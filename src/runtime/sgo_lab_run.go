@@ -134,7 +134,7 @@ func sgoLabSleep(t *sgoTask, ms int64) error {
 	}
 	sgoSleepers = r
 	lock(&l.lock)
-	l.timers = append(l.timers, sgoLabTimer{deadline: l.now + ms, id: l.nextTmr, t: t, r: r}) // capacity reserved
+	l.timers = append(l.timers, sgoLabTimer{deadline: l.now + ms, id: l.nextTmr, t: t, r: r}) // lock-alloc: ok (capacity reserved)
 	l.nextTmr++
 	unlock(&l.lock)
 	sgoLabBlock(t, "Sleep")

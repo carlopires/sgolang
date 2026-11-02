@@ -114,12 +114,18 @@
       "resolution": "sgoChanReserve allocates the permit once before lock(&c.lock) and reuses it across retries (the task's scope cannot change while it is blocked); the order of c.reserved++ and sgoPermitLink is unchanged. The audit of the other allocation sites under runtime locks (sgo_native_ops.go, sgo_ready.go) and the static check script are still open.",
       "fix_commit": null,
       "regression_test": "sgo/scripts/lock-alloc-check.py in sgo-spec CI; mutation: it reports all 9 sites in the pre-fix sources",
-      "fix": "no allocation under an S-Go runtime lock: sgoChanReserve (d329fa71b7); native send/recv, Event.Wait and limiter Acquire allocate the wait record with the lock released and retry; blocking select allocates sel/ws/park records before sgoSelLock"
+      "fix": "no allocation under an S-Go runtime lock: sgoChanReserve (d329fa71b7); native send/recv, Event.Wait and limiter Acquire allocate the wait record with the lock released and retry; blocking select allocates sel/ws/park records before sgoSelLock",
+      "residual": {
+        "by": "reviewer at 2bb64c63b6",
+        "finding": "append to c.queue under c.lock (sgoChanCommit, sgoNativeTrySend, sgoNativeTryRecv refill); queue[1:] dropped capacity so steady-state buffered channels reallocated under the lock",
+        "fix": "fixed ring allocated at channel creation (buf, head, count; qpush/qpop clear popped slots); netfake backlog drained one pop per lock hold; lock-alloc-check also reports append( and checks functions documented as running under the caller's lock",
+        "regression_test": "TestSGoChanRingStable (10 000 pairs: FIFO, ring identity, cleared slots; mutant without the slot clear fails); lock-alloc-check reports the 3 queue sites on the pre-fix sources"
+      }
     },
     {
       "id": "R6b",
       "severity": "minor",
-      "status": "fixed",
+      "status": "verified",
       "finding": "EPERM from a real openat2 (immutable or append-only file) switched resolution to the walk for the rest of the process",
       "fix": "availability decided once by sgoOpenat2Probe (openat2(dirfd, \".\", O_PATH, RESOLVE_BENEATH)); an open's EPERM maps through sgoErrKind",
       "regression_test": "TestSGoOpenat2EPERMIsAnOpenError (fault hook SGoOpenat2FaultOnce, openat2 open counter); linux only, skipped without openat2"
@@ -127,7 +133,7 @@
     {
       "id": "R10",
       "severity": "minor (doc)",
-      "status": "fixed",
+      "status": "verified",
       "finding": "runtime-design §5 said a channel lock is never held while taking another; native select holds every arm's lock",
       "fix": "§5 states the order: none, one, or one select's arm set in ascending address order (sgoSelLock, the only multi-lock site), then sgoSleepLock"
     }
