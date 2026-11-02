@@ -139,6 +139,22 @@
       "status": "verified",
       "finding": "runtime-design §5 said a channel lock is never held while taking another; native select holds every arm's lock",
       "fix": "§5 states the order: none, one, or one select's arm set in ascending address order (sgoSelLock, the only multi-lock site), then sgoSleepLock"
+    },
+    {
+      "id": "R11",
+      "severity": "minor",
+      "status": "fixed",
+      "finding": "walk-mode Create raced by a rename could create a file outside the grant and report PathRejected (NoEffect true): an unreported effect (D56, §12.3)",
+      "fix": "the walk creates exclusively first (O_EXCL), then opens without O_CREAT on EEXIST; a failed verification after this walk created the file returns PathRaced (NoEffect false), not undone; SGO-FILE-002 v3",
+      "regression_test": "TestSGoCreateRaceReported (forced walk): created -> PathRaced with an empty file outside; existing -> unchanged, NoEffect true; mutant (created never set) fails"
+    },
+    {
+      "id": "R12",
+      "severity": "minor (doc)",
+      "status": "fixed",
+      "finding": "two values were called admission digest: the registry's rows digest and the SHA-256 of the registry file the toolchain records",
+      "fix": "registry field renamed rows_digest; inventory.md prints the file digest the binaries record; spec-tool check requires identity.go (driver and sgoadmit) to hold the file digest and spec version",
+      "regression_test": "spec-tool.py check fails when identity.go is stale (seen before tcb-manifest --write)"
     }
   ],
   "self_findings": [

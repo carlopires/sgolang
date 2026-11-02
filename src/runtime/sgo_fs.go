@@ -122,14 +122,30 @@ func sgoResolve(root int32, path string, lastFlags, mode int32) (int32, string) 
 		fds := []int32{root}
 		ids := make([]sgoFileID, len(names))
 		kind := ""
+		created := false // this walk created the last name (W12 R11)
 		for i := range names {
 			flags := int32(sgoO_RDONLY | sgoO_DIRECTORY)
 			if i == len(names)-1 {
 				flags = lastFlags
 			}
-			fd := sgoOpenat(fds[i], cnames[i], flags|sgoO_NOFOLLOW|sgoO_CLOEXEC, mode)
-			for fd == -sgoEINTR {
-				fd = sgoOpenat(fds[i], cnames[i], flags|sgoO_NOFOLLOW|sgoO_CLOEXEC, mode)
+			open := func(flags int32) int32 {
+				fd := sgoOpenat(fds[i], cnames[i], flags|sgoO_NOFOLLOW|sgoO_CLOEXEC, mode)
+				for fd == -sgoEINTR {
+					fd = sgoOpenat(fds[i], cnames[i], flags|sgoO_NOFOLLOW|sgoO_CLOEXEC, mode)
+				}
+				return fd
+			}
+			var fd int32
+			if flags&sgoO_CREAT != 0 {
+				// Create in two steps, so the walk knows whether it created the file: exclusively
+				// first, then (it exists) without O_CREAT.
+				if fd = open(flags | sgoO_EXCL); fd >= 0 {
+					created = true
+				} else if fd == -sgoEEXIST {
+					fd = open(flags &^ sgoO_CREAT)
+				}
+			} else {
+				fd = open(flags)
 			}
 			if fd < 0 {
 				kind = sgoErrKind(fd)
@@ -174,6 +190,12 @@ func sgoResolve(root int32, path string, lastFlags, mode int32) (int32, string) 
 			return last, ""
 		}
 		sgoCloseFD(last)
+		if created {
+			// A concurrent rename moved the path out of the grant while this walk created the file
+			// there: the effect happened outside, and is reported (D56, W12 R11). It is not undone:
+			// removing it would act outside the grant too.
+			return -1, "PathRaced"
+		}
 	}
 	return -1, "PathRejected"
 }

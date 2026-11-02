@@ -5,7 +5,7 @@
 """spec-tool.py — validate S-Go specification clauses and keep the admission registry in sync (D18).
 
     spec-tool.py check    validate sgo/spec/*.md; fail if SGO_SPEC_ADMISSION.json is stale
-    spec-tool.py update   validate, then write clause IDs, digests, spec_version, admission_digest
+    spec-tool.py update   validate, then write clause IDs, digests, spec_version, rows_digest
     spec-tool.py list     print one line per clause
 
 Clause format (sgo/spec/README.md):
@@ -193,7 +193,11 @@ def computed_registry(registry, families, clauses, spec_version):
                                         if cs else None)
     reg["spec_version"] = spec_version
     canon = [{k: r.get(k) for k in ("id", "status", "subset0", "clause_ids", "normative_text_digest")} for r in reg["rows"]]
-    reg["admission_digest"] = hashlib.sha256(json.dumps(canon, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    # rows_digest identifies the admission decisions (status, scope, clause texts). The admission
+    # digest the toolchain and every binary record is the SHA-256 of the whole registry file
+    # (tcb-manifest.py writes it into identity.go; W12 R12).
+    reg.pop("admission_digest", None)
+    reg["rows_digest"] = hashlib.sha256(json.dumps(canon, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     return reg
 
 
@@ -239,10 +243,18 @@ def main():
             json.dump(new, f, indent=2, ensure_ascii=False)
             f.write("\n")
         print(f"spec-tool: updated registry: {len(clauses)} clauses, spec_version={spec_version}, "
-              f"admission_digest={new['admission_digest'][:16]}")
+              f"rows_digest={new['rows_digest'][:16]}")
     elif mode == "check":
         if new != registry:
             die("SGO_SPEC_ADMISSION.json is stale; run sgo/scripts/spec-tool.py update")
+        # The toolchain records the SHA-256 of the registry file as its admission digest (W12 R12).
+        adm = hashlib.sha256(open(REGISTRY, "rb").read()).hexdigest()[:16]
+        for gen in ("src/cmd/sgo/identity.go", "src/cmd/compile/internal/sgoadmit/identity.go"):
+            text = open(os.path.join(ROOT, gen)).read()
+            got = dict(re.findall(r'(SpecVersion|AdmissionDigest)\s*=\s*"([^"]*)"', text))
+            if got.get("AdmissionDigest") != adm or got.get("SpecVersion") != spec_version:
+                die(f"{gen} records spec {got.get('SpecVersion')} admission {got.get('AdmissionDigest')}, the registry is "
+                    f"spec {spec_version} admission {adm}; run sgo/scripts/tcb-manifest.py --write")
         st = {}
         for c in clauses:
             st[c["fields"].get("status")] = st.get(c["fields"].get("status"), 0) + 1

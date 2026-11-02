@@ -300,3 +300,48 @@ func TestSGoRenameRaces(t *testing.T) {
 		t.Error("the walk's race window was never reached")
 	}
 }
+
+// TestSGoCreateRaceReported: in walk mode, a Create whose parent another process moves out of the
+// grant while it resolves reports the file it created there as PathRaced (an effect happened:
+// NoEffect false), and leaves an existing file untouched with NoEffect true (W12 R11).
+func TestSGoCreateRaceReported(t *testing.T) {
+	runtime.SGoEnterRoot()
+	defer runtime.SGoLeaveRoot()
+	runtime.SGoForceWalk(true)
+	defer runtime.SGoForceWalk(false)
+	for _, existing := range []bool{false, true} {
+		base := t.TempDir()
+		grant, outside := filepath.Join(base, "grant"), filepath.Join(base, "outside")
+		for _, d := range []string{filepath.Join(grant, "a"), outside} {
+			if err := os.MkdirAll(d, 0o755); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if existing {
+			if err := os.WriteFile(filepath.Join(grant, "a", "f"), []byte("precious"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
+		moved := false
+		kind, noEffect := runtime.SGoDirOp(grant, "create", "a/f", func(site string) {
+			if site == "walk" && !moved {
+				moved = true
+				if err := os.Rename(filepath.Join(grant, "a"), filepath.Join(outside, "a")); err != nil {
+					t.Error(err)
+				}
+			}
+		})
+		if !moved {
+			t.Fatal("the walk's race window was never reached")
+		}
+		data, err := os.ReadFile(filepath.Join(outside, "a", "f"))
+		switch {
+		case err != nil:
+			t.Errorf("existing=%v: %v", existing, err)
+		case existing && (string(data) != "precious" || kind == "PathRaced" || !noEffect):
+			t.Errorf("existing file: %q, kind %q, NoEffect %v; want it unchanged with no effect reported", data, kind, noEffect)
+		case !existing && (len(data) != 0 || kind != "PathRaced" || noEffect):
+			t.Errorf("created file: %q, kind %q, NoEffect %v; want an empty file reported as PathRaced, NoEffect false", data, kind, noEffect)
+		}
+	}
+}
