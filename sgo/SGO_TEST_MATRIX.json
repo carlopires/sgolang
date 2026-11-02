@@ -2156,9 +2156,11 @@
       ],
       "scenario": "Inspect and test reserved, accessible, guarded, and resident stack regions.",
       "expected": "Layout matches OS/runtime contracts; no sysAlloc-as-PROT_NONE assumption remains.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W11: passed (probe lane) - reserve/guard/touched regions built with real OS APIs on darwin/arm64, linux/amd64, linux/arm64; no prototype (sgo/evidence/w11/README.md)"
+      ]
     },
     {
       "id": "F02",
@@ -2172,9 +2174,11 @@
       ],
       "scenario": "Use deep recursion and large frames that could cross a guard region.",
       "expected": "Overflow is controlled without writing into unrelated memory; guard-skipping is prevented.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W11: passed for the guard (probe lane) - write below lo faults on all 3 targets; compiled large-frame guard-skipping not tested, no prototype (sgo/evidence/w11/README.md)"
+      ]
     },
     {
       "id": "F03",
@@ -2190,7 +2194,9 @@
       "expected": "Stack changes do not remove required safepoints/preemption or block collector progress.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W11: not run - needs the vstack runtime prototype, which was not built (investigated_not_adopted at probe stage, user decision 2026-11-02; sgo/evidence/w11/README.md)"
+      ]
     },
     {
       "id": "F04",
@@ -2206,7 +2212,9 @@
       "expected": "Unwind/traceback and scope barriers remain correct.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W11: not run - needs the vstack runtime prototype, which was not built (investigated_not_adopted at probe stage, user decision 2026-11-02; sgo/evidence/w11/README.md)"
+      ]
     },
     {
       "id": "F05",
@@ -2222,7 +2230,9 @@
       "expected": "g0/signal stacks retain the validated upstream path unless separately qualified.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W11: not run - needs the vstack runtime prototype, which was not built (investigated_not_adopted at probe stage, user decision 2026-11-02; sgo/evidence/w11/README.md)"
+      ]
     },
     {
       "id": "F06",
@@ -2236,9 +2246,11 @@
       ],
       "scenario": "Create increasing numbers of mostly idle tasks under recorded limits.",
       "expected": "Report virtual space, RSS, mappings, commit/page-table overhead, and clean exhaustion behavior.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W11: passed (probe lane) - virtual size, RSS, mappings, page tables (note2), exhaustion at max_map_count 65530/262144/1048576 (mprotect ENOMEM) (sgo/evidence/w11/README.md)"
+      ]
     },
     {
       "id": "F07",
@@ -2252,9 +2264,11 @@
       ],
       "scenario": "Recycle experimental stacks and run pointer-rich workloads with GC pressure.",
       "expected": "No stale data/reference/state reuse or incorrect accounting.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W11: passed (probe lane) - linux MADV_DONTNEED zeroes (0 stale pages); darwin MADV_FREE_REUSABLE keeps old data, recorded as a cost (sgo/evidence/w11/README.md)"
+      ]
     },
     {
       "id": "F08",
@@ -2268,9 +2282,11 @@
       ],
       "scenario": "Compare preregistered representative workloads with the growable-stack baseline.",
       "expected": "Adopt only after correctness and meaningful benefit; otherwise record an evidence-backed not-adopted/deferred outcome.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W11: investigated_not_adopted - layout floor 2-6x worse per idle task than the W10 baseline; D70 threshold unreachable (sgo/evidence/w11/README.md)"
+      ]
     },
     {
       "id": "Q01",

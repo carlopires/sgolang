@@ -700,7 +700,7 @@
         "W10"
       ],
       "risk": "very_high",
-      "status": "pending",
+      "status": "investigated_not_adopted",
       "plan_section": "11/W11",
       "deliverables": [
         "Isolated prototype or evidence-backed feasibility report",

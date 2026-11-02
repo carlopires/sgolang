@@ -1,0 +1,11 @@
+{"exit":2,"guard":65536,"mode":"guard","page":4096,"signal":"signal -1","signaled":false}
+{"advice":4,"lo":"0xfffbe2600000","madvise_error":"\u003cnil\u003e","mode":"reuse","pages":2048,"pages_with_old_data":0,"rss_after":2777088,"rss_before":11124736}
+{"max_map_count":262144,"event":"checkpoint","guard":65536,"maps":2027,"mode":"density","n":1000,"page":4096,"rss":7090176,"secs":0.005891481,"size":8388608,"vsz":9778434048}
+{"max_map_count":262144,"event":"checkpoint","guard":65536,"maps":4027,"mode":"density","n":2000,"page":4096,"rss":12115968,"secs":0.012204,"size":8388608,"vsz":18232578048}
+{"max_map_count":262144,"event":"checkpoint","guard":65536,"maps":8027,"mode":"density","n":4000,"page":4096,"rss":21913600,"secs":0.024409969,"size":8388608,"vsz":35140866048}
+{"max_map_count":262144,"event":"checkpoint","guard":65536,"maps":16028,"mode":"density","n":8000,"page":4096,"rss":39804928,"secs":0.04835211,"size":8388608,"vsz":68957835264}
+{"max_map_count":262144,"event":"checkpoint","guard":65536,"maps":32029,"mode":"density","n":16000,"page":4096,"rss":73646080,"secs":0.097792532,"size":8388608,"vsz":136591249408}
+{"max_map_count":262144,"event":"checkpoint","guard":65536,"maps":64029,"mode":"density","n":32000,"page":4096,"rss":141529088,"secs":0.196789673,"size":8388608,"vsz":271857553408}
+{"max_map_count":262144,"event":"checkpoint","guard":65536,"maps":128030,"mode":"density","n":64000,"page":4096,"rss":279203840,"secs":0.389474431,"size":8388608,"vsz":542390439936}
+{"max_map_count":262144,"event":"checkpoint","guard":65536,"maps":256030,"mode":"density","n":128000,"page":4096,"rss":554209280,"secs":0.784424393,"size":8388608,"vsz":1083455655936}
+{"max_map_count":262144,"error":"mprotect: cannot allocate memory","event":"exhausted","maps":262143,"mode":"density","n":131057,"rss":599998464,"secs":0.86250258,"vsz":1109299974144}
