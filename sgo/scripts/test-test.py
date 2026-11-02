@@ -76,6 +76,14 @@ func TestLeak(t *sgo.T) error {
 	return err
 }
 
+func TestLeakAndError(t *sgo.T) error {
+	ch := sgo.NewChannel[int](1)
+	if _, err := ch.Reserve(t.Context()); err != nil {
+		return err
+	}
+	return sgo.NewError("error after a leak")
+}
+
 func TestGrant(t *sgo.T) error {
 	s, err := t.Context().Dir("data").ReadFile("seed.txt")
 	if err != nil {
@@ -157,7 +165,7 @@ def main():
         out = r.stdout
         check(r.returncode == 1, f"sgo test ./calc: exit {r.returncode}, want 1: {r.stderr.strip()[:300]!r}")
         want = {"TestAdd": "PASS", "TestReturnsError": "FAIL", "TestTempDir": "PASS", "TestTempDirAgain": "PASS",
-                "TestLeak": "FAIL", "TestGrant": "PASS", "TestStdout": "PASS", "TestDivZero": "FAIL"}
+                "TestLeak": "FAIL", "TestLeakAndError": "FAIL", "TestGrant": "PASS", "TestStdout": "PASS", "TestDivZero": "FAIL"}
         got = dict((m.group(2), m.group(1)) for m in re.finditer(r"^--- (PASS|FAIL): (\S+) \(", out, re.M))
         check(got == want, f"results {got}, want {want}")
         check(list(got) == list(want), f"tests ran in order {list(got)}, want source order")
@@ -165,6 +173,9 @@ def main():
         check("    about to fail" in out, "T.Log line of a failing test not shown")
         check('"kind":"MainError","message":"deliberate failure"' in out, "MainError record of a failing test not shown")
         check('"kind":"LeakedWork"' in out and '"kind":"PermitAbandoned"' in out, "leaked permit not reported as LeakedWork with its chain")
+        check(re.search(r'"kind":"MainError","message":"error after a leak".*"chain":\[\{"kind":"PermitAbandoned"', out),
+              "an error after a leak is not the primary outcome with the abandoned permit in its chain (SGO-TEST-003)")
+        check(out.count('"kind":"LeakedWork"') == 1, "LeakedWork reported for a test that returned an error")
         check('"kind":"DivideByZero"' in out or "DivideByZero" in out, "checked failure of a test not shown")
         check("written to stdout" not in out, "output of a passing test shown without -v")
         check(re.search(r"^FAIL\texample\.com/tm/calc\t", out, re.M), "package FAIL line missing")

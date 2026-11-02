@@ -46,7 +46,7 @@ func sgoExitMain(v any) {
 	if t == nil || t.id != 0 || len(t.nest) != 0 {
 		sgoDefect("main returned with an open nursery or outside the root task") // OWN-3
 	}
-	sgoTestEnd(t) // test binaries only: obligations the test left fail it with LeakedWork (D64)
+	leaked := sgoTestEnd(t, v != nil) // test binaries only: obligations the test left (D64)
 	if v == nil {
 		if sgoLab != nil {
 			sgoProgramExit(0, "") // a lab binary ends here, after the trace is written
@@ -57,7 +57,7 @@ func sgoExitMain(v any) {
 	if !ok {
 		sgoDefect("main returned a non-error value")
 	}
-	sgoWriteRecord(sgoFailureInfo{"MainError", err.Error(), ""}, nil, sgoOrigin{})
+	sgoWriteRecord(sgoFailureInfo{"MainError", err.Error(), ""}, leaked, sgoOrigin{})
 	sgoProgramExit(1, "MainError")
 }
 

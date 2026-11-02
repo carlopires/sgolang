@@ -23,3 +23,25 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §16, the user's naming decision (d
 - **implementation_coverage:** gate level only — `sgo/scripts/sgo-target` denies every request (W00); the driver is W03.
 - **executed_evidence:** W00 gate checks passed on all three targets.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
+
+### SGO-TOOL-002 — sgo check
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-TOOL-001, SGO-IMP-001, SGO-IMP-002, SGO-ERR-001; D63.
+- **grammar_and_types:** `sgo check [-json] [packages]`, where a package is a directory of the module or `./...` (every package of the module, excluding `testdata`, `_`- and `.`-prefixed directories, and nested modules); the default is the current directory. Any other flag is `SGO_E_USAGE`.
+- **preconditions:** The working directory is inside a module (SGO-IMP-001).
+- **evaluation_and_value_semantics:** `check` runs the same front end as `build` — parsing, admission, type checking, and every compile-time S-Go check — on each requested package and its module dependencies, in dependency order, and stops before code generation. It reports exactly the diagnostics `build` would report for the same package (codes, positions, messages; SGO-ERR-001), and exits 0 iff `build` of that package would compile. `_test.sgo` files are not part of any package for `check` (SGO-TEST-002). With `-json`, each diagnostic is one JSON object per line with `file`, `line`, `column`, `code`, `message`.
+- **ownership_and_lifecycle:** `check` writes nothing in the module and produces no binary; intermediate export data stays in a temporary directory removed at exit.
+- **effect_and_capability_requirements:** As SGO-TOOL-001: no network access, no `go` binary.
+- **concurrency_and_memory_order:** n/a — toolchain.
+- **allowed_nondeterminism:** None: the output for identical inputs is identical.
+- **failure_and_partial_progress:** A package whose dependency does not check is not checked; its dependents report nothing further. The exit status is 1 if any package has a diagnostic, 2 for usage errors.
+- **cancellation_and_cleanup:** n/a — toolchain.
+- **compile_link_checks:** All of the compile-time checks of the packages checked; no link-time check (SGO-IMP-002 contract and TCB digest checks of the link are not run).
+- **runtime_guards:** n/a — toolchain.
+- **tcb_assumptions:** The driver and compiler as in SGO-TOOL-001.
+- **positive_tests:** T03; `sgo/scripts/test-check.py` (every conformance case: check and build agree).
+- **negative_tests:** T03; `sgo/scripts/test-check.py` (rejection cases report identical diagnostics; a dependency that does not check stops its dependents).
+- **implementation_coverage:** `src/cmd/sgo/check.go`; compiler flag `-sgocheck` (stops after type checking, writing export data only).
+- **executed_evidence:** PENDING — W10 evidence record.
+- **supported_execution_configurations:** production (lab binaries are produced only by `sgo lab`).

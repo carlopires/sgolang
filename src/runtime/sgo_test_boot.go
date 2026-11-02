@@ -78,24 +78,29 @@ func sgoTestBoot() {
 	}
 }
 
-// sgoTestEnd resolves the root's obligations at the end of a test and fails the test if any was
-// left behind (D64).
-func sgoTestEnd(t *sgoTask) {
+// sgoTestEnd resolves the root's obligations at the end of a test (D64, SGO-TEST-003). If the test
+// returned nil and left any, it fails the test with LeakedWork; if it returned an error, that stays
+// the primary outcome and the abandoned obligations are returned for its record's chain.
+func sgoTestEnd(t *sgoTask, returnedErr bool) []sgoFailureInfo {
 	if sgoTestBuild != "test" {
-		return
+		return nil
 	}
 	before, from := t.abandoned, len(t.entries)
 	sgoPermitsResolve(t, nil, true) // permits, tokens, and handles the test left open
 	leaked := t.abandoned - before
 	if leaked == 0 {
-		return
+		return nil
 	}
 	chain := make([]sgoFailureInfo, 0, len(t.entries)-from)
 	for _, e := range t.entries[from:] {
 		chain = append(chain, e.info)
 	}
+	if returnedErr {
+		return chain
+	}
 	sgoWriteRecord(sgoFailureInfo{"LeakedWork", "the test left " + sgoItoa(uint64(leaked)) + " obligation(s) unresolved (D64)", ""}, chain, sgoOrigin{})
 	sgoProgramExit(1, "LeakedWork")
+	return nil
 }
 
 // Package sgo entry points (src/sgo/test.go).

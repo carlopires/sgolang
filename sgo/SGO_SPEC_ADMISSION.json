@@ -2,7 +2,7 @@
   "schema_version": 1,
   "plan_version": "2.0",
   "spec_version": "0.5.0",
-  "admission_digest": "f9a7bfd0b6abd1dcd16b62eef19cf4541f7402099fb0a2793470a3cffa8668f1",
+  "admission_digest": "31d608973ae0f9d7ebb14e92476c26904e290ff59db9b94fce42fd7ba211edc5",
   "status": "subset0_frozen_not_admitted",
   "warning": "Spec 0.1.0 is frozen: every row's clauses are fixed by digest. No row is admitted: admission requires implementation, enforcement, and executed evidence (constitution §6), starting in W03.",
   "default_decision": "reject",
@@ -998,9 +998,10 @@
       "implementation_owner_work_package": "W10",
       "status": "specified_not_admitted",
       "clause_ids": [
-        "SGO-TOOL-001"
+        "SGO-TOOL-001",
+        "SGO-TOOL-002"
       ],
-      "normative_text_digest": "72f38f2e6f452964d9cb15c4024a690f1845d932ec29201e585a88a594c7d7e3",
+      "normative_text_digest": "4eb1cdc6cee16ded78477888ca7aa2674cf116c2b9de54894df923c3c2293233",
       "admitted_in": [],
       "acceptance_case_ids": [
         "T01",
@@ -1013,13 +1014,16 @@
       "evidence": [],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-TOOL-001": "a5153f1fc319ffcac0a4276a8ad0be8cda9ead285e9a914fa529625af08e3fb8"
+        "SGO-TOOL-001": "a5153f1fc319ffcac0a4276a8ad0be8cda9ead285e9a914fa529625af08e3fb8",
+        "SGO-TOOL-002": "2e99353ef01a8a8cfe2c30f1ab556b66d89ca81b00993e1951b06bc667356fe8"
       },
       "clause_status": {
-        "SGO-TOOL-001": "frozen"
+        "SGO-TOOL-001": "frozen",
+        "SGO-TOOL-002": "draft"
       },
       "clause_versions": {
-        "SGO-TOOL-001": 1
+        "SGO-TOOL-001": 1,
+        "SGO-TOOL-002": 1
       }
     },
     {
@@ -1396,9 +1400,11 @@
       "implementation_owner_work_package": "W03",
       "status": "specified_not_admitted",
       "clause_ids": [
-        "SGO-TEST-001"
+        "SGO-TEST-001",
+        "SGO-TEST-002",
+        "SGO-TEST-003"
       ],
-      "normative_text_digest": "18be935cf7bf07246c7a956325d104117e5ffb2e39509e5bc845b654bb3234a6",
+      "normative_text_digest": "ff7cd16875aac7a0ac898074fdf62bd8560ddec5d129cc4cd28eaed541cd431c",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S01",
@@ -1408,13 +1414,19 @@
       "decision_refs": "D10",
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-TEST-001": "db988520f433af67d5245dc178a5b0cb25eb0b5c99b3fdee7d4edc0fc0f11a24"
+        "SGO-TEST-001": "db988520f433af67d5245dc178a5b0cb25eb0b5c99b3fdee7d4edc0fc0f11a24",
+        "SGO-TEST-002": "10508b9f2097a9d2e7e7e86ee010082ce08cbd732ef09e07a95af0627c288112",
+        "SGO-TEST-003": "9543b4b70e8882950dd49a6680856b520e27b3bd620c47862f8bdec67f85ca1a"
       },
       "clause_status": {
-        "SGO-TEST-001": "frozen"
+        "SGO-TEST-001": "frozen",
+        "SGO-TEST-002": "draft",
+        "SGO-TEST-003": "draft"
       },
       "clause_versions": {
-        "SGO-TEST-001": 1
+        "SGO-TEST-001": 1,
+        "SGO-TEST-002": 1,
+        "SGO-TEST-003": 1
       }
     }
   ],
