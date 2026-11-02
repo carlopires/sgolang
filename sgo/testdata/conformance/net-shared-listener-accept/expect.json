@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-NET-002",
+  "SGO-FILE-003"
+ ],
+ "exit": 0,
+ "stdout": "4 clients served by 4 concurrent acceptors\n",
+ "note": "Before the fix, two tasks waiting in Accept on one handle ended the program with RuntimeDefect \"runtime: double wait\" (found by the W10 service example)."
+}

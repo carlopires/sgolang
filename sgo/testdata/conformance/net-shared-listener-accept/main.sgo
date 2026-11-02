@@ -1,0 +1,51 @@
+package main
+
+import "sgo"
+
+// Four tasks accept on one lent listener at the same time, each until it has served one client:
+// waits on a shared handle take turns in the poller (one waiter per descriptor and direction).
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	l, err := root.Listen("unix:shared.sock")
+	if err != nil {
+		return err
+	}
+	nursery (n) {
+		ll := l.LendTo(n)
+		for k := 0; k < 4; k++ {
+			n.Spawn(func(task *sgo.Context) error {
+				c, aerr := ll.Accept()
+				if aerr != nil {
+					return aerr
+				}
+				if _, werr := c.Write("served"); werr != nil {
+					return werr
+				}
+				return c.Close()
+			})
+		}
+		if serr := root.Sleep(50); serr != nil {
+			return serr
+		}
+		for i := 0; i < 4; i++ {
+			c, derr := root.Dial("unix:shared.sock")
+			if derr != nil {
+				return derr
+			}
+			got, rerr := c.Read(100)
+			if rerr != nil {
+				return rerr
+			}
+			if got != "served" {
+				return sgo.NewError("reply " + got)
+			}
+			if cerr := c.Close(); cerr != nil {
+				return cerr
+			}
+		}
+	}
+	if cerr := l.Close(); cerr != nil {
+		return cerr
+	}
+	return out.WriteString("4 clients served by 4 concurrent acceptors\n")
+}

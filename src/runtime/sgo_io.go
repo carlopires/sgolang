@@ -47,9 +47,12 @@ type sgoHandle struct {
 	closed   bool
 	lentTo   []*sgoScope  // nurseries the handle is lent to (touched by the owner)
 	ops      atomic.Int32 // operations in progress
-	name     string       // for messages: the path or address
-	prev     *sgoHandle   // the owner's open handles
-	next     *sgoHandle
+	// Sockets: whether a task is waiting in the poller to read (Read, Accept) or to write. The
+	// poller keeps one waiter per descriptor and direction, so other tasks wait for the turn.
+	awaitR, awaitW atomic.Uint32
+	name           string     // for messages: the path or address
+	prev           *sgoHandle // the owner's open handles
+	next           *sgoHandle
 }
 
 // sgoIOErr is the result of a failed operation: its kind and the bytes transferred before it.

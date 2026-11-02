@@ -51,6 +51,21 @@ func sgoNetWakeAll(wake *sgoNetWait) {
 // sgoNetAwait waits until h's socket is ready in mode ('r' or 'w'), or the task is cancelled.
 func sgoNetAwait(h *sgoHandle, mode int) *sgoIOErr {
 	t := sgoCurrent()
+	// The poller has one waiter per descriptor and direction ("double wait" otherwise): tasks
+	// sharing a handle, such as several workers accepting on one lent listener, take turns. A task
+	// that finds the turn taken sleeps briefly, as a cancellation point, and its caller retries the
+	// operation (which, still not ready, comes back here).
+	turn := &h.awaitR
+	if mode == 'w' {
+		turn = &h.awaitW
+	}
+	if !turn.CompareAndSwap(0, 1) {
+		if err := sgoSleepFor(t, 1); err != nil {
+			return &sgoIOErr{"Cancelled", 0}
+		}
+		return nil
+	}
+	defer turn.Store(0)
 	r := &sgoNetWait{task: t, pd: h.pd, mode: mode}
 	lock(&sgoSleepLock)
 	if sgoOuterCancelled(t) != nil {
