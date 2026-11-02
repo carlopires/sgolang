@@ -54,10 +54,11 @@
       "title": "A captured named result is reassigned by return <operands>",
       "location": "types2/sgo_flow.go sgoAssignments",
       "clause": "SGO-MEM-001, SGO-MEM-002",
-      "status": "fixed",
+      "status": "verified",
       "resolution": "sgoAssignments treats a return with operands as assigning every named result of its innermost enclosing function (FuncDecl or FuncLit, tracked with a stack during Inspect) and reports SGO_E_CAPTURE_NOT_FINAL at the return when one is captured. A bare return still assigns nothing. ctl-defer-assigns-named-result now also expects the diagnostic at 'return 1, 2', which is correct per SGO-MEM-002 (the deferred literal captures b and the return assigns it). Recording the implicit-assignment forms in SGO-MEM-002 compile_link_checks is normative text, deferred to the SR2 version change (doc item D-R5).",
-      "fix_commit": null,
-      "regression_test": "conformance mem-capture-named-result-return (FuncDecl), mem-capture-named-result-return-literal (FuncLit), mem-capture-named-result-bare-return (run, exit 0); ctl-return-operands-nursery unchanged"
+      "fix_commit": "f35be2e975",
+      "regression_test": "conformance mem-capture-named-result-return (FuncDecl), mem-capture-named-result-return-literal (FuncLit), mem-capture-named-result-bare-return (run, exit 0); ctl-return-operands-nursery unchanged",
+      "verified_by": "reviewer at f35be2e975 (linux/amd64): probes p8, p9 rejected; p10a (multi-value return, only b captured) rejected once naming b; p10b (nested literal return) not flagged; conformance 339/339; test-check 323; second diagnostic in ctl-defer-assigns-named-result agreed as correct"
     },
     {
       "id": "R6",
