@@ -29,6 +29,8 @@ import subprocess
 import sys
 import tempfile
 
+from sgotool import buildid
+
 ROOT = subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip()
 SPEC_VERSION = open(os.path.join(ROOT, "sgo", "spec", "VERSION")).read().strip()
 PLAT = {"Darwin": "darwin", "Linux": "linux"}[os.uname().sysname] + "_" + \
@@ -102,7 +104,7 @@ def main():
 
         def link(lib, main_a):
             return run([os.path.join(TOOLS, "link"), "-o", os.path.join(tmp, "out"), "-importcfg",
-                        importcfg({"example.com/idt/lib": lib}), "-buildmode=exe", main_a], tmp, env, False)
+                        importcfg({"example.com/idt/lib": lib}), "-buildmode=exe", buildid(), main_a], tmp, env, False)
 
         v1, main_a = os.path.join(tmp, "lib1.a"), os.path.join(tmp, "main.a")
         compile_lib(LIB_V1, v1)

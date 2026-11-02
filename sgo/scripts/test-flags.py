@@ -20,6 +20,8 @@ import subprocess
 import sys
 import tempfile
 
+from sgotool import buildid
+
 ROOT = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 SPEC_VERSION = open(os.path.join(ROOT, "sgo", "spec", "VERSION")).read().strip()
 GOOS = {"Darwin": "darwin", "Linux": "linux"}[platform.system()]
@@ -34,6 +36,16 @@ WANT_BAD = ["main.sgo:4:2: SGO_E_UNADMITTED", "main.sgo:12:2: SGO_E_UNSTRUCTURED
 
 def run(args, cwd, env):
     return subprocess.run(args, cwd=cwd, env=env, capture_output=True, text=True)
+
+
+def refused(r, out_file, want="SGO_E_USAGE"):
+    """'' if the tool refused with want (None: any refusal) and wrote nothing, else the problem."""
+    out = r.stdout + r.stderr
+    if r.returncode == 0 or want is not None and want not in out:
+        return f"exit {r.returncode}, want {want}:\n{out}"
+    if out_file and os.path.exists(out_file):
+        return f"refused but wrote {out_file}"
+    return ""
 
 
 def main():
@@ -61,16 +73,13 @@ def main():
         bad = os.path.join(tmp, "bad")
         os.makedirs(bad)
         open(os.path.join(bad, "main.sgo"), "w").write(BAD)
+        # Admitted command lines (the driver's flags) still report the S-Go denials.
         variants = [
             ("no flags", [], {}),
-            ("-std", ["-std"], {}),
-            ("-+ (compiling runtime)", ["-+"], {}),
-            ("-lang=go1.21", ["-lang=go1.21"], {}),
-            ("-d=checkptr=0", ["-d=checkptr=0"], {}),
             ("-complete omitted", None, {}),
-            ("GOEXPERIMENT=noregabiargs", [], {"GOEXPERIMENT": "noregabiargs"}),
             ("GODEBUG=panicnil=1", [], {"GODEBUG": "panicnil=1"}),
             ("-sgotestmain", ["-sgotestmain"], {}),  # admits only sgo.StartTest (D69)
+            ("-m=2 (diagnostic output only)", ["-m=2"], {}),
         ]
         for label, flags, extra in variants:
             base = ["-o", os.path.join(tmp, "x.a"), "-p", "main", "-pack", "-importcfg", cfgp]
@@ -79,6 +88,23 @@ def main():
             out = r.stdout + r.stderr
             if r.returncode == 0 or not all(w in out for w in WANT_BAD):
                 problems.append(f"compile {label}: exit {r.returncode}, want both S-Go denials:\n{out}")
+        # Every other flag or compiler setting is refused before anything is compiled (D77, W12 R3).
+        compile_refused = [[f] for f in ("-std", "-+", "-lang=go1.21", "-d=checkptr=0", "-wb=false", "-B", "-N",
+                                         "-l", "-race", "-spectre=all", "-dynlink", "-shared", "-d=ssa/check/off",
+                                         "-smallframes", "-asan", "-msan", "-live", "-S")]
+        compile_env = [{"GOEXPERIMENT": "noregabiargs"}, {"GOCOMPILEDEBUG": "loopvarhash=1"}]
+        compile_env.append({"GOAMD64": "v3"} if GOARCH == "amd64" else {"GOARM64": "v8.1"})
+        # Upstream's flag parsing already rejects these on some platforms, before S-Go's check runs.
+        upstream_rejects = {"-spectre=all", "-asan", "-msan"}
+        for flags, extra in [(f, {}) for f in compile_refused] + [([], e) for e in compile_env]:
+            out_a = os.path.join(tmp, "refused.a")
+            if os.path.exists(out_a):
+                os.remove(out_a)
+            r = run([os.path.join(TOOLS, "compile"), "-o", out_a, "-p", "main", "-pack", "-complete",
+                     "-importcfg", cfgp] + flags + ["main.sgo"], mod, {**env, **extra})
+            want = None if set(flags) & upstream_rejects else "SGO_E_USAGE"
+            if msg := refused(r, out_a, want):
+                problems.append(f"compile {' '.join(flags) or extra}: {msg}")
         r = run([os.path.join(TOOLS, "compile"), "-o", os.path.join(tmp, "x.a"), "-p", "runtime", "-pack",
                  "-importcfg", cfgp, "-+", "-std", "main.sgo"], bad, env)
         if r.returncode == 0 or "SGO_E_TCB_DIGEST" not in r.stdout + r.stderr:
@@ -97,7 +123,7 @@ def main():
         if r.returncode != 0:
             sys.exit(f"test-flags: compile of the valid program failed:\n{r.stdout}{r.stderr}")
         r = run([os.path.join(TOOLS, "link"), "-o", os.path.join(tmp, "ok"), "-importcfg", cfgp,
-                 "-buildmode=exe", main_a], tmp, env)
+                 "-buildmode=exe", buildid(), main_a], tmp, env)
         if r.returncode != 0:
             sys.exit(f"test-flags: plain link failed:\n{r.stdout}{r.stderr}")
         # D69: -sgotestmain compiles only package main, and such a package links only as the main
@@ -112,24 +138,46 @@ def main():
         if r.returncode != 0:
             problems.append(f"compile -sgotestmain -p main failed:\n{r.stdout}{r.stderr}")
         for label, flags, a in (("testmain without -sgotest", [], tm_a), ("-sgotest with a production main", ["-sgotest"], main_a)):
-            r = run([os.path.join(TOOLS, "link"), "-o", os.path.join(tmp, "t"), "-importcfg", cfgp, "-buildmode=exe"] +
-                    flags + [a], tmp, env)
+            r = run([os.path.join(TOOLS, "link"), "-o", os.path.join(tmp, "t"), "-importcfg", cfgp, "-buildmode=exe",
+                     buildid("test" if flags else None)] + flags + [a], tmp, env)
             if r.returncode == 0 or "SGO_E_SPEC_MISMATCH" not in r.stdout + r.stderr:
                 problems.append(f"link {label}: want SGO_E_SPEC_MISMATCH:\n{r.stdout}{r.stderr}")
-        refused = [("-buildmode=c-shared", ["-buildmode=c-shared"]),
+        refused_link = [("-buildmode=c-shared", ["-buildmode=c-shared"]),
                    ("-buildmode=c-archive", ["-buildmode=c-archive"]),
                    ("-buildmode=plugin", ["-buildmode=plugin"]),
                    ("-X", ["-X", "runtime.buildVersion=stock"]),
                    ("-checklinkname=0", ["-checklinkname=0"]),
-                   ("-linkmode=external", ["-linkmode=external"])]
+                   ("-linkmode=external", ["-linkmode=external"]),
+                   ("no -buildid", "nobuildid"),
+                   ("-buildid not S-Go metadata", ["-buildid=abc"]),
+                   ("-sgolab with production -buildid", ["-sgolab"]),
+                   ("-buildid claiming a drain budget", ["-buildid=" + buildid()[len("-buildid="):].replace("drain=none", "drain=500")]),
+                   ("-buildid claiming grants", ["-buildid=" + buildid()[len("-buildid="):].replace("grants=none", "grants=clock")])]
+        refused_link += [(f, [f]) for f in ("-f", "-s", "-w", "-strictdups=0", "-randlayout=1", "-k=x",
+                                             "-installsuffix=x", "-debugnosplit", "-race", "-msan", "-asan")]
+        refused_link.append(("-R 0x2000", ["-R", "0x2000"]))
         # On darwin every executable is PIE, so -buildmode=pie is the plain executable there.
         if GOOS != "darwin":
-            refused.append(("-buildmode=pie", ["-buildmode=pie"]))
-        for label, flags in refused:
-            r = run([os.path.join(TOOLS, "link"), "-o", os.path.join(tmp, "z"), "-importcfg", cfgp] + flags +
-                    [main_a], tmp, env)
-            if r.returncode == 0 or "SGO_E_" not in r.stdout + r.stderr:
-                problems.append(f"link {label}: exit {r.returncode}, want an S-Go refusal:\n{r.stdout}{r.stderr}")
+            refused_link.append(("-buildmode=pie", ["-buildmode=pie"]))
+        for label, flags in refused_link:
+            out = os.path.join(tmp, "z")
+            if os.path.exists(out):
+                os.remove(out)
+            if flags == "nobuildid":
+                args = []
+            elif any(f.startswith("-buildid") for f in flags):
+                args = flags
+            else:
+                args = [buildid()] + flags  # a production -buildid, so -sgolab contradicts it
+            r = run([os.path.join(TOOLS, "link"), "-o", out, "-importcfg", cfgp] + args + [main_a], tmp, env)
+            if msg := refused(r, out, "SGO_E_"):
+                problems.append(f"link {label}: {msg}")
+        # Harness self-test (D79): an admitted flag treated as "must be refused" must be reported, so
+        # the refusal checks cannot pass vacuously.
+        out = os.path.join(tmp, "selftest")
+        r = run([os.path.join(TOOLS, "link"), "-o", out, "-importcfg", cfgp, "-buildmode=exe", buildid(), main_a], tmp, env)
+        if not refused(r, out):
+            problems.append("self-test: an admitted link command line was reported as refused; the harness is vacuous")
     for p in problems:
         print("test-flags:", p, file=sys.stderr)
     if problems:

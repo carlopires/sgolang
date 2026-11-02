@@ -5,6 +5,7 @@
 package ld
 
 import (
+	"flag"
 	"internal/buildcfg"
 	"internal/platform"
 	"net/netip"
@@ -34,6 +35,12 @@ func (ctxt *Link) sgoCheckConfig() {
 	if ctxt.LinkMode != LinkInternal {
 		Errorf("sgo:1:1: SGO_E_USAGE: link mode %s is not admitted; S-Go programs link internally (SGO-BUILD-001)", ctxt.LinkMode)
 	}
+	// Only the driver's flags (D77, W12 R3); the checks above and below stay as named diagnostics.
+	flag.CommandLine.Visit(func(f *flag.Flag) {
+		if msg := sgoLinkFlagErr(f.Name); msg != "" && f.Name != "X" && f.Name != "checklinkname" && f.Name != "linkmode" {
+			Errorf("sgo:1:1: %s", msg)
+		}
+	})
 	if sgoXFlags != 0 {
 		Errorf("sgo:1:1: SGO_E_USAGE: -X string overrides are not admitted (SGO-TOOL-001)")
 	}
@@ -44,6 +51,10 @@ func (ctxt *Link) sgoCheckConfig() {
 
 // sgoXFlags counts -X flags on the command line (main.go).
 var sgoXFlags int
+
+// sgoDrainArg and sgoGrantsArg are the -sgodrainbudget and -sgogrants values, checked against the
+// -buildid (sgoBuildIDErr).
+var sgoDrainArg, sgoGrantsArg string
 
 // sgoSetDrainBudget handles -sgodrainbudget=ms: it sets runtime.sgoDrainBudget, which the runtime
 // reads when the program starts (SGO-DRAIN-002). Only positive decimal integers are accepted, as
@@ -56,6 +67,7 @@ func sgoSetDrainBudget(ctxt *Link, s string) {
 	if !ok {
 		Exitf("sgo:1:1: SGO_E_USAGE: -sgodrainbudget must be a positive number of milliseconds, not %q (SGO-DRAIN-002)", s)
 	}
+	sgoDrainArg = s
 	addstrdata1(ctxt, "runtime.sgoDrainBudget="+s)
 }
 
@@ -73,6 +85,7 @@ func sgoSetGrants(ctxt *Link, s string) {
 		}
 		next = i + 1
 	}
+	sgoGrantsArg = s
 	addstrdata1(ctxt, "runtime.sgoGrants="+s)
 }
 
@@ -167,6 +180,8 @@ func (ctxt *Link) sgoCheckIdentity() {
 	}
 	if f := strings.Fields(ref.head); f[3] != objabi.SGoABI {
 		Errorf("sgo:1:1: SGO_E_SPEC_MISMATCH: the program was compiled for ABI %s, this linker is %s", f[3], objabi.SGoABI)
+	} else if msg := sgoBuildIDErr(*flagBuildid, f[1], f[2], sgoDrainArg, sgoGrantsArg, sgoLab, sgoTest); msg != "" {
+		Errorf("sgo:1:1: %s", msg)
 	}
 	for _, p := range pkgs {
 		id := ids[p]

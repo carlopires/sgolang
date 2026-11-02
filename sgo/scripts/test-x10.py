@@ -25,6 +25,8 @@ import subprocess
 import sys
 import tempfile
 
+from sgotool import buildid
+
 ROOT = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 SPEC_VERSION = open(os.path.join(ROOT, "sgo", "spec", "VERSION")).read().strip()
 GOOS = {"Darwin": "darwin", "Linux": "linux"}[platform.system()]
@@ -132,7 +134,14 @@ def main():
             return p
 
         results = {}
-        for label, flags in (("inline", ["-m=2"]), ("noinline", ["-l"])):
+        # -l (no inlining) is refused by the shipped compiler (W12 R3), so the only optimization
+        # setting an S-Go program has is the default one; check that the refusal holds.
+        rl = subprocess.run([os.path.join(TOOLS, "compile"), "-o", os.path.join(tmp, "l.a"), "-p", "example.com/x10/lib",
+                             "-pack", "-complete", "-importcfg", importcfg("lib", {}), "-l", "lib/lib.sgo"],
+                            cwd=mod, env=env, capture_output=True, text=True)
+        if rl.returncode == 0 or "SGO_E_USAGE: compile flag -l is not admitted" not in rl.stderr:
+            sys.exit(f"test-x10: compile -l was not refused:\n{rl.stdout}{rl.stderr}")
+        for label, flags in (("inline", ["-m=2"]),):
             lib_a, main_a, exe = (os.path.join(tmp, f"{x}-{label}") for x in ("lib.a", "main.a", "prog"))
             rl = run([os.path.join(TOOLS, "compile"), "-o", lib_a, "-p", "example.com/x10/lib", "-pack",
                  "-complete", "-trimpath", mod + "=>", "-importcfg", importcfg("lib", {})] + flags +
@@ -149,7 +158,7 @@ def main():
                     if f"can inline {fn} " not in report:
                         sys.exit(f"test-x10: spawned closure {fn} is no longer inlinable:\n{report}")
             run([os.path.join(TOOLS, "link"), "-o", exe, "-importcfg",
-                 importcfg("link", {"example.com/x10/lib": lib_a}), "-buildmode=exe", main_a], tmp, env)
+                 importcfg("link", {"example.com/x10/lib": lib_a}), "-buildmode=exe", buildid(), main_a], tmp, env)
             results[label] = run([exe], tmp, {"PATH": "/usr/bin:/bin"}, check=False)
         results["driver"] = run([os.path.join(tmp, "prog-driver")], tmp, {"PATH": "/usr/bin:/bin"}, check=False)
 
@@ -158,7 +167,7 @@ def main():
                 sys.exit(f"test-x10: {label}: exit {r.returncode}\nstdout:\n{r.stdout}stderr:\n{r.stderr}"
                          f"want exit 2\nstdout:\n{WANT_STDOUT}stderr:\n{WANT_STDERR}")
     print("test-x10: ok: cross-package nurseries behave identically with default optimization "
-          "(nursery functions not inlined, spawned closures inlinable), with -l, and as built by the driver")
+          "(nursery functions not inlined, spawned closures inlinable) and as built by the driver; -l is refused")
 
 
 if __name__ == "__main__":

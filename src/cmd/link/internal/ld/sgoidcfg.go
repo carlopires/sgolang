@@ -43,3 +43,69 @@ func sgoIsTCBPackage(pkg string) bool {
 	}
 	return false
 }
+
+// sgoLinkFlags are the link flags the sgo driver writes (build.go link). Every other flag is
+// refused (D77, W12 R3): refuse-by-default, so a flag added upstream stays refused until it is
+// added here deliberately.
+var sgoLinkFlags = []string{"o", "importcfg", "buildmode", "buildid", "sgodrainbudget", "sgogrants", "sgoiogrants", "sgolab", "sgotest"}
+
+// sgoLinkFlagErr returns the diagnostic for a set flag that is not admitted, or "".
+func sgoLinkFlagErr(name string) string {
+	for _, a := range sgoLinkFlags {
+		if name == a {
+			return ""
+		}
+	}
+	return fmt.Sprintf("SGO_E_USAGE: link flag -%s is not admitted (SGO-TOOL-001)", name)
+}
+
+// sgoBuildIDErr checks the -buildid the driver writes (SGO-BUILD-001): it is required, and it must
+// agree with the link itself: the configuration (lab, test), the drain budget and root grants
+// passed to this link, and the spec version and admission digest of the linked packages. It
+// returns "" or the diagnostic.
+func sgoBuildIDErr(id, spec, admission, drain, grants string, lab, test bool) string {
+	if id == "" {
+		return "SGO_E_USAGE: -buildid is required: every S-Go binary records its build metadata (SGO-BUILD-001)"
+	}
+	rest, ok := strings.CutPrefix(id, "sgo1/")
+	if !ok {
+		return fmt.Sprintf("SGO_E_USAGE: -buildid %q is not S-Go build metadata (SGO-BUILD-001)", id)
+	}
+	kv := map[string]string{}
+	for _, seg := range strings.Split(rest, "/") {
+		if k, v, ok := strings.Cut(seg, "="); ok {
+			if _, dup := kv[k]; dup {
+				return fmt.Sprintf("SGO_E_USAGE: -buildid repeats %s (SGO-BUILD-001)", k)
+			}
+			kv[k] = v
+		}
+	}
+	config := ""
+	switch {
+	case lab && test:
+		config = "lab-test"
+	case lab:
+		config = "lab"
+	case test:
+		config = "test"
+	}
+	if drain == "" {
+		drain = "none"
+	}
+	if grants == "" {
+		grants = "none"
+	}
+	for _, c := range []struct{ key, want string }{
+		{"spec", spec}, {"admission", admission}, {"config", config}, {"drain", drain}, {"grants", grants},
+	} {
+		if kv[c.key] != c.want {
+			return fmt.Sprintf("SGO_E_USAGE: -buildid records %s=%q, the link is %q (SGO-BUILD-001)", c.key, kv[c.key], c.want)
+		}
+	}
+	for _, k := range []string{"target", "toolchain", "upstream"} {
+		if kv[k] == "" {
+			return fmt.Sprintf("SGO_E_USAGE: -buildid has no %s (SGO-BUILD-001)", k)
+		}
+	}
+	return ""
+}

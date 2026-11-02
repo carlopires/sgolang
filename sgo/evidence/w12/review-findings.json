@@ -33,10 +33,10 @@
       "title": "Shipped compile and link accept the whole upstream flag table for S-Go code",
       "location": "cmd/compile/internal/base/flag.go; link/ld/sgoid.go sgoCheckConfig",
       "clause": "SGO-TOOL-001, SGO-BUILD-001, D77",
-      "status": "open",
-      "resolution": null,
+      "status": "fixed",
+      "resolution": "Refuse-by-default allowlists in the shipped tools. compile (base/sgoflags.go, called in noder.LoadPackage once sgoMode is known): S-Go packages accept -o -p -importcfg -pack -complete -trimpath -sgolab -sgocheck -sgotestmain and -m (diagnostic output only); TCB packages accept the driver's TCB command line (-o -p -importcfg -pack -complete -trimpath -std -lang -symabis -asmhdr) with -lang pinned to go1.<goversion>; GOCOMPILEDEBUG, a non-empty GOEXPERIMENT or an experiment set differing from the default, and GOAMD64 != v1 / GOARM64 != v8.0 are refused. link (sgoCheckConfig + sgoidcfg.go): only -o -importcfg -buildmode -buildid -sgodrainbudget -sgogrants -sgoiogrants -sgolab -sgotest; -buildid is required, must be S-Go metadata, and must agree with the link (config lab/test/lab-test, drain, grants) and with the linked packages' spec version and admission digest. The existing named refusals (-X, -checklinkname=0, -linkmode, build modes) keep their messages. Flags upstream already rejects on a platform (-spectre, -asan, -msan on darwin) stay refused by upstream.",
       "fix_commit": null,
-      "regression_test": null
+      "regression_test": "test-flags.py: 18 compile flags and 3 compiler settings refused with SGO_E_USAGE and no output file; admitted command lines still give the S-Go denials; 13 named link refusals plus -f -s -w -strictdups=0 -randlayout=1 -k=x -installsuffix=x -debugnosplit -race -msan -asan -R; missing/foreign/inconsistent -buildid (lab claiming production, drain, grants) refused; harness self-test that an admitted link is not reported as refused. Host lane TestSGoLinkFlagsAndBuildID (13 build-ID rows). test-identity and test-x10 link with a driver-format -buildid (sgotool.py); test-x10 checks -l is refused instead of comparing a -l build."
     },
     {
       "id": "R4",
@@ -44,10 +44,11 @@
       "title": "Dir.Open/Create on a FIFO wedges the program; the drain budget never fires",
       "location": "runtime/sgo_io_sys_linux.go, sgo_io_sys_darwin*, sgo_fs.go, sgo_io.go",
       "clause": "SGO-DRAIN-002, SGO-FILE-003, D55",
-      "status": "fixed",
+      "status": "verified",
       "resolution": "(1) Dir.Open/Create open the last component with O_NONBLOCK, fstat it, close and report NotRegularFile (no effect) for anything but a regular file (IsDirectory kept for directories), and clear O_NONBLOCK on success; ENXIO maps to NotRegularFile. (2) Every file system call that can block goes through entersyscall/exitsyscall: linux sgoSys (openat, fstatat, mkdirat, unlinkat, getdents64, ftruncate, and the socket calls), darwin sgoOpenat/Fstatat/Fstat/Mkdirat/Unlinkat/Ftruncate, darwin readdir through syscall_syscalln with heap buffers. No caller holds a runtime lock. D55 unchanged: file calls are still not cancellation points. The NotRegularFile kind and the regular-files-only rule join SPEC-FILE in the 0.7.0 change (doc item D-R4).",
-      "fix_commit": null,
-      "regression_test": "conformance file-open-fifo (runner mkfifo; Open and Create -> NotRegularFile with NoEffect, under a 5 s watchdog); runtime lane TestSGoBlockedOpenDoesNotStallGC (blocking openat on a FIFO through a test hook while 20 GCs run; the mutant without entersyscall hangs until the 60 s test timeout); linux/amd64 and linux/arm64 vet of the runtime"
+      "fix_commit": "426276e16c",
+      "regression_test": "conformance file-open-fifo (runner mkfifo; Open and Create -> NotRegularFile with NoEffect, under a 5 s watchdog); runtime lane TestSGoBlockedOpenDoesNotStallGC (blocking openat on a FIFO through a test hook while 20 GCs run; the mutant without entersyscall hangs until the 60 s test timeout); linux/amd64 and linux/arm64 vet of the runtime",
+      "verified_by": "reviewer at 426276e16c (linux/amd64): p7 FIFO probe returns NotRegularFile at once; TestSGoBlockedOpenDoesNotStallGC passes; linux mutant without entersyscall in sgoSys hangs (test killed after 2m); race lane TestSGo ok; conformance 342/342"
     },
     {
       "id": "R5",
@@ -181,6 +182,12 @@
       "for": "R4",
       "text": "SPEC-FILE: Open/Create admit regular files only; NotRegularFile joins the error kinds; lab fake and model state the same rule",
       "status": "open, with the 0.7.0 change"
+    },
+    {
+      "id": "D-R3",
+      "for": "R3",
+      "text": "legacy-audit.py (D77) reads the two allowlists (base/sgoflags.go, ld/sgoidcfg.go) and diffs them against the upstream flag tables, so a new upstream flag is classified deliberately",
+      "status": "open (D77 work)"
     }
   ]
 }

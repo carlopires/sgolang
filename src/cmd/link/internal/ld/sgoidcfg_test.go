@@ -34,3 +34,45 @@ func TestSGoIdentConfigErr(t *testing.T) {
 		}
 	}
 }
+
+// TestSGoLinkFlagsAndBuildID: refuse-by-default link flags and the required, consistent -buildid
+// (D77, SGO-BUILD-001, W12 R3).
+func TestSGoLinkFlagsAndBuildID(t *testing.T) {
+	for _, f := range []string{"o", "importcfg", "buildmode", "buildid", "sgodrainbudget", "sgogrants", "sgoiogrants", "sgolab", "sgotest"} {
+		if msg := sgoLinkFlagErr(f); msg != "" {
+			t.Errorf("driver flag -%s refused: %s", f, msg)
+		}
+	}
+	for _, f := range []string{"f", "s", "w", "strictdups", "randlayout", "R", "k", "installsuffix", "debugnosplit", "race", "X", "B"} {
+		if msg := sgoLinkFlagErr(f); !strings.HasPrefix(msg, "SGO_E_USAGE") {
+			t.Errorf("flag -%s admitted", f)
+		}
+	}
+	id := func(mid string) string {
+		return "sgo1/spec=0.6.0/admission=abc" + mid + "/target=linux-amd64/toolchain=t/upstream=u"
+	}
+	for _, tc := range []struct {
+		name, id, drain, grants string
+		lab, test               bool
+		ok                      bool
+	}{
+		{"production", id("/drain=none/grants=none"), "", "", false, false, true},
+		{"grants and io", id("/drain=500/grants=clock,random/io=deadbeef"), "500", "clock,random", false, false, true},
+		{"lab", id("/config=lab/drain=none/grants=none"), "", "", true, false, true},
+		{"lab test", id("/config=lab-test/drain=none/grants=none"), "", "", true, true, true},
+		{"missing", "", "", "", false, false, false},
+		{"not S-Go", "abc", "", "", false, false, false},
+		{"lab binary claiming production", id("/drain=none/grants=none"), "", "", true, false, false},
+		{"production claiming lab", id("/config=lab/drain=none/grants=none"), "", "", false, false, false},
+		{"other spec", "sgo1/spec=9.9.9/admission=abc/drain=none/grants=none/target=a/toolchain=t/upstream=u", "", "", false, false, false},
+		{"drain mismatch", id("/drain=none/grants=none"), "500", "", false, false, false},
+		{"grants mismatch", id("/drain=none/grants=clock"), "", "", false, false, false},
+		{"repeated key", id("/drain=none/grants=none/drain=none"), "", "", false, false, false},
+		{"no target", "sgo1/spec=0.6.0/admission=abc/drain=none/grants=none/toolchain=t/upstream=u", "", "", false, false, false},
+	} {
+		msg := sgoBuildIDErr(tc.id, "0.6.0", "abc", tc.drain, tc.grants, tc.lab, tc.test)
+		if (msg == "") != tc.ok {
+			t.Errorf("%s: sgoBuildIDErr = %q, want ok=%v", tc.name, msg, tc.ok)
+		}
+	}
+}

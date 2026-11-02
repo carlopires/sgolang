@@ -61,6 +61,8 @@ def main():
             e = json.load(open(os.path.join(d, "expect.json")))
             if e["kind"] != "run" or name in pending or e.get("build_args") or e.get("procedure") or e.get("expect_watchdog"):
                 continue
+            for f in e.get("mkfifo", []):  # named pipes the case needs (conformance.py mkfifo)
+                os.mkfifo(os.path.join(d, f))
             exe = os.path.join(tmp, name + ".prog")
             b = subprocess.run([SGO, "build", "-o", exe], cwd=d, env=env, capture_output=True, text=True)
             if b.returncode != 0:

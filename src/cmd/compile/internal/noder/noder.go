@@ -70,6 +70,7 @@ func LoadPackage(filenames []string) {
 	}
 	sgoMode = !sgoadmit.Trusted(base.Ctxt.Pkgpath, filenames)
 	base.SGo = sgoMode
+	base.SGoCheckToolInput(sgoMode) // only the driver's command lines (D77, W12 R3)
 	if base.Flag.SGoTestMain && (!sgoMode || base.Ctxt.Pkgpath != "main" || base.Flag.SGoLab) {
 		fmt.Fprintf(os.Stderr, "sgo:1:1: SGO_E_USAGE: -sgotestmain compiles only an S-Go package main, not for the lab (D69)\n")
 		base.ErrorExit()
