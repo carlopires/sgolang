@@ -33,7 +33,7 @@ jobs:
     timeout-minutes: 240
     env:
       SGO_CACHE: ${{ github.workspace }}/../sgo-cache
-      SGO_OUT: ${{ runner.temp }}/sgo-out
+      SGO_OUT: ${{ github.workspace }}/.sgo-out
     steps:
       - uses: actions/checkout@v4
         with:
@@ -136,7 +136,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: w10-bench-${{ matrix.runner }}
-          path: ${{ runner.temp }}/sgo-out/evidence/w10/bench-*
+          path: ${{ github.workspace }}/.sgo-out/evidence/w10/bench-*
           retention-days: 90
 
       - name: B03 upstream baseline tests
@@ -153,5 +153,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: w00-evidence-${{ matrix.runner }}
-          path: ${{ runner.temp }}/sgo-out/evidence/w00/
+          path: ${{ github.workspace }}/.sgo-out/evidence/w00/
           retention-days: 90

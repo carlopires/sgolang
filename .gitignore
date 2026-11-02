@@ -53,3 +53,6 @@ _testmain.go
 # For files created by specific development environment (e.g. editor),
 # use alternative ways to exclude files from git.
 # For example, set up .git/info/exclude or use a global .gitignore.
+
+# S-Go evidence output when not recording (sgo/scripts/lib.sh, W12 R7)
+/.sgo-out/

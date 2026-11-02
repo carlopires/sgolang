@@ -26,7 +26,7 @@ jobs:
     timeout-minutes: 90
     env:
       SGO_CACHE: ${{ github.workspace }}/../sgo-cache
-      SGO_OUT: ${{ runner.temp }}/sgo-out
+      SGO_OUT: ${{ github.workspace }}/.sgo-out
     steps:
       - uses: actions/checkout@v4
         with:

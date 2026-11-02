@@ -54,7 +54,7 @@ jobs:
       - name: Executable model (W01 step 5)
         run: sgo/scripts/test-model.sh
         env:
-          SGO_OUT: ${{ runner.temp }}/sgo-out
+          SGO_OUT: ${{ github.workspace }}/.sgo-out
       - name: The checks left the tree clean (W12 R7)
         run: |
           git status --porcelain --untracked-files=all > "$RUNNER_TEMP/dirty.txt"
@@ -64,5 +64,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: w01-model-${{ matrix.runner }}
-          path: ${{ runner.temp }}/sgo-out/evidence/w01/
+          path: ${{ github.workspace }}/.sgo-out/evidence/w01/
           retention-days: 90
