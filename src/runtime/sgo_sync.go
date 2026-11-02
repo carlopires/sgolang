@@ -34,7 +34,13 @@ func sgoEventSet(e *sgoEvent) {
 func sgoEventWait(e *sgoEvent, t *sgoTask) error {
 	lock(&e.c.lock)
 	for !e.c.closed {
+		// A fresh wait record per park, allocated with the lock released (W12 R9).
+		unlock(&e.c.lock)
 		w := &sgoChanWait{task: t}
+		lock(&e.c.lock)
+		if e.c.closed {
+			break
+		}
 		if !sgoChanPark(&e.c, &e.c.recvs, w, waitReasonChanReceive, false) || w.state.Load() == sgoWaitCancelled {
 			unlock(&e.c.lock)
 			return sgoTaskCancellation(t)
@@ -82,23 +88,30 @@ func sgoLimiterCheck(l *sgoLimiter) {
 }
 
 func sgoLimiterAcquire(l *sgoLimiter, t *sgoTask) (*sgoToken, error) {
+	var w *sgoChanWait // allocated with the lock released, then the acquire is retried (W12 R9)
 	lock(&l.c.lock)
-	free := l.used < l.n
-	for w := l.c.recvs.first; free && w != nil; w = w.next {
-		free = !w.waiting() // FIFO: no slot is taken ahead of a waiting acquirer
-	}
-	if free {
-		l.used++
-		sgoLimiterCheck(l)
-		unlock(&l.c.lock)
-	} else {
-		w := &sgoChanWait{task: t}
-		if !sgoChanPark(&l.c, &l.c.recvs, w, waitReasonSemacquire, false) || w.state.Load() == sgoWaitCancelled {
-			unlock(&l.c.lock)
-			return nil, sgoTaskCancellation(t)
+	for {
+		free := l.used < l.n
+		for q := l.c.recvs.first; free && q != nil; q = q.next {
+			free = !q.waiting() // FIFO: no slot is taken ahead of a waiting acquirer
 		}
-		unlock(&l.c.lock) // Done: the releaser passed its slot
+		if free {
+			l.used++
+			sgoLimiterCheck(l)
+			break
+		}
+		if w != nil {
+			if !sgoChanPark(&l.c, &l.c.recvs, w, waitReasonSemacquire, false) || w.state.Load() == sgoWaitCancelled {
+				unlock(&l.c.lock)
+				return nil, sgoTaskCancellation(t)
+			}
+			break // Done: the releaser passed its slot
+		}
+		unlock(&l.c.lock)
+		w = &sgoChanWait{task: t}
+		lock(&l.c.lock)
 	}
+	unlock(&l.c.lock)
 	if raceenabled {
 		raceacquire(unsafe.Pointer(l))
 	}

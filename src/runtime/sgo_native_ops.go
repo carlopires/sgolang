@@ -84,19 +84,29 @@ func sgochansend1(c *sgoChan, elem unsafe.Pointer) {
 		racereleasemerge(box)
 	}
 	sgoRaceRendezvousStart(c)
+	// The wait record is allocated with c.lock released, then the send is retried: nothing is
+	// allocated under a runtime lock (W12 R9).
+	var w *sgoChanWait
 	lock(&c.lock)
-	wake, st := sgoNativeTrySend(c, box)
-	if st != sgoNotReady {
-		unlock(&c.lock)
-		sgoReadyOne(wake)
-		if st == sgoClosedSend {
-			sgoClosedChannel()
+	for {
+		wake, st := sgoNativeTrySend(c, box)
+		if st != sgoNotReady {
+			unlock(&c.lock)
+			sgoReadyOne(wake)
+			if st == sgoClosedSend {
+				sgoClosedChannel()
+			}
+			sgoRaceRendezvousEnd(c)
+			sgoChanInject(sgoFaultAfterCommit)
+			return
 		}
-		sgoRaceRendezvousEnd(c)
-		sgoChanInject(sgoFaultAfterCommit)
-		return
+		if w != nil {
+			break
+		}
+		unlock(&c.lock)
+		w = &sgoChanWait{task: t, box: box}
+		lock(&c.lock)
 	}
-	w := &sgoChanWait{task: t, box: box}
 	if !sgoChanPark(c, &c.senders, w, waitReasonChanSend, false) || w.state.Load() == sgoWaitCancelled {
 		unlock(&c.lock)
 		sgoNativeCancel(t)
@@ -115,10 +125,16 @@ func sgochanrecv2(c *sgoChan, dst unsafe.Pointer) bool {
 	sgoLabPoint()
 	t := sgoCurrent()
 	sgoRaceRendezvousStart(c)
+	var w *sgoChanWait // allocated with c.lock released, then the receive is retried (W12 R9)
 	lock(&c.lock)
 	box, ok, wake, ready := sgoNativeTryRecv(c)
+	for !ready && w == nil {
+		unlock(&c.lock)
+		w = &sgoChanWait{task: t}
+		lock(&c.lock)
+		box, ok, wake, ready = sgoNativeTryRecv(c)
+	}
 	if !ready {
-		w := &sgoChanWait{task: t}
 		if !sgoChanPark(c, &c.recvs, w, waitReasonChanReceive, false) || w.state.Load() == sgoWaitCancelled {
 			unlock(&c.lock)
 			sgoNativeCancel(t)
@@ -290,6 +306,16 @@ func sgoselectgo(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs in
 	for _, c := range locks {
 		sgoRaceRendezvousStart(c)
 	}
+	// A blocking select allocates its wait records before taking the arm locks: nothing is
+	// allocated while a channel lock is held (W12 R9).
+	var sel *sgoSel
+	var ws []sgoChanWait
+	var sp *sgoSelPark
+	if block {
+		sel = &sgoSel{}
+		ws = make([]sgoChanWait, n+1) // ws[n]: the cancellation registration (an empty select has no arm)
+		sp = &sgoSelPark{locks: locks}
+	}
 	sgoSelLock(locks)
 	// Uniform choice among the arms that can proceed (D34), by reservoir sampling.
 	pick, ready := -1, uint32(0)
@@ -345,8 +371,6 @@ func sgoselectgo(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs in
 		return -1, false
 	}
 	// Wait on every arm under one decision.
-	sel := &sgoSel{}
-	ws := make([]sgoChanWait, n+1) // ws[n]: the cancellation registration (an empty select has no arm)
 	gp := getg()
 	for i := range ws {
 		w := &ws[i]
@@ -378,7 +402,7 @@ func sgoselectgo(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs in
 		sgoChanWaiters.cprev = rep
 	}
 	sgoChanWaiters = rep
-	sp := &sgoSelPark{locks: locks, rep: rep}
+	sp.rep = rep
 	if sgoLab != nil {
 		sgoLabBlock(t, "select")
 	}
