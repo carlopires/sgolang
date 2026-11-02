@@ -1,8 +1,64 @@
 {
   "schema": "W12 review findings (D75); see sgo/docs/w12-review-brief.md",
   "reviewer": "sgolang-reviewer (job:note2/id:77bfab38c5a3)",
-  "review_commit": null,
-  "findings": [],
+  "review_commit": "e9c1f60fb3",
+  "findings": [
+    {
+      "id": "R1",
+      "severity": "blocker",
+      "title": "A byte-for-byte copy of TCB files exempts a user package from admission",
+      "location": "sgoadmit/admit.go Trusted; noder.go; noder/sgo_identity.go; link/ld/sgoid.go",
+      "clause": "SGO-TCB-002, SGO-BIND-002, SGO-NATIVE-001",
+      "status": "fixed",
+      "resolution": "Trust is now (import path, file name, digest): sgoadmit.Trusted(pkgpath, files) requires a TCB package path and each file's manifest entry (shared tcbFileOK with CheckTCB); the content-only digest set is no longer generated. The importer refuses a 'tcb' identity on a non-TCB path (SGO_E_FOREIGN_OBJECT), and so does the linker (sgoIdentConfigErr, generated sgotcb.go list). policy.md reworded. SGO-TCB-002 clause wording ('a function of file digests') is deferred to the version change of SR2, since it is normative text.",
+      "fix_commit": null,
+      "regression_test": "test-tcb.py copy cases (subset copy of internal/stringslite, whole internal/godebugs, direct compile; digest asserted first); host-lane TestTrusted and TestSGoIdentConfigErr; mutation (content-only Trusted) caught by test-tcb via the importer check"
+    },
+    {
+      "id": "R2",
+      "severity": "blocker",
+      "title": "S-Go programs honour GODEBUG, GOTRACEBACK, GOGC, GOMEMLIMIT and GOMAXPROCS",
+      "location": "runtime/proc.go schedinit; runtime1.go; mgcpacer.go",
+      "clause": "SGO-PROC-004",
+      "status": "open",
+      "resolution": null,
+      "fix_commit": null,
+      "regression_test": null
+    },
+    {
+      "id": "R3",
+      "severity": "blocker",
+      "title": "Shipped compile and link accept the whole upstream flag table for S-Go code",
+      "location": "cmd/compile/internal/base/flag.go; link/ld/sgoid.go sgoCheckConfig",
+      "clause": "SGO-TOOL-001, SGO-BUILD-001, D77",
+      "status": "open",
+      "resolution": null,
+      "fix_commit": null,
+      "regression_test": null
+    },
+    {
+      "id": "R4",
+      "severity": "blocker",
+      "title": "Dir.Open/Create on a FIFO wedges the program; the drain budget never fires",
+      "location": "runtime/sgo_io_sys_linux.go, sgo_io_sys_darwin*, sgo_fs.go, sgo_io.go",
+      "clause": "SGO-DRAIN-002, SGO-FILE-003, D55",
+      "status": "open",
+      "resolution": null,
+      "fix_commit": null,
+      "regression_test": null
+    },
+    {
+      "id": "R5",
+      "severity": "blocker",
+      "title": "A captured named result is reassigned by return <operands>",
+      "location": "types2/sgo_flow.go sgoAssignments",
+      "clause": "SGO-MEM-001, SGO-MEM-002",
+      "status": "open",
+      "resolution": null,
+      "fix_commit": null,
+      "regression_test": null
+    }
+  ],
   "self_findings": [
     {
       "id": "SR1",

@@ -11,8 +11,16 @@ In a scratch copy of the toolchain root (src, sgo, pkg/tool), a program builds; 
 each fail with exactly one SGO_E_TCB_DIGEST diagnostic naming the file, and nothing is built from
 the unreviewed source; after restoring the file the program builds again. The real tree and cache
 are never touched.
+
+Trust is a function of (import path, file name, digest), never of content (W12 R1): byte copies of
+pinned TCB files placed in a user package (a subset, internal/stringslite, and a whole package,
+internal/godebugs) go through admission and are rejected, through the driver and through a direct
+compile invocation. Each copy's digest is first checked against TARGET_TCB.json, so the case
+cannot pass vacuously when the TCB changes.
 """
 
+import hashlib
+import json
 import os
 import platform
 import shutil
@@ -38,7 +46,59 @@ def copytree(src, dst):
         shutil.copytree(src, dst, symlinks=True)
 
 
+def pinned_copy(rel, dst):
+    """Copy src/<rel> to dst, asserting it is byte-identical to its TARGET_TCB.json entry."""
+    data = open(os.path.join(ROOT, "src", rel), "rb").read()
+    tcb = {f["path"]: f["sha256"] for f in json.load(open(os.path.join(ROOT, "sgo", "TARGET_TCB.json")))["files"]}
+    if tcb.get("src/" + rel) != hashlib.sha256(data).hexdigest():
+        sys.exit(f"test-tcb: copy case: src/{rel} is not pinned with this digest; the case would be vacuous")
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    open(dst, "wb").write(data)
+    return data.decode()
+
+
+def copy_cases():
+    tools = os.path.join(ROOT, "pkg", "tool", HOST)
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = os.path.realpath(tmp)
+        env = {"HOME": tmp, "PATH": "/usr/bin:/bin", "SGO_CACHE": os.path.join(tmp, "cache")}
+        # A subset of a TCB package, used from admitted code (the reviewer's probe).
+        mod = os.path.join(tmp, "p2")
+        src = pinned_copy("internal/stringslite/strings.go", os.path.join(mod, "sl", "strings.sgo"))
+        line = next(i for i, l in enumerate(src.splitlines(), 1) if l.strip() == '"internal/bytealg"')
+        open(os.path.join(mod, "sgo.mod"), "w").write("module example.com/p2\n\nsgo " + SPEC_VERSION + "\n")
+        open(os.path.join(mod, "main.sgo"), "w").write(
+            'package main\n\nimport (\n\t"example.com/p2/sl"\n\t"sgo"\n)\n\n'
+            'func main(root *sgo.Context) error {\n\tout := root.Stdout()\n'
+            '\treturn out.WriteString(stringslite.TrimPrefix("bypass: not admitted\\n", "bypass: "))\n}\n')
+        r = subprocess.run([os.path.join(tools, "sgo"), "run", "."], cwd=mod, env=env, capture_output=True, text=True)
+        want = f"sl/strings.sgo:{line}:2: SGO_E_UNADMITTED"
+        if r.returncode == 0 or want not in r.stderr or "not admitted\n" in r.stdout:
+            sys.exit(f"test-tcb: copied TCB file in a user package: want {want} and no run, got exit "
+                     f"{r.returncode}:\n{r.stdout}{r.stderr}")
+        # Every file of a TCB package that imports nothing: rejected by path, not by its imports.
+        mod = os.path.join(tmp, "p3")
+        pinned_copy("internal/godebugs/table.go", os.path.join(mod, "gd", "table.sgo"))
+        open(os.path.join(mod, "sgo.mod"), "w").write("module example.com/p3\n\nsgo " + SPEC_VERSION + "\n")
+        open(os.path.join(mod, "main.sgo"), "w").write(
+            'package main\n\nimport (\n\t"example.com/p3/gd"\n\t"sgo"\n)\n\n'
+            'func main(root *sgo.Context) error {\n\t_ = godebugs.All\n\treturn nil\n}\n')
+        out = os.path.join(tmp, "p3.bin")
+        r = subprocess.run([os.path.join(tools, "sgo"), "build", "-o", out, "."], cwd=mod, env=env,
+                           capture_output=True, text=True)
+        if r.returncode == 0 or "gd/table.sgo:" not in r.stderr or "SGO_E_UNADMITTED" not in r.stderr or os.path.exists(out):
+            sys.exit(f"test-tcb: copied whole TCB package: want SGO_E_UNADMITTED and no binary, got exit "
+                     f"{r.returncode}:\n{r.stdout}{r.stderr}")
+        # The shipped compiler invoked directly (D77): same rule.
+        r = subprocess.run([os.path.join(tools, "compile"), "-p", "example.com/p3/gd", "-o", os.path.join(tmp, "gd.a"),
+                            os.path.join(mod, "gd", "table.sgo")], env=env, capture_output=True, text=True)
+        if r.returncode == 0 or "SGO_E_UNADMITTED" not in r.stdout + r.stderr:
+            sys.exit(f"test-tcb: direct compile of a copied TCB package under a user path: want SGO_E_UNADMITTED, "
+                     f"got exit {r.returncode}:\n{r.stdout}{r.stderr}")
+
+
 def main():
+    copy_cases()
     with tempfile.TemporaryDirectory() as tmp:
         tmp = os.path.realpath(tmp)
         root = os.path.join(tmp, "goroot")
@@ -99,7 +159,8 @@ def main():
                 os.remove(path)
             build(f"restored after {label}")
     print("test-tcb: ok: clean build; edited runtime file, added runtime file, edited sgo file, edited and "
-          "added assembly file, and edited included header each fail with one SGO_E_TCB_DIGEST; restored trees build")
+          "added assembly file, and edited included header each fail with one SGO_E_TCB_DIGEST; restored trees build; "
+          "byte copies of TCB files under user paths (driver and direct compile) go through admission and are rejected")
 
 
 if __name__ == "__main__":

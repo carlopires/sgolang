@@ -121,7 +121,10 @@ func sgoCheckImports(m posMap, noders []*noder, pkg *types2.Package) map[string]
 				path, strings.TrimSpace(line[:strings.LastIndex(line, " ")]), strings.TrimSpace(want))
 		default:
 			config, contract, _ := strings.Cut(line[len(want):], " ")
-			if config != "tcb" && config != sgoImportConfig() {
+			if config == "tcb" && !sgoadmit.IsTCBPackage(path) {
+				base.ErrorfAt(pos, 0, "SGO_E_FOREIGN_OBJECT: package %s claims trusted identity but is not a TCB package (SGO-TCB-002)", path)
+				continue
+			} else if config != "tcb" && config != sgoImportConfig() {
 				base.ErrorfAt(pos, 0, "SGO_E_SPEC_MISMATCH: package %s was compiled for the %s configuration, this package for %s (D41, SGO-IMP-002)",
 					path, config, sgoImportConfig())
 				continue

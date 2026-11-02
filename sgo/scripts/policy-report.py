@@ -160,7 +160,7 @@ def render():
         "",
         "## Trusted computing base",
         "",
-        f"`sgo/TARGET_TCB.json` (SGO-TCB-002): spec {tcb['spec_version']}, allowlist digest `{tcb['allowlist_digest'][:16]}`, {tcb['summary']['packages']} packages, {tcb['summary']['files']} files ({tcb['summary']['files_changed_from_upstream']} changed from upstream), {len(prims)} primitives. Each file is admitted only by its exact SHA-256; a package's name confers nothing.",
+        f"`sgo/TARGET_TCB.json` (SGO-TCB-002): spec {tcb['spec_version']}, allowlist digest `{tcb['allowlist_digest'][:16]}`, {tcb['summary']['packages']} packages, {tcb['summary']['files']} files ({tcb['summary']['files_changed_from_upstream']} changed from upstream), {len(prims)} primitives. A file is trusted only at its own import path and file name with its exact SHA-256: neither a package name nor copied content confers trust (W12 R1).",
         "",
         "## Denied escape routes",
         "",

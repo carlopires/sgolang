@@ -118,6 +118,11 @@ jobs:
       - name: Host test lane (compiler syntax package, incl. keyword table)
         run: sgo/scripts/test-host-pkg.sh cmd/compile/internal/syntax -count=1
 
+      - name: Host test lane (trust rules of the compiler and linker, W12 R1)
+        run: |
+          sgo/scripts/test-host-pkg.sh --only "trust.go tcbtable.go trust_test.go" cmd/compile/internal/sgoadmit -count=1
+          sgo/scripts/test-host-pkg.sh --only "sgoidcfg.go sgotcb.go sgoidcfg_test.go" cmd/link/internal/ld -count=1
+
       - name: B05/S01/S15 gate checks
         run: sgo/scripts/check-w00.sh
 

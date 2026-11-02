@@ -2,7 +2,7 @@
 # Copyright 2026 The S-Go Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
-# test-host-pkg.sh [--src ROOT] PKGDIR [go test flags...]
+# test-host-pkg.sh [--src ROOT] [--only "FILE ..."] PKGDIR [go test flags...]
 #
 # Host test lane (stage H1 in sgo/docs/stage-map.md): run the unit tests of a fork *host* package
 # (compiler/toolchain code, written in Go) with the pinned bootstrap Go. The package is copied into a
@@ -11,11 +11,15 @@
 # Limits (reported, never hidden): only packages whose non-test files import nothing but the standard
 # library are supported; test files importing upstream-internal packages (internal/..., cmd/...) are
 # excluded and listed. PKGDIR is relative to <ROOT>/src (default ROOT: the fork checkout).
+# --only tests a self-contained subset of a package's files (by base name), for packages that as a
+# whole import cmd/... (e.g. the trust rules in sgoadmit and the linker, W12 R1).
 source "$(dirname "$0")/lib.sh"
 
 root="$SGO_ROOT"
+only=""
 if [ "${1:-}" = "--src" ]; then root="$2"; shift 2; fi
-[ $# -ge 1 ] || die "usage: test-host-pkg.sh [--src ROOT] PKGDIR [go test flags...]"
+if [ "${1:-}" = "--only" ]; then only=" $2 "; shift 2; fi
+[ $# -ge 1 ] || die "usage: test-host-pkg.sh [--src ROOT] [--only \"FILE ...\"] PKGDIR [go test flags...]"
 pkg="$1"; shift
 dir="$root/src/$pkg"
 [ -d "$dir" ] || die "no package directory $dir"
@@ -84,6 +88,7 @@ GO
 excluded=()
 shimmed=()
 for f in "$dir"/*.go; do
+	if [ -n "$only" ] && [[ "$only" != *" $(basename "$f") "* ]]; then continue; fi
 	imports="$("$tmp/listimports" "$f")" || die "cannot parse $f"
 	other="$(echo "$imports" | grep -E '^(internal|cmd)/|\.' | grep -vx 'internal/testenv' || true)"
 	if [ -n "$other" ]; then

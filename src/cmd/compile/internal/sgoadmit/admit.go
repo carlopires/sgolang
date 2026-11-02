@@ -4,71 +4,18 @@
 
 // Package sgoadmit is the S-Go admission pass (SGO-ERR-001): it runs on parsed files before type
 // checking and reports one diagnostic per outermost construct that subset 0 denies, at the first
-// token that belongs only to that construct. A package is exempt only if every one of its files is
-// trusted target code pinned by digest in sgo/TARGET_TCB.json (SGO-TCB-002); no flag, name, or
-// pragma widens admission.
+// token that belongs only to that construct. A package is exempt only if its import path is a TCB
+// package and every one of its files is that package's file pinned by digest in
+// sgo/TARGET_TCB.json (SGO-TCB-002); no flag, name, pragma, or copied content widens admission.
 package sgoadmit
 
 import (
 	"cmd/compile/internal/syntax"
-	"crypto/sha256"
-	"encoding/hex"
 	"os"
-	"slices"
 	"sort"
 	"strconv"
 	"strings"
 )
-
-// Trusted reports whether every file is trusted target code (digest in tcbDigests).
-func Trusted(filenames []string) bool {
-	if len(filenames) == 0 {
-		return false
-	}
-	for _, f := range filenames {
-		data, err := os.ReadFile(f)
-		if err != nil {
-			return false
-		}
-		sum := sha256.Sum256(data)
-		if !tcbDigests[hex.EncodeToString(sum[:])] {
-			return false
-		}
-	}
-	return true
-}
-
-// CheckTCB verifies the files of a TCB package against the manifest (SGO-TCB-002): if pkgpath is
-// the import path of a TCB package, every file must be one of its manifest files with the pinned
-// digest. It returns the first file that is not, with the SGO_E_TCB_DIGEST message, else "". Other
-// packages are not TCB packages and are checked by admission. A TCB package path is never
-// compiled as ordinary S-Go code: nothing is built from unreviewed runtime source.
-func CheckTCB(pkgpath string, filenames []string) (file, msg string) {
-	if !slices.Contains(strings.Fields(tcbPackageList), pkgpath) {
-		return "", ""
-	}
-	tcbFiles := map[string]string{}
-	for _, line := range strings.Split(strings.TrimSpace(tcbFileList), "\n") {
-		if name, digest, ok := strings.Cut(line, " "); ok {
-			tcbFiles[name] = digest
-		}
-	}
-	for _, f := range filenames {
-		name := pkgpath + "/" + f[strings.LastIndexAny(f, `/\`)+1:]
-		want, ok := tcbFiles[name]
-		if !ok {
-			return f, "TCB package " + pkgpath + ": file " + name + " is not in sgo/TARGET_TCB.json"
-		}
-		data, err := os.ReadFile(f)
-		if err != nil {
-			return f, "TCB package " + pkgpath + ": " + err.Error()
-		}
-		if sum := sha256.Sum256(data); hex.EncodeToString(sum[:]) != want {
-			return f, "TCB package " + pkgpath + ": file " + name + " differs from its digest in sgo/TARGET_TCB.json"
-		}
-	}
-	return "", ""
-}
 
 // Diag is one admission diagnostic.
 type Diag struct {

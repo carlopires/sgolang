@@ -61,14 +61,14 @@ func LoadPackage(filenames []string) {
 		}
 	}()
 
-	// The admission decision depends only on the file digests (SGO-TCB-002), so it is known before
-	// syntax errors are reported and they can carry S-Go codes.
+	// The admission decision depends only on the package path and the file names and digests
+	// (SGO-TCB-002), so it is known before syntax errors are reported and they can carry S-Go codes.
 	// A TCB package path is compiled only from its pinned files; it never falls back to admission.
 	if f, msg := sgoadmit.CheckTCB(base.Ctxt.Pkgpath, filenames); msg != "" {
 		fmt.Fprintf(os.Stderr, "%s:1:1: SGO_E_TCB_DIGEST: %s (SGO-TCB-002)\n", f, msg)
 		base.ErrorExit()
 	}
-	sgoMode = !sgoadmit.Trusted(filenames)
+	sgoMode = !sgoadmit.Trusted(base.Ctxt.Pkgpath, filenames)
 	base.SGo = sgoMode
 	if base.Flag.SGoTestMain && (!sgoMode || base.Ctxt.Pkgpath != "main" || base.Flag.SGoLab) {
 		fmt.Fprintf(os.Stderr, "sgo:1:1: SGO_E_USAGE: -sgotestmain compiles only an S-Go package main, not for the lab (D69)\n")
