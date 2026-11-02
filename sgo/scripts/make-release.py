@@ -14,7 +14,7 @@ Builds sgo-<spec version>-<os>-<arch>.tar.gz for the host from the current stage
       src/...                          exactly the TCB files of sgo/TARGET_TCB.json (runtime, sgo, ...)
       sgo/spec/VERSION, sgo/SGO_SPEC_ADMISSION.json, sgo/TARGET_TCB.json, sgo/UPSTREAM.lock.json
       examples/                        the D66 examples
-      LICENSE, PATENTS
+      LICENSE, PATENTS, INSTALL.md     (sgo/docs/INSTALL.md)
 
 There is no go command, gofmt, or standard library source outside the TCB: the installation is
 single-language. sgo finds its root from its own path, so installing is extracting the archive and
@@ -102,6 +102,20 @@ def main():
             dst = os.path.join(top, "examples", os.path.relpath(f, "sgo/examples"))
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             shutil.copy2(os.path.join(ROOT, f), dst)
+        shutil.copy2(os.path.join(ROOT, "sgo", "docs", "INSTALL.md"), os.path.join(top, "INSTALL.md"))
+        # The replay example's trace names the build that recorded it (D46): record it with the
+        # toolchain being released, so the shipped trace replays with the shipped build (D78).
+        rp = os.path.join(top, "examples", "replay")
+        with tempfile.TemporaryDirectory() as home:
+            env = {"HOME": home, "PATH": "/usr/bin:/bin", "SGO_CACHE": os.path.join(home, "cache")}
+            seed = json.loads(open(os.path.join(rp, "buggy.trace.jsonl")).readline())["seed"]
+            fresh = os.path.join(home, "t.jsonl")
+            subprocess.run([os.path.join(ROOT, tooldir, "sgo"), "lab", "sweep", "-seeds", f"{seed}..{seed}",
+                            "-expect", "expected.txt", "-save", fresh, "./buggy"], cwd=rp, env=env,
+                           capture_output=True, text=True)
+            if not os.path.exists(fresh):
+                sys.exit(f"make-release: seed {seed} no longer fails ./buggy; the replay example is stale")
+            shutil.copy2(fresh, os.path.join(rp, "buggy.trace.jsonl"))
         # Single language: the only executables are the four tools.
         allowed = {os.path.join(tooldir, t) for t in TOOLS}
         for root, _, files in os.walk(top):

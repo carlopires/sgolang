@@ -1,0 +1,116 @@
+# S-Go release qualification (D78, Q03): build the release archives on the three targets, the source
+# archive, the combined diff against the upstream pin, and SHA256SUMS; then, on fresh runners with no
+# checkout, install from those artifacts alone and exercise them (verify-release.sh, which follows
+# INSTALL.md); and bootstrap the toolchain from the source archive. It uploads artifacts only:
+# publishing a tag or GitHub release is the owner's decision.
+name: sgo-release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-14, ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      SGO_CACHE: ${{ github.workspace }}/../sgo-cache
+      SGO_OUT: ${{ github.workspace }}/.sgo-out
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage-0 toolchain from the pinned bootstrap
+        run: sgo/scripts/build-stage0.sh
+      - name: Release archive (make-release.py)
+        run: |
+          mkdir -p "$RUNNER_TEMP/dist"
+          sgo/scripts/make-release.py --out "$RUNNER_TEMP/dist"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: archive-${{ matrix.runner }}
+          path: ${{ runner.temp }}/dist/sgo-*.tar.gz
+          retention-days: 90
+
+  source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the combined diff is against the locked upstream commit
+      - name: Source archive and combined diff against the upstream pin
+        run: |
+          v="$(cat sgo/spec/VERSION)"
+          up="$(python3 -c 'import json; print(json.load(open("sgo/UPSTREAM.lock.json"))["upstream"]["commit"])')"
+          mkdir -p "$RUNNER_TEMP/dist"
+          git archive --format=tar.gz --prefix="sgo-$v-src/" -o "$RUNNER_TEMP/dist/sgo-$v-src.tar.gz" HEAD
+          git diff --binary "$up" HEAD > "$RUNNER_TEMP/dist/sgo-$v-upstream.diff"
+          cp sgo/scripts/verify-release.sh "$RUNNER_TEMP/dist/"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source
+          path: ${{ runner.temp }}/dist/
+          retention-days: 90
+
+  sums:
+    needs: [build, source]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: SHA256SUMS
+        run: |
+          cd dist
+          sha256sum sgo-* > SHA256SUMS
+          cat SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sgo-release
+          path: dist/
+          retention-days: 90
+
+  verify:
+    needs: sums
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-14, ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      # No checkout: only the released artifacts are used.
+      - uses: actions/download-artifact@v4
+        with:
+          name: sgo-release
+          path: release
+      - name: Install from the artifacts and exercise them (INSTALL.md)
+        run: sh release/verify-release.sh release
+
+  bootstrap:
+    needs: sums
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: sgo-release
+          path: release
+      - name: Clean bootstrap from the source archive (stage-0, then the conformance lane)
+        run: |
+          cd release
+          sha256sum -c --ignore-missing SHA256SUMS
+          mkdir src && tar xzf sgo-*-src.tar.gz -C src
+          cd src/sgo-*-src
+          # The scripts identify the tree through git; the source archive has no history, so it is
+          # recorded as one local commit.
+          git init -q && git add -A && git -c user.name=release -c user.email=release@localhost commit -qm source
+          export SGO_CACHE="$RUNNER_TEMP/sgo-cache" SGO_OUT="$RUNNER_TEMP/sgo-out"
+          sgo/scripts/build-stage0.sh
+          sgo/scripts/conformance.py run --sgo "$PWD/pkg/tool/linux_amd64/sgo" --pending sgo/testdata/conformance-pending.json
