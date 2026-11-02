@@ -7,7 +7,11 @@
   {
    "code": "SGO_E_CAPTURE_NOT_FINAL",
    "at": "b = b + 5"
+  },
+  {
+   "code": "SGO_E_CAPTURE_NOT_FINAL",
+   "at": "return 1, 2"
   }
  ],
- "note": "X05: a deferred function literal cannot assign a named result: captured variables are final."
+ "note": "X05: a deferred function literal cannot assign a named result: captured variables are final. The return with operands also assigns the captured result b (W12 R5)."
 }

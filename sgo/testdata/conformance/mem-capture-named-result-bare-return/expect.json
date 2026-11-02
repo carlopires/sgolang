@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-MEM-002"
+ ],
+ "exit": 0,
+ "stdout": "ok\n"
+}

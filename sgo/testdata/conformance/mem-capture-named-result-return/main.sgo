@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+func helper(c0 *sgo.Context, n *sgo.Nursery) (r int) {
+	n.Spawn(func(c *sgo.Context) error {
+		if r != 0 {
+			return sgo.NewError("changed")
+		}
+		return nil
+	})
+	return 5
+}
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		_ = helper(root, n)
+	}
+	return nil
+}

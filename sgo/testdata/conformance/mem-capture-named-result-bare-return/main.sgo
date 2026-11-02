@@ -1,0 +1,27 @@
+package main
+
+import "sgo"
+
+func helper(n *sgo.Nursery) (r int) {
+	n.Spawn(func(c *sgo.Context) error {
+		if r != 0 {
+			return sgo.NewError("changed")
+		}
+		return nil
+	})
+	return
+}
+
+func uncaptured() (r int) {
+	return 3
+}
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		_ = helper(n)
+	}
+	if uncaptured() != 3 {
+		return sgo.NewError("wrong result")
+	}
+	return root.Stdout().WriteString("ok\n")
+}

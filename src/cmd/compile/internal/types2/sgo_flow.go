@@ -222,10 +222,45 @@ func (check *Checker) sgoCaptured(lits []*syntax.FuncLit) map[*Var]*syntax.FuncL
 	return captured
 }
 
+// sgoNamedResults returns the named results of a function type as local variables.
+func (check *Checker) sgoNamedResults(t *syntax.FuncType) []*Var {
+	var vs []*Var
+	for _, f := range t.ResultList {
+		if f.Name != nil {
+			if v := check.sgoLocalVar(check.Defs[f.Name]); v != nil {
+				vs = append(vs, v)
+			}
+		}
+	}
+	return vs
+}
+
 // sgoAssignments reports assignments to nursery binders (SGO-NUR-001) and to captured variables
-// (SGO-MEM-002), at the assigned name.
+// (SGO-MEM-002), at the assigned name. A return statement with operands assigns every named
+// result of its innermost enclosing function (W12 R5): if one of them is captured, it is reported
+// at the return. A bare return assigns nothing.
 func (check *Checker) sgoAssignments(fd *syntax.FuncDecl, captured map[*Var]*syntax.FuncLit, binders map[*Var]bool) {
+	funcs := []*syntax.FuncType{fd.Type} // innermost enclosing function last
+	var stack []syntax.Node              // nodes whose children are being visited
 	syntax.Inspect(fd.Body, func(n syntax.Node) bool {
+		if n == nil {
+			if lit, _ := stack[len(stack)-1].(*syntax.FuncLit); lit != nil {
+				funcs = funcs[:len(funcs)-1]
+			}
+			stack = stack[:len(stack)-1]
+			return true
+		}
+		stack = append(stack, n)
+		if lit, _ := n.(*syntax.FuncLit); lit != nil {
+			funcs = append(funcs, lit.Type)
+		}
+		if r, _ := n.(*syntax.ReturnStmt); r != nil && r.Results != nil {
+			for _, v := range check.sgoNamedResults(funcs[len(funcs)-1]) {
+				if lit := captured[v]; lit != nil {
+					check.errorf(r, UnassignableOperand, "SGO_E_CAPTURE_NOT_FINAL: named result %s is captured by the function literal at %s and the return statement assigns it (SGO-MEM-002)", v.name, syntax.StartPos(lit))
+				}
+			}
+		}
 		a, _ := n.(*syntax.AssignStmt)
 		if a == nil {
 			return true

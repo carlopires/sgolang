@@ -9,10 +9,11 @@
       "title": "A byte-for-byte copy of TCB files exempts a user package from admission",
       "location": "sgoadmit/admit.go Trusted; noder.go; noder/sgo_identity.go; link/ld/sgoid.go",
       "clause": "SGO-TCB-002, SGO-BIND-002, SGO-NATIVE-001",
-      "status": "fixed",
+      "status": "verified",
       "resolution": "Trust is now (import path, file name, digest): sgoadmit.Trusted(pkgpath, files) requires a TCB package path and each file's manifest entry (shared tcbFileOK with CheckTCB); the content-only digest set is no longer generated. The importer refuses a 'tcb' identity on a non-TCB path (SGO_E_FOREIGN_OBJECT), and so does the linker (sgoIdentConfigErr, generated sgotcb.go list). policy.md reworded. SGO-TCB-002 clause wording ('a function of file digests') is deferred to the version change of SR2, since it is normative text.",
-      "fix_commit": null,
-      "regression_test": "test-tcb.py copy cases (subset copy of internal/stringslite, whole internal/godebugs, direct compile; digest asserted first); host-lane TestTrusted and TestSGoIdentConfigErr; mutation (content-only Trusted) caught by test-tcb via the importer check"
+      "fix_commit": "f71e01af75",
+      "regression_test": "test-tcb.py copy cases (subset copy of internal/stringslite, whole internal/godebugs, direct compile; digest asserted first); host-lane TestTrusted and TestSGoIdentConfigErr; mutation (content-only Trusted) caught by test-tcb via the importer check",
+      "verified_by": "reviewer at f71e01af75 (linux/amd64): probes p1/p2 rejected, direct compile rejected, test-tcb ok, conformance 336/336"
     },
     {
       "id": "R2",
@@ -53,6 +54,50 @@
       "title": "A captured named result is reassigned by return <operands>",
       "location": "types2/sgo_flow.go sgoAssignments",
       "clause": "SGO-MEM-001, SGO-MEM-002",
+      "status": "fixed",
+      "resolution": "sgoAssignments treats a return with operands as assigning every named result of its innermost enclosing function (FuncDecl or FuncLit, tracked with a stack during Inspect) and reports SGO_E_CAPTURE_NOT_FINAL at the return when one is captured. A bare return still assigns nothing. ctl-defer-assigns-named-result now also expects the diagnostic at 'return 1, 2', which is correct per SGO-MEM-002 (the deferred literal captures b and the return assigns it). Recording the implicit-assignment forms in SGO-MEM-002 compile_link_checks is normative text, deferred to the SR2 version change (doc item D-R5).",
+      "fix_commit": null,
+      "regression_test": "conformance mem-capture-named-result-return (FuncDecl), mem-capture-named-result-return-literal (FuncLit), mem-capture-named-result-bare-return (run, exit 0); ctl-return-operands-nursery unchanged"
+    },
+    {
+      "id": "R6",
+      "severity": "major",
+      "title": "File confinement: Create truncates before the chain check; Mkdir/Remove act on a parent descriptor after verifying it (TOCTOU)",
+      "location": "runtime/sgo_fs.go sgoResolve; sgo_io.go Create; sgo_iodir.go",
+      "clause": "SGO-FILE-002, D53, D56",
+      "status": "open",
+      "resolution": null,
+      "fix_commit": null,
+      "regression_test": null
+    },
+    {
+      "id": "R7",
+      "severity": "minor",
+      "title": "Running build scripts dirties tracked evidence files",
+      "location": "sgo/scripts/build-stage0.sh, lib.sh",
+      "clause": "D77 / reviewer tree hygiene",
+      "status": "open",
+      "resolution": null,
+      "fix_commit": null,
+      "regression_test": null
+    },
+    {
+      "id": "R8",
+      "severity": "minor",
+      "title": "Driver reuses cached TCB archives on a 'complete' marker alone; SGO_CACHE unclassified",
+      "location": "src/cmd/sgo/tcb.go cacheRoot, reuse",
+      "clause": "SGO-TCB-002, D77",
+      "status": "open",
+      "resolution": null,
+      "fix_commit": null,
+      "regression_test": null
+    },
+    {
+      "id": "R9",
+      "severity": "minor",
+      "title": "Allocation under c.lock in sgoChanReserve",
+      "location": "runtime/sgo_chan.go:236",
+      "clause": "sgo/docs/runtime-design.md §3",
       "status": "open",
       "resolution": null,
       "fix_commit": null,
@@ -107,6 +152,26 @@
       "status": "fixed",
       "fix_commit": null,
       "regression_test": "license-audit.py (mutation: LICENSE edit, SPDX marker, missing header all caught)"
+    }
+  ],
+  "doc_items": [
+    {
+      "id": "D-R1",
+      "for": "R1",
+      "text": "SGO-TCB-002: 'admission is a function of file digests' -> '(package path, file name, digest) triples' (new clause version)",
+      "status": "open, with SR2 version change"
+    },
+    {
+      "id": "D-R5",
+      "for": "R5",
+      "text": "SGO-MEM-002 compile_link_checks: list the implicit assignment forms (return with operands; select receive with =; x++, op=; range with = denied)",
+      "status": "open, with SR2 version change"
+    },
+    {
+      "id": "D-R1b",
+      "for": "R1",
+      "text": "reviewer suggestion: test-tcb case mapping a pinned TCB archive under a user import path in an importcfg (expected refused by importer/linker)",
+      "status": "open"
     }
   ]
 }

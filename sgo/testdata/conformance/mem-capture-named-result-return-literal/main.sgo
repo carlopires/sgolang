@@ -1,0 +1,19 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		f := func() (r int) {
+			n.Spawn(func(c *sgo.Context) error {
+				if r != 0 {
+					return sgo.NewError("changed")
+				}
+				return nil
+			})
+			return 7
+		}
+		_ = f()
+	}
+	return nil
+}
