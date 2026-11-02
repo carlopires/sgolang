@@ -70,6 +70,17 @@ jobs:
           plat="$(uname -s | tr A-Z a-z)_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
           sgo/scripts/test-examples.py --sgo "$PWD/pkg/tool/$plat/sgo"
 
+      - name: Release archive installs and runs the examples with no go command (D61)
+        run: |
+          sgo/scripts/make-release.py --out "$RUNNER_TEMP"
+          inst="$RUNNER_TEMP/inst"; mkdir -p "$inst" "$inst/home"
+          tar xzf "$RUNNER_TEMP"/sgo-*.tar.gz -C "$inst"
+          top="$(ls -d "$inst"/sgo-*)"
+          ! find "$top" -name go -o -name gofmt | grep .
+          cd "$RUNNER_TEMP"
+          env -i HOME="$inst/home" PATH=/usr/bin:/bin python3 "$GITHUB_WORKSPACE/sgo/scripts/test-examples.py" \
+            --sgo "$top/bin/sgo" --examples "$top/examples"
+
       - name: Package identity checks (SGO-IMP-002; stale and foreign objects)
         run: sgo/scripts/test-identity.py
 

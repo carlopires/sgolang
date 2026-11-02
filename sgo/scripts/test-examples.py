@@ -15,7 +15,7 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip()
+ROOT = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))  # no git needed: also runs against a release
 
 # name -> (main packages that print expected.txt, lab sweep seeds)
 EXAMPLES = {
