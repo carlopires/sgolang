@@ -54,6 +54,10 @@ TEST_RESULTS = {"PASS", "FAIL"}
 # Lab cases (kind "lab", W08, SPEC-LAB): run with `sgo lab run` (or `sgo lab sweep` with "sweep"), and
 # check the program's result, the trace's canonical events ("trace_events", in order), and the
 # lab_checks; a lab case with diagnostics expects the same rejection as production (S14).
+# The code `sgo lab replay` must refuse each tampered trace with (SGO-LAB-005); test-negative.py
+# swaps them to show the check is not vacuous (D79).
+LAB_REFUSALS = {"reject-other-build": "SGO_E_LAB_MANIFEST", "reject-changed-choice": "SGO_E_LAB_DIVERGENCE",
+                "reject-altered": "SGO_E_LAB_TRACE"}
 LAB_CHECKS = {"repeat", "replay", "reject-other-build", "reject-changed-choice", "reject-altered", "hang"}
 PROCEDURES = {"rebuild-after-edit"}  # build once, replace each X with X.next, build again; expectations apply to the second build
 CODE = re.compile(r"^SGO_E_[A-Z_]+$")
@@ -391,8 +395,7 @@ def run_lab_case(src, d, sgo, e):
         rr = subprocess.run([sgo, "lab", "replay", trace, "."], cwd=d, env=env, capture_output=True, text=True, timeout=to)
         if rr.returncode != e["exit"] or rr.stdout != r.stdout or "replay reproduced" not in rr.stderr:
             return f"replay: exit {rr.returncode}, stdout {rr.stdout!r}, stderr {rr.stderr[-200:]!r}"
-    refusals = {"reject-other-build": "SGO_E_LAB_MANIFEST", "reject-changed-choice": "SGO_E_LAB_DIVERGENCE",
-                "reject-altered": "SGO_E_LAB_TRACE"}
+    refusals = LAB_REFUSALS
     for c in checks:
         if c not in refusals:
             continue
