@@ -664,7 +664,7 @@
         "W09"
       ],
       "risk": "high",
-      "status": "pending",
+      "status": "passed",
       "plan_section": "11/W10",
       "deliverables": [
         "Single-language launcher and spec/ABI/admission identity",

@@ -2007,7 +2007,9 @@
       "expected": "All mismatched or uncontracted objects are rejected before execution. No fallback, header-only relabeling, or cache contamination enables linking.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W10: passed - test-isolation (lab/production packages never mix), test-flags (testmain confined to test binaries), test-identity, test-tcb (edited Go, assembly, and header TCB inputs with a warm cache) (sgo/evidence/w10/README.md)"
+      ]
     },
     {
       "id": "T02",
@@ -2024,7 +2026,9 @@
       "expected": "The combination is rejected and no replay guarantee is reported. Ownership/effect/admission checks remain mandatory; no compatibility binary exists.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W10: passed - test-isolation (a production binary ignores lab environment and writes no trace), test-lab (ignores a lab manifest) (sgo/evidence/w10/README.md)"
+      ]
     },
     {
       "id": "T03",
@@ -2041,7 +2045,9 @@
       "expected": "All shipped source tools agree on enabled syntax and diagnostics; unsupported external LSP behavior is documented.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W10: passed - test-fmt over every fixture, test-check (sgo check and sgo build agree on 318 cases); LSP documented as unsupported (sgo/evidence/w10/README.md)"
+      ]
     },
     {
       "id": "T04",
@@ -2058,7 +2064,9 @@
       "expected": "Each test has an audited lifetime root; failed tests drain or terminate; tasks cannot leak across test domains.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W10: passed - sgo test, one process per test; test-test (LeakedWork, cross-test TempDir isolation, watchdog), cases test-leaked-work, test-tempdir, test-pass-fail (sgo/evidence/w10/README.md)"
+      ]
     },
     {
       "id": "T05",
@@ -2075,7 +2083,9 @@
       "expected": "Intentional Go incompatibility is accepted as a design difference or a S-Go rejection test. No target legacy lane is added to keep upstream tests green; unexplained failures of admitted clauses block release.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W10: passed - rejection-report (356 upstream tests: 344 rejected with code and clause, 12 admitted stubs, 0 mismatches); B03 untouched suite with the reference toolchain (sgo/evidence/w10/README.md)"
+      ]
     },
     {
       "id": "T06",
@@ -2092,7 +2102,9 @@
       "expected": "All examples assert quiescence and their expected outcomes; replay example is independently reproducible.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W10: passed - examples pipeline, service, replay from the extracted release (env -i, no go): check, test with quiescence, run, 64-seed lab sweep; replay reproducible (sgo/evidence/w10/README.md)"
+      ]
     },
     {
       "id": "T07",
@@ -2109,7 +2121,9 @@
       "expected": "Raw samples, allocation/resource measurements, and uncertainty are retained; no unmeasured speedup claims.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W10: PARTIAL - bench.py: 20 fresh processes per row, wall, CPU, peak RSS, compile time, P50/P95/min-max, S-Go vs Go and lab off vs on, darwin/arm64 and linux (CI artifacts); allocation counts not measured (sgo/evidence/w10/README.md)"
+      ]
     },
     {
       "id": "T08",
@@ -2126,7 +2140,9 @@
       "expected": "Cross-compilation alone is not used as runtime-support evidence.",
       "implementation_status": "pending",
       "execution_status": "unrun",
-      "evidence": []
+      "evidence": [
+        "W10: passed - conformance built and executed natively on darwin/arm64 (local) and linux/amd64, linux/arm64 (sgo-w00 runners) (sgo/evidence/w10/README.md)"
+      ]
     },
     {
       "id": "F01",
@@ -2334,7 +2350,8 @@
       "execution_status": "unrun",
       "evidence": [
         "W00 gate-level checks passed on all three targets (sgo/evidence/w00/checks-*.json); compiler/linker-level part unrun until W03",
-        "W03: W03 part passed (W10: release tooling) - test-flags, err-no-suppression-flag, tool-compat-flag, lab-flag, proc-godebug-ignored (sgo/evidence/w03/README.md)"
+        "W03: W03 part passed (W10: release tooling) - test-flags, err-no-suppression-flag, tool-compat-flag, lab-flag, proc-godebug-ignored (sgo/evidence/w03/README.md)",
+        "W10: passed - test-isolation: sgo check and sgo test refuse permissive flags and reject identically under GOFLAGS/GOEXPERIMENT/GODEBUG; release has no go command (sgo/evidence/w10/README.md)"
       ]
     },
     {
@@ -2494,7 +2511,8 @@
       "execution_status": "passed",
       "evidence": [
         "W03: W03 part passed; effect annotations do not exist in subset 0 (W05/W10) - test-identity, test-tcb, imp-stale-contract, imp-stock-object (sgo/evidence/w03/README.md)",
-        "W05: passed - W05 part: imp-stale-contract, imp-stock-object, test-identity.py, test-tcb.py (sgo/evidence/w05/README.md)"
+        "W05: passed - W05 part: imp-stale-contract, imp-stock-object, test-identity.py, test-tcb.py (sgo/evidence/w05/README.md)",
+        "W10: passed - test-identity, test-tcb (assembler inputs now verified by the driver) (sgo/evidence/w10/README.md)"
       ]
     },
     {
@@ -2597,7 +2615,8 @@
       "implementation_status": "implemented",
       "execution_status": "passed",
       "evidence": [
-        "W08: passed - fixtures lab-pair-* (8 production cases: same outcome, records, output, and rejection under the lab), lab-rejects-like-production; test-lab.py (production binary ignores a manifest) (sgo/evidence/w08/README.md)"
+        "W08: passed - fixtures lab-pair-* (8 production cases: same outcome, records, output, and rejection under the lab), lab-rejects-like-production; test-lab.py (production binary ignores a manifest) (sgo/evidence/w08/README.md)",
+        "W10: passed - examples' production runs and lab sweeps agree; test-isolation T02 (sgo/evidence/w10/README.md)"
       ]
     },
     {
@@ -2619,7 +2638,8 @@
       "execution_status": "unrun",
       "evidence": [
         "W00 gate-level checks passed on all three targets (sgo/evidence/w00/checks-*.json); compiler/linker-level part unrun until W03",
-        "W03: W03 part passed (W10) - imp-stock-object, test-identity (foreign objects), test-tcb, test-flags, tool-go-file-input (sgo/evidence/w03/README.md)"
+        "W03: W03 part passed (W10) - imp-stock-object, test-identity (foreign objects), test-tcb, test-flags, tool-go-file-input (sgo/evidence/w03/README.md)",
+        "W10: passed - test-isolation (.go inputs refused by build, check, test); test-tcb; release clean install (sgo/evidence/w10/README.md)"
       ]
     },
     {
@@ -2685,7 +2705,8 @@
       "implementation_status": "pending",
       "execution_status": "unrun",
       "evidence": [
-        "W03: W03 part passed (W10/W12) - test-mutations (frozen clause change; amended registry refused by the toolchain); identity in packages, binaries, driver (sgo/evidence/w03/README.md)"
+        "W03: W03 part passed (W10/W12) - test-mutations (frozen clause change; amended registry refused by the toolchain); identity in packages, binaries, driver (sgo/evidence/w03/README.md)",
+        "W10: passed - test-mutations; the 0.6.0 freeze moved every identity (sgo/evidence/w10/README.md)"
       ]
     },
     {
@@ -2704,7 +2725,8 @@
       "implementation_status": "pending",
       "execution_status": "unrun",
       "evidence": [
-        "W03: W03 part passed (W10) - `sgo fmt` refuses unparsable S-Go and builds nothing; the driver accepts only `.sgo` through the one admission path (tool-go-file-input, test-flags) (sgo/evidence/w03/README.md)"
+        "W03: W03 part passed (W10) - `sgo fmt` refuses unparsable S-Go and builds nothing; the driver accepts only `.sgo` through the one admission path (tool-go-file-input, test-flags) (sgo/evidence/w03/README.md)",
+        "W10: passed - test-isolation (sgo check, sgo test, sgo fmt refuse .go and legacy constructs through the one admission path) (sgo/evidence/w10/README.md)"
       ]
     },
     {
