@@ -1,0 +1,25 @@
+// 100000 values over an channel of capacity 128 from a child to the root.
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	c := make(chan int, 128)
+	sum := 0
+	nursery (n) {
+		n.Spawn(func(task *sgo.Context) error {
+			for i := 0; i < 100000; i++ {
+				c <- i
+			}
+			close(c)
+			return nil
+		})
+		for v := range c {
+			sum += v
+		}
+	}
+	if sum != 4999950000 {
+		return sgo.NewError("bad sum")
+	}
+	return nil
+}

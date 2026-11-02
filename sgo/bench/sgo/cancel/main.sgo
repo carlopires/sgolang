@@ -1,0 +1,17 @@
+// Cancel a nursery of 1000 sleeping tasks and join them.
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		for i := 0; i < 1000; i++ {
+			n.Spawn(func(task *sgo.Context) error { return task.Sleep(600000) })
+		}
+		if err := root.Sleep(10); err != nil {
+			return err
+		}
+		n.Cancel()
+	}
+	return nil
+}

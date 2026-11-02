@@ -1,0 +1,21 @@
+// 10000 tasks blocked at the same time on a receive, released by a close.
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	c := make(chan int)
+	nursery (n) {
+		for i := 0; i < 10000; i++ {
+			n.Spawn(func(task *sgo.Context) error {
+				<-c
+				return nil
+			})
+		}
+		if err := root.Sleep(50); err != nil {
+			return err
+		}
+		close(c)
+	}
+	return nil
+}

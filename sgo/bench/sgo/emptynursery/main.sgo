@@ -1,0 +1,13 @@
+// 100000 empty nurseries, entered and closed by the root.
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	for i := 0; i < 100000; i++ {
+		nursery (n) {
+			_ = n
+		}
+	}
+	return nil
+}

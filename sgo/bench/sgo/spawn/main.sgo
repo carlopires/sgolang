@@ -1,0 +1,13 @@
+// Spawn and join 10000 tasks that return at once.
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		for i := 0; i < 10000; i++ {
+			n.Spawn(func(task *sgo.Context) error { return nil })
+		}
+	}
+	return nil
+}
