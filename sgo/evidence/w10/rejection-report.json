@@ -1,0 +1,2461 @@
+{
+ "spec_version": "0.6.0",
+ "upstream_dir": "test",
+ "files": 356,
+ "admitted": 12,
+ "by_code": {
+  "SGO_E_UNADMITTED": 314,
+  "SGO_E_SYNTAX": 13,
+  "SGO_E_MAIN_SIGNATURE": 12,
+  "admitted": 12,
+  "SGO_E_UNSTRUCTURED_SPAWN": 3,
+  "SGO_E_SHADOW": 1,
+  "SGO_E_SOURCE_ENCODING": 1
+ },
+ "results": {
+  "235": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "12:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "64bit": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "16:2",
+   "message": "import of standard-library package \"bufio\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "alg": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "13:8",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "alias": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "14:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "alias1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-IFACE-001",
+   "position": "13:8",
+   "message": "interface type is not admitted in S-Go subset 0 (SGO-IFACE-001)"
+  },
+  "alias2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"reflect\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "alias3": {
+   "outcome": "admitted"
+  },
+  "align": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "14:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "append": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "append1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-COMP-001",
+   "position": "14:7",
+   "message": "predeclared make is not admitted in S-Go subset 0 (SGO-COMP-001)"
+  },
+  "args": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"os\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "armimm": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:8",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "asmhdr": {
+   "outcome": "admitted"
+  },
+  "assign": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "13:2",
+   "message": "import of standard-library package \"sync\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "assign1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "12:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "atomicload": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-COMP-001",
+   "position": "14:10",
+   "message": "pointer type is not admitted in S-Go subset 0 (SGO-COMP-001)"
+  },
+  "bigalg": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "11:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "bigmap": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-COMP-001",
+   "position": "13:20",
+   "message": "array or slice type is not admitted in S-Go subset 0 (SGO-COMP-001)"
+  },
+  "blank": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"os\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "blank1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "12:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "bloop": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:8",
+   "message": "import of standard-library package \"testing\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "bom": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "bombad": {
+   "outcome": "rejected",
+   "code": "SGO_E_SOURCE_ENCODING",
+   "clause": "SGO-LEX-001",
+   "position": "14:2",
+   "message": "invalid BOM in the middle of the file (SGO-LEX-001)"
+  },
+  "bounds": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "12:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "cannotassign": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-COMP-001",
+   "position": "13:3",
+   "message": "slice expression is not admitted in S-Go subset 0 (SGO-COMP-001)"
+  },
+  "chancap": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"strings\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "chanlinear": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "char_lit": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"os\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "char_lit1": {
+   "outcome": "rejected",
+   "code": "SGO_E_SYNTAX",
+   "clause": "",
+   "position": "16:13",
+   "message": "escape is invalid Unicode code point U+D800"
+  },
+  "checkbce": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "clear": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "9:8",
+   "message": "import of standard-library package \"math\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "clearfat": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"bytes\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "closedchan": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "14:8",
+   "message": "import of standard-library package \"os\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "closure": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"runtime\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "closure1": {
+   "outcome": "rejected",
+   "code": "SGO_E_MAIN_SIGNATURE",
+   "clause": "SGO-PROC-001",
+   "position": "9:6",
+   "message": "package main must declare func main(root *sgo.Context) error (SGO-PROC-001)"
+  },
+  "closure2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "12:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "closure3": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "closure4": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-DEF-002",
+   "position": "13:10",
+   "message": "predeclared recover is not admitted in S-Go subset 0 (SGO-DEF-002)"
+  },
+  "closure5": {
+   "outcome": "admitted"
+  },
+  "closure6": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "9:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "closure7": {
+   "outcome": "rejected",
+   "code": "SGO_E_MAIN_SIGNATURE",
+   "clause": "SGO-PROC-001",
+   "position": "26:6",
+   "message": "package main must declare func main(root *sgo.Context) error (SGO-PROC-001)"
+  },
+  "cmp": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"os\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "cmp6": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "14:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "cmplx": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "12:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "cmplxdivide": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "13:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "cmplxdivide1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "6:8",
+   "message": "import of standard-library package \"math\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "complit": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "11:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "complit1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "12:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "complit2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:8",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "compos": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "11:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "const": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"os\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "const1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "12:8",
+   "message": "import of \"unsafe\" is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "const2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-TYPE-001",
+   "position": "14:4",
+   "message": "predeclared byte is not admitted in S-Go subset 0 (SGO-TYPE-001)"
+  },
+  "const3": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "const4": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "const5": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "const6": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "11:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "const7": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"bytes\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "const8": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-VAL-004",
+   "position": "17:10",
+   "message": "predeclared iota is not admitted in S-Go subset 0 (SGO-VAL-004)"
+  },
+  "convT2X": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "11:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "convert": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"reflect\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "convert1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "12:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "convert2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "12:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "convert3": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "14:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "convert4": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-DEF-002",
+   "position": "13:10",
+   "message": "predeclared recover is not admitted in S-Go subset 0 (SGO-DEF-002)"
+  },
+  "convert5": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "7:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "convinline": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "2:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "convlit": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "12:8",
+   "message": "import of \"unsafe\" is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "convlit1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "12:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "copy": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "copy1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-COMP-001",
+   "position": "14:8",
+   "message": "predeclared make is not admitted in S-Go subset 0 (SGO-COMP-001)"
+  },
+  "crlf": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "ddd": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-TYPE-003",
+   "position": "11:15",
+   "message": "variadic parameter is not admitted in S-Go subset 0 (SGO-TYPE-003)"
+  },
+  "ddd1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "12:8",
+   "message": "import of \"unsafe\" is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "ddd2": {
+   "outcome": "admitted"
+  },
+  "decl": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-FLOAT-001",
+   "position": "12:12",
+   "message": "predeclared float32 is not admitted in S-Go subset 0 (SGO-FLOAT-001)"
+  },
+  "declbad": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-FLOAT-001",
+   "position": "13:12",
+   "message": "predeclared float32 is not admitted in S-Go subset 0 (SGO-FLOAT-001)"
+  },
+  "defer": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "defererrcheck": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "deferfin": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"runtime\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "defernil": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "14:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "deferprint": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-PROC-003",
+   "position": "12:8",
+   "message": "predeclared println is not admitted in S-Go subset 0 (SGO-PROC-003)"
+  },
+  "devirt": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "7:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "devirtualization": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "9:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "devirtualization_nil_panics": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "10:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "devirtualization_with_type_assertions_interleaved": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "9:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "directive": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "9:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "directive2": {
+   "outcome": "rejected",
+   "code": "SGO_E_SYNTAX",
+   "clause": "",
+   "position": "14:3",
+   "message": "misplaced compiler directive"
+  },
+  "divide": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "divmod": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-PROC-003",
+   "position": "23:3",
+   "message": "predeclared println is not admitted in S-Go subset 0 (SGO-PROC-003)"
+  },
+  "embedfunc": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "9:8",
+   "message": "named, dot, or blank import is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "embedvers": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "9:8",
+   "message": "named, dot, or blank import is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "empty": {
+   "outcome": "admitted"
+  },
+  "env": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "13:2",
+   "message": "import of standard-library package \"os\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "eof": {
+   "outcome": "rejected",
+   "code": "SGO_E_MAIN_SIGNATURE",
+   "clause": "SGO-PROC-001",
+   "position": "12:1",
+   "message": "package main has no func main(root *sgo.Context) error (SGO-PROC-001)"
+  },
+  "eof1": {
+   "outcome": "admitted"
+  },
+  "escape": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "15:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "escape2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "15:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "escape2n": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "15:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "escape3": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "21:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "escape4": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "escape5": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "13:2",
+   "message": "import of standard-library package \"runtime\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "escape6": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "14:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "escape_alias": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "escape_array": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "escape_bloop": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"testing\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "escape_calls": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-COMP-001",
+   "position": "14:12",
+   "message": "array or slice type is not admitted in S-Go subset 0 (SGO-COMP-001)"
+  },
+  "escape_closure": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "escape_field": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "escape_goto": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "escape_hash_maphash": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"hash/maphash\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "escape_iface": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "escape_iface_data": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "12:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "escape_indir": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "escape_level": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "escape_make_non_const": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "escape_map": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "escape_mutations": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "9:8",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "escape_param": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "16:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "escape_reflect": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"reflect\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "escape_runtime_atomic": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"internal/runtime/atomic\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "escape_selfassign": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "11:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "escape_slice": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"os\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "escape_struct_param1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "12:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "escape_struct_param2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "12:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "escape_struct_return": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "escape_sync_atomic": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"sync/atomic\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "escape_unique": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"unique\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "escape_unsafe": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"reflect\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "fibo": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "22:2",
+   "message": "import of standard-library package \"flag\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "finprofiled": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "14:2",
+   "message": "import of standard-library package \"runtime\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "float_lit": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "float_lit2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "float_lit3": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-FLOAT-001",
+   "position": "13:12",
+   "message": "floating-point or imaginary literal is not admitted in S-Go subset 0 (SGO-FLOAT-001)"
+  },
+  "floatcmp": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"math\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "for": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-PROC-003",
+   "position": "13:3",
+   "message": "predeclared print is not admitted in S-Go subset 0 (SGO-PROC-003)"
+  },
+  "func": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-PROC-003",
+   "position": "13:3",
+   "message": "predeclared print is not admitted in S-Go subset 0 (SGO-PROC-003)"
+  },
+  "func1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-FLOAT-001",
+   "position": "12:22",
+   "message": "predeclared float32 is not admitted in S-Go subset 0 (SGO-FLOAT-001)"
+  },
+  "func2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "12:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "func3": {
+   "outcome": "rejected",
+   "code": "SGO_E_SYNTAX",
+   "clause": "",
+   "position": "16:9",
+   "message": "syntax error: missing parameter name"
+  },
+  "func4": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "12:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "func5": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNSTRUCTURED_SPAWN",
+   "clause": "SGO-SPAWN-005",
+   "position": "17:2",
+   "message": "the go statement is not part of S-Go; spawn through a nursery handle (SGO-SPAWN-005)"
+  },
+  "func6": {
+   "outcome": "rejected",
+   "code": "SGO_E_MAIN_SIGNATURE",
+   "clause": "SGO-PROC-001",
+   "position": "11:6",
+   "message": "package main must declare func main(root *sgo.Context) error (SGO-PROC-001)"
+  },
+  "func7": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "func8": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "funcdup": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "9:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "funcdup2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "9:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "fuse": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "gc": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"runtime\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "gc1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-FLOAT-001",
+   "position": "12:18",
+   "message": "floating-point or imaginary literal is not admitted in S-Go subset 0 (SGO-FLOAT-001)"
+  },
+  "gc2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "gcgort": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "15:2",
+   "message": "import of standard-library package \"errors\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "gcstring": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "13:2",
+   "message": "import of standard-library package \"runtime\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "genmeth": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "genmeth1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "genmeth2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "goprint": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"log\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "goto": {
+   "outcome": "rejected",
+   "code": "SGO_E_SYNTAX",
+   "clause": "",
+   "position": "42:7",
+   "message": "goto L jumps over declaration of x at main.sgo:43:4"
+  },
+  "heapsampling": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "helloworld": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-PROC-003",
+   "position": "12:2",
+   "message": "predeclared print is not admitted in S-Go subset 0 (SGO-PROC-003)"
+  },
+  "if": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-PROC-003",
+   "position": "13:3",
+   "message": "predeclared print is not admitted in S-Go subset 0 (SGO-PROC-003)"
+  },
+  "import": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:8",
+   "message": "named, dot, or blank import is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "import1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:8",
+   "message": "import of standard-library package \"bufio\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "import2": {
+   "outcome": "admitted"
+  },
+  "import4": {
+   "outcome": "admitted"
+  },
+  "import5": {
+   "outcome": "rejected",
+   "code": "SGO_E_SYNTAX",
+   "clause": "",
+   "position": "24:8",
+   "message": "syntax error: import path must be a string"
+  },
+  "import6": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "17:8",
+   "message": "import of standard-library package \"\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "index": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "13:2",
+   "message": "import of standard-library package \"bufio\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "index0": {
+   "outcome": "rejected",
+   "code": "SGO_E_MAIN_SIGNATURE",
+   "clause": "SGO-PROC-001",
+   "position": "10:1",
+   "message": "package main has no func main(root *sgo.Context) error (SGO-PROC-001)"
+  },
+  "index1": {
+   "outcome": "rejected",
+   "code": "SGO_E_MAIN_SIGNATURE",
+   "clause": "SGO-PROC-001",
+   "position": "10:1",
+   "message": "package main has no func main(root *sgo.Context) error (SGO-PROC-001)"
+  },
+  "index2": {
+   "outcome": "rejected",
+   "code": "SGO_E_MAIN_SIGNATURE",
+   "clause": "SGO-PROC-001",
+   "position": "10:1",
+   "message": "package main has no func main(root *sgo.Context) error (SGO-PROC-001)"
+  },
+  "indirect": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "indirect1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "12:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "init": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "12:1",
+   "message": "func init is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "init1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"runtime\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "initcomma": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "initexp": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "15:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "initialize": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "initializerr": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "12:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "initloop": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "12:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "inline": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "inline_big": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-COMP-001",
+   "position": "12:14",
+   "message": "array or slice type is not admitted in S-Go subset 0 (SGO-COMP-001)"
+  },
+  "inline_caller": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "10:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "inline_callers": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "10:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "inline_endian": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "inline_literal": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "10:2",
+   "message": "import of standard-library package \"log\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "inline_math_bits_rotate": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "inline_sync": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "inline_variadic": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-TYPE-003",
+   "position": "12:14",
+   "message": "variadic parameter is not admitted in S-Go subset 0 (SGO-TYPE-003)"
+  },
+  "int_lit": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"os\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "intcvt": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-FLOAT-001",
+   "position": "22:9",
+   "message": "floating-point or imaginary literal is not admitted in S-Go subset 0 (SGO-FLOAT-001)"
+  },
+  "intrinsic": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "intrinsic_atomic": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "iota": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-PROC-003",
+   "position": "13:3",
+   "message": "predeclared print is not admitted in S-Go subset 0 (SGO-PROC-003)"
+  },
+  "known_bits": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "label": {
+   "outcome": "rejected",
+   "code": "SGO_E_SYNTAX",
+   "clause": "",
+   "position": "16:1",
+   "message": "label L1 defined and not used"
+  },
+  "label1": {
+   "outcome": "rejected",
+   "code": "SGO_E_SYNTAX",
+   "clause": "",
+   "position": "18:3",
+   "message": "continue is not in a loop"
+  },
+  "linkmain": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "1:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "linkmain_run": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "linkname": {
+   "outcome": "admitted"
+  },
+  "linkname3": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "10:8",
+   "message": "named, dot, or blank import is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "linknameasm": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "7:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "linkobj": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "linkx": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:8",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "linkx_run": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "literal": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "literal2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "13:8",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "live": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "live1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "27:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "live2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "14:1",
+   "message": "function declaration without a body is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "live_regabi": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "live_uintptrkeepalive": {
+   "outcome": "rejected",
+   "code": "SGO_E_SYNTAX",
+   "clause": "",
+   "position": "27:3",
+   "message": "//go:uintptrkeepalive is only allowed in the standard library"
+  },
+  "loopbce": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "mainsig": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "12:1",
+   "message": "func init is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "makechan": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "13:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "makemap": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "13:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "makenew": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-COMP-001",
+   "position": "13:6",
+   "message": "predeclared make is not admitted in S-Go subset 0 (SGO-COMP-001)"
+  },
+  "makeslice": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "10:2",
+   "message": "import of standard-library package \"strings\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "mallocfin": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"runtime\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "map": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "13:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "map1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "12:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "mapclear": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "13:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "maplinear": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "maymorestack": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:8",
+   "message": "import of standard-library package \"runtime\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "mergemul": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "9:8",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "method": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "12:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "method1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "12:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "method2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "12:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "method3": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "11:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "method4": {
+   "outcome": "admitted"
+  },
+  "method5": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "13:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "method6": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "12:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "method7": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "12:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "named": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "12:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "named1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "13:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "newexpr": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-COMP-001",
+   "position": "13:8",
+   "message": "predeclared new is not admitted in S-Go subset 0 (SGO-COMP-001)"
+  },
+  "newinline": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "nil": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "nilcheck": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "12:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "nilptr": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "11:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "nilptr2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-DEF-002",
+   "position": "14:15",
+   "message": "predeclared recover is not admitted in S-Go subset 0 (SGO-DEF-002)"
+  },
+  "nilptr3": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "nilptr4": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "11:8",
+   "message": "import of \"unsafe\" is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "nilptr5": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "nilptr5_aix": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "nilptr5_wasm": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "nilptr_aix": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "10:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "noinit": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "2:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "nosplit": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "nowritebarrier": {
+   "outcome": "rejected",
+   "code": "SGO_E_SYNTAX",
+   "clause": "",
+   "position": "20:3",
+   "message": "//go:nowritebarrier only allowed in runtime"
+  },
+  "nul1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "opt_branchlikely": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "4:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "parentype": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "11:1",
+   "message": "function declaration without a body is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "peano": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:8",
+   "message": "import of standard-library package \"runtime\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "phiopt": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "print": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-PROC-003",
+   "position": "14:2",
+   "message": "predeclared println is not admitted in S-Go subset 0 (SGO-PROC-003)"
+  },
+  "printbig": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-PROC-003",
+   "position": "12:2",
+   "message": "predeclared print is not admitted in S-Go subset 0 (SGO-PROC-003)"
+  },
+  "prove": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "prove_constant_folding": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "prove_invert_loop_with_unused_iterators": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "prove_popcount": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "range": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNSTRUCTURED_SPAWN",
+   "clause": "SGO-SPAWN-005",
+   "position": "22:2",
+   "message": "the go statement is not part of S-Go; spawn through a nursery handle (SGO-SPAWN-005)"
+  },
+  "range2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "14:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "range3": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-TYPE-002",
+   "position": "14:17",
+   "message": "conversion to int is not admitted in S-Go subset 0 (SGO-TYPE-002)"
+  },
+  "range4": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "rangegen": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "25:2",
+   "message": "import of standard-library package \"bytes\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "recover": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"os\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "recover1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:8",
+   "message": "import of standard-library package \"runtime\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "recover2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "14:8",
+   "message": "import of standard-library package \"strings\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "recover3": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"runtime\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "recover4": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "recover5": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-DEF-002",
+   "position": "13:6",
+   "message": "predeclared recover is not admitted in S-Go subset 0 (SGO-DEF-002)"
+  },
+  "reflectmethod1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "13:8",
+   "message": "import of standard-library package \"reflect\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "reflectmethod2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "13:8",
+   "message": "named, dot, or blank import is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "reflectmethod3": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "13:8",
+   "message": "import of standard-library package \"reflect\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "reflectmethod4": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "13:8",
+   "message": "import of standard-library package \"reflect\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "reflectmethod5": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:8",
+   "message": "import of standard-library package \"reflect\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "reflectmethod6": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"reflect\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "reflectmethod7": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"reflect\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "reflectmethod8": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "12:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "rename": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "rename1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-TYPE-001",
+   "position": "13:8",
+   "message": "predeclared byte is not admitted in S-Go subset 0 (SGO-TYPE-001)"
+  },
+  "reorder": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "reorder2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "retjmp": {
+   "outcome": "admitted"
+  },
+  "return": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "12:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "rotate": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "18:2",
+   "message": "import of standard-library package \"bufio\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "rotate0": {
+   "outcome": "rejected",
+   "code": "SGO_E_MAIN_SIGNATURE",
+   "clause": "SGO-PROC-001",
+   "position": "10:1",
+   "message": "package main has no func main(root *sgo.Context) error (SGO-PROC-001)"
+  },
+  "rotate1": {
+   "outcome": "rejected",
+   "code": "SGO_E_MAIN_SIGNATURE",
+   "clause": "SGO-PROC-001",
+   "position": "10:1",
+   "message": "package main has no func main(root *sgo.Context) error (SGO-PROC-001)"
+  },
+  "rotate2": {
+   "outcome": "rejected",
+   "code": "SGO_E_MAIN_SIGNATURE",
+   "clause": "SGO-PROC-001",
+   "position": "10:1",
+   "message": "package main has no func main(root *sgo.Context) error (SGO-PROC-001)"
+  },
+  "rotate3": {
+   "outcome": "rejected",
+   "code": "SGO_E_MAIN_SIGNATURE",
+   "clause": "SGO-PROC-001",
+   "position": "10:1",
+   "message": "package main has no func main(root *sgo.Context) error (SGO-PROC-001)"
+  },
+  "rune": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "12:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "runtime": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "17:8",
+   "message": "import of standard-library package \"runtime\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "shift1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-IFACE-001",
+   "position": "14:10",
+   "message": "interface type is not admitted in S-Go subset 0 (SGO-IFACE-001)"
+  },
+  "shift2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-IFACE-001",
+   "position": "14:10",
+   "message": "interface type is not admitted in S-Go subset 0 (SGO-IFACE-001)"
+  },
+  "shift3": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "14:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "sieve": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNSTRUCTURED_SPAWN",
+   "clause": "SGO-SPAWN-005",
+   "position": "33:2",
+   "message": "the go statement is not part of S-Go; spawn through a nursery handle (SGO-SPAWN-005)"
+  },
+  "sigchld": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "simassign": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "11:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "simd": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "simd_inline": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "sizeof": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "9:8",
+   "message": "import of \"unsafe\" is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "slice3": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"bufio\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "slice3err": {
+   "outcome": "rejected",
+   "code": "SGO_E_SYNTAX",
+   "clause": "",
+   "position": "20:13",
+   "message": "middle index required in 3-index slice"
+  },
+  "slicecap": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "9:8",
+   "message": "import of \"unsafe\" is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "sliceopt": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-COMP-001",
+   "position": "11:11",
+   "message": "array or slice type is not admitted in S-Go subset 0 (SGO-COMP-001)"
+  },
+  "solitaire": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "21:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "stack": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "13:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "stackobj": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "10:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "stackobj2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "10:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "stackobj3": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"runtime\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "strcopy": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "13:2",
+   "message": "import of standard-library package \"reflect\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "strength": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:8",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "string_lit": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"os\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "stringrange": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "struct0": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-CHAN-002",
+   "position": "13:18",
+   "message": "channel element type interface{} (admitted: int, bool, string, error, and channels of them) is not admitted in S-Go subset 0 (SGO-CHAN-002)"
+  },
+  "switch": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"os\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "switch2": {
+   "outcome": "rejected",
+   "code": "SGO_E_SYNTAX",
+   "clause": "",
+   "position": "14:8",
+   "message": "syntax error: unexpected semicolon, expected :"
+  },
+  "switch3": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-UTYPE-001",
+   "position": "12:1",
+   "message": "type declaration is not admitted in S-Go subset 0 (SGO-UTYPE-001)"
+  },
+  "switch4": {
+   "outcome": "rejected",
+   "code": "SGO_E_SYNTAX",
+   "clause": "",
+   "position": "21:3",
+   "message": "cannot fallthrough final case in switch"
+  },
+  "switch5": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-TYPE-002",
+   "position": "20:7",
+   "message": "conversion to int is not admitted in S-Go subset 0 (SGO-TYPE-002)"
+  },
+  "switch6": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-IFACE-001",
+   "position": "17:10",
+   "message": "type switch is not admitted in S-Go subset 0 (SGO-IFACE-001)"
+  },
+  "switch7": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "13:8",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "tailcall": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "13:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "tighten": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "3:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "tinyfin": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"runtime\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "torture": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-COMP-001",
+   "position": "12:15",
+   "message": "pointer type is not admitted in S-Go subset 0 (SGO-COMP-001)"
+  },
+  "turing": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "13:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "typecheck": {
+   "outcome": "rejected",
+   "code": "SGO_E_SHADOW",
+   "clause": "SGO-BIND-004",
+   "position": "15:11",
+   "message": "int shadows the predeclared identifier int (SGO-BIND-004)"
+  },
+  "typecheckloop": {
+   "outcome": "rejected",
+   "code": "SGO_E_MAIN_SIGNATURE",
+   "clause": "SGO-PROC-001",
+   "position": "10:1",
+   "message": "package main has no func main(root *sgo.Context) error (SGO-PROC-001)"
+  },
+  "typeswitch": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"os\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "typeswitch1": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "typeswitch2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:8",
+   "message": "import of standard-library package \"io\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "typeswitch2b": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-IFACE-001",
+   "position": "12:16",
+   "message": "interface type is not admitted in S-Go subset 0 (SGO-IFACE-001)"
+  },
+  "typeswitch3": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "14:2",
+   "message": "import of standard-library package \"io\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "uintptrescapes": {
+   "outcome": "admitted"
+  },
+  "uintptrescapes2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "12:2",
+   "message": "import of \"unsafe\" is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "uintptrescapes3": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "uintptrkeepalive": {
+   "outcome": "rejected",
+   "code": "SGO_E_SYNTAX",
+   "clause": "",
+   "position": "9:3",
+   "message": "//go:uintptrkeepalive is only allowed in the standard library"
+  },
+  "undef": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "12:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  },
+  "unsafe_slice_data": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "10:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "unsafe_string": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "10:2",
+   "message": "import of \"unsafe\" is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "unsafe_string_data": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "10:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "unsafebuiltins": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "10:2",
+   "message": "import of standard-library package \"math\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "used": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "9:8",
+   "message": "import of \"unsafe\" is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "utf": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "11:8",
+   "message": "import of standard-library package \"unicode/utf8\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "varerr": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-COMP-001",
+   "position": "15:2",
+   "message": "predeclared new is not admitted in S-Go subset 0 (SGO-COMP-001)"
+  },
+  "varinit": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-PROC-003",
+   "position": "14:3",
+   "message": "predeclared print is not admitted in S-Go subset 0 (SGO-PROC-003)"
+  },
+  "wasmexport": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "9:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "wasmexport2": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "10:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "wasmmemsize": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "9:1",
+   "message": "compiler directive is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "weak": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"runtime\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "winbatch": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "13:2",
+   "message": "import of standard-library package \"bytes\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "writebarrier": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-NATIVE-001",
+   "position": "11:8",
+   "message": "import of \"unsafe\" is not admitted in S-Go subset 0 (SGO-NATIVE-001)"
+  },
+  "zerodivide": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-002",
+   "position": "12:2",
+   "message": "import of standard-library package \"fmt\" is not admitted in S-Go subset 0 (SGO-BIND-002)"
+  },
+  "zerosize": {
+   "outcome": "rejected",
+   "code": "SGO_E_UNADMITTED",
+   "clause": "SGO-BIND-003",
+   "position": "12:1",
+   "message": "package-level variable is not admitted in S-Go subset 0 (SGO-BIND-003)"
+  }
+ }
+}
