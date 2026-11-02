@@ -1,6 +1,7 @@
 package lib
 
-// count is recursive, so it is never inlined and its body is not in the export data.
+// count is reachable only from Count, which is recursive and so never inlined: neither body is in
+// the export data, and the export data does not carry count.
 func count(n int) int {
 	if n == 0 {
 		return 0
@@ -8,4 +9,9 @@ func count(n int) int {
 	return 1 + count(n-1)
 }
 
-func Count(n int) int { return count(n) }
+func Count(n int) int {
+	if n < 0 {
+		return Count(-n)
+	}
+	return count(n)
+}
