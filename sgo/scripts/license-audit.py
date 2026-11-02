@@ -90,7 +90,8 @@ def main():
         except UnicodeDecodeError:
             continue
         if st.startswith("A"):
-            for m in FOREIGN.finditer(text):
+            # This script names the markers it looks for; it is not itself a foreign notice.
+            for m in ([] if path == "sgo/scripts/license-audit.py" else FOREIGN.finditer(text)):
                 errs.append(f"{path}: foreign license or copyright marker {m.group(0)!r}")
             if needs_header(path) and not has_header(text) and not generated(text):
                 if fix:
