@@ -162,8 +162,8 @@
       "claim": "Q04: every accepted feature is explicit in the closed registry",
       "finding": "The registry still carries its 0.1.0 text ('No row is admitted') and every implemented family is 'specified_not_admitted' with empty admitted_in and evidence, although W03-W10 implemented, enforced and tested them. The registry understates what the toolchain accepts. Row status is part of the admission digest, so correcting it moves every identity.",
       "resolution": null,
-      "status": "open",
-      "fix_commit": null,
+      "status": "fixed",
+      "fix_commit": "spec 0.7.0 freeze",
       "regression_test": "guarantee-check.py (registry status vs guarantees)"
     },
     {
@@ -196,13 +196,13 @@
       "id": "D-R1",
       "for": "R1",
       "text": "SGO-TCB-002: 'admission is a function of file digests' -> '(package path, file name, digest) triples' (new clause version)",
-      "status": "open, with SR2 version change"
+      "status": "done in spec 0.7.0"
     },
     {
       "id": "D-R5",
       "for": "R5",
       "text": "SGO-MEM-002 compile_link_checks: list the implicit assignment forms (return with operands; select receive with =; x++, op=; range with = denied)",
-      "status": "open, with SR2 version change"
+      "status": "done in spec 0.7.0"
     },
     {
       "id": "D-R1b",
@@ -214,7 +214,7 @@
       "id": "D-R4",
       "for": "R4",
       "text": "SPEC-FILE: Open/Create admit regular files only; NotRegularFile joins the error kinds; lab fake and model state the same rule",
-      "status": "open, with the 0.7.0 change"
+      "status": "done in spec 0.7.0"
     },
     {
       "id": "D-R3",
@@ -226,13 +226,14 @@
       "id": "D-R6",
       "for": "R6",
       "text": "SPEC-FILE concurrency text: linux 5.6+ resolves with openat2 (kernel guarantee); darwin and older linux verify the walk, so a file can be created (never truncated) outside the grant through a raced path; Mkdir/Remove report PathRaced (an effect that happened); model iopath admits exactly these outcomes",
-      "status": "open, with the 0.7.0 change"
+      "status": "done in spec 0.7.0"
     },
     {
       "id": "D-R8",
       "for": "0.7.0 / D77 limitations",
-      "text": "State the TCB cache check as integrity against corruption, stale and partial entries, not tamper resistance: the manifest lives in the user-writable cache with the archives."
+      "text": "State the TCB cache check as integrity against corruption, stale and partial entries, not tamper resistance: the manifest lives in the user-writable cache with the archives.",
+      "status": "done in spec 0.7.0"
     }
   ],
-  "review_state": "all findings verified (R1-R10, R6b) at f247f1219a; open: 0.7.0 freeze (SR2, D-R1/R3/R4/R5/R6/R8, guarantee-check in CI) and D77-D80"
+  "review_state": "all findings verified (R1-R10, R6b); spec 0.7.0 freeze applies D-R1/R4/R5/R6/R8 and SR2; open: D-R1b test, D-R3 (D77), D77-D80"
 }

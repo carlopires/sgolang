@@ -1,3 +1,3 @@
 module example.com/nur-join-all
 
-sgo 0.6.0
+sgo 0.7.0

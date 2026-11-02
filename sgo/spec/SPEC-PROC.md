@@ -69,7 +69,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §13, decisions D08, D09, D16, reso
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-PROC-004 — Arguments and environment
-- **version:** 1
+- **version:** 2
 - **status:** frozen
 - **reference_closure:** SGO-ERR-001; D08.
 - **grammar_and_types:** Subset 0 provides no access to command-line arguments, environment variables, stdin, files, or the working directory.
@@ -83,9 +83,9 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §13, decisions D08, D09, D16, reso
 - **cancellation_and_cleanup:** n/a — no API exists.
 - **compile_link_checks:** `SGO_E_UNADMITTED` for any attempt (e.g. importing `os`).
 - **runtime_guards:** n/a — no API exists.
-- **tcb_assumptions:** The runtime does not change user-visible behavior based on environment variables; upstream `GODEBUG`/`GOTRACEBACK`-style settings are ignored or fixed at build time (SGO-TCB-001).
+- **tcb_assumptions:** An S-Go program reads no runtime environment variable: `GODEBUG`, `GOTRACEBACK`, `GOGC`, `GOMEMLIMIT`, `GOMAXPROCS` (D84), and every other upstream runtime setting are ignored, and their effects are fixed at build time (SGO-TCB-001). The linker marks every binary it links as an S-Go program; the runtime reads its environment settings only in a binary without the mark (W12 R2).
 - **positive_tests:** n/a — denial clause.
-- **negative_tests:** S13; fixture:bind-import-fmt, fixture:proc-godebug-ignored.
+- **negative_tests:** S13; fixture:bind-import-fmt, fixture:proc-godebug-ignored, fixture:proc-env-ignored, fixture:proc-env-ignored-ok.
 - **implementation_coverage:** W00: `src/cmd/compile/internal/noder/sgo_main.go`, `src/runtime/sgo_main.go`, `src/sgo/sgo.go`.
 - **executed_evidence:** conformance fixtures bind-import-fmt, proc-godebug-ignored (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w00/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

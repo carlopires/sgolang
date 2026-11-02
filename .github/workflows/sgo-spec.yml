@@ -31,6 +31,8 @@ jobs:
         run: sgo/scripts/policy-report.py
       - name: Licensing against the upstream pin (D81)
         run: sgo/scripts/license-audit.py
+      - name: Published guarantees rest on admitted rows and passed cases (D76, SR2)
+        run: sgo/scripts/guarantee-check.py
       - name: No allocation under an S-Go runtime lock (W12 R9)
         run: sgo/scripts/lock-alloc-check.py
       - name: Conformance cases (validate + runner self-test)

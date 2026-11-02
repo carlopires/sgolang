@@ -2,6 +2,19 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.7.0 — 2026-11-02
+
+Release registry (D83): every implemented family is admitted, and the independent review's corrections are part of the text (W12, Q01). Programs keep their meaning except where a review fix made a hole an error; the admission digest and toolchain identity change, so objects built for 0.6.0 are refused by a 0.7.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.7.0`.
+
+Registry: the 30 rows that W03-W10 implemented, enforced, and tested move from `specified_not_admitted` to `admitted` (`admitted_in` 0.7.0, with the evidence files of their acceptance cases); the 8 denied rows stay denied. `sgo/GUARANTEES.json` and `guarantee-check.py` (in CI) check that each published guarantee rests on admitted rows, frozen clauses, and passed acceptance cases (SR2).
+
+Amended:
+
+- SGO-TCB-002 v2 — trust is a property of the triple (import path, file name, digest): a byte copy of a trusted file in a user package is user code (W12 R1); the compiler, importer, and linker each check it. The driver's cache of trusted archives is checked against a digest list before reuse: integrity against corruption and stale or partial entries, not tamper resistance (D-R8).
+- SGO-MEM-002 v2 — the assignments that break effective finality are listed: also a `select` receive arm with `=` and a `return` with operands in a function whose named results are captured (W12 R5). A program that returned a value into a captured named result is now rejected with `SGO_E_CAPTURE_NOT_FINAL`.
+- SGO-PROC-004 v2 — an S-Go program reads no runtime environment variable, `GOMAXPROCS` included (W12 R2, D84).
+- SGO-FILE-002 v2 — `Open` and `Create` admit regular files only (`NotRegularFile`, W12 R4); on linux 5.6+ the kernel resolves paths beneath the grant (`openat2`), elsewhere the verified walk; `Create` truncates only after verification; `Mkdir` and `Remove` report an effect a concurrent rename moved outside the grant as `PathRaced`; the walk-mode `Create` race is stated (W12 R6).
+
 ## 0.6.0 — 2026-11-02
 
 Tooling: `sgo check` and `sgo test` (W10, D61-D64, D69). Programs keep their meaning; the admission digest and toolchain identity change, so objects built for 0.5.0 are refused by a 0.6.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.6.0`. A test binary's build ID names the configuration `test`, and the main package `sgo test` generates records the configuration `testmain` in its identity; neither appears in any other program.

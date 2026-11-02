@@ -1,7 +1,7 @@
 {
  "schema_version": 1,
  "clause": "SGO-TCB-002",
- "spec_version": "0.6.0",
+ "spec_version": "0.7.0",
  "allowlist_digest": "386c9d3dc830cb3eb0bdf168cc2a1a79877f621dfce11b33a7e44a327bc3ab09",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",

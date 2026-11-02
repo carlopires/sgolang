@@ -25,23 +25,23 @@ Subset 0. Derived from plan §8.1, §10.2, stage map §2 (T0), invariant OWN-6, 
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-TCB-002 — Admission of the runtime source
-- **version:** 1
+- **version:** 2
 - **status:** frozen
 - **reference_closure:** SGO-TCB-001, SGO-IMP-002, SGO-NATIVE-001; stage map §2–§3; OWN-6. Approved by the user on 2026-10-30.
 - **grammar_and_types:** n/a — build-trust rule.
 - **preconditions:** n/a — build-trust rule.
-- **evaluation_and_value_semantics:** The runtime's package closure on the admitted targets (30 packages: `runtime`, its `internal/…` dependencies, `math/bits`, `unsafe`) is Go source using `unsafe`, assembly, and linkname. It is admitted as trusted target code only by exact identity, recorded in `sgo/TARGET_TCB.json`: every `.go`, `.s`, and `.h` file of the closure (excluding tests) with its SHA-256 and whether it is identical to the upstream commit; the trusted primitives of SGO-TCB-001 with their clauses, upstream implementation symbols, and allowed callers; and every `go` statement in the closure as an enumerated runtime service with its purpose and status (active, dormant, not-built). Changing any listed file, adding or removing a file, or adding or removing a runtime `go` statement fails the check until the manifest is regenerated in a commit that reviews the change. Being listed grants nothing to user code: user-level `unsafe`, assembly, linkname, and cgo stay denied (SGO-NATIVE-001).
+- **evaluation_and_value_semantics:** The runtime's package closure on the admitted targets (30 packages: `runtime`, its `internal/…` dependencies, `math/bits`, `unsafe`) is Go source using `unsafe`, assembly, and linkname. It is admitted as trusted target code only by exact identity: trust is a property of the triple (import path, file name, SHA-256), so a file is trusted only when it is compiled as part of the package the manifest lists it under, with that name and that digest; a byte-for-byte copy of a trusted file in any other package is user code and goes through admission like any other (W12 R1). The identity is recorded in `sgo/TARGET_TCB.json`: every `.go`, `.s`, and `.h` file of the closure (excluding tests) with its SHA-256 and whether it is identical to the upstream commit; the trusted primitives of SGO-TCB-001 with their clauses, upstream implementation symbols, and allowed callers; and every `go` statement in the closure as an enumerated runtime service with its purpose and status (active, dormant, not-built). Changing any listed file, adding or removing a file, or adding or removing a runtime `go` statement fails the check until the manifest is regenerated in a commit that reviews the change. Being listed grants nothing to user code: user-level `unsafe`, assembly, linkname, and cgo stay denied (SGO-NATIVE-001).
 - **ownership_and_lifecycle:** The manifest is owned by the repository; each regeneration is a reviewed commit.
 - **effect_and_capability_requirements:** n/a — build-trust rule.
 - **concurrency_and_memory_order:** n/a — build-trust rule.
-- **allowed_nondeterminism:** None: admission is a function of file digests.
+- **allowed_nondeterminism:** None: admission is a function of (import path, file name, digest) triples.
 - **failure_and_partial_progress:** A mismatch fails the check (CI now; the compiler from W03) with `SGO_E_TCB_DIGEST`; nothing is built from unreviewed runtime source.
 - **cancellation_and_cleanup:** n/a — build-trust rule.
-- **compile_link_checks:** `SGO_E_TCB_DIGEST` (runtime file or service list differs from the manifest). W01: `sgo/scripts/tcb-manifest.py` in CI. W03: the compiler and linker verify the same digests before accepting runtime packages, and refuse a runtime entry point called from a caller not listed for its primitive (`SGO_E_TCB_CALLER`).
+- **compile_link_checks:** `SGO_E_TCB_DIGEST` (runtime file or service list differs from the manifest). The compiler, the importer, and the linker each check the triple: an object or archive is trusted only for the import path and files it was pinned for. W01: `sgo/scripts/tcb-manifest.py` in CI. W03: the compiler and linker verify the same digests before accepting runtime packages, and refuse a runtime entry point called from a caller not listed for its primitive (`SGO_E_TCB_CALLER`).
 - **runtime_guards:** n/a — build time.
-- **tcb_assumptions:** This clause defines how trust is granted.
+- **tcb_assumptions:** This clause defines how trust is granted. The driver keeps compiled trusted archives in a user-writable cache; an entry is reused only if every archive matches the digest list written last into the entry, which detects corruption and stale or partial entries. It is not tamper resistance: a user who can write the cache can rewrite both, as they can replace the toolchain binaries (D-R8).
 - **positive_tests:** S11; `tcb-manifest.py` check passes on the reviewed manifest.
-- **negative_tests:** S11, S15; self-tests: an edited runtime file and an added runtime `go` statement both fail the check.
+- **negative_tests:** S11, S15; self-tests: an edited runtime file and an added runtime `go` statement both fail the check; fixture:tcb-user-package-named-runtime; `sgo/scripts/test-tcb.py` (byte copies of TCB files under user paths are rejected; an altered cached archive is rebuilt).
 - **implementation_coverage:** W01 — `sgo/scripts/tcb-manifest.py`, `sgo/TARGET_TCB.json` (1,020 files, 11 enumerated services); compiler/linker enforcement W03.
 - **executed_evidence:** 2026-10-30, darwin/arm64: check passed; both negative self-tests failed as required.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

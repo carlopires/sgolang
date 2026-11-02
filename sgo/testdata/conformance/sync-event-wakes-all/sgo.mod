@@ -1,3 +1,3 @@
 module example.com/sync-event-wakes-all
 
-sgo 0.6.0
+sgo 0.7.0

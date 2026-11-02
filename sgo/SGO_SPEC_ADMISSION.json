@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": "0.6.0",
-  "admission_digest": "b25d4765ab53b004f0e2adf7a9f13d73fa2522518d5fc5b1e29c6841bfec3dd8",
-  "status": "subset0_frozen_not_admitted",
-  "warning": "Spec 0.1.0 is frozen: every row's clauses are fixed by digest. No row is admitted: admission requires implementation, enforcement, and executed evidence (constitution §6), starting in W03.",
+  "spec_version": "0.7.0",
+  "admission_digest": "45e8ec5a80754dc0eea727c89e50021e44ce28ee7719133a62e1e8feba0f8085",
+  "status": "admitted_0.7.0",
+  "warning": "Spec 0.7.0 admits every row marked 'admitted': its clauses are frozen, the toolchain implements and enforces them, and its acceptance cases have executed evidence (constitution §6, D83). Rows marked 'denied' stay rejected. Admission does not widen any row beyond its clauses; everything the clauses do not name is rejected.",
   "default_decision": "reject",
   "missing_draft_conflicting_or_stale_contract_decision": "reject",
   "language_dialects": [
@@ -57,7 +57,7 @@
       "surface_family": "Lexing, grammar, reserved words, and source recovery",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-LEX-001",
         "SGO-LEX-002",
@@ -65,7 +65,9 @@
         "SGO-LEX-004"
       ],
       "normative_text_digest": "7e2981f3b5fffcebd82c56070b38c9439aa7a40dd96312e10368760e5b089c3a",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "X01",
         "X03",
@@ -73,7 +75,12 @@
         "S05",
         "S19"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w03/README.md",
+        "sgo/evidence/w01/README.md",
+        "sgo/evidence/w05/README.md",
+        "sgo/evidence/w10/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-LEX-001": "2235bd8f9312d1c7757421ad5275d263515361e10ce67d1e559891ae5088aa14",
@@ -99,7 +106,7 @@
       "surface_family": "Names, scopes, imports, initialization, and nursery bindings",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-BIND-001",
         "SGO-BIND-002",
@@ -108,13 +115,20 @@
         "SGO-BIND-005"
       ],
       "normative_text_digest": "5743b7a11a1178fccf29c41cf6798fe8fe62d889ce40d51861a1699a47ee4782",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "X02",
         "S03",
         "S09"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w03/README.md",
+        "sgo/evidence/w01/README.md",
+        "sgo/evidence/w05/README.md",
+        "sgo/evidence/w10/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-BIND-001": "6e990dc11d03f357df717f0f7bad0290b2674b114bc919072a320f4311db1377",
@@ -143,7 +157,7 @@
       "surface_family": "Type system, function types, checked callable/effect summaries",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-TYPE-001",
         "SGO-TYPE-002",
@@ -153,13 +167,19 @@
         "SGO-TYPE-006"
       ],
       "normative_text_digest": "f67140684e18cf4736b44aeee4bbd41d8990bd20662274a8e7aade1683eb4081",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "X10",
         "S09",
         "S10"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w03/README.md",
+        "sgo/evidence/w05/README.md",
+        "sgo/evidence/w10/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-TYPE-001": "54c2f7fce51902b6c5f9d3d70144c181e1ca994c1e0975cc1e5b4320a7e1d71b",
@@ -191,7 +211,7 @@
       "surface_family": "Primitive values, conversions, equality, arithmetic and evaluation order",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-VAL-001",
         "SGO-VAL-002",
@@ -200,12 +220,18 @@
         "SGO-VAL-005"
       ],
       "normative_text_digest": "0294a05c630fb35050df0dfe196ab5671d4e4a4dc96c9a4d175236eb49ab3ea0",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "X05",
         "S16"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w03/README.md",
+        "sgo/evidence/w01/README.md",
+        "sgo/evidence/w07/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-VAL-001": "34e8f53afd2b5480eb3c70c1f87bc89e215a73ae3d0ba2a8f175cf061a29ac1a",
@@ -234,24 +260,31 @@
       "surface_family": "References, aliasing, shared mutable memory, atomics and data-race contract",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W07",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-MEM-001",
         "SGO-MEM-002",
         "SGO-MEM-003",
         "SGO-MEM-004"
       ],
-      "normative_text_digest": "40772a49c5895148a7f6a48afb5f368760312089fd7cd021c86f5a2c44517ee8",
-      "admitted_in": [],
+      "normative_text_digest": "5018e8b9a588bb0b61c650dbacb6f96cc22f46a941370e722d27a2462c3a1e1e",
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "O09",
         "S16"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w02/README.md",
+        "sgo/evidence/w01/README.md",
+        "sgo/evidence/w03/README.md",
+        "sgo/evidence/w07/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-MEM-001": "dadf4fd01d135c27c98916532bffbb6117469ef920f178158a6b9a4dc8e11db6",
-        "SGO-MEM-002": "d5b73b4725896bf537264759b44b61383f6e1c7f7b4073256acb91b0ecfb826f",
+        "SGO-MEM-002": "19b6cd0e0c4492333870463c15ceeaaed739fb86babef280ba5a658add0641ff",
         "SGO-MEM-003": "f6db2e4e1390c429f17944e111a14803d0cc8c1e47d47da9599af1f98cdfd02c",
         "SGO-MEM-004": "b459160b94cf0d75d444d97ef73930182055ad8ac55bf934644533f712d0d987"
       },
@@ -263,7 +296,7 @@
       },
       "clause_versions": {
         "SGO-MEM-001": 1,
-        "SGO-MEM-002": 1,
+        "SGO-MEM-002": 2,
         "SGO-MEM-003": 1,
         "SGO-MEM-004": 1
       }
@@ -273,7 +306,7 @@
       "surface_family": "Branches, loops, returns, closures and all scope exits",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-CTL-001",
         "SGO-CTL-002",
@@ -281,7 +314,9 @@
         "SGO-CTL-004"
       ],
       "normative_text_digest": "8e21c0a4f6adc0f053f47091b33e15d15c806c2bd37bc64964140781b1f88394",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "X04",
         "X05",
@@ -290,7 +325,9 @@
         "X08",
         "X11"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w03/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-CTL-001": "9ed4d5bcbd38d6a3ca98cd7877dd76ab65d8ad9b500528f4baadf04d1716b628",
@@ -316,7 +353,7 @@
       "surface_family": "Function defers, scoped finalizers, panic/recover and task exit",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W04",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-DEF-001",
         "SGO-DEF-002",
@@ -325,7 +362,9 @@
         "SGO-DEF-005"
       ],
       "normative_text_digest": "2e9a66a63b9613c41441240cd14312bfc9a8082d1fec0089e52fd523584e761c",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "X09",
         "X12",
@@ -335,7 +374,10 @@
         "P06",
         "P08"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w03/README.md",
+        "sgo/evidence/w04/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-DEF-001": "c05ee5ce795aea70813fc91b16fc35f2a0fc75c3f7c051e70a19044754840e59",
@@ -364,7 +406,7 @@
       "surface_family": "Nursery lifecycle, nesting, terminal snapshots, quiescence",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-NUR-001",
         "SGO-NUR-002",
@@ -373,14 +415,19 @@
         "SGO-NUR-005"
       ],
       "normative_text_digest": "a871f6c9a093855d934c44aff321afea7df96f535cbe0de52e70fa4f1373c18a",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "O01",
         "O02",
         "O05",
         "X04"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w02/README.md",
+        "sgo/evidence/w03/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-NUR-001": "12bf08589117df5d8470569f6ec0262361c5de6fbb03ae51ab3007ffa194c7c9",
@@ -409,7 +456,7 @@
       "surface_family": "Explicit nursery capability, callback admission and outcome reporting",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-SPAWN-001",
         "SGO-SPAWN-002",
@@ -418,7 +465,9 @@
         "SGO-SPAWN-005"
       ],
       "normative_text_digest": "beb516f9dce5cbf267e0d6caeaaf466ea317d851a87abd0e880a534ef0c93123",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "O03",
         "O04",
@@ -427,7 +476,12 @@
         "S07",
         "S08"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w02/README.md",
+        "sgo/evidence/w03/README.md",
+        "sgo/evidence/w05/README.md",
+        "sgo/evidence/w04/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-SPAWN-001": "2a90e2c678ca14b39c210763ba48ab5f22b2e9b0a9cb60f28c8cde5d8c83b0ba",
@@ -456,7 +510,7 @@
       "surface_family": "Sticky cancellation, owner/ancestor propagation, progress boundaries",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W04",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-CANCEL-001",
         "SGO-CANCEL-002",
@@ -464,7 +518,9 @@
         "SGO-CANCEL-004"
       ],
       "normative_text_digest": "950d1e909101469d036266645904fbfac5ef73273ffc1facf73d5e7f38a27324",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "C01",
         "C02",
@@ -472,7 +528,10 @@
         "C04",
         "P07"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w04/README.md",
+        "sgo/evidence/w03/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-CANCEL-001": "60ade2e07554f653c37b2249a93c3ad32dbf1a7a3882e0bdae559d2f7691cb57",
@@ -498,20 +557,26 @@
       "surface_family": "Cleanup budget, non-cooperation, fail-stop and diagnostic behavior",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W04",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-DRAIN-001",
         "SGO-DRAIN-002",
         "SGO-DRAIN-003"
       ],
       "normative_text_digest": "9a9f9c622a7dea5c108f72f40e2e0915f6e05d2009e589f989f21745cf323b95",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "C07",
         "C09",
         "S17"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w04/README.md",
+        "sgo/evidence/w03/README.md",
+        "sgo/evidence/w09/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-DRAIN-001": "fc0baf81aee47d7202bbc85f04e08846972bba11c1306150d65ddb4d2cf192f7",
@@ -534,19 +599,23 @@
       "surface_family": "Wait registration, terminal winner, park/unpark and lock order",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W04",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-WAIT-001",
         "SGO-WAIT-002"
       ],
       "normative_text_digest": "8e6fb6243b2f377ba9ee2ac5a1225a10ad0ef5e7b5f9fa61a4963d74118eccbf",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "C02",
         "C03",
         "C04"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w04/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-WAIT-001": "f7d2036b89d4992fcac526824569046e5ed598f1be387141927437c5ad852b04",
@@ -566,7 +635,7 @@
       "surface_family": "Reserve/commit/abort and native channels, select, close and reflection",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W07",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-CHAN-001",
         "SGO-CHAN-002",
@@ -574,7 +643,9 @@
         "SGO-CHAN-004"
       ],
       "normative_text_digest": "123110bab7a3ac5af0bd4e0ca0fcdd8aff6f50512b7b246edead4e4b08aadffc",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "H01",
         "H02",
@@ -590,7 +661,11 @@
         "N09",
         "S12"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w06/README.md",
+        "sgo/evidence/w07/README.md",
+        "sgo/evidence/w03/README.md"
+      ],
       "subset0": "denied",
       "clause_digests": {
         "SGO-CHAN-001": "7c41048db5a410ea5a70cb45877a0f23f328a903e75bd3a43d1b4235d9838ad5",
@@ -616,20 +691,25 @@
       "surface_family": "Permit alias/lifetime/affinity and abandoned obligation resolution",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W06",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-PERMIT-001",
         "SGO-PERMIT-002"
       ],
       "normative_text_digest": "86e550069c6c9a002f02086b1d5cc5c94782ddb6b71c935c610257875f6662cd",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "H03",
         "H04",
         "H05",
         "H06"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w06/README.md",
+        "sgo/evidence/w07/README.md"
+      ],
       "subset0": "denied",
       "clause_digests": {
         "SGO-PERMIT-001": "f6f24b113297a1786346e6e26c76941319c7e5408199c9c597c899936f00ab71",
@@ -649,20 +729,24 @@
       "surface_family": "Explicit nursery-authorized readiness handshake",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W05",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-READY-001",
         "SGO-READY-002"
       ],
       "normative_text_digest": "09c62f9934b39cb62027310580e68e4642642a741248dfa5643dc0ef4cadbe8a",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "R01",
         "R02",
         "R03",
         "R04"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w05/README.md"
+      ],
       "subset0": "denied",
       "clause_digests": {
         "SGO-READY-001": "fd0830cea1901043ab5d7648879d5a4d0ed252aaf286888bc61aec62fe6bd8f6",
@@ -682,14 +766,16 @@
       "surface_family": "Effect authority: capability handles, task ceilings, root grants, subset-1 effect kinds (D24-D26)",
       "specification_work_package": "W05",
       "implementation_owner_work_package": "W05",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-AUTH-001",
         "SGO-AUTH-002",
         "SGO-AUTH-003"
       ],
       "normative_text_digest": "882e0a1fb91722ffa10b411796a5f4503c4646efb6b9f533ccbee85aa64f1ada",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "A01",
         "A02",
@@ -702,7 +788,9 @@
         "A09",
         "A10"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w05/README.md"
+      ],
       "subset0": "denied",
       "clause_digests": {
         "SGO-AUTH-001": "d672d6e298826ed13c783ed0487106f8262f42bace3410719fec1373b53e5c4b",
@@ -725,12 +813,14 @@
       "surface_family": "Capabilities, task ceilings, attenuation, revocation and opaque handles",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W05",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-CAP-001"
       ],
       "normative_text_digest": "706baad47d74826f78a7c94634a6d525bf9a66349dddcecfb3667c203f68bfab",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "A01",
         "A02",
@@ -738,7 +828,11 @@
         "A04",
         "S06"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w05/README.md",
+        "sgo/evidence/w02/README.md",
+        "sgo/evidence/w03/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-CAP-001": "66407cdd485657acfe6acfedabf21c65883b5889acbc1b0e757206bf2f008230"
@@ -755,20 +849,27 @@
       "surface_family": "Transitive package/body/initialization contracts and artifact identity",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-IMP-001",
         "SGO-IMP-002"
       ],
       "normative_text_digest": "aa76738b65dc5c527f44ab4085f0c37ed34a9950ed92a0da0bfccc314c5bf0eb",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "S09",
         "S10",
         "S13",
         "T01"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w03/README.md",
+        "sgo/evidence/w05/README.md",
+        "sgo/evidence/w10/README.md",
+        "sgo/evidence/w09/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-IMP-001": "e3622c8b2f9109d66ef1835a9ae0d7c1ed719b47e95a2acfb4e95f781796d6d7",
@@ -788,24 +889,32 @@
       "surface_family": "Runtime/GC/service/assembly/intrinsic contracts and sealed callers",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W02",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-TCB-001",
         "SGO-TCB-002"
       ],
-      "normative_text_digest": "d63059dbf804e7059986b1a549602cceb90935366c2372e81a61ac4d37a06bea",
-      "admitted_in": [],
+      "normative_text_digest": "4cde4d7b14fff54699a5612f087b636c3c4b1b05d4c67ab4752cff8b250c9271",
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "O07",
         "O10",
         "S11",
         "S15"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w02/README.md",
+        "sgo/evidence/w01/README.md",
+        "sgo/evidence/w05/README.md",
+        "sgo/evidence/w03/README.md",
+        "sgo/evidence/w10/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-TCB-001": "8d20627ca979da20e7b47f29d344f3a6f4567893f5c68003bc79f31c70f4bcbc",
-        "SGO-TCB-002": "4b75768af8a2f243edce706fe51c72bdfb37ba2231abdbf820e4833be9ef83e9"
+        "SGO-TCB-002": "cbd751d342bd50ea11ebbb541cf2aa0eaaafd4bfafdff3d5239710ffd957e59c"
       },
       "clause_status": {
         "SGO-TCB-001": "frozen",
@@ -813,7 +922,7 @@
       },
       "clause_versions": {
         "SGO-TCB-001": 1,
-        "SGO-TCB-002": 1
+        "SGO-TCB-002": 2
       }
     },
     {
@@ -821,17 +930,22 @@
       "surface_family": "Production/virtual clocks, timers, deadlines and tie ordering",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W04",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-TIMER-001"
       ],
       "normative_text_digest": "e72df26e31b489f522b86470c72a4c0fe364c73a009248950047e7e7247d01f1",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "C01",
         "D06"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w04/README.md",
+        "sgo/evidence/w08/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-TIMER-001": "9376cf97d257974ef3aa5586d3f20ae30fe2e73bb845430eb174baff4febf72d"
@@ -875,25 +989,29 @@
       "surface_family": "Confined file capabilities, operation progress and lifetime",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W09",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-FILE-001",
         "SGO-FILE-002",
         "SGO-FILE-003"
       ],
-      "normative_text_digest": "d26d3a622a0b911d6bca7e89583bcbfcbb45639a87a98b00c5a65c94b6728571",
-      "admitted_in": [],
+      "normative_text_digest": "025c1cc08c6c00cdb1205ec1fe4b0cf02eec650d2a176fa827cff785795221a4",
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "I01",
         "I03",
         "I04",
         "I05"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w09/README.md"
+      ],
       "subset0": "denied",
       "clause_digests": {
         "SGO-FILE-001": "4c63d65dec0bd4ad5b94562d4f439c038b9bfe7121376cde4f703d2254fe3b0b",
-        "SGO-FILE-002": "d4d17d764c549f6bf50c1666d7700fe18e0bfd75e3389958a306a1d37e4beb08",
+        "SGO-FILE-002": "0fe60d030cb17cbbfcecd3d61f0440037f965ac903d4dba1248274208b9e16c3",
         "SGO-FILE-003": "4876fd6f7d4f685a7039857d09b768566d82abfea57076fa05f261c2d151d0ae"
       },
       "clause_status": {
@@ -903,7 +1021,7 @@
       },
       "clause_versions": {
         "SGO-FILE-001": 2,
-        "SGO-FILE-002": 1,
+        "SGO-FILE-002": 2,
         "SGO-FILE-003": 1
       }
     },
@@ -912,20 +1030,24 @@
       "surface_family": "Network capability, readiness, address policy and partial progress",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W09",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-NET-001",
         "SGO-NET-002"
       ],
       "normative_text_digest": "3645dd0053f78906bb02d884769da8b1a6021724c4b85f48bebfadf9f1614268",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "I02",
         "I03",
         "I04",
         "I05"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w09/README.md"
+      ],
       "subset0": "denied",
       "clause_digests": {
         "SGO-NET-001": "43ad25475ebf42449599a21e9cd2bba385bb89586308025767f8d96656483eea",
@@ -945,7 +1067,7 @@
       "surface_family": "Allowed nondeterminism, scheduling boundaries, virtual time and replay",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W08",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-LAB-001",
         "SGO-LAB-002",
@@ -955,7 +1077,9 @@
         "SGO-LAB-006"
       ],
       "normative_text_digest": "e0de5b31f595ca7a9cbc1c431ebd336c6708056334cf3490e0d9fae3c659f6c1",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "D02",
         "D03",
@@ -964,7 +1088,10 @@
         "D09",
         "S14"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w08/README.md",
+        "sgo/evidence/w10/README.md"
+      ],
       "subset0": "denied",
       "clause_digests": {
         "SGO-LAB-001": "3464f5ed770f3a21d0ba6b85b8c85da797a5ab9581c051fce575ac43bb2f8a6d",
@@ -996,13 +1123,15 @@
       "surface_family": "Driver/compiler/linker/export/cache and source-tool admission",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W10",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-TOOL-001",
         "SGO-TOOL-002"
       ],
       "normative_text_digest": "4fd1ca7c211d0dd1de494d2c3f65523c5da5de3f2ee14b913d653665512dd5c1",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "T01",
         "T02",
@@ -1011,7 +1140,10 @@
         "S18",
         "S19"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w10/README.md",
+        "sgo/evidence/w03/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-TOOL-001": "78b45888d746fe4fa49bfebc42843c0c26aa4a81e7ca35f00b40ab9e24e93b12",
@@ -1031,19 +1163,25 @@
       "surface_family": "Host/reference/target separation and truthful self-hosting status",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W00",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-BUILD-001"
       ],
       "normative_text_digest": "636c31555a7ece45e91a2f6978608c88ddf215f7ec22be82d306bd3af2899b76",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "B04",
         "B05",
         "S01",
         "S15"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w00/README.md",
+        "sgo/evidence/w03/README.md",
+        "sgo/evidence/w10/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-BUILD-001": "c2dfdc139ecfd24652ea428d84c2ddcf63434110ec2f30be4f7b37ac12473ef5"
@@ -1060,12 +1198,14 @@
       "surface_family": "GC roots, stack relocation, overflow and experimental stack contract",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W02",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-STACK-001"
       ],
       "normative_text_digest": "35564a8c7bc50ec2563680b382d93fb300d3699d759b81d7e61dc237f4920940",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "O07",
         "O08",
@@ -1073,7 +1213,10 @@
         "F03",
         "F04"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w02/README.md",
+        "sgo/evidence/w11/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-STACK-001": "72199f3f2627b39568c422f79bfb4ae59963dc93636e54f6ec79ea3c0d213315"
@@ -1090,21 +1233,28 @@
       "surface_family": "Diagnostics, resource exhaustion and runtime-check versus compile-error policy",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-ERR-001",
         "SGO-ERR-002",
         "SGO-ERR-003"
       ],
       "normative_text_digest": "d5b07404f472cf4e455df50ea8bb4344114ad10929d3dca93e440351f4e74f90",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "O04",
         "S03",
         "S16",
         "S20"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w02/README.md",
+        "sgo/evidence/w01/README.md",
+        "sgo/evidence/w03/README.md",
+        "sgo/evidence/w07/README.md"
+      ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-ERR-001": "17f732afab5e5edbe6fe8bdc2e22437be0d74923cfae45fb5b0b0363d4860a13",
@@ -1326,18 +1476,25 @@
       "surface_family": "Shared-memory synchronization: mutexes, atomics, once, wait groups and sendability",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-SYNC-001",
         "SGO-SYNC-002"
       ],
       "normative_text_digest": "e7d21bac4e8df28332ef54733f46e7f82bf0eeedb69ec3e6da03c48f027ed603",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "S16",
         "S17"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w01/README.md",
+        "sgo/evidence/w03/README.md",
+        "sgo/evidence/w07/README.md",
+        "sgo/evidence/w09/README.md"
+      ],
       "decision_refs": "D01",
       "subset0": "denied",
       "clause_digests": {
@@ -1358,27 +1515,34 @@
       "surface_family": "Process entry/exit status, stdout/stderr, arguments and environment",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-PROC-001",
         "SGO-PROC-002",
         "SGO-PROC-003",
         "SGO-PROC-004"
       ],
-      "normative_text_digest": "126b675cc46bd8f7e58c8a6ea776e0351f8870b94f5f8a26e8fc012ac5acfc3e",
-      "admitted_in": [],
+      "normative_text_digest": "c66356cfe3c0e505883a4d42026b37b233bd2c1cdd29cf9f0f21ae8b04ffa756",
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "S06",
         "S13"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w02/README.md",
+        "sgo/evidence/w03/README.md",
+        "sgo/evidence/w05/README.md",
+        "sgo/evidence/w09/README.md"
+      ],
       "decision_refs": "D08,D09",
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-PROC-001": "2c7b704866f18ec7553f7711c048173e0ac87f597c951014fa370a5c728f169e",
         "SGO-PROC-002": "43cc2ff8ddf53a18189750d92aa8bff977122e2715ecfb26cd8d3a9474521ced",
         "SGO-PROC-003": "f50d3d7b4b617770907a504d3294f19a276f0b948ca2288d692a612b73b9fb2f",
-        "SGO-PROC-004": "7498b299d931a8ad3d372123c18af17b160b59544c429df8870980f326a1639d"
+        "SGO-PROC-004": "a6767b1dc3e42ab508f8ba1eb381e7fbeb2632515a7fccec31a53ff5ac133d31"
       },
       "clause_status": {
         "SGO-PROC-001": "frozen",
@@ -1390,7 +1554,7 @@
         "SGO-PROC-001": 1,
         "SGO-PROC-002": 1,
         "SGO-PROC-003": 1,
-        "SGO-PROC-004": 1
+        "SGO-PROC-004": 2
       }
     },
     {
@@ -1398,19 +1562,24 @@
       "surface_family": "Test harness: golden program tests (subset 0) and later a testing package",
       "specification_work_package": "W01",
       "implementation_owner_work_package": "W03",
-      "status": "specified_not_admitted",
+      "status": "admitted",
       "clause_ids": [
         "SGO-TEST-001",
         "SGO-TEST-002",
         "SGO-TEST-003"
       ],
       "normative_text_digest": "6afb8572e5fe27dc59130ea7b4bc5deb22b7f7bb6e166327ebab0cb3629bae67",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.7.0"
+      ],
       "acceptance_case_ids": [
         "S01",
         "S19"
       ],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w03/README.md",
+        "sgo/evidence/w10/README.md"
+      ],
       "decision_refs": "D10",
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
@@ -1430,5 +1599,5 @@
       }
     }
   ],
-  "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. No row is admitted until its clauses are frozen."
+  "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0)."
 }

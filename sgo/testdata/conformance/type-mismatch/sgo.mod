@@ -1,3 +1,3 @@
 module example.com/type-mismatch
 
-sgo 0.6.0
+sgo 0.7.0
