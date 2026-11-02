@@ -502,13 +502,13 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 4. **Scope:** stream sockets on file-system paths only, at most 103 bytes (the portable `sun_path` limit), checked by the driver. Denied: Linux abstract names, datagram and seqpacket sockets, and passing descriptors or credentials as messages (authority arriving outside the grants).
 5. **Peer identity:** `c.PeerUID() (int, error)` on a Unix connection returns the peer process's user ID (SO_PEERCRED on linux, getpeereid on darwin); on a TCP connection it returns an `Unsupported` error. In lab runs the peer is the run itself and PeerUID returns the fixed value 1000.
 
-## D61 — Spec version and scope of W10 **[DEFAULT]** · PROPOSED 2026-11-02
+## D61 — Spec version and scope of W10 **[DEFAULT]** · APPROVED 2026-11-02
 
 **Recommendation.** W10 is spec **0.6.0**, a strict superset of 0.5.0 (no 0.5.0 program changes meaning). It adds only tooling: tests written in S-Go (D62), a type-check command (D63), and the distribution (below). The language and the runtime contracts do not change; examples, reports, and benchmarks are evidence, not spec surface. Editor/LSP support stays explicitly unsupported (plan §11/W10) until a forked tool works.
 
 **Distribution.** A release is an archive `sgo-<version>-<os>-<arch>.tar.gz` holding `bin/sgo`, the toolchain binaries it runs (`compile`, `link`, `asm`), the TCB sources and `sgo` package it compiles for targets, and the frozen registry (`spec/VERSION`, `SGO_SPEC_ADMISSION.json`, `TARGET_TCB.json`). It holds **no `go` command** and no stock standard library sources outside the TCB, so the installation is single-language. `sgo` finds its root from its own path; installing is extracting the archive and adding `bin` to `PATH`. A script builds the archive from a clean checkout and a fresh-machine check (CI) builds and runs the examples from it (W10 gate).
 
-## D62 — Tests written in S-Go: `sgo test` and per-test roots **[USER]** · PROPOSED 2026-11-02
+## D62 — Tests written in S-Go: `sgo test` and per-test roots **[USER]** · APPROVED 2026-11-02
 
 **Why it matters.** T04 requires each test to own an audited lifetime root: a failed test drains or terminates, and no task or handle crosses into another test.
 
@@ -518,27 +518,27 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation: (a).** Strongest isolation with no new runtime concept; per-test process start (a few ms) is acceptable. `sgo lab test` (the same tests under the lab, one seed per test, trace on failure) follows from the existing lab driver.
 
-## D63 — A type-check command for editors and scripts **[DEFAULT]** · PROPOSED 2026-11-02
+## D63 — A type-check command for editors and scripts **[DEFAULT]** · APPROVED 2026-11-02
 
 **Recommendation.** `sgo check [packages]` runs exactly the build front end (parse, admission, type checking, S-Go checks) without code generation or linking, and reports the same diagnostics, codes, and positions as `sgo build` (T03: one front end, so the tools cannot disagree). `-json` prints the diagnostics as JSON lines for editors. No LSP server ships; the limitation is documented.
 
-## D64 — How the examples assert quiescence **[DEFAULT]** · PROPOSED 2026-11-02
+## D64 — How the examples assert quiescence **[DEFAULT]** · APPROVED 2026-11-02
 
 **Recommendation.** Structured concurrency already makes post-scope quiescence a property of every nursery (no task outlives its scope; handles, tokens, and permits are resolved). The examples assert it as tests (D62): at the end of each test the harness checks the runtime's counters for the test process (live tasks other than the root, sleepers, socket waiters, open handles, unresolved permits and tokens) are all zero, and fails the test with `LeakedWork` otherwise. No user-visible counting API is added.
 
-## D65 — Lab variables and production binaries (T02) **[DEFAULT]** · PROPOSED 2026-11-02
+## D65 — Lab variables and production binaries (T02) **[DEFAULT]** · APPROVED 2026-11-02
 
 **Recommendation.** Keep the current rule and prove it: a production binary has no lab activation path, so lab environment variables (`GOLABSEED` and anything `SGO_LAB*`) and a manifest on fd 3 have no effect on it and it reports no replay guarantee; `sgo lab replay` and `sgo lab run` refuse a production binary and a production build ID (already enforced, D41). W10 adds the T02 test for both directions. No variable is ever read to refuse or alter a run (S15).
 
-## D66 — The three examples **[DEFAULT]** · PROPOSED 2026-11-02
+## D66 — The three examples **[DEFAULT]** · APPROVED 2026-11-02
 
 **Recommendation.** In `sgo/examples/`: **pipeline** (a producer, N workers, and a collector over channels with a capacity limiter; cancellation on the first bad record); **service** (a Unix-socket service started with `n.Start`, ready only after it listens; clients; orderly shutdown by cancellation with cleanup of every connection); **replay** (a seeded ordering bug found by `sgo lab sweep`, its saved trace committed, `sgo lab replay` reproducing it, and the fixed program passing the same sweep). Each has `sgo test` tests asserting outcomes and quiescence (D64), and each runs from the release archive in CI.
 
-## D67 — Performance evidence **[DEFAULT]** · PROPOSED 2026-11-02
+## D67 — Performance evidence **[DEFAULT]** · APPROVED 2026-11-02
 
 **Recommendation.** A benchmark harness (`sgo/bench/`) runs pairs of programs (S-Go, and equivalent Go built by the isolated upstream reference toolchain) and S-Go-only microbenchmarks: empty nursery, spawn/join, cancellation fan-out, channel throughput (rendezvous and buffered), peak live tasks, lab off versus lab on. Each is run 20 times in fresh processes; the harness records raw samples, wall and CPU time, peak RSS and virtual size, allocations where measurable, compile time, and host and toolchain identity, and reports P50/P95 with spread. Results are evidence only: no claim without samples, and no check is removed to improve a number.
 
-## D68 — Adopted conformance versus the upstream suite (T05) **[DEFAULT]** · PROPOSED 2026-11-02
+## D68 — Adopted conformance versus the upstream suite (T05) **[DEFAULT]** · APPROVED 2026-11-02
 
 **Recommendation.** Two separate lanes, never mixed: the untouched upstream suite runs only with the reference toolchain (B03, as today), and an **intentional rejection report** runs `sgo check` over the upstream language tests (`test/*.go`, copied as `.sgo`), records each file's outcome (admitted, or the first rejection code and clause), and classifies them by clause. A file that `sgo check` admits and that has an expected output is built and run by S-Go and must match; an unexplained mismatch blocks the release. No upstream test is changed or added to a target lane to keep it green.
 
@@ -556,3 +556,4 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - 2026-11-02: user approved the SPEC-LAB 0.4.0 clauses SGO-LAB-002 to SGO-LAB-006 as drafted ("looks good, continue"); frozen in spec 0.4.0 with the lab conformance lane (17 lab cases).
 - 2026-11-02: user approved D51–D59 as recommended ("looks good, continue"). Follow-up: spec 0.5.0 clauses for confined files and TCP endpoints (SPEC-FILE, SPEC-NET); W09 implementation, model first (D30).
 - 2026-11-02: user approved D60 as recommended (Unix domain sockets: exact path grants, socket-only stale removal, stream sockets on paths only, `PeerUID` in 0.5.0) and the SPEC-FILE/SPEC-NET 0.5.0 drafts otherwise; D60 is folded into 0.5.0 before freezing.
+- 2026-11-02: user approved D61-D68 as recommended ("approved"; D62 option (a), one process per test). Follow-up: spec 0.6.0 clauses for `sgo test` and `sgo check`; W10 implementation.
