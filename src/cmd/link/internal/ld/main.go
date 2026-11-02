@@ -234,6 +234,7 @@ func Main(arch *sys.Arch, theArch Arch) {
 	objabi.Flagfn1("importcfg", "read import configuration from `file`", ctxt.readImportCfg)
 
 	objabi.Flagparse(usage)
+	sgoCheckFlags() // S-Go: only the driver's flags and target settings (sgoid.go, D77)
 	// S-Go: this linker links only S-Go programs (sgoCheckIdentity refuses anything else; R3's flag
 	// allowlist keeps it so: a mode that linked other programs would make them ignore their
 	// environment too), so every

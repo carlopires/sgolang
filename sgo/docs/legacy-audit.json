@@ -1,0 +1,362 @@
+{
+  "about": "D77 no-legacy-path audit: every flag and environment input of the shipped tools (sgo, compile, asm, link) is S-Go-specified, refused (with a test), or inert (with a test). legacy-audit.py checks this file against the tools and their sources; anything unclassified, stale, or untested fails.",
+  "flags": {
+    "about": "compile, asm, and link: the flags the sgo driver writes are listed in each tool's refuse-by-default allowlist (base/sgoflags.go, cmd/asm/main.go, ld/sgoidcfg.go); legacy-audit.py checks that the driver writes each of them and runs the tool with every other flag of its table, requiring a refusal with no output. The list below is the reviewed table: a flag added upstream is unclassified until it is added here.",
+    "compile": [
+      "%",
+      "+",
+      "B",
+      "C",
+      "D",
+      "E",
+      "I",
+      "K",
+      "L",
+      "N",
+      "S",
+      "V",
+      "W",
+      "asan",
+      "asmhdr",
+      "bench",
+      "blockprofile",
+      "buildid",
+      "c",
+      "clobberdead",
+      "clobberdeadreg",
+      "complete",
+      "coveragecfg",
+      "cpuprofile",
+      "d",
+      "dwarf",
+      "dwarfbasentries",
+      "dwarflocationlists",
+      "dynlink",
+      "e",
+      "embedcfg",
+      "env",
+      "errorurl",
+      "gendwarfinl",
+      "goversion",
+      "h",
+      "importcfg",
+      "installsuffix",
+      "j",
+      "json",
+      "l",
+      "lang",
+      "linkobj",
+      "linkshared",
+      "live",
+      "m",
+      "memprofile",
+      "memprofilerate",
+      "msan",
+      "mutexprofile",
+      "nolocalimports",
+      "o",
+      "p",
+      "pack",
+      "pgoprofile",
+      "r",
+      "race",
+      "sgocheck",
+      "sgolab",
+      "sgotestmain",
+      "shared",
+      "smallframes",
+      "spectre",
+      "std",
+      "symabis",
+      "t",
+      "traceprofile",
+      "trimpath",
+      "u",
+      "v",
+      "w",
+      "wb"
+    ],
+    "asm": [
+      "D",
+      "I",
+      "S",
+      "V",
+      "d",
+      "debug",
+      "dynlink",
+      "e",
+      "gensymabis",
+      "linkshared",
+      "o",
+      "p",
+      "shared",
+      "spectre",
+      "std",
+      "trimpath",
+      "v"
+    ],
+    "link": [
+      "B",
+      "D",
+      "E",
+      "H",
+      "I",
+      "L",
+      "R",
+      "T",
+      "V",
+      "X",
+      "a",
+      "asan",
+      "aslr",
+      "benchmark",
+      "benchmarkprofile",
+      "bindnow",
+      "buildid",
+      "buildmode",
+      "c",
+      "capturehostobjs",
+      "checklinkname",
+      "compressdwarf",
+      "cpuprofile",
+      "d",
+      "debugnosplit",
+      "debugtextsize",
+      "debugtramp",
+      "dumpdep",
+      "e",
+      "extar",
+      "extld",
+      "extldflags",
+      "f",
+      "fipso",
+      "funcalign",
+      "g",
+      "h",
+      "importcfg",
+      "installsuffix",
+      "k",
+      "libgcc",
+      "linkmode",
+      "linkshared",
+      "macos",
+      "macsdk",
+      "memprofile",
+      "memprofilerate",
+      "msan",
+      "n",
+      "o",
+      "pluginpath",
+      "pruneweakmap",
+      "r",
+      "race",
+      "randlayout",
+      "s",
+      "sgodrainbudget",
+      "sgogrants",
+      "sgoiogrants",
+      "sgolab",
+      "sgotest",
+      "strictdups",
+      "tmpdir",
+      "v",
+      "w"
+    ],
+    "values": {
+      "about": "values legacy-audit.py passes to a refused flag that takes one, so the S-Go check (not upstream value parsing) decides; any other non-boolean flag gets 'x'; @EMPTYJSON is a file holding {}",
+      "compile": {
+        "c": "1",
+        "gendwarfinl": "1",
+        "memprofilerate": "1",
+        "d": "checkptr=0",
+        "spectre": "ret",
+        "lang": "go1.21",
+        "goversion": "go1.27.3",
+        "env": "K=V",
+        "json": "0,file:///nonexistent-sgo-audit",
+        "coveragecfg": "@EMPTYJSON",
+        "embedcfg": "@EMPTYJSON"
+      },
+      "asm": {
+        "spectre": "ret",
+        "d": "pctab=1"
+      },
+      "link": {
+        "B": "0x0102",
+        "R": "4096",
+        "T": "4096",
+        "D": "4096",
+        "debugtextsize": "1",
+        "debugtramp": "1",
+        "funcalign": "16",
+        "memprofilerate": "1",
+        "randlayout": "1",
+        "strictdups": "0",
+        "buildmode": "c-shared",
+        "linkmode": "external",
+        "checklinkname": "0",
+        "X": "main.x=1",
+        "H": "linux",
+        "aslr": "false",
+        "bindnow": "true",
+        "compressdwarf": "false",
+        "pruneweakmap": "false",
+        "macos": "11.0",
+        "macsdk": "11.0"
+      }
+    },
+    "info": {
+      "about": "flags that print and exit before anything is read or written (the version); legacy-audit.py requires that they write no output",
+      "compile": [
+        "V"
+      ],
+      "asm": [
+        "V"
+      ],
+      "link": [
+        "V"
+      ]
+    }
+  },
+  "env": {
+    "about": "Environment variables read by the shipped tools' sources (src/cmd/{sgo,compile,asm,link}, src/cmd/internal, src/internal/buildcfg) and by the Go runtime and standard library they run on. class: pinned (the driver sets a fixed value in every tool's environment, toolchain.go toolEnv), refused (a tool refuses any other value, tested), driver (an S-Go-specified input of the driver), inert (no effect on what is built: legacy-audit.py builds with the variable set and requires byte-identical objects and binaries), other-target (read only for a GOOS/GOARCH S-Go does not admit, which the tools refuse first), unshipped (read only by code no shipped tool links).",
+    "vars": {
+      "GOROOT": {
+        "class": "pinned",
+        "note": "the toolchain's own root"
+      },
+      "GOOS": {
+        "class": "pinned",
+        "note": "the target; sgo refuses unadmitted targets (SGO_E_TARGET)"
+      },
+      "GOARCH": {
+        "class": "pinned",
+        "note": "the target; sgo refuses unadmitted targets (SGO_E_TARGET)"
+      },
+      "GOEXPERIMENT": {
+        "class": "refused",
+        "test": "legacy-audit.py env refusals; test-flags.py"
+      },
+      "GOAMD64": {
+        "class": "refused",
+        "test": "legacy-audit.py env refusals; test-flags.py"
+      },
+      "GOARM64": {
+        "class": "refused",
+        "test": "legacy-audit.py env refusals; test-flags.py"
+      },
+      "GOFIPS140": {
+        "class": "refused",
+        "test": "legacy-audit.py env refusals"
+      },
+      "GOCOMPILEDEBUG": {
+        "class": "refused",
+        "test": "legacy-audit.py env refusals; test-flags.py"
+      },
+      "SGO_CACHE": {
+        "class": "driver",
+        "note": "location of the driver's cache (SGO-TOOL-001); entries are verified on reuse (SGO-TCB-002 v2, D-R8)"
+      },
+      "TMPDIR": {
+        "class": "driver",
+        "note": "location of temporary files; passed to the tools for that purpose only"
+      },
+      "HOME": {
+        "class": "driver",
+        "note": "default cache location (os.UserCacheDir) when SGO_CACHE is unset"
+      },
+      "XDG_CACHE_HOME": {
+        "class": "driver",
+        "note": "default cache location on linux (os.UserCacheDir) when SGO_CACHE is unset"
+      },
+      "GODEBUG": {
+        "class": "inert",
+        "value": "panicnil=1,gotypesalias=0,asynctimerchan=1"
+      },
+      "GOGC": {
+        "class": "inert",
+        "value": "off"
+      },
+      "GOMEMLIMIT": {
+        "class": "inert",
+        "value": "64MiB"
+      },
+      "GOMAXPROCS": {
+        "class": "inert",
+        "value": "1"
+      },
+      "GOTRACEBACK": {
+        "class": "inert",
+        "value": "crash"
+      },
+      "GOSSAFUNC": {
+        "class": "inert",
+        "value": "main",
+        "note": "writes a debug ssa.html when set on a direct compile; the object is unchanged and the driver never passes it"
+      },
+      "GOSSADIR": {
+        "class": "inert",
+        "value": "/nonexistent-sgo-audit"
+      },
+      "GOCLOBBERDEADHASH": {
+        "class": "inert",
+        "value": "1",
+        "note": "used only with -clobberdead, which is refused"
+      },
+      "GSHS_LOGFILE": {
+        "class": "inert",
+        "value": "/nonexistent-sgo-audit/log"
+      },
+      "DEBUG_TRACE_INLHEUR": {
+        "class": "inert",
+        "value": "1"
+      },
+      "TEST_TELEMETRY_DIR": {
+        "class": "inert",
+        "value": "/nonexistent-sgo-audit"
+      },
+      "GO_EXTLINK_ENABLED": {
+        "class": "refused",
+        "value": "1",
+        "tools": [
+          "link"
+        ],
+        "code": "link mode external is not admitted",
+        "note": "selects external linking, which is refused (SGO-BUILD-001)"
+      },
+      "GO386": {
+        "class": "other-target"
+      },
+      "GOARM": {
+        "class": "other-target"
+      },
+      "GOMIPS": {
+        "class": "other-target"
+      },
+      "GOMIPS64": {
+        "class": "other-target"
+      },
+      "GOPPC64": {
+        "class": "other-target"
+      },
+      "GORISCV64": {
+        "class": "other-target"
+      },
+      "GOWASM": {
+        "class": "other-target"
+      },
+      "PathExt": {
+        "class": "other-target",
+        "note": "windows executable lookup"
+      },
+      "DISPLAY": {
+        "class": "unshipped",
+        "note": "cmd/internal/browser (pprof, trace)"
+      },
+      "BROWSER": {
+        "class": "unshipped",
+        "note": "cmd/internal/browser (pprof, trace)"
+      }
+    }
+  }
+}

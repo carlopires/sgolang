@@ -62,6 +62,31 @@ func SGoCheckToolInput(sgo bool) {
 	}
 }
 
+// sgoCheckFlagsEarly runs right after the flags are parsed, before any of them takes effect (a
+// profile is started, a configuration file read, a sanitizer checked): it refuses a flag that
+// neither allowlist has, and the target settings, so they are refused by S-Go and not by whichever
+// upstream check happens to run first (D77). SGoCheckToolInput later applies the allowlist of the
+// package's kind.
+func sgoCheckFlagsEarly() {
+	flag.CommandLine.Visit(func(f *flag.Flag) {
+		for _, a := range append(SGoFlagsSGo, SGoFlagsTCB...) {
+			if f.Name == a {
+				return
+			}
+		}
+		sgoUsage("compile flag -%s is not admitted (SGO-TOOL-001)", f.Name)
+	})
+	if v := os.Getenv("GOCOMPILEDEBUG"); v != "" {
+		sgoUsage("GOCOMPILEDEBUG is not admitted (SGO-TOOL-001)")
+	}
+	for _, e := range buildcfg.SGoTargetConfigErrs() {
+		sgoUsage("%s", e)
+	}
+	if sgoUsageErrors > 0 {
+		os.Exit(2)
+	}
+}
+
 var sgoUsageErrors int
 
 func sgoUsage(format string, args ...any) {

@@ -6,9 +6,11 @@ package ld
 
 import (
 	"flag"
+	"fmt"
 	"internal/buildcfg"
 	"internal/platform"
 	"net/netip"
+	"os"
 	"regexp"
 	"slices"
 	"sort"
@@ -33,23 +35,36 @@ func (ctxt *Link) sgoCheckConfig() {
 		Errorf("sgo:1:1: SGO_E_USAGE: build mode %s is not admitted; S-Go programs are executables (SGO-BUILD-001)", ctxt.BuildMode)
 	}
 	if ctxt.LinkMode != LinkInternal {
-		Errorf("sgo:1:1: SGO_E_USAGE: link mode %s is not admitted; S-Go programs link internally (SGO-BUILD-001)", ctxt.LinkMode)
+		Errorf("sgo:1:1: SGO_E_USAGE: link mode %s is not admitted; S-Go programs link internally (SGO-BUILD-001)", &ctxt.LinkMode)
 	}
-	// Only the driver's flags (D77, W12 R3); the checks above and below stay as named diagnostics.
+}
+
+// sgoCheckFlags refuses, before anything is loaded or written, every flag the sgo driver does not
+// write and every target setting other than the one it pins (D77, W12 R3): SGO_E_USAGE, exit
+// status 2, no output. sgoCheckConfig checks the admitted flags' values later, once the link mode is
+// known.
+func sgoCheckFlags() {
+	var bad []string
 	flag.CommandLine.Visit(func(f *flag.Flag) {
-		if msg := sgoLinkFlagErr(f.Name); msg != "" && f.Name != "X" && f.Name != "checklinkname" && f.Name != "linkmode" {
-			Errorf("sgo:1:1: %s", msg)
+		switch {
+		case f.Name == "X":
+			bad = append(bad, "SGO_E_USAGE: -X string overrides are not admitted (SGO-TOOL-001)")
+		case f.Name == "checklinkname" && !*flagCheckLinkname:
+			bad = append(bad, "SGO_E_USAGE: -checklinkname=0 is not admitted (SGO-TOOL-001)")
+		default:
+			if msg := sgoLinkFlagErr(f.Name); msg != "" {
+				bad = append(bad, msg)
+			}
 		}
 	})
-	// The target configuration is the one the driver pins (D77, W12 R3).
 	for _, e := range buildcfg.SGoTargetConfigErrs() {
-		Errorf("sgo:1:1: SGO_E_USAGE: %s", e)
+		bad = append(bad, "SGO_E_USAGE: "+e)
 	}
-	if sgoXFlags != 0 {
-		Errorf("sgo:1:1: SGO_E_USAGE: -X string overrides are not admitted (SGO-TOOL-001)")
+	for _, b := range bad {
+		fmt.Fprintf(os.Stderr, "sgo:1:1: %s\n", b)
 	}
-	if !*flagCheckLinkname {
-		Errorf("sgo:1:1: SGO_E_USAGE: -checklinkname=0 is not admitted (SGO-TOOL-001)")
+	if len(bad) > 0 {
+		os.Exit(2)
 	}
 }
 

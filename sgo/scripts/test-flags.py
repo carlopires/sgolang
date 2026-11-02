@@ -106,7 +106,7 @@ def main():
             if msg := refused(r, out_a, want):
                 problems.append(f"compile {' '.join(flags) or extra}: {msg}")
         r = run([os.path.join(TOOLS, "compile"), "-o", os.path.join(tmp, "x.a"), "-p", "runtime", "-pack",
-                 "-importcfg", cfgp, "-+", "-std", "main.sgo"], bad, env)
+                 "-importcfg", cfgp, "-std", "main.sgo"], bad, env)  # -+ is refused first (legacy-audit.py)
         if r.returncode == 0 or "SGO_E_TCB_DIGEST" not in r.stdout + r.stderr:
             problems.append(f"compile -p runtime: want SGO_E_TCB_DIGEST:\n{r.stdout}{r.stderr}")
 

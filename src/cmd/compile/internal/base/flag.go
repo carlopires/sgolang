@@ -202,6 +202,7 @@ func ParseFlags() {
 	objabi.AddVersionFlag() // -V
 	registerFlags()
 	objabi.Flagparse(usage)
+	sgoCheckFlagsEarly() // S-Go: before any flag takes effect (sgoflags.go, D77)
 	if Flag.SGoLab {
 		// Lab builds count a step at every function entry (D43): an inlined call would lose its
 		// entry step, so step counts would depend on inlining decisions. Inlining is off.
