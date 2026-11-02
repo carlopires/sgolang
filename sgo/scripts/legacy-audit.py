@@ -157,6 +157,14 @@ def check_archive(tmp):
     if r.returncode != 0:
         return [f"archive: make-release.py failed: {(r.stdout + r.stderr)[-300:]}"]
     arch = glob.glob(os.path.join(out, "sgo-*.tar.gz"))
+    problems = []
+    # R13: the release tool refuses what it does not specify and never writes into the tree.
+    before = set(glob.glob(os.path.join(ROOT, "sgo-*.tar.gz")))
+    for args, want in ((["--bogus-flag", "--out", os.path.join(tmp, "bogus")], 2), (["--help"], 0)):
+        rr = run([sys.executable, os.path.join(ROOT, "sgo", "scripts", "make-release.py")] + args, ROOT, dict(os.environ))
+        wrote = glob.glob(os.path.join(tmp, "bogus", "*.tar.gz")) + sorted(set(glob.glob(os.path.join(ROOT, "sgo-*.tar.gz"))) - before)
+        if rr.returncode != want or wrote:
+            problems.append(f"archive: make-release.py {' '.join(args)}: exit {rr.returncode} (want {want}), wrote {wrote}")
     tcb = json.load(open(os.path.join(ROOT, "sgo", "TARGET_TCB.json")))
     want_src = {f["path"] for f in tcb["files"]}
     spec = importlib.util.spec_from_file_location("mkrel", os.path.join(ROOT, "sgo", "scripts", "make-release.py"))
@@ -164,7 +172,7 @@ def check_archive(tmp):
     spec.loader.exec_module(mk)
     headers = set(mk.asm_headers(tcb))
     tools = {f"pkg/tool/{GOOS}_{GOARCH}/{t}" for t in ("sgo", "compile", "asm", "link")}
-    problems, srcs = [], set()
+    srcs = set()
     with tarfile.open(arch[0]) as t:
         for m in t.getmembers():
             rel = m.name.split("/", 1)[1] if "/" in m.name else ""

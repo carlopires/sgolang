@@ -4,7 +4,7 @@
 # license that can be found in the LICENSE file.
 """make-release.py — the S-Go release archive (D61, W10).
 
-    make-release.py [--out DIR]
+    make-release.py [--out DIR]       (default $SGO_OUT/release; never the repository)
 
 Builds sgo-<spec version>-<os>-<arch>.tar.gz for the host from the current stage-0 toolchain:
 
@@ -61,9 +61,17 @@ def asm_headers(manifest):
 
 
 def main():
-    out = os.getcwd()
-    if sys.argv[1:2] == ["--out"]:
-        out = os.path.abspath(sys.argv[2])
+    import argparse
+    ap = argparse.ArgumentParser(prog="make-release.py", description="Build the S-Go release archive for the host (D61).")
+    default_out = os.path.join(os.environ.get("SGO_OUT") or os.path.join(os.path.expanduser("~"), ".cache", "sgolang", "out"),
+                               "release")
+    ap.add_argument("--out", default=default_out, help=f"directory for the archive, created if missing (default {default_out})")
+    try:
+        opts = ap.parse_args()
+    except SystemExit as e:
+        sys.exit(2 if e.code else 0)  # argparse: usage error (exit 2, nothing written) or --help (exit 0)
+    out = os.path.abspath(opts.out)
+    os.makedirs(out, exist_ok=True)
     version = open(os.path.join(ROOT, "sgo", "spec", "VERSION")).read().strip()
     name = f"sgo-{version}-{GOOS}-{GOARCH}"
     manifest = json.load(open(os.path.join(ROOT, "sgo", "TARGET_TCB.json")))

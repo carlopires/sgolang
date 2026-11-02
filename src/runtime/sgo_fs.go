@@ -139,10 +139,17 @@ func sgoResolve(root int32, path string, lastFlags, mode int32) (int32, string) 
 			if flags&sgoO_CREAT != 0 {
 				// Create in two steps, so the walk knows whether it created the file: exclusively
 				// first, then (it exists) without O_CREAT.
-				if fd = open(flags | sgoO_EXCL); fd >= 0 {
-					created = true
-				} else if fd == -sgoEEXIST {
-					fd = open(flags &^ sgoO_CREAT)
+				// A file removed between the two steps is created again (bounded), so Create does
+				// not report NotFound for it.
+				for try := 0; try < 4; try++ {
+					if fd = open(flags | sgoO_EXCL); fd >= 0 {
+						created = true
+					} else if fd == -sgoEEXIST {
+						if fd = open(flags &^ sgoO_CREAT); fd == -sgoENOENT {
+							continue
+						}
+					}
+					break
 				}
 			} else {
 				fd = open(flags)

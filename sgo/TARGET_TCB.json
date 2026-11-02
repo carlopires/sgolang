@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.7.0",
- "allowlist_digest": "eb59852eb83d8c38835469d9a3906f2202b790b8ec2033267d7f9e605df64816",
+ "allowlist_digest": "7b39a426cc3a8d1341428b29b66c6727b917500bdc0b6fd3617b45a0c4407d91",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -4471,7 +4471,7 @@
   },
   {
    "path": "src/runtime/sgo_fs.go",
-   "sha256": "e43b044346e262e61797da3fa4c6b10380d49395e3a2323e5836639745b83f0c",
+   "sha256": "050c98440f05fc1cfdc5e3eab524dec213adb836f6626399ae0d63e516a29293",
    "upstream_identical": false
   },
   {

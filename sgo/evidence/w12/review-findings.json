@@ -143,7 +143,7 @@
     {
       "id": "R11",
       "severity": "minor",
-      "status": "fixed",
+      "status": "verified",
       "finding": "walk-mode Create raced by a rename could create a file outside the grant and report PathRejected (NoEffect true): an unreported effect (D56, §12.3)",
       "fix": "the walk creates exclusively first (O_EXCL), then opens without O_CREAT on EEXIST; a failed verification after this walk created the file returns PathRaced (NoEffect false), not undone; SGO-FILE-002 v3",
       "regression_test": "TestSGoCreateRaceReported (forced walk): created -> PathRaced with an empty file outside; existing -> unchanged, NoEffect true; mutant (created never set) fails"
@@ -151,10 +151,18 @@
     {
       "id": "R12",
       "severity": "minor (doc)",
-      "status": "fixed",
+      "status": "verified",
       "finding": "two values were called admission digest: the registry's rows digest and the SHA-256 of the registry file the toolchain records",
       "fix": "registry field renamed rows_digest; inventory.md prints the file digest the binaries record; spec-tool check requires identity.go (driver and sgoadmit) to hold the file digest and spec version",
       "regression_test": "spec-tool.py check fails when identity.go is stale (seen before tcb-manifest --write)"
+    },
+    {
+      "id": "R13",
+      "severity": "minor",
+      "status": "fixed",
+      "finding": "make-release.py ignored unknown arguments and wrote the archive into the repository root",
+      "fix": "argparse with exactly --out (default $SGO_OUT/release, created if missing); an unknown argument exits 2 writing nothing; --help exits 0",
+      "regression_test": "legacy-audit.py: make-release.py --bogus-flag exits 2 and writes no archive; --help exits 0 and writes none"
     }
   ],
   "self_findings": [
