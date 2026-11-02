@@ -1,0 +1,3 @@
+# lab sweep failure traces and their sidecars (sgo lab sweep); a committed trace is named explicitly
+*.lab-fail.jsonl
+*.lab-fail.jsonl.host.json
