@@ -67,7 +67,7 @@ def main():
             sys.exit(f"test-isolation: reference build failed: {r.stderr}")
 
         # T01: configurations never mix (D41, SGO-IMP-002).
-        tcb = glob.glob(os.path.join(cache, "sgo-driver", "tcb", "*", "complete"))
+        tcb = glob.glob(os.path.join(cache, "sgo-driver", "tcb", "*", "manifest.sha256"))
         cfg = os.path.join(tmp, "importcfg")
         with open(cfg, "w") as f:
             for a in sorted(glob.glob(os.path.join(os.path.dirname(tcb[0]), "*.a"))):

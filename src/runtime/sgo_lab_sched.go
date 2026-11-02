@@ -291,6 +291,9 @@ func sgoLabSpawned(c *sgoTask) {
 	}
 	lock(&l.lock)
 	c.labID = int32(len(l.tasks))
+	if cap(l.tasks) == len(l.tasks) {
+		throw("sgo: lab task capacity not reserved")
+	}
 	l.tasks = append(l.tasks, c) // lock-alloc: ok (capacity reserved at the spawn point)
 	c.labReady = true
 	l.seq++

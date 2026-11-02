@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 # check-w00.sh — negative checks for W00 test cases B05, S01, S15 (gate level).
-# Writes sgo/evidence/w00/checks-<platform>.json. Exit status 0 only if every check passed.
+# Writes checks-<platform>.json to the w00 evidence directory (sgo/evidence/w00 only with SGO_RECORD=1). Exit status 0 only if every check passed.
 source "$(dirname "$0")/lib.sh"
 
 plat="$(host_platform)"

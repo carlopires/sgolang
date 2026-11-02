@@ -26,6 +26,7 @@ jobs:
     timeout-minutes: 90
     env:
       SGO_CACHE: ${{ github.workspace }}/../sgo-cache
+      SGO_OUT: ${{ runner.temp }}/sgo-out
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,3 +37,7 @@ jobs:
         run: sgo/scripts/runtime-lane.sh -race -count=2 -run 'TestSGo' runtime
       - name: Upstream runtime suite (regression, -short)
         run: sgo/scripts/runtime-lane.sh -short -count=1 runtime
+      - name: The checks left the tree clean (W12 R7)
+        run: |
+          git status --porcelain --untracked-files=all > "$RUNNER_TEMP/dirty.txt"
+          if [ -s "$RUNNER_TEMP/dirty.txt" ]; then echo "tracked or new files changed:"; cat "$RUNNER_TEMP/dirty.txt"; exit 1; fi

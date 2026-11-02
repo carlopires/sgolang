@@ -6,7 +6,7 @@
 #
 # B03: run the upstream distribution tests in the untouched reference worktree built by
 # build-reference.sh. Raw JSON events go to $SGO_CACHE/logs (large); a per-package summary
-# with every failure and skip goes to sgo/evidence/w00/. Failures are recorded, never hidden.
+# with every failure and skip goes to the w00 evidence directory (sgo/evidence/w00/ only with SGO_RECORD=1). Failures are recorded, never hidden.
 source "$(dirname "$0")/lib.sh"
 
 plat="$(host_platform)"

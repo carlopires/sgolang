@@ -176,8 +176,13 @@ func (t *toolchain) buildTCB(goos, goarch string) (map[string]string, error) {
 	for _, p := range pkgs {
 		archives[p.path] = filepath.Join(dir, strings.ReplaceAll(p.path, "/", "%")+".a")
 	}
-	if _, err := os.Stat(filepath.Join(dir, "complete")); err == nil {
+	if tcbCacheValid(dir, archives) {
 		return archives, nil
+	}
+	// A missing, incomplete, or altered entry is rebuilt (W12 R8): the manifest written last lists
+	// the sha256 of every archive, and a reused entry must match it byte for byte.
+	if err := os.RemoveAll(dir); err != nil {
+		return nil, err
 	}
 
 	// Build in a sibling directory and rename it into place, so a cache entry is complete or absent.
@@ -197,15 +202,58 @@ func (t *toolchain) buildTCB(goos, goarch string) (map[string]string, error) {
 		}
 		built[p.path] = a
 	}
-	if err := os.WriteFile(filepath.Join(work, "complete"), nil, 0o666); err != nil {
+	var man strings.Builder
+	for _, p := range pkgs {
+		name := strings.ReplaceAll(p.path, "/", "%") + ".a"
+		data, err := os.ReadFile(filepath.Join(work, name))
+		if err != nil {
+			return nil, err
+		}
+		fmt.Fprintf(&man, "%x  %s\n", sha256.Sum256(data), name)
+	}
+	if err := os.WriteFile(filepath.Join(work, tcbManifestName), []byte(man.String()), 0o666); err != nil {
 		return nil, err
 	}
 	if err := os.Rename(work, dir); err != nil {
-		if _, serr := os.Stat(filepath.Join(dir, "complete")); serr != nil {
+		if !tcbCacheValid(dir, archives) {
 			return nil, err // not a concurrent build that finished first
 		}
 	}
 	return archives, nil
+}
+
+// tcbManifestName is the last file written into a TCB cache entry: one "sha256  archive" line per
+// archive. An entry is reused only if it lists exactly the expected archives and each one's
+// contents match (W12 R8); the old empty "complete" marker proved only that a build had finished.
+const tcbManifestName = "manifest.sha256"
+
+func tcbCacheValid(dir string, archives map[string]string) bool {
+	data, err := os.ReadFile(filepath.Join(dir, tcbManifestName))
+	if err != nil {
+		return false
+	}
+	want := map[string]string{}
+	for _, line := range strings.Split(strings.TrimSuffix(string(data), "\n"), "\n") {
+		sum, name, ok := strings.Cut(line, "  ")
+		if !ok || len(sum) != 64 {
+			return false
+		}
+		want[name] = sum
+	}
+	if len(want) != len(archives) {
+		return false
+	}
+	for _, a := range archives {
+		sum, ok := want[filepath.Base(a)]
+		if !ok {
+			return false
+		}
+		data, err := os.ReadFile(a)
+		if err != nil || fmt.Sprintf("%x", sha256.Sum256(data)) != sum {
+			return false
+		}
+	}
+	return true
 }
 
 // buildTCBPkg compiles one package (with assembly when it has .s files) into work.

@@ -88,10 +88,11 @@
       "title": "Running build scripts dirties tracked evidence files",
       "location": "sgo/scripts/build-stage0.sh, lib.sh",
       "clause": "D77 / reviewer tree hygiene",
-      "status": "open",
+      "status": "fixed",
       "resolution": null,
       "fix_commit": null,
-      "regression_test": null
+      "regression_test": "CI clean-tree steps; locally build-stage0 + checks leave sgo/evidence unchanged",
+      "fix": "scripts write tracked evidence only with SGO_RECORD=1; otherwise to $SGO_OUT/evidence (default $SGO_CACHE/out); CI uploads from $SGO_OUT and every sgo-w00/sgo-spec/sgo-runtime job ends with a clean-tree check (git status --porcelain --untracked-files=all)"
     },
     {
       "id": "R8",
@@ -99,10 +100,11 @@
       "title": "Driver reuses cached TCB archives on a 'complete' marker alone; SGO_CACHE unclassified",
       "location": "src/cmd/sgo/tcb.go cacheRoot, reuse",
       "clause": "SGO-TCB-002, D77",
-      "status": "open",
+      "status": "fixed",
       "resolution": null,
       "fix_commit": null,
-      "regression_test": null
+      "regression_test": "test-tcb: one flipped byte in the cached runtime.a is rebuilt byte for byte; mutant (manifest presence only) fails",
+      "fix": "a TCB cache entry ends with manifest.sha256 (sha256 of each archive); an entry is reused only if it lists exactly the expected archives and each matches, otherwise it is removed and rebuilt. SGO_CACHE and TMPDIR classification goes to the D77 audit"
     },
     {
       "id": "R9",
@@ -110,7 +112,7 @@
       "title": "Allocation under c.lock in sgoChanReserve",
       "location": "runtime/sgo_chan.go:236",
       "clause": "sgo/docs/runtime-design.md §3",
-      "status": "fixed",
+      "status": "verified",
       "resolution": "sgoChanReserve allocates the permit once before lock(&c.lock) and reuses it across retries (the task's scope cannot change while it is blocked); the order of c.reserved++ and sgoPermitLink is unchanged. The audit of the other allocation sites under runtime locks (sgo_native_ops.go, sgo_ready.go) and the static check script are still open.",
       "fix_commit": null,
       "regression_test": "sgo/scripts/lock-alloc-check.py in sgo-spec CI; mutation: it reports all 9 sites in the pre-fix sources",

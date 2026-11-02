@@ -37,6 +37,10 @@ jobs:
         run: |
           sgo/scripts/conformance.py validate
           sgo/scripts/conformance.py selftest
+      - name: The checks left the tree clean (W12 R7)
+        run: |
+          git status --porcelain --untracked-files=all > "$RUNNER_TEMP/dirty.txt"
+          if [ -s "$RUNNER_TEMP/dirty.txt" ]; then echo "tracked or new files changed:"; cat "$RUNNER_TEMP/dirty.txt"; exit 1; fi
 
   model:
     strategy:
@@ -49,10 +53,16 @@ jobs:
       - uses: actions/checkout@v4
       - name: Executable model (W01 step 5)
         run: sgo/scripts/test-model.sh
+        env:
+          SGO_OUT: ${{ runner.temp }}/sgo-out
+      - name: The checks left the tree clean (W12 R7)
+        run: |
+          git status --porcelain --untracked-files=all > "$RUNNER_TEMP/dirty.txt"
+          if [ -s "$RUNNER_TEMP/dirty.txt" ]; then echo "tracked or new files changed:"; cat "$RUNNER_TEMP/dirty.txt"; exit 1; fi
       - name: Upload evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: w01-model-${{ matrix.runner }}
-          path: sgo/evidence/w01/
+          path: ${{ runner.temp }}/sgo-out/evidence/w01/
           retention-days: 90

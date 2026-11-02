@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 # test-model.sh — W01 step 5: run the executable model (sgo/model) with the pinned bootstrap Go.
-# Writes sgo/evidence/w01/model-<platform>.json.
+# Writes model-<platform>.json to the w01 evidence directory (sgo/evidence/w01 only with SGO_RECORD=1).
 source "$(dirname "$0")/lib.sh"
 plat="$(host_platform)"
 boot="$("$SGO_SCRIPTS/fetch-bootstrap.sh")"
@@ -16,6 +16,7 @@ set +e
 status=$?
 set -e
 cat "$out"
+mkdir -p "$SGO_EVIDENCE/../w01"
 json_write "$SGO_EVIDENCE/../w01/model-$plat.json" \
 	platform="$plat" started_at="$(echo "$start")" finished_at="$(now_utc)" exit_status="$status" \
 	go="$(run_clean -- "$boot/bin/go" version)" \

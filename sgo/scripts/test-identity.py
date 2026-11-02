@@ -79,7 +79,7 @@ def main():
             found = b'Go build ID: "' + want + b'"' in prog
         if not found:
             sys.exit(f"test-identity: binary does not record its build metadata {want!r}")
-        tcb = glob.glob(os.path.join(tmp, "cache", "sgo-driver", "tcb", "*", "complete"))
+        tcb = glob.glob(os.path.join(tmp, "cache", "sgo-driver", "tcb", "*", "manifest.sha256"))
         if len(tcb) != 1:
             sys.exit("test-identity: TCB cache not found")
         cfg = {}

@@ -120,7 +120,7 @@ def main():
 
         # The driver's build is the reference configuration (and fills the TCB cache).
         run([os.path.join(TOOLS, "sgo"), "build", "-o", os.path.join(tmp, "prog-driver")], mod, env)
-        tcb = glob.glob(os.path.join(tmp, "cache", "sgo-driver", "tcb", "*", "complete"))
+        tcb = glob.glob(os.path.join(tmp, "cache", "sgo-driver", "tcb", "*", "manifest.sha256"))
         if len(tcb) != 1:
             sys.exit("test-x10: TCB cache not found")
         cfg = {os.path.basename(a)[:-2].replace("%", "/"): a

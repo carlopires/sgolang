@@ -33,6 +33,7 @@ jobs:
     timeout-minutes: 240
     env:
       SGO_CACHE: ${{ github.workspace }}/../sgo-cache
+      SGO_OUT: ${{ runner.temp }}/sgo-out
     steps:
       - uses: actions/checkout@v4
         with:
@@ -135,17 +136,22 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: w10-bench-${{ matrix.runner }}
-          path: sgo/evidence/w10/bench-*
+          path: ${{ runner.temp }}/sgo-out/evidence/w10/bench-*
           retention-days: 90
 
       - name: B03 upstream baseline tests
         if: github.event_name == 'push' || inputs.full_tests
         run: sgo/scripts/test-reference.sh
 
+      - name: The checks left the tree clean (W12 R7)
+        run: |
+          git status --porcelain --untracked-files=all > "$RUNNER_TEMP/dirty.txt"
+          if [ -s "$RUNNER_TEMP/dirty.txt" ]; then echo "tracked or new files changed:"; cat "$RUNNER_TEMP/dirty.txt"; exit 1; fi
+
       - name: Upload evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: w00-evidence-${{ matrix.runner }}
-          path: sgo/evidence/w00/
+          path: ${{ runner.temp }}/sgo-out/evidence/w00/
           retention-days: 90

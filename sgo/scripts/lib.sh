@@ -16,7 +16,16 @@ SGO_DIR="$(cd "$SGO_SCRIPTS/.." && pwd)"
 SGO_ROOT="$(cd "$SGO_DIR/.." && pwd)"
 SGO_LOCK="$SGO_DIR/UPSTREAM.lock.json"
 SGO_CACHE="${SGO_CACHE:-$HOME/.cache/sgolang}"
-SGO_EVIDENCE="$SGO_DIR/evidence/w00"
+# Evidence records (W12 R7): the scripts write the tracked files under sgo/evidence only when
+# SGO_RECORD=1 (a deliberate evidence update, committed by hand). Otherwise they write to
+# $SGO_OUT/evidence (default $SGO_CACHE/out), so building and checking never dirty the tree.
+SGO_OUT="${SGO_OUT:-$SGO_CACHE/out}"
+if [ "${SGO_RECORD:-0}" = 1 ]; then
+	SGO_EVIDENCE="$SGO_DIR/evidence/w00"
+else
+	SGO_EVIDENCE="$SGO_OUT/evidence/w00"
+fi
+mkdir -p "$SGO_EVIDENCE"
 # Minimal, explicit PATH for child processes. System directories may contain a Go installation
 # (e.g. /usr/bin/go on GitHub's Ubuntu images), so a guard directory comes first: its `go` and
 # `gofmt` fail loudly, turning any PATH lookup of Go into an error instead of a silent fallback.

@@ -21,6 +21,7 @@ cannot pass vacuously when the TCB changes.
 
 import hashlib
 import json
+import glob
 import os
 import platform
 import shutil
@@ -127,6 +128,19 @@ def main():
                 sys.exit(f"test-tcb: {label}: want one diagnostic {want}...{want_msg}, got exit {r.returncode}:\n{out}")
 
         build("clean tree")
+        # W12 R8: a cached TCB archive is reused only if it matches the entry's manifest. Flip one
+        # byte of the cached runtime archive: the next build must rebuild the entry (the archive
+        # comes back byte for byte) instead of linking the altered one.
+        cached = glob.glob(os.path.join(tmp, "cache", "sgo-driver", "tcb", "*", "runtime.a"))
+        if len(cached) != 1 or not glob.glob(os.path.join(os.path.dirname(cached[0]), "manifest.sha256")):
+            sys.exit(f"test-tcb: cached TCB entry: want one runtime.a with a manifest, got {cached}")
+        good = open(cached[0], "rb").read()
+        bad = bytearray(good)
+        bad[len(bad) // 2] ^= 0xFF
+        open(cached[0], "wb").write(bytes(bad))
+        build("altered cached runtime archive")
+        if open(cached[0], "rb").read() != good:
+            sys.exit("test-tcb: an altered cached runtime archive was reused, not rebuilt")
         cases = [
             ("edited runtime file", os.path.join(root, "src", "runtime", "sgo_record.go"), "edit",
              "file runtime/sgo_record.go differs from its digest"),
@@ -160,6 +174,7 @@ def main():
             build(f"restored after {label}")
     print("test-tcb: ok: clean build; edited runtime file, added runtime file, edited sgo file, edited and "
           "added assembly file, and edited included header each fail with one SGO_E_TCB_DIGEST; restored trees build; "
+          "an altered cached TCB archive is rebuilt, not reused; "
           "byte copies of TCB files under user paths (driver and direct compile) go through admission and are rejected")
 
 

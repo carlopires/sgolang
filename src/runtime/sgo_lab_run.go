@@ -134,6 +134,9 @@ func sgoLabSleep(t *sgoTask, ms int64) error {
 	}
 	sgoSleepers = r
 	lock(&l.lock)
+	if cap(l.timers) == len(l.timers) {
+		throw("sgo: lab timer capacity not reserved")
+	}
 	l.timers = append(l.timers, sgoLabTimer{deadline: l.now + ms, id: l.nextTmr, t: t, r: r}) // lock-alloc: ok (capacity reserved)
 	l.nextTmr++
 	unlock(&l.lock)

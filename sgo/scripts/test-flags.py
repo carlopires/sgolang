@@ -62,7 +62,7 @@ def main():
         r = run([os.path.join(TOOLS, "sgo"), "build", "-o", os.path.join(tmp, "good")], mod, env)
         if r.returncode != 0:
             sys.exit(f"test-flags: reference build failed:\n{r.stdout}{r.stderr}")
-        tcb = glob.glob(os.path.join(tmp, "cache", "sgo-driver", "tcb", "*", "complete"))
+        tcb = glob.glob(os.path.join(tmp, "cache", "sgo-driver", "tcb", "*", "manifest.sha256"))
         cfgp = os.path.join(tmp, "importcfg")
         with open(cfgp, "w") as f:
             for a in sorted(glob.glob(os.path.join(os.path.dirname(tcb[0]), "*.a"))):

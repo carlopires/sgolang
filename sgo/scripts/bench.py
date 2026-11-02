@@ -107,7 +107,13 @@ def main():
             results["benchmarks"][name] = entry
             print(f"bench: {name} done", file=sys.stderr)
     plat = f"{GOOS}-{GOARCH}"
-    outdir = os.path.join(ROOT, "sgo", "evidence", "w10")
+    # Tracked evidence only with SGO_RECORD=1; otherwise $SGO_OUT/evidence/w10 (W12 R7).
+    if os.environ.get("SGO_RECORD") == "1":
+        outdir = os.path.join(ROOT, "sgo", "evidence", "w10")
+    else:
+        out = os.environ.get("SGO_OUT") or os.path.join(os.environ.get("SGO_CACHE") or os.path.expanduser("~/.cache/sgolang"), "out")
+        outdir = os.path.join(out, "evidence", "w10")
+    os.makedirs(outdir, exist_ok=True)
     os.makedirs(outdir, exist_ok=True)
     with open(os.path.join(outdir, f"bench-{plat}.json"), "w") as f:
         json.dump(results, f, indent=1)
@@ -131,7 +137,7 @@ def main():
                          f"| {'' if comp is None else f'{comp:.2f}'} |")
     with open(os.path.join(outdir, f"bench-{plat}.md"), "w") as f:
         f.write("\n".join(lines) + "\n")
-    print(f"bench: wrote sgo/evidence/w10/bench-{plat}.json and .md")
+    print(f"bench: wrote {outdir}/bench-{plat}.json and .md")
 
 
 if __name__ == "__main__":
