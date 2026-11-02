@@ -141,6 +141,25 @@ def main():
         build("altered cached runtime archive")
         if open(cached[0], "rb").read() != good:
             sys.exit("test-tcb: an altered cached runtime archive was reused, not rebuilt")
+        # D-R1b: a pinned TCB archive mapped to a user import path in an importcfg is refused: an
+        # archive carries the trust of the path it was pinned for, and is never user code.
+        tcbdir = os.path.dirname(cached[0])
+        cfg = os.path.join(tmp, "importcfg-rt")
+        with open(cfg, "w") as f:
+            for a in sorted(glob.glob(os.path.join(tcbdir, "*.a"))):
+                f.write(f"packagefile {os.path.basename(a)[:-2].replace('%', '/')}={a}\n")
+            f.write(f"packagefile example.com/prog/rt={os.path.join(tcbdir, 'internal%abi.a')}\n")
+        rtmod = os.path.join(tmp, "rtprog")
+        os.makedirs(rtmod)
+        open(os.path.join(rtmod, "main.sgo"), "w").write(
+            'package main\n\nimport (\n\t"example.com/prog/rt"\n\t"sgo"\n)\n\n'
+            'func main(root *sgo.Context) error {\n\t_ = rt.PtrSize\n\treturn nil\n}\n')
+        out_a = os.path.join(tmp, "rt.a")
+        r = subprocess.run([os.path.join(root, "pkg", "tool", HOST, "compile"), "-o", out_a, "-p", "main", "-pack",
+                            "-complete", "-importcfg", cfg, "main.sgo"], cwd=rtmod, env=env, capture_output=True, text=True)
+        if r.returncode == 0 or os.path.exists(out_a) or "mismatched import path" not in r.stdout + r.stderr:
+            sys.exit(f"test-tcb: a pinned archive under a user import path was not refused: exit {r.returncode}\n"
+                     f"{r.stdout}{r.stderr}")
         cases = [
             ("edited runtime file", os.path.join(root, "src", "runtime", "sgo_record.go"), "edit",
              "file runtime/sgo_record.go differs from its digest"),
@@ -174,7 +193,7 @@ def main():
             build(f"restored after {label}")
     print("test-tcb: ok: clean build; edited runtime file, added runtime file, edited sgo file, edited and "
           "added assembly file, and edited included header each fail with one SGO_E_TCB_DIGEST; restored trees build; "
-          "an altered cached TCB archive is rebuilt, not reused; "
+          "an altered cached TCB archive is rebuilt, not reused; a pinned archive under a user import path is refused; "
           "byte copies of TCB files under user paths (driver and direct compile) go through admission and are rejected")
 
 

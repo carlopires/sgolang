@@ -22,6 +22,7 @@ admitted, and requires the harness to report both, so it cannot pass vacuously.
 """
 import glob
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -147,6 +148,46 @@ def refusal(bench, tool, args, label, extra_env=None):
     return ""
 
 
+def check_archive(tmp):
+    import tarfile
+    out = os.path.join(tmp, "release")
+    os.makedirs(out, exist_ok=True)
+    r = run([sys.executable, os.path.join(ROOT, "sgo", "scripts", "make-release.py"), "--out", out], ROOT,
+            dict(os.environ))
+    if r.returncode != 0:
+        return [f"archive: make-release.py failed: {(r.stdout + r.stderr)[-300:]}"]
+    arch = glob.glob(os.path.join(out, "sgo-*.tar.gz"))
+    tcb = json.load(open(os.path.join(ROOT, "sgo", "TARGET_TCB.json")))
+    want_src = {f["path"] for f in tcb["files"]}
+    spec = importlib.util.spec_from_file_location("mkrel", os.path.join(ROOT, "sgo", "scripts", "make-release.py"))
+    mk = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mk)
+    headers = set(mk.asm_headers(tcb))
+    tools = {f"pkg/tool/{GOOS}_{GOARCH}/{t}" for t in ("sgo", "compile", "asm", "link")}
+    problems, srcs = [], set()
+    with tarfile.open(arch[0]) as t:
+        for m in t.getmembers():
+            rel = m.name.split("/", 1)[1] if "/" in m.name else ""
+            if not rel:
+                continue
+            top = rel.split("/")[0]
+            if top not in AUDIT["archive"]["top_level"]:
+                problems.append(f"archive: unexpected top-level entry {rel}")
+            if m.issym():
+                if rel != "bin/sgo":
+                    problems.append(f"archive: unexpected symlink {rel}")
+            elif m.isfile():
+                if m.mode & 0o111 and rel not in tools:
+                    problems.append(f"archive: unexpected executable {rel}")
+                if rel.startswith("src/"):
+                    srcs.add(rel)
+                    if rel not in want_src and rel not in headers:
+                        problems.append(f"archive: {rel} is not a TCB file")
+    for f in sorted(want_src - srcs):
+        problems.append(f"archive: TCB file {f} missing")
+    return problems
+
+
 def flag_args(tool, name, typ, tmp):
     v = AUDIT["flags"]["values"].get(tool, {}).get(name)
     if v == "@EMPTYJSON":
@@ -170,7 +211,7 @@ def info_flag(bench, tool, name):
 
 def main():
     problems = []
-    checked = {"refused_flags": 0, "driver_flags": 0, "refused_env": 0, "inert_env": 0}
+    checked = {"refused_flags": 0, "driver_flags": 0, "refused_env": 0, "inert_env": 0, "driver_commands": 0}
     with tempfile.TemporaryDirectory() as tmp:
         bench = Bench(os.path.realpath(tmp))
 
@@ -237,6 +278,33 @@ def main():
             elif c["class"] not in ("pinned", "driver", "other-target", "unshipped"):
                 problems.append(f"env {name}: unknown class {c['class']!r}")
 
+        # The sgo driver: its hand-written flag parsers (D77).
+        drv = AUDIT["driver"]
+        src = {p: open(p).read() for p in glob.glob(os.path.join(ROOT, "src", "cmd", "sgo", "*.go"))
+               if not p.endswith("_test.go")}
+        parsed = set()
+        for text in src.values():
+            parsed |= set(re.findall(r'\bname == "([a-z][a-z0-9-]*)"', text))
+            parsed |= set(re.findall(r'\ba == "-([a-z][a-z0-9-]*)"', text))
+            parsed |= set(re.findall(r'HasPrefix\(a, "-([a-z][a-z0-9-]*)="\)', text))
+        parsed -= set(drv["not_flags"])
+        spec = "".join(open(p).read() for p in glob.glob(os.path.join(ROOT, "sgo", "spec", "*.md")))
+        for f in sorted(parsed - set(drv["flags"])):
+            problems.append(f"sgo -{f}: parsed by the driver but not classified in legacy-audit.json")
+        for f in sorted(set(drv["flags"]) - parsed):
+            problems.append(f"sgo -{f}: classified in legacy-audit.json but the driver does not parse it")
+        for f in sorted(drv["flags"]):
+            if not re.search(r"`[^`]*-" + re.escape(f) + r"\b", spec):
+                problems.append(f"sgo -{f}: not named in the specification (sgo/spec)")
+        for cmd in drv["commands"]:
+            r = run([os.path.join(TOOLS, "sgo")] + cmd + ["-gcflags=-l", "."], bench.mod, bench.env)
+            if r.returncode == 0 or "SGO_E_USAGE" not in r.stdout + r.stderr:
+                problems.append(f"sgo {' '.join(cmd)} -gcflags=-l: exit {r.returncode}, want SGO_E_USAGE")
+        checked["driver_commands"] = len(drv["commands"])
+
+        # The release archive: four executables, the TCB sources, nothing else (D77, D61).
+        problems += check_archive(bench.tmp)
+
         # Self-test: the refusal check must reject an admitted command line, and the tool must still
         # refuse a known refused flag, so neither direction passes vacuously.
         if refusal(bench, "compile", [], "(no flag, self-test)") == "":
@@ -249,6 +317,8 @@ def main():
     print(f"legacy-audit: {'ok' if not problems else 'FAIL'}: {checked['driver_flags']} driver flags written by sgo, "
           f"{checked['refused_flags']} other flags refused, {checked['refused_env']} target settings refused, "
           f"{checked['inert_env']} inert variables without effect on sgo build and direct compile/link; "
+          f"sgo: {len(AUDIT['driver']['flags'])} specified flags, {checked['driver_commands']} commands refuse unknown flags; "
+          f"release archive: four executables and the TCB sources; "
           f"{len(problems)} problem(s)")
     return 1 if problems else 0
 

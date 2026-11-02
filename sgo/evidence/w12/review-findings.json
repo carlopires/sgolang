@@ -208,7 +208,7 @@
       "id": "D-R1b",
       "for": "R1",
       "text": "reviewer suggestion: test-tcb case mapping a pinned TCB archive under a user import path in an importcfg (expected refused by importer/linker)",
-      "status": "open"
+      "status": "done: test-tcb maps a pinned archive to a user import path; compile refuses (mismatched import path), no output"
     },
     {
       "id": "D-R4",

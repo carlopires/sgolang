@@ -358,5 +358,72 @@
         "note": "cmd/internal/browser (pprof, trace)"
       }
     }
+  },
+  "driver": {
+    "about": "The sgo driver parses its flags by hand (main.go, lab.go, check.go, test.go, fmt.go). legacy-audit.py extracts every flag name those parsers compare against and requires it to be listed here and named in the specification (sgo/spec/*.md); each command must refuse an unknown flag with SGO_E_USAGE.",
+    "flags": [
+      "o",
+      "target",
+      "drain-budget",
+      "json",
+      "v",
+      "run",
+      "seed",
+      "seeds",
+      "sched",
+      "k",
+      "quota",
+      "epoch",
+      "trace",
+      "expect",
+      "save",
+      "timeout"
+    ],
+    "not_flags": {
+      "testdata": "a directory name the module loader skips, not a flag"
+    },
+    "commands": [
+      [
+        "build"
+      ],
+      [
+        "run"
+      ],
+      [
+        "check"
+      ],
+      [
+        "test"
+      ],
+      [
+        "fmt"
+      ],
+      [
+        "lab",
+        "run"
+      ],
+      [
+        "lab",
+        "sweep"
+      ],
+      [
+        "lab",
+        "replay"
+      ]
+    ]
+  },
+  "archive": {
+    "about": "legacy-audit.py builds the release archive with make-release.py and requires: the only executables are bin/sgo and pkg/tool/<os>_<arch>/{sgo,compile,asm,link}; every file under src/ is a file of sgo/TARGET_TCB.json (or an assembler header it includes) and every TCB file is present; no top-level entry other than these.",
+    "top_level": [
+      "bin",
+      "pkg",
+      "src",
+      "sgo",
+      "examples",
+      "LICENSE",
+      "PATENTS",
+      "README.md",
+      "INSTALL.md"
+    ]
   }
 }
