@@ -69,11 +69,18 @@
       "title": "File confinement: Create truncates before the chain check; Mkdir/Remove act on a parent descriptor after verifying it (TOCTOU)",
       "location": "runtime/sgo_fs.go sgoResolve; sgo_io.go Create; sgo_iodir.go",
       "clause": "SGO-FILE-002, D53, D56",
-      "status": "fixed",
+      "status": "reopened-fixed",
       "resolution": "linux: sgoResolve first tries one openat2(root, path, RESOLVE_BENEATH|RESOLVE_NO_SYMLINKS|RESOLVE_NO_MAGICLINKS) (syscall 437); EAGAIN/EINTR retry up to sgoResolveRetries then PathRejected; EXDEV/ELOOP -> PathRejected; ENOSYS (kernel < 5.6) falls back to the component walk for the rest of the run. Create truncates only after resolution (R4 commit). Mkdir/Remove re-resolve the parent after the effect and compare (dev, ino); if the parent left the grant they return the new kind PathRaced with NoEffect false (D56: the effect is reported). darwin and pre-5.6 linux keep the walk: the residual (a file may be created outside the grant through a raced path, never truncated) goes into SPEC-FILE 0.7.0 (D-R6).",
       "fix_commit": null,
       "regression_test": "runtime lane TestSGoRenameRaces with a test hook (sgoIORaceHook, sites 'walk' and 'effect'): Remove and Mkdir with the parent moved out -> PathRaced, NoEffect false; Create through a raced walk -> the outside file keeps its content and the result is NotFound/PathRejected. Mutants: without the post-effect check both PathRaced rows fail; with O_TRUNC restored the outside file is truncated and the test fails. linux/amd64 and linux/arm64 vet; openat2 itself needs a linux run (reviewer).",
-      "note": "Partly addressed by R4's change: Create now opens without O_TRUNC and truncates only after the chain verification succeeded, so a file reached through a raced path is never truncated (it may still be created). openat2 and Mkdir/Remove re-verification remain."
+      "note": "Partly addressed by R4's change: Create now opens without O_TRUNC and truncates only after the chain verification succeeded, so a file reached through a raced path is never truncated (it may still be created). openat2 and Mkdir/Remove re-verification remain.",
+      "reopen": {
+        "by": "reviewer at 876daac0a8 (linux/amd64)",
+        "regression": "openat2 path: EINVAL for a mode without O_CREAT made every Open/ReadFile an IOError (7 conformance cases failed); O_DIRECTORY on a trailing symlink gave ENOTDIR -> NotFound instead of PathRejected (TestSGoDirList)",
+        "fix": "sgoOpenBeneath drops mode without O_CREAT; strips O_DIRECTORY and checks S_IFDIR with fstat after the open (ENOTDIR otherwise); falls back to the walk on ENOSYS and EPERM (seccomp); sgoNoOpenat2 is an atomic.Bool",
+        "regression_test": "TestSGoResolutionPathsAgree: 14 file-confined-paths outcomes through openat2 and through the forced walk (SGoForceWalk); runs on every target (darwin: walk only)",
+        "process": "linux-sensitive fixes go to re-check only after the linux CI legs are green"
+      }
     },
     {
       "id": "R7",

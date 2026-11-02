@@ -174,6 +174,14 @@ func SGoDirOp(dir, op, path string, hook func(site string)) (string, bool) {
 		e = sgoDirMkdir(0, path)
 	case "remove":
 		e = sgoDirRemove(0, path)
+	case "isdir":
+		e = sgoDirIsDir(0, path)
+	case "open":
+		var h *sgoHandle
+		h, e = sgoDirOpenGrant(0, path, false)
+		if e == nil {
+			sgoCloseFD(h.fd)
+		}
 	case "create":
 		var h *sgoHandle
 		h, e = sgoDirOpenGrant(0, path, true)

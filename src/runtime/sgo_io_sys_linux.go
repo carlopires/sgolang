@@ -10,6 +10,7 @@
 package runtime
 
 import (
+	"internal/runtime/atomic"
 	"internal/runtime/syscall/linux"
 	"unsafe"
 )
@@ -109,25 +110,43 @@ const (
 	sgoEXDEV                 = 18
 )
 
-// sgoNoOpenat2 is set once openat2 reports ENOSYS (kernels before 5.6).
-var sgoNoOpenat2 bool
+// sgoNoOpenat2 is set once openat2 is unavailable: ENOSYS (kernels before 5.6), or EPERM from a
+// seccomp filter that blocks the call (it cannot come from the open itself for these flags).
+// Tasks read and write it concurrently.
+var sgoNoOpenat2 atomic.Bool
 
 // sgoOpenBeneath opens path (relative, '/'-separated) beneath dirfd with openat2 and
 // RESOLVE_BENEATH|RESOLVE_NO_SYMLINKS|RESOLVE_NO_MAGICLINKS: the kernel guarantees the object
 // opened is inside dirfd's tree even against concurrent renames (D53, W12 R6). It returns the fd
 // or the negated errno; ok is false when the kernel has no openat2 (the caller walks instead).
+//
+// It keeps the walk's outcomes exactly (W12 R6 reopen): openat2 rejects a mode without O_CREAT
+// (EINVAL), so mode is dropped then; and O_DIRECTORY on a trailing symlink would give ENOTDIR
+// instead of ELOOP, so O_DIRECTORY is checked with fstat after the open instead.
 func sgoOpenBeneath(dirfd int32, path *byte, flags, mode int32) (fd int32, ok bool) {
-	if sgoNoOpenat2 {
+	if sgoNoOpenat2.Load() {
 		return 0, false
 	}
+	if flags&sgoO_CREAT == 0 {
+		mode = 0
+	}
+	wantDir := flags&sgoO_DIRECTORY != 0
+	flags &^= sgoO_DIRECTORY
 	how := &sgoOpenHow{flags: uint64(uint32(flags)), mode: uint64(mode),
 		resolve: sgoRESOLVE_BENEATH | sgoRESOLVE_NO_SYMLINKS | sgoRESOLVE_NO_MAGICLINKS}
 	r := sgoSys(sgoSYS_openat2, uintptr(int64(dirfd)), uintptr(unsafe.Pointer(path)), uintptr(unsafe.Pointer(how)), unsafe.Sizeof(*how))
 	KeepAlive(path)
 	KeepAlive(how)
-	if r == -38 { // ENOSYS
-		sgoNoOpenat2 = true
+	if r == -38 || r == -1 { // ENOSYS, EPERM (seccomp)
+		sgoNoOpenat2.Store(true)
 		return 0, false
+	}
+	if r >= 0 && wantDir {
+		var st sgoStatBuf
+		if sgoFstat(r, &st) < 0 || sgoStatMode(&st)&0xF000 != 0x4000 {
+			sgoCloseFD(r)
+			return -sgoENOTDIR, true
+		}
 	}
 	return r, true
 }
