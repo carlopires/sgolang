@@ -88,6 +88,32 @@ func sgoResolve(root int32, path string, lastFlags, mode int32) (int32, string) 
 	if !ok {
 		return -1, "PathRejected"
 	}
+	// linux: one openat2 beneath the grant (the kernel's guarantee, D53, W12 R6).
+	joined := names[0]
+	for _, n := range names[1:] {
+		joined += "/" + n
+	}
+	cjoined := sgoCString(joined)
+	beneath := false
+	for attempt := 0; attempt <= sgoResolveRetries; attempt++ {
+		fd, ok := sgoOpenBeneath(root, cjoined, lastFlags|sgoO_NOFOLLOW|sgoO_CLOEXEC, mode)
+		if !ok {
+			break // no openat2: walk and verify below
+		}
+		beneath = true
+		switch {
+		case fd >= 0:
+			return fd, ""
+		case fd == -sgoEINTR || fd == -sgoEAGAIN_RESOLVE:
+			continue
+		case fd == -sgoEXDEV || fd == -sgoELOOP:
+			return -1, "PathRejected"
+		}
+		return -1, sgoErrKind(fd)
+	}
+	if beneath {
+		return -1, "PathRejected" // renames kept racing the resolution
+	}
 	cnames := make([]*byte, len(names))
 	for i, n := range names {
 		cnames[i] = sgoCString(n)
@@ -124,6 +150,9 @@ func sgoResolve(root int32, path string, lastFlags, mode int32) (int32, string) 
 		if kind != "" {
 			sgoCloseFDs(fds[1:])
 			return -1, kind
+		}
+		if sgoIORaceHook != nil {
+			sgoIORaceHook("walk")
 		}
 		// Verify the chain from the grant down.
 		good := true

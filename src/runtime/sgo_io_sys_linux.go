@@ -98,6 +98,40 @@ func sgoUnlinkat(dirfd int32, path *byte, flags int32) int32 {
 	return r
 }
 
+// sgoOpenHow is struct open_how (flags, mode, resolve) of openat2.
+type sgoOpenHow struct{ flags, mode, resolve uint64 }
+
+const (
+	sgoRESOLVE_NO_MAGICLINKS = 0x02
+	sgoRESOLVE_NO_SYMLINKS   = 0x04
+	sgoRESOLVE_BENEATH       = 0x08
+	sgoEAGAIN_RESOLVE        = 11 // EAGAIN: a concurrent rename raced the resolution
+	sgoEXDEV                 = 18
+)
+
+// sgoNoOpenat2 is set once openat2 reports ENOSYS (kernels before 5.6).
+var sgoNoOpenat2 bool
+
+// sgoOpenBeneath opens path (relative, '/'-separated) beneath dirfd with openat2 and
+// RESOLVE_BENEATH|RESOLVE_NO_SYMLINKS|RESOLVE_NO_MAGICLINKS: the kernel guarantees the object
+// opened is inside dirfd's tree even against concurrent renames (D53, W12 R6). It returns the fd
+// or the negated errno; ok is false when the kernel has no openat2 (the caller walks instead).
+func sgoOpenBeneath(dirfd int32, path *byte, flags, mode int32) (fd int32, ok bool) {
+	if sgoNoOpenat2 {
+		return 0, false
+	}
+	how := &sgoOpenHow{flags: uint64(uint32(flags)), mode: uint64(mode),
+		resolve: sgoRESOLVE_BENEATH | sgoRESOLVE_NO_SYMLINKS | sgoRESOLVE_NO_MAGICLINKS}
+	r := sgoSys(sgoSYS_openat2, uintptr(int64(dirfd)), uintptr(unsafe.Pointer(path)), uintptr(unsafe.Pointer(how)), unsafe.Sizeof(*how))
+	KeepAlive(path)
+	KeepAlive(how)
+	if r == -38 { // ENOSYS
+		sgoNoOpenat2 = true
+		return 0, false
+	}
+	return r, true
+}
+
 // sgoFtruncate truncates fd to zero length.
 func sgoFtruncate(fd int32) int32 { return sgoSys(sgoSYS_ftruncate, uintptr(fd), 0, 0, 0) }
 

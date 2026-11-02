@@ -33,10 +33,11 @@
       "title": "Shipped compile and link accept the whole upstream flag table for S-Go code",
       "location": "cmd/compile/internal/base/flag.go; link/ld/sgoid.go sgoCheckConfig",
       "clause": "SGO-TOOL-001, SGO-BUILD-001, D77",
-      "status": "fixed",
+      "status": "verified",
       "resolution": "Refuse-by-default allowlists in the shipped tools. compile (base/sgoflags.go, called in noder.LoadPackage once sgoMode is known): S-Go packages accept -o -p -importcfg -pack -complete -trimpath -sgolab -sgocheck -sgotestmain and -m (diagnostic output only); TCB packages accept the driver's TCB command line (-o -p -importcfg -pack -complete -trimpath -std -lang -symabis -asmhdr) with -lang pinned to go1.<goversion>; GOCOMPILEDEBUG, a non-empty GOEXPERIMENT or an experiment set differing from the default, and GOAMD64 != v1 / GOARM64 != v8.0 are refused. link (sgoCheckConfig + sgoidcfg.go): only -o -importcfg -buildmode -buildid -sgodrainbudget -sgogrants -sgoiogrants -sgolab -sgotest; -buildid is required, must be S-Go metadata, and must agree with the link (config lab/test/lab-test, drain, grants) and with the linked packages' spec version and admission digest. The existing named refusals (-X, -checklinkname=0, -linkmode, build modes) keep their messages. Flags upstream already rejects on a platform (-spectre, -asan, -msan on darwin) stay refused by upstream.",
-      "fix_commit": null,
-      "regression_test": "test-flags.py: 18 compile flags and 3 compiler settings refused with SGO_E_USAGE and no output file; admitted command lines still give the S-Go denials; 13 named link refusals plus -f -s -w -strictdups=0 -randlayout=1 -k=x -installsuffix=x -debugnosplit -race -msan -asan -R; missing/foreign/inconsistent -buildid (lab claiming production, drain, grants) refused; harness self-test that an admitted link is not reported as refused. Host lane TestSGoLinkFlagsAndBuildID (13 build-ID rows). test-identity and test-x10 link with a driver-format -buildid (sgotool.py); test-x10 checks -l is refused instead of comparing a -l build."
+      "fix_commit": "098959aa24",
+      "regression_test": "test-flags.py: 18 compile flags and 3 compiler settings refused with SGO_E_USAGE and no output file; admitted command lines still give the S-Go denials; 13 named link refusals plus -f -s -w -strictdups=0 -randlayout=1 -k=x -installsuffix=x -debugnosplit -race -msan -asan -R; missing/foreign/inconsistent -buildid (lab claiming production, drain, grants) refused; harness self-test that an admitted link is not reported as refused. Host lane TestSGoLinkFlagsAndBuildID (13 build-ID rows). test-identity and test-x10 link with a driver-format -buildid (sgotool.py); test-x10 checks -l is refused instead of comparing a -l build.",
+      "verified_by": "reviewer at 098959aa24 (linux/amd64): p6 matrix re-run; 19 compile flags and 3 settings refused; link flags, missing/inconsistent -buildid refused; lanes ok; conformance 342/342. Residuals folded into D-R3: link-side GOEXPERIMENT check and GOFIPS140 classification; -goversion refused only by upstream's check, should be SGO_E_USAGE."
     },
     {
       "id": "R4",
@@ -68,10 +69,10 @@
       "title": "File confinement: Create truncates before the chain check; Mkdir/Remove act on a parent descriptor after verifying it (TOCTOU)",
       "location": "runtime/sgo_fs.go sgoResolve; sgo_io.go Create; sgo_iodir.go",
       "clause": "SGO-FILE-002, D53, D56",
-      "status": "open",
-      "resolution": null,
+      "status": "fixed",
+      "resolution": "linux: sgoResolve first tries one openat2(root, path, RESOLVE_BENEATH|RESOLVE_NO_SYMLINKS|RESOLVE_NO_MAGICLINKS) (syscall 437); EAGAIN/EINTR retry up to sgoResolveRetries then PathRejected; EXDEV/ELOOP -> PathRejected; ENOSYS (kernel < 5.6) falls back to the component walk for the rest of the run. Create truncates only after resolution (R4 commit). Mkdir/Remove re-resolve the parent after the effect and compare (dev, ino); if the parent left the grant they return the new kind PathRaced with NoEffect false (D56: the effect is reported). darwin and pre-5.6 linux keep the walk: the residual (a file may be created outside the grant through a raced path, never truncated) goes into SPEC-FILE 0.7.0 (D-R6).",
       "fix_commit": null,
-      "regression_test": null,
+      "regression_test": "runtime lane TestSGoRenameRaces with a test hook (sgoIORaceHook, sites 'walk' and 'effect'): Remove and Mkdir with the parent moved out -> PathRaced, NoEffect false; Create through a raced walk -> the outside file keeps its content and the result is NotFound/PathRejected. Mutants: without the post-effect check both PathRaced rows fail; with O_TRUNC restored the outside file is truncated and the test fails. linux/amd64 and linux/arm64 vet; openat2 itself needs a linux run (reviewer).",
       "note": "Partly addressed by R4's change: Create now opens without O_TRUNC and truncates only after the chain verification succeeded, so a file reached through a raced path is never truncated (it may still be created). openat2 and Mkdir/Remove re-verification remain."
     },
     {
@@ -186,8 +187,14 @@
     {
       "id": "D-R3",
       "for": "R3",
-      "text": "legacy-audit.py (D77) reads the two allowlists (base/sgoflags.go, ld/sgoidcfg.go) and diffs them against the upstream flag tables, so a new upstream flag is classified deliberately",
+      "text": "legacy-audit.py (D77) reads the two allowlists (base/sgoflags.go, ld/sgoidcfg.go) and diffs them against the upstream flag tables, so a new upstream flag is classified deliberately; also: link-side GOEXPERIMENT refusal, GOFIPS140 classification (compile and link), -goversion refused with SGO_E_USAGE (+ test-flags row)",
       "status": "open (D77 work)"
+    },
+    {
+      "id": "D-R6",
+      "for": "R6",
+      "text": "SPEC-FILE concurrency text: linux 5.6+ resolves with openat2 (kernel guarantee); darwin and older linux verify the walk, so a file can be created (never truncated) outside the grant through a raced path; Mkdir/Remove report PathRaced (an effect that happened); model iopath admits exactly these outcomes",
+      "status": "open, with the 0.7.0 change"
     }
   ]
 }

@@ -155,3 +155,41 @@ func SGoOpenBlocking(path string) int32 {
 
 // SGoCloseFD closes fd.
 func SGoCloseFD(fd int32) { sgoCloseFD(fd) }
+
+// SGoDirOp runs Mkdir ("mkdir"), Remove ("remove") or Create ("create", closing the file) on
+// path in directory dir opened as grant 0, with hook run in the rename windows (W12 R6; site
+// "walk" between a walk's last open and its verification, "effect" before mkdirat/unlinkat). It
+// returns the error kind ("" on success) and NoEffect.
+func SGoDirOp(dir, op, path string, hook func(site string)) (string, bool) {
+	sgoDirGrants = append(sgoDirGrants[:0], sgoDirGrant{name: "t", fd: sgoOpenat(sgoAT_FDCWD, sgoCString(dir), sgoO_RDONLY|sgoO_DIRECTORY|sgoO_CLOEXEC, 0)})
+	sgoIORaceHook = hook
+	defer func() {
+		sgoIORaceHook = nil
+		sgoCloseFD(sgoDirGrants[0].fd)
+		sgoDirGrants = sgoDirGrants[:0]
+	}()
+	var e *sgoIOErr
+	switch op {
+	case "mkdir":
+		e = sgoDirMkdir(0, path)
+	case "remove":
+		e = sgoDirRemove(0, path)
+	case "create":
+		var h *sgoHandle
+		h, e = sgoDirOpenGrant(0, path, true)
+		if e == nil {
+			sgoCloseFD(h.fd)
+		}
+	}
+	if e == nil {
+		return "", false
+	}
+	_, noEffect, _ := sgo_ioInfo(&sgoIOError{kind: e.kind, progress: e.progress})
+	return e.kind, noEffect
+}
+
+// SGoHasOpenat2 reports whether resolution uses openat2 on this kernel (linux 5.6+).
+func SGoHasOpenat2() bool {
+	_, ok := sgoOpenBeneath(sgoAT_FDCWD, sgoCString("."), sgoO_RDONLY|sgoO_DIRECTORY|sgoO_CLOEXEC, 0)
+	return ok
+}

@@ -110,6 +110,14 @@ func sgoUnlinkat(dirfd int32, path *byte, flags int32) int32 {
 }
 func sgo_unlinkat_trampoline()
 
+// sgoOpenBeneath: darwin has no openat2; sgoResolve walks and verifies the chain instead.
+func sgoOpenBeneath(dirfd int32, path *byte, flags, mode int32) (int32, bool) { return 0, false }
+
+const (
+	sgoEAGAIN_RESOLVE = -1 // never returned
+	sgoEXDEV          = 18
+)
+
 // sgoFtruncate truncates fd to zero length.
 //
 //go:nosplit

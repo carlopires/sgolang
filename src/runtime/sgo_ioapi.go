@@ -46,8 +46,9 @@ func sgo_ioInfo(err error) (progress int, noEffect, eof bool) {
 	if !ok {
 		return 0, false, false
 	}
-	// IOError leaves the effect unknown; every other kind with no progress had none.
-	return e.progress, e.progress == 0 && e.kind != "IOError", e.kind == "EOF"
+	// IOError leaves the effect unknown, and PathRaced reports an effect that happened (W12 R6);
+	// every other kind with no progress had none.
+	return e.progress, e.progress == 0 && e.kind != "IOError" && e.kind != "PathRaced", e.kind == "EOF"
 }
 
 //go:linkname sgo_dirGrant sgo.runtime_dirGrant

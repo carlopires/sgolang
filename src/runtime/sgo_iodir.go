@@ -44,6 +44,30 @@ func sgoDirParent(root int32, path string) (int32, *byte, *sgoIOErr) {
 	return fd, last, nil
 }
 
+// sgoDirParentStill reports whether the parent of path in root is still the directory fd after an
+// effect on fd (W12 R6): if another process moved it out of the grant between the resolution and
+// the effect, the effect happened outside, and the caller reports PathRaced (D56: no unreported
+// partial effect). On linux the parent was opened with openat2, so only this window remains.
+func sgoDirParentStill(root, fd int32, path string) bool {
+	if fd == root {
+		return true
+	}
+	names, _ := sgoParsePath(path)
+	again, kind := sgoResolve(root, path[:len(path)-len(names[len(names)-1])-1], sgoO_RDONLY|sgoO_DIRECTORY, 0)
+	if kind != "" {
+		return false
+	}
+	defer sgoCloseFD(again)
+	a, _, _ := sgoFdID(fd)
+	b, _, _ := sgoFdID(again)
+	return a == b
+}
+
+// sgoIORaceHook, when set by a runtime test, runs in the windows a concurrent rename can race:
+// between resolving a parent and acting on it, and between a walk's last open and its
+// verification (W12 R6). It is never set outside tests.
+var sgoIORaceHook func(site string)
+
 func sgoDirParentDone(root, fd int32) {
 	if fd != root {
 		sgoCloseFD(fd)
@@ -81,8 +105,14 @@ func sgoDirMkdir(g int, path string) *sgoIOErr {
 		return e
 	}
 	defer sgoDirParentDone(root, fd)
+	if sgoIORaceHook != nil {
+		sgoIORaceHook("effect")
+	}
 	if r := sgoMkdirat(fd, name, 0o755); r < 0 {
 		return &sgoIOErr{kind: sgoErrKind(r)}
+	}
+	if !sgoDirParentStill(root, fd, path) {
+		return &sgoIOErr{kind: "PathRaced"}
 	}
 	return nil
 }
@@ -110,8 +140,14 @@ func sgoDirRemove(g int, path string) *sgoIOErr {
 	if _, _, isDir, _ := sgoStatID(&st); isDir {
 		flags = sgoAT_REMOVEDIR
 	}
+	if sgoIORaceHook != nil {
+		sgoIORaceHook("effect")
+	}
 	if r := sgoUnlinkat(fd, name, flags); r < 0 {
 		return &sgoIOErr{kind: sgoErrKind(r)}
+	}
+	if !sgoDirParentStill(root, fd, path) {
+		return &sgoIOErr{kind: "PathRaced"}
 	}
 	return nil
 }

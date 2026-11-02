@@ -232,3 +232,71 @@ func TestSGoBlockedOpenDoesNotStallGC(t *testing.T) {
 		runtime.SGoCloseFD(fd)
 	}
 }
+
+// TestSGoRenameRaces: a directory moved out of the grant while an operation is between resolving
+// and acting (W12 R6). Remove and Mkdir report the effect they had (PathRaced, NoEffect false);
+// Create never truncates a file outside the grant.
+func TestSGoRenameRaces(t *testing.T) {
+	runtime.SGoEnterRoot()
+	defer runtime.SGoLeaveRoot()
+	for _, op := range []string{"remove", "mkdir"} {
+		base := t.TempDir()
+		grant, outside := filepath.Join(base, "grant"), filepath.Join(base, "outside")
+		for _, d := range []string{filepath.Join(grant, "a", "b"), outside} {
+			if err := os.MkdirAll(d, 0o755); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if err := os.WriteFile(filepath.Join(grant, "a", "b", "x"), nil, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		target := "a/b/x"
+		if op == "mkdir" {
+			target = "a/b/y"
+		}
+		moved := false
+		kind, noEffect := runtime.SGoDirOp(grant, op, target, func(site string) {
+			if site == "effect" && !moved {
+				moved = true
+				if err := os.Rename(filepath.Join(grant, "a"), filepath.Join(outside, "a")); err != nil {
+					t.Error(err)
+				}
+			}
+		})
+		if kind != "PathRaced" || noEffect {
+			t.Errorf("%s with the parent moved out: kind %q, NoEffect %v; want PathRaced, false", op, kind, noEffect)
+		}
+	}
+
+	base := t.TempDir()
+	grant, outside := filepath.Join(base, "grant"), filepath.Join(base, "outside")
+	for _, d := range []string{filepath.Join(grant, "a"), outside} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	precious := filepath.Join(grant, "a", "f")
+	if err := os.WriteFile(precious, []byte("precious"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	moved := false
+	kind, _ := runtime.SGoDirOp(grant, "create", "a/f", func(site string) {
+		if site == "walk" && !moved {
+			moved = true
+			if err := os.Rename(filepath.Join(grant, "a"), filepath.Join(outside, "a")); err != nil {
+				t.Error(err)
+			}
+		}
+	})
+	if data, err := os.ReadFile(filepath.Join(outside, "a", "f")); moved && (err != nil || string(data) != "precious") {
+		t.Errorf("Create through a raced path changed the file outside the grant: %q, %v (kind %q)", data, err, kind)
+	}
+	// The verification fails and the retry finds a/ gone from the grant: NotFound (or
+	// PathRejected if renames kept racing). Either way nothing inside the grant was created.
+	if moved && kind != "NotFound" && kind != "PathRejected" {
+		t.Errorf("Create through a raced path: kind %q, want NotFound or PathRejected", kind)
+	}
+	if !moved && !runtime.SGoHasOpenat2() {
+		t.Error("the walk's race window was never reached")
+	}
+}

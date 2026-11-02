@@ -21,15 +21,19 @@ const (
 
 type sgoStatBuf [256]byte
 
-func sgoStatID(b *sgoStatBuf) (dev, ino uint64, isDir, isLink bool)         { return }
-func sgoOpenat(dirfd int32, path *byte, flags, mode int32) int32            { return -sgoENOSYS }
-func sgoFstatat(dirfd int32, path *byte, st *sgoStatBuf, flags int32) int32 { return -sgoENOSYS }
-func sgoFstat(fd int32, st *sgoStatBuf) int32                               { return -sgoENOSYS }
-func sgoMkdirat(dirfd int32, path *byte, mode int32) int32                  { return -sgoENOSYS }
-func sgoUnlinkat(dirfd int32, path *byte, flags int32) int32                { return -sgoENOSYS }
-func sgoCloseFD(fd int32)                                                   {}
-func sgoFtruncate(fd int32) int32                                           { return -sgoENOSYS }
-func sgoClearNonblock(fd int32)                                             {}
+func sgoStatID(b *sgoStatBuf) (dev, ino uint64, isDir, isLink bool)           { return }
+func sgoOpenat(dirfd int32, path *byte, flags, mode int32) int32              { return -sgoENOSYS }
+func sgoFstatat(dirfd int32, path *byte, st *sgoStatBuf, flags int32) int32   { return -sgoENOSYS }
+func sgoFstat(fd int32, st *sgoStatBuf) int32                                 { return -sgoENOSYS }
+func sgoMkdirat(dirfd int32, path *byte, mode int32) int32                    { return -sgoENOSYS }
+func sgoUnlinkat(dirfd int32, path *byte, flags int32) int32                  { return -sgoENOSYS }
+func sgoCloseFD(fd int32)                                                     {}
+func sgoFtruncate(fd int32) int32                                             { return -sgoENOSYS }
+func sgoOpenBeneath(dirfd int32, path *byte, flags, mode int32) (int32, bool) { return 0, false }
+
+const sgoEAGAIN_RESOLVE, sgoEXDEV = -1, 18
+
+func sgoClearNonblock(fd int32) {}
 
 func sgoStatSize(b *sgoStatBuf) int64 { return 0 }
 

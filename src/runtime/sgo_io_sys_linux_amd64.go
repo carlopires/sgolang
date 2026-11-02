@@ -21,6 +21,7 @@ const (
 	sgoSYS_mkdirat     = 258
 	sgoSYS_unlinkat    = 263
 	sgoSYS_ftruncate   = 77
+	sgoSYS_openat2     = 437
 
 	sgoO_NOFOLLOW  = 0x20000
 	sgoO_DIRECTORY = 0x10000
