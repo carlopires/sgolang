@@ -223,12 +223,24 @@ func (s *sState) step(p SProgram, t int) (blocked bool, err error) {
 		switch tk.Kinds[st.W] {
 		case SErr:
 			v[st.V] = v[st.W]
-		case SRef:
+		case SRef, SIface:
 			v[st.V] = s.alloc(sObj{Frozen: true, Child: v[st.W]})
 		default:
 			v[st.V] = s.alloc(sObj{Frozen: true, Child: -1})
 		}
 		tk.Kinds[st.V] = SErr
+	case SToIface:
+		// A value type is boxed by copy (the box owns a private copy); a pointer receiver is boxed
+		// by reference, so method calls through the box reach W's object.
+		if tk.Kinds[st.W] == SVal {
+			v[st.V], err = s.deepCopy(t, v[st.W], t, false)
+		} else {
+			v[st.V] = v[st.W]
+		}
+		tk.Kinds[st.V] = SIface
+	case SAssert:
+		v[st.V] = v[st.W]
+		tk.Kinds[st.V] = SRef
 	case SSpawn:
 		child := sTask{Body: st.Body, Vars: map[string]int{}, Kinds: map[string]SKind{}}
 		n := len(s.Tasks)

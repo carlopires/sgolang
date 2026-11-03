@@ -11,8 +11,8 @@ import (
 	"testing"
 )
 
-// Channel kinds used by the scenarios: 0 carries Ref values, 1 Frozen, 2 Val.
-var shareChans = []SKind{SRef, SFrozen, SVal}
+// Channel kinds used by the scenarios: 0 carries Ref values, 1 Frozen, 2 Val, 3 error, 4 interface.
+var shareChans = []SKind{SRef, SFrozen, SVal, SErr, SIface}
 
 func alloc(v string, k SKind) SStmt        { return SStmt{Op: SAlloc, V: v, Kind: k} }
 func send(v string, ch int, m SMode) SStmt { return SStmt{Op: SSend, V: v, Ch: ch, Mode: m} }
@@ -80,6 +80,43 @@ var ShareScenarios = map[string]struct {
 		{alloc("s", SRef), op(SToErr, "err", "s"), spawn(1, "err"), op(SWrite, "s", "")},
 		{op(SWriteChild, "err", "")},
 	}, "SGO_E_TASK_LOCAL_CAPTURE"},
+
+	// Interface values (W17, D132): task-local whatever they hold; crossing tasks only by copy.
+	"iface-local-dispatch": {[][]SStmt{
+		{alloc("s", SRef), op(SChild, "s", ""), op(SToIface, "i", "s"), op(SWrite, "i", ""), op(SWriteChild, "i", ""),
+			op(SAssert, "p", "i"), op(SWrite, "p", ""), op(SWrite, "s", "")},
+	}, ""},
+	"iface-copy-send": {[][]SStmt{
+		{alloc("s", SRef), op(SChild, "s", ""), op(SToIface, "i", "s"), spawn(1), send("i", 4, SCopy), op(SWriteChild, "i", ""), op(SWrite, "s", "")},
+		{recv("j", 4), op(SWriteChild, "j", ""), op(SAssert, "q", "j"), op(SWrite, "q", "")},
+	}, ""},
+	"iface-value-boxed": {[][]SStmt{
+		{alloc("v", SVal), op(SToIface, "i", "v"), op(SWrite, "i", ""), spawn(1, "v"), op(SWrite, "v", "")},
+		{op(SWrite, "v", "")},
+	}, ""},
+	"reject-plain-iface-send": {[][]SStmt{
+		{alloc("s", SRef), op(SToIface, "i", "s"), spawn(1), send("i", 4, SPlain), op(SWrite, "s", "")},
+		{recv("j", 4), op(SWrite, "j", "")},
+	}, "SGO_E_UNCOPIED_SEND"},
+	"reject-iface-capture": {[][]SStmt{
+		{alloc("s", SRef), op(SToIface, "i", "s"), spawn(1, "i"), op(SWrite, "s", "")},
+		{op(SWrite, "i", "")},
+	}, "SGO_E_TASK_LOCAL_CAPTURE"},
+	"reject-iface-error": {[][]SStmt{
+		{alloc("s", SRef), op(SToIface, "i", "s"), op(SToErr, "err", "i"), spawn(1, "err"), op(SWrite, "s", "")},
+		{op(SWriteChild, "err", "")},
+	}, "SGO_E_TASK_LOCAL_CAPTURE"},
+	"reject-move-boxed": {[][]SStmt{
+		{alloc("s", SRef), op(SToIface, "i", "s"), spawn(1), send("s", 0, SMove), op(SWrite, "i", "")},
+		{recv("t", 0), op(SWrite, "t", "")},
+	}, "SGO_E_MOVE_ALIASED"},
+	"reject-move-asserted": {[][]SStmt{
+		{alloc("s", SRef), op(SToIface, "i", "s"), op(SAssert, "p", "i"), spawn(1), send("p", 0, SMove), op(SWrite, "i", "")},
+		{recv("t", 0), op(SWrite, "t", "")},
+	}, "SGO_E_MOVE_ALIASED"},
+	"reject-move-iface":   {[][]SStmt{{alloc("s", SRef), op(SToIface, "i", "s"), send("i", 4, SMove)}}, "SGO_E_TYPE"},
+	"reject-freeze-iface": {[][]SStmt{{alloc("s", SRef), op(SToIface, "i", "s"), op(SFreeze, "f", "i")}}, "SGO_E_TYPE"},
+	"reject-assert-ref":   {[][]SStmt{{alloc("s", SRef), op(SAssert, "p", "s")}}, "SGO_E_TYPE"},
 }
 
 func TestShareScenarios(t *testing.T) {
@@ -135,6 +172,44 @@ func TestShareErrSoundness(t *testing.T) {
 	t.Logf("%d of %d generated programs with error values accepted; all explored without a violation", acc, sharePrograms)
 }
 
+// Soundness with interface values (W17): GenShareIface adds boxing, assertions, method calls and
+// an interface channel.
+func TestShareIfaceSoundness(t *testing.T) {
+	acc, bounded, bad, err := ShareIfaceSoundness(shareSeed, sharePrograms)
+	if err != nil {
+		t.Fatalf("accepted program violates ownership: %v\n%+v", err, *bad)
+	}
+	if bounded != 0 {
+		t.Fatalf("%d explorations reached the state bound: soundness is not established for them", bounded)
+	}
+	if acc < sharePrograms/20 {
+		t.Fatalf("only %d of %d generated programs accepted: the generator is too weak", acc, sharePrograms)
+	}
+	t.Logf("%d of %d generated programs with interface values accepted; all explored without a violation", acc, sharePrograms)
+}
+
+// Each W17 relaxation is caught by GenShareIface's programs alone, not only by a scenario.
+func TestShareIfaceGeneratorFindsMutations(t *testing.T) {
+	for _, m := range []struct {
+		name string
+		flag *bool
+	}{
+		{"plain-iface-send", &shareAllowPlainIface},
+		{"iface-capture", &shareAllowIfaceCapture},
+		{"iface-error", &shareAllowIfaceError},
+		{"iface-no-taint", &shareIfaceNoTaint},
+	} {
+		*m.flag = true
+		_, _, bad, err := ShareIfaceSoundness(shareSeed, 5*sharePrograms)
+		*m.flag = false
+		if err == nil {
+			t.Errorf("mutation %s: no generated program violates ownership", m.name)
+			continue
+		}
+		t.Logf("mutation %s found: %v\n%+v", m.name, err, *bad)
+	}
+}
+
 // The generated programs, not only the hand-written scenario, reach the error route: with error(v)
 // of a Ref accepted, GenShareErr's programs alone show a violation.
 func TestShareErrGeneratorFindsRefError(t *testing.T) {
@@ -160,6 +235,10 @@ func TestShareMutations(t *testing.T) {
 		{"frozen-write", &shareAllowFrozenWrite},
 		{"shallow-copy", &shareShallowCopy},
 		{"ref-error", &shareAllowRefError},
+		{"plain-iface-send", &shareAllowPlainIface},
+		{"iface-capture", &shareAllowIfaceCapture},
+		{"iface-error", &shareAllowIfaceError},
+		{"iface-no-taint", &shareIfaceNoTaint},
 	} {
 		*m.flag = true
 		by, err := "TestShareScenarios", shareScenarioViolation()
@@ -170,6 +249,10 @@ func TestShareMutations(t *testing.T) {
 		if err == nil {
 			by = "TestShareErrSoundness"
 			_, _, _, err = ShareErrSoundness(shareSeed, 5*sharePrograms)
+		}
+		if err == nil {
+			by = "TestShareIfaceSoundness"
+			_, _, _, err = ShareIfaceSoundness(shareSeed, 5*sharePrograms)
 		}
 		*m.flag = false
 		if err == nil {

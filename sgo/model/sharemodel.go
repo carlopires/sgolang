@@ -27,6 +27,7 @@ const (
 	SRef    SKind = 'r'
 	SFrozen SKind = 'f'
 	SErr    SKind = 'e' // an error value: an immutable interface box, shareable (SGO-COMP-004 rule 4)
+	SIface  SKind = 'i' // a non-error interface value (W17, D132): task-local whatever its dynamic value
 )
 
 // SOp is a statement.
@@ -46,6 +47,8 @@ const (
 	SFreeze                // V := sgo.Freeze(W)     (deep copy into frozen objects)
 	SSpawn                 // n.Spawn(Body), capturing Caps
 	SToErr                 // V := error(W)          (W's value boxed; its Error method may write W's referents)
+	SToIface               // V := I(W)              (W boxed: a Val is copied, a Ref (pointer receiver) is shared)
+	SAssert                // V, ok := W.(*T)        (V refers to the boxed object: the worst case)
 )
 
 // SMode is how a send passes its value.
@@ -82,6 +85,12 @@ var (
 	shareAllowFrozenWrite bool // accept writes through a Frozen variable
 	shareShallowCopy      bool // sgo.Copy copies only the top object (runtime mutation)
 	shareAllowRefError    bool // accept error(v) for a Ref v (W13 review V2)
+
+	// W17 interface mutations.
+	shareAllowPlainIface   bool // accept ch <- i for an interface i (no copy)
+	shareAllowIfaceCapture bool // accept a Spawn capture of an interface variable
+	shareAllowIfaceError   bool // accept error(i) for an interface i
+	shareIfaceNoTaint      bool // boxing a Ref or asserting from an interface does not mark it aliased
 )
 
 // CheckShare applies the proposed compile-time rule and returns the diagnostic code of the first
@@ -131,7 +140,7 @@ func checkBody(p SProgram, b int, caps map[string]SKind) string {
 			}
 			kinds[s.V] = k
 			delete(dead, s.V)
-			if k == SRef {
+			if k == SRef || k == SIface {
 				tainted[s.V], tainted[s.W] = true, true
 			}
 		case SStore:
@@ -176,7 +185,7 @@ func checkBody(p SProgram, b int, caps map[string]SKind) string {
 			}
 			switch s.Mode {
 			case SPlain:
-				if k == SRef && !shareAllowPlainRef {
+				if k == SRef && !shareAllowPlainRef || k == SIface && !shareAllowPlainIface {
 					return "SGO_E_UNCOPIED_SEND"
 				}
 			case SMove:
@@ -197,8 +206,8 @@ func checkBody(p SProgram, b int, caps map[string]SKind) string {
 			if e != "" {
 				return e
 			}
-			if k == SVal || k == SErr {
-				return "SGO_E_TYPE"
+			if k == SVal || k == SErr || k == SIface {
+				return "SGO_E_TYPE" // no frozen interface storage (D132)
 			}
 			kinds[s.V] = SFrozen
 			delete(dead, s.V)
@@ -210,11 +219,39 @@ func checkBody(p SProgram, b int, caps map[string]SKind) string {
 			if k == SFrozen {
 				return "SGO_E_TYPE" // sgo.Frozen does not implement error
 			}
-			if k == SRef && !shareAllowRefError {
+			if k == SRef && !shareAllowRefError || k == SIface && !shareAllowIfaceError {
 				return "SGO_E_TASK_LOCAL_CAPTURE" // only shareable types become errors
 			}
 			kinds[s.V] = SErr
 			delete(dead, s.V)
+		case SToIface:
+			k, e := use(s.W)
+			if e != "" {
+				return e
+			}
+			if k != SVal && k != SRef {
+				return "SGO_E_TYPE"
+			}
+			kinds[s.V] = SIface
+			delete(dead, s.V)
+			delete(tainted, s.V)
+			if k == SRef && !shareIfaceNoTaint {
+				tainted[s.V], tainted[s.W] = true, true
+			}
+		case SAssert:
+			k, e := use(s.W)
+			if e != "" {
+				return e
+			}
+			if k != SIface {
+				return "SGO_E_TYPE"
+			}
+			kinds[s.V] = SRef
+			delete(dead, s.V)
+			delete(tainted, s.V)
+			if !shareIfaceNoTaint {
+				tainted[s.V], tainted[s.W] = true, true
+			}
 		case SSpawn:
 			cm := map[string]SKind{}
 			for _, c := range s.Caps {
@@ -222,7 +259,7 @@ func checkBody(p SProgram, b int, caps map[string]SKind) string {
 				if e != "" {
 					return e
 				}
-				if k == SRef && !shareAllowRefCapture {
+				if k == SRef && !shareAllowRefCapture || k == SIface && !shareAllowIfaceCapture {
 					return "SGO_E_TASK_LOCAL_CAPTURE"
 				}
 				cm[c] = k
