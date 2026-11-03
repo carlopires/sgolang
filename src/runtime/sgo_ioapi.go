@@ -138,6 +138,12 @@ func sgo_dial(addr string) (unsafe.Pointer, error) {
 	if g == nil {
 		panic(error(&sgoFailure{"MissingCapability", "Dial " + quoteKind(addr) + ": no connect grant for this endpoint", ""}))
 	}
+	return sgoDialGrant(g, "Dial")
+}
+
+// sgoDialGrant connects to the endpoint of connect grant g; the connection belongs to the calling
+// task. root.Dial and Dialer.Dial both come here.
+func sgoDialGrant(g *sgoNetGrant, op string) (unsafe.Pointer, error) {
 	var h *sgoHandle
 	var e *sgoIOErr
 	if sgoLab != nil {
@@ -146,7 +152,7 @@ func sgo_dial(addr string) (unsafe.Pointer, error) {
 		h, e = sgoNetConnect(g)
 	}
 	if e != nil {
-		return nil, sgoIOResult(e, "Dial")
+		return nil, sgoIOResult(e, op)
 	}
 	return unsafe.Pointer(h), nil
 }

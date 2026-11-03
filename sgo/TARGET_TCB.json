@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.14.1",
- "allowlist_digest": "524e21f3423c70a79a3a3323c47db785d08f9da39458c011b16ca8fcd81bad1a",
+ "allowlist_digest": "5f35d5e2aa84e91438a3c4b3b32543e63429e404e6ca720d18a2c528d6e1e614",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -445,8 +445,8 @@
  ],
  "summary": {
   "packages": 31,
-  "files": 1068,
-  "files_changed_from_upstream": 53,
+  "files": 1069,
+  "files_changed_from_upstream": 54,
   "services": {
    "active": 5,
    "dormant": 5,
@@ -4481,7 +4481,7 @@
   },
   {
    "path": "src/runtime/sgo_io.go",
-   "sha256": "6b1ea2708b2fd89815a83633e73fac795db5c16f7f2ea5ae0021444f0e599dc4",
+   "sha256": "f3c8b541b93c184efdc2bbc8ff8f551c26545a05c9767a245bae2d24369bfbf7",
    "upstream_identical": false
   },
   {
@@ -4516,7 +4516,7 @@
   },
   {
    "path": "src/runtime/sgo_ioapi.go",
-   "sha256": "32e5e1efdf09bb6684cda513c96ae840bc41daa3fbb89ee1ee5a21ca4181b08d",
+   "sha256": "ec36d92493a17a8e146da9e52de310d31a71687ebb1edc355163abc27a36646d",
    "upstream_identical": false
   },
   {
@@ -4587,6 +4587,11 @@
   {
    "path": "src/runtime/sgo_net_sys_linux.go",
    "sha256": "59c98a8d98b597f79ad8bebc7e2c5fffdd6cd0488cbbda3c83c8f33fddaed11f",
+   "upstream_identical": false
+  },
+  {
+   "path": "src/runtime/sgo_netdial.go",
+   "sha256": "2090bbfad141f53e9f8ae509f45af8e55a63d46ee2b7eeba6ccd803bf9bfe5df",
    "upstream_identical": false
   },
   {
@@ -5761,7 +5766,7 @@
   },
   {
    "path": "src/sgo/io.go",
-   "sha256": "4a2e61f6da6619f602b246bb5e47243ebe247d8ec669a9d8c4479c9758883916",
+   "sha256": "09e5c067e1fa156e07b0d94fa6a6bddaa2fcc591e96ed940e4e289ee6ace863a",
    "upstream_identical": false
   },
   {

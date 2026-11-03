@@ -26,6 +26,11 @@ func runtime_dial(addr string) (unsafe.Pointer, error)
 func runtime_listen(addr string) (unsafe.Pointer, error)
 func runtime_accept(h unsafe.Pointer) (unsafe.Pointer, error)
 func runtime_peerUID(h unsafe.Pointer) (int, error)
+func runtime_dialerNew(endpoints []string) unsafe.Pointer
+func runtime_dialerDial(h unsafe.Pointer, addr string) (unsafe.Pointer, error)
+func runtime_slotNew() unsafe.Pointer
+func runtime_slotPut(slot, conn unsafe.Pointer) error
+func runtime_slotTake(slot unsafe.Pointer) (unsafe.Pointer, bool)
 
 // Progress returns the bytes an I/O operation transferred before err (0 for other errors).
 func Progress(err error) int {
@@ -221,6 +226,69 @@ func (c *Conn) Close() error { return runtime_close(c.h, "Conn.Close") }
 
 // LendTo lets the tasks of nursery n use c until n closes; n must be a nursery of c's owner.
 func (c *Conn) LendTo(n *Nursery) *Conn { runtime_lend(c.h, n.s); return c }
+
+// Dialer is delegated connect authority (D143): a capability handle for a fixed set of endpoints
+// the main module grants. The root task creates it and lends it to the nurseries whose tasks may
+// dial; each connection belongs to the task that dialed it.
+type Dialer struct{ h unsafe.Pointer }
+
+// Dialer returns a dialer for endpoints, each of which a connect grant must name exactly. Only the
+// root task holds the grants, so only the root task may create a dialer.
+func (c *Context) Dialer(endpoints []string) *Dialer {
+	c.own()
+	if !runtime_isRoot(c.t) {
+		runtime_fail("MissingCapability", "Dialer: only the root task holds the grants; children use a dialer lent to them")
+	}
+	return &Dialer{runtime_dialerNew(endpoints)}
+}
+
+// Dial connects to addr, one of the dialer's endpoints. The caller must own the dialer or run in
+// a nursery it is lent to. Waiting for the connection is a cancellation point.
+func (d *Dialer) Dial(addr string) (*Conn, error) {
+	h, err := runtime_dialerDial(d.h, addr)
+	if err != nil {
+		return nil, err
+	}
+	return &Conn{h}, nil
+}
+
+// LendTo lets the tasks of nursery n use d until n closes; n must be a nursery of d's owner.
+func (d *Dialer) LendTo(n *Nursery) *Dialer { runtime_lend(d.h, n.s); return d }
+
+// Close closes the dialer; only its owner may, and not while it is lent to an open nursery.
+func (d *Dialer) Close() error { return runtime_close(d.h, "Dialer.Close") }
+
+// ConnSlot receives one connection from another task (D144). The task that creates it owns it
+// and lends it to a nursery; a task there hands its connection over with Put, and only the first
+// Put succeeds, so a slot settles a race. The owner then takes the connection as its own.
+type ConnSlot struct{ h unsafe.Pointer }
+
+// NewConnSlot returns an empty slot owned by the calling task.
+func (c *Context) NewConnSlot() *ConnSlot {
+	c.own()
+	return &ConnSlot{runtime_slotNew()}
+}
+
+// Put moves conn, which the caller owns, into the slot: conn is no longer the caller's. If a
+// connection was put before, Put returns an AlreadySet error and conn stays the caller's.
+func (s *ConnSlot) Put(conn *Conn) error { return runtime_slotPut(s.h, conn.h) }
+
+// Take returns the connection put into the slot, now owned by the caller (the slot's owner), and
+// true; or nil and false if there is none (not yet put, or already taken).
+func (s *ConnSlot) Take() (*Conn, bool) {
+	h, ok := runtime_slotTake(s.h)
+	if !ok {
+		return nil, false
+	}
+	return &Conn{h}, true
+}
+
+// LendTo lets the tasks of nursery n put into s until n closes; n must be a nursery of s's owner.
+func (s *ConnSlot) LendTo(n *Nursery) *ConnSlot { runtime_lend(s.h, n.s); return s }
+
+// Close closes the slot and a connection still in it; only its owner may, and not while it is
+// lent to an open nursery.
+func (s *ConnSlot) Close() error { return runtime_close(s.h, "ConnSlot.Close") }
 
 // Listener accepts TCP connections on a granted endpoint.
 type Listener struct{ h unsafe.Pointer }
