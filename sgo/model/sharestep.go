@@ -170,6 +170,9 @@ func (s *sState) step(p SProgram, t int) (blocked bool, err error) {
 			s.Objs[v[st.V]].Child = v[st.W]
 		}
 	case SWrite, SRead:
+		if tk.Kinds[st.V] == SErr {
+			break // the Error method's receiver is its own copy of the boxed value
+		}
 		err = s.access(t, v[st.V], st.Op == SWrite)
 	case SWriteChild, SReadChild:
 		if err = s.access(t, v[st.V], false); err == nil {
@@ -213,6 +216,19 @@ func (s *sState) step(p SProgram, t int) (blocked bool, err error) {
 	case SFreeze:
 		v[st.V], err = s.deepCopy(t, v[st.W], -1, true)
 		tk.Kinds[st.V] = SFrozen
+	case SToErr:
+		// The box is immutable and shared by every holder; a value with no references boxes
+		// nothing further, a referencing value (accepted only under a checker mutation) keeps
+		// W's object reachable from the box, so Error writing through it touches W's object.
+		switch tk.Kinds[st.W] {
+		case SErr:
+			v[st.V] = v[st.W]
+		case SRef:
+			v[st.V] = s.alloc(sObj{Frozen: true, Child: v[st.W]})
+		default:
+			v[st.V] = s.alloc(sObj{Frozen: true, Child: -1})
+		}
+		tk.Kinds[st.V] = SErr
 	case SSpawn:
 		child := sTask{Body: st.Body, Vars: map[string]int{}, Kinds: map[string]SKind{}}
 		n := len(s.Tasks)

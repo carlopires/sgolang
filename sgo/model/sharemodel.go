@@ -26,6 +26,7 @@ const (
 	SVal    SKind = 'v'
 	SRef    SKind = 'r'
 	SFrozen SKind = 'f'
+	SErr    SKind = 'e' // an error value: an immutable interface box, shareable (SGO-COMP-004 rule 4)
 )
 
 // SOp is a statement.
@@ -44,6 +45,7 @@ const (
 	SRecv                  // V := <-Ch
 	SFreeze                // V := sgo.Freeze(W)     (deep copy into frozen objects)
 	SSpawn                 // n.Spawn(Body), capturing Caps
+	SToErr                 // V := error(W)          (W's value boxed; its Error method may write W's referents)
 )
 
 // SMode is how a send passes its value.
@@ -79,6 +81,7 @@ var (
 	shareAllowAliasedMove bool // accept move(v) when v has been aliased or stored
 	shareAllowFrozenWrite bool // accept writes through a Frozen variable
 	shareShallowCopy      bool // sgo.Copy copies only the top object (runtime mutation)
+	shareAllowRefError    bool // accept error(v) for a Ref v (W13 review V2)
 )
 
 // CheckShare applies the proposed compile-time rule and returns the diagnostic code of the first
@@ -194,10 +197,23 @@ func checkBody(p SProgram, b int, caps map[string]SKind) string {
 			if e != "" {
 				return e
 			}
-			if k == SVal {
+			if k == SVal || k == SErr {
 				return "SGO_E_TYPE"
 			}
 			kinds[s.V] = SFrozen
+			delete(dead, s.V)
+		case SToErr:
+			k, e := use(s.W)
+			if e != "" {
+				return e
+			}
+			if k == SFrozen {
+				return "SGO_E_TYPE" // sgo.Frozen does not implement error
+			}
+			if k == SRef && !shareAllowRefError {
+				return "SGO_E_TASK_LOCAL_CAPTURE" // only shareable types become errors
+			}
+			kinds[s.V] = SErr
 			delete(dead, s.V)
 		case SSpawn:
 			cm := map[string]SKind{}

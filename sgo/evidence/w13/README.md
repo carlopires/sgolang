@@ -144,9 +144,20 @@ Tests and mutants: `comp-copy-interior-pointer` and the runtime tests `TestSGoCo
 `comp-error-task-local` (`-return`, `-send`, `-arg`, `-literal`) and `comp-error-pointer-receiver`
 catch the disabled conversion check; `test-map-lowering.py` catches Go maps in S-Go packages
 (comp-map-basic called `mapaccess1_faststr`, `mapassign_faststr`, `mapclear`, `mapdelete_faststr`).
-darwin-arm64 at `0a82e925c1`: conformance 462/462, generated-twin-check ok. Open: the G01 sharing
-model's generator does not yet produce user error types (reviewer note); linux re-check of V1–V3
-pending.
+darwin-arm64 at `0a82e925c1`: conformance 462/462, generated-twin-check ok. Reviewer re-check on
+linux/amd64: V1, V3 verified at `c09c5c56e1`/`74f4284f9d`; V2 reopened at `0a82e925c1` for
+multi-value calls and `range =`, and V4 found (`range =` assigned a captured variable, SGO-MEM-002):
+both fixed in `98b664e3d2` (tuple elements checked through one helper; `range` with `=` denied at
+admission) and verified there, including the reviewer's tuple-branch mutant. Conformance 469/469.
+
+Sharing model (G01) extended for V2: kind `SErr` and statement `V := error(W)` (an immutable box;
+`Error` may write what a referencing box points to). `GenShareErr` (error values, a channel of
+errors, reads and writes through them; `GenShare`'s stream unchanged, so 17,362 of 20,000 stays
+reproducible): 17,235 of 20,000 accepted, all explored without a violation. Mutant `ref-error`
+(accept `error(Ref)`) is caught by the scenario `reject-ref-error` and, independently, by the
+generated programs (`TestShareErrGeneratorFindsRefError`). `range =` needs no model construct: it
+is denied again.
+
 
 ## Stage 2 drafts (approved 2026-11-02; frozen at 0.9.0 above)
 

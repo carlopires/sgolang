@@ -68,13 +68,28 @@ func ExploreShare(p SProgram) ShareResult {
 // fitting kind) so that most rejections come from the sharing rule, not from type errors; the
 // sharing-relevant choices (plain, copy or move sends, captures of any kind, aliasing, use after
 // move, writes through frozen values) are left unconstrained.
-func GenShare(r *rand.Rand) SProgram {
+func GenShare(r *rand.Rand) SProgram { return genShare(r, false) }
+
+// GenShareErr is GenShare with error values (W13 review V2): it also generates V := error(W) for W
+// of any kind, a fourth channel of error values, and child reads and writes through errors (the
+// Error method of a value-receiver type writing what its value refers to). GenShare's stream is
+// unchanged, so its recorded acceptance figures stay reproducible.
+func GenShareErr(r *rand.Rand) SProgram { return genShare(r, true) }
+
+func genShare(r *rand.Rand, withErr bool) SProgram {
 	p := SProgram{Chans: []SKind{SRef, SFrozen, SVal}}
+	lastOp := SSpawn
+	childKinds := []SKind{SRef, SFrozen}
+	if withErr {
+		p.Chans = append(p.Chans, SErr)
+		lastOp = SToErr
+		childKinds = append(childKinds, SErr)
+	}
 	nb := 1 + r.Intn(3)
 	names := []string{"a", "b", "c", "d"}
 	caps := make([]map[string]SKind, nb) // kinds captured by the body's first spawn
 	caps[0] = map[string]SKind{}
-	chanOf := map[SKind]int{SRef: 0, SFrozen: 1, SVal: 2}
+	chanOf := map[SKind]int{SRef: 0, SFrozen: 1, SVal: 2, SErr: 3}
 	for b := 0; b < nb; b++ {
 		kinds := map[string]SKind{}
 		for v, k := range caps[b] {
@@ -99,7 +114,7 @@ func GenShare(r *rand.Rand) SProgram {
 			fresh = names[r.Intn(len(names))]
 			var st SStmt
 			ok := true
-			switch op := SOp(r.Intn(int(SSpawn) + 1)); op {
+			switch op := SOp(r.Intn(int(lastOp) + 1)); op {
 			case SAlloc:
 				k := SRef
 				if r.Intn(3) == 0 {
@@ -131,7 +146,7 @@ func GenShare(r *rand.Rand) SProgram {
 				st = SStmt{Op: op, V: v}
 			case SWriteChild, SReadChild:
 				var v string
-				v, ok = defined(SRef, SFrozen)
+				v, ok = defined(childKinds...)
 				st = SStmt{Op: op, V: v}
 			case SSend:
 				var v string
@@ -141,8 +156,15 @@ func GenShare(r *rand.Rand) SProgram {
 					m = SPlain
 				}
 				st = SStmt{Op: op, V: v, Ch: chanOf[kinds[v]], Mode: m}
+			case SToErr:
+				var w string
+				w, ok = defined(SVal, SRef, SErr)
+				st = SStmt{Op: op, V: fresh, W: w}
+				if ok {
+					kinds[fresh] = SErr
+				}
 			case SRecv:
-				ch := r.Intn(3)
+				ch := r.Intn(len(p.Chans))
 				st = SStmt{Op: op, V: fresh, Ch: ch}
 				kinds[fresh] = p.Chans[ch]
 			case SFreeze:
@@ -178,9 +200,18 @@ func GenShare(r *rand.Rand) SProgram {
 // number accepted, the number whose exploration reached the state bound (incomplete), and the
 // first accepted program with a violation.
 func ShareSoundness(seed int64, n int) (accepted, bounded int, bad *SProgram, err error) {
+	return shareSoundness(GenShare, seed, n)
+}
+
+// ShareErrSoundness is ShareSoundness over GenShareErr's programs.
+func ShareErrSoundness(seed int64, n int) (accepted, bounded int, bad *SProgram, err error) {
+	return shareSoundness(GenShareErr, seed, n)
+}
+
+func shareSoundness(gen func(*rand.Rand) SProgram, seed int64, n int) (accepted, bounded int, bad *SProgram, err error) {
 	r := rand.New(rand.NewSource(seed))
 	for i := 0; i < n; i++ {
-		p := GenShare(r)
+		p := gen(r)
 		if CheckShare(p) != "" {
 			continue
 		}

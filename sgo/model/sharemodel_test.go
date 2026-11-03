@@ -69,6 +69,17 @@ var ShareScenarios = map[string]struct {
 	"reject-move-stored-in":  {[][]SStmt{{alloc("a", SRef), alloc("b", SRef), op(SStore, "a", "b"), send("a", 0, SMove), op(SWrite, "b", "")}}, "SGO_E_MOVE_ALIASED"},
 	"reject-frozen-write":    {[][]SStmt{{alloc("a", SRef), op(SFreeze, "f", "a"), op(SWrite, "f", "")}}, "SGO_E_FROZEN_WRITE"},
 	"reject-frozen-child-wr": {[][]SStmt{{alloc("a", SRef), op(SChild, "a", ""), op(SFreeze, "f", "a"), op(SWriteChild, "f", "")}}, "SGO_E_FROZEN_WRITE"},
+
+	// Error values (W13 review V2): a value type boxed as an error is shared freely; a task-local
+	// one is refused, because its Error method could write what the shared box refers to.
+	"error-value-shared": {[][]SStmt{
+		{alloc("v", SVal), op(SToErr, "err", "v"), spawn(1, "err"), op(SWrite, "err", ""), op(SWrite, "v", "")},
+		{op(SWriteChild, "err", ""), op(SRead, "err", "")},
+	}, ""},
+	"reject-ref-error": {[][]SStmt{
+		{alloc("s", SRef), op(SToErr, "err", "s"), spawn(1, "err"), op(SWrite, "s", "")},
+		{op(SWriteChild, "err", "")},
+	}, "SGO_E_TASK_LOCAL_CAPTURE"},
 }
 
 func TestShareScenarios(t *testing.T) {
@@ -108,6 +119,34 @@ func TestShareSoundness(t *testing.T) {
 	t.Logf("%d of %d generated programs accepted; all explored without a violation", acc, sharePrograms)
 }
 
+// Soundness with error values: GenShareErr adds error(W) for W of every kind, a channel of errors,
+// and reads and writes through them (W13 review V2).
+func TestShareErrSoundness(t *testing.T) {
+	acc, bounded, bad, err := ShareErrSoundness(shareSeed, sharePrograms)
+	if err != nil {
+		t.Fatalf("accepted program violates ownership: %v\n%+v", err, *bad)
+	}
+	if bounded != 0 {
+		t.Fatalf("%d explorations reached the state bound: soundness is not established for them", bounded)
+	}
+	if acc < sharePrograms/20 {
+		t.Fatalf("only %d of %d generated programs accepted: the generator is too weak", acc, sharePrograms)
+	}
+	t.Logf("%d of %d generated programs with error values accepted; all explored without a violation", acc, sharePrograms)
+}
+
+// The generated programs, not only the hand-written scenario, reach the error route: with error(v)
+// of a Ref accepted, GenShareErr's programs alone show a violation.
+func TestShareErrGeneratorFindsRefError(t *testing.T) {
+	shareAllowRefError = true
+	defer func() { shareAllowRefError = false }()
+	_, _, bad, err := ShareErrSoundness(shareSeed, 5*sharePrograms)
+	if err == nil {
+		t.Fatal("with error(Ref) accepted, no generated program violates ownership: the generator does not reach the route")
+	}
+	t.Logf("found: %v\n%+v", err, *bad)
+}
+
 // Each relaxation of the rule (and a shallow sgo.Copy) admits a program that the explorer shows
 // violating ownership: every part of the rule is needed.
 func TestShareMutations(t *testing.T) {
@@ -120,12 +159,17 @@ func TestShareMutations(t *testing.T) {
 		{"aliased-move", &shareAllowAliasedMove},
 		{"frozen-write", &shareAllowFrozenWrite},
 		{"shallow-copy", &shareShallowCopy},
+		{"ref-error", &shareAllowRefError},
 	} {
 		*m.flag = true
 		by, err := "TestShareScenarios", shareScenarioViolation()
 		if err == nil {
 			by = "TestShareSoundness"
 			_, _, _, err = ShareSoundness(shareSeed, 5*sharePrograms)
+		}
+		if err == nil {
+			by = "TestShareErrSoundness"
+			_, _, _, err = ShareErrSoundness(shareSeed, 5*sharePrograms)
 		}
 		*m.flag = false
 		if err == nil {
