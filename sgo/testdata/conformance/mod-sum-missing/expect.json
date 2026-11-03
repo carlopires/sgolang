@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IMP-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_MODULE_SUM",
+   "position": "sgo.sum:1:1"
+  }
+ ],
+ "note": "No sgo.sum entry for a required module; builds never write sgo.sum (D113)."
+}

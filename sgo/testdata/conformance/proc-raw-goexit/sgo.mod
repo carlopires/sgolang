@@ -1,3 +1,3 @@
 module example.com/proc-raw-goexit
 
-sgo 0.10.1
+sgo 0.11.0

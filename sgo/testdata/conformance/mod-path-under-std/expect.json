@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IMP-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_USAGE",
+   "at": "module",
+   "file": "sgo.mod"
+  }
+ ],
+ "note": "Module paths under std are reserved for the standard library (D103)."
+}

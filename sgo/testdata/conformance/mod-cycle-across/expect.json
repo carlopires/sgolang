@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IMP-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_IMPORT_CYCLE",
+   "position": "example.com/base/base.sgo:3:8"
+  }
+ ],
+ "note": "Package import cycles are refused across module boundaries too."
+}

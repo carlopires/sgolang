@@ -110,6 +110,12 @@ jobs:
       - name: Lab execution configuration end to end (W08, D41-D49)
         run: sgo/scripts/test-lab.py
 
+      - name: Required modules, sgo.sum, and the std MANIFEST (SGO-IMP-003, SGO-IMP-004, W14)
+        run: sgo/scripts/test-modules.py
+
+      - name: sgo test of every std package (SGO-IMP-004, D110)
+        run: sgo/scripts/test-std.py
+
       - name: No flag, mode, or environment reopens stock Go (S01, S15)
         run: sgo/scripts/test-flags.py
 

@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IMP-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_MODULE_MISSING",
+   "at": "require",
+   "file": "sgo.mod"
+  }
+ ],
+ "note": "The vendored sgo.mod declares another module path."
+}

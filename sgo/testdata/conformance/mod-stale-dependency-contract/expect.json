@@ -1,0 +1,15 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IMP-002",
+  "SGO-IMP-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_TYPE_MISMATCH",
+   "at": "\"main\")"
+  }
+ ],
+ "procedure": "rebuild-after-edit",
+ "note": "A required module's exported signature changes (with sgo mod sum rerun): the rebuild type-checks the main module against the new contract, never a stale one."
+}

@@ -2,6 +2,21 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.11.0 — 2026-11-03
+
+Packages beyond the module (W14; D103–D105, D109–D115; drafts approved 2026-11-03): required modules with `require`/`replace`/`sgo.sum`, and the standard library `std/`. Every program valid under 0.10.1 keeps its meaning; the admission digest and toolchain identity change, so objects built for 0.10.1 are refused by a 0.11.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.11.0`.
+
+New frozen clauses:
+
+- SGO-IMP-003 v1 — required modules: `require <path> vX.Y.Z`, `replace <path> => <dir>` (main module only) or `vendor/<path>/`; each module path once per build (D111); `sgo.sum` digests checked before any compile and written only by `sgo mod sum` (D113); dependency grants bounded by the main module's, no file or network grants in dependencies (D114).
+- SGO-IMP-004 v1 — the standard library: the implicit module `std` from `$GOROOT/src/sgostd`, checked against its MANIFEST, compiled under the same rules as user code, importing only `std/` and `sgo` (D103, D115); first package `std/strconv` (`Itoa`, `Atoi`).
+
+Amended:
+
+- SGO-IMP-001 v3 — a program is built from its main module, the modules it requires, and `std`; imports resolve by longest module-path prefix; module paths under `std` are reserved; cycles are refused across modules.
+- SGO-IMP-002 v2 — contract identity is checked across module boundaries; only TCB packages are cached.
+- SGO-AUTH-002 v3 — a dependency's `grant` lines are a bound on the main module's grants, never a source of authority.
+
 ## 0.10.1 — 2026-11-03
 
 Soundness fixes from the W13 review (V1, V2). Programs that 0.10.0 rejected stay rejected; two kinds of programs that 0.10.0 accepted are now rejected or copied differently, because 0.10.0 accepted them unsoundly.

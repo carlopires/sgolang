@@ -1,0 +1,6 @@
+package base
+
+// Prefix is the greeting prefix.
+func Prefix() string {
+	return "hello via base to "
+}

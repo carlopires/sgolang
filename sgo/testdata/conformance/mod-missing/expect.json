@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IMP-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_MODULE_MISSING",
+   "at": "require",
+   "file": "sgo.mod"
+  }
+ ],
+ "note": "A required module with neither a replace line nor a vendor/ copy."
+}

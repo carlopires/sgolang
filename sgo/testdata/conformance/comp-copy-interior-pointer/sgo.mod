@@ -1,3 +1,3 @@
 module example.com/comp-copy-interior-pointer
 
-sgo 0.10.1
+sgo 0.11.0

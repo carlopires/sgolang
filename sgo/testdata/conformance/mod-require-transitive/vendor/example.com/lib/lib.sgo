@@ -1,0 +1,8 @@
+package lib
+
+import "example.com/base"
+
+// Greeting returns a greeting for name.
+func Greeting(name string) string {
+	return base.Prefix() + name
+}

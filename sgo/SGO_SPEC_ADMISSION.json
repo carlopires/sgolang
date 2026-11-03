@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": "0.10.1",
+  "spec_version": "0.11.0",
   "status": "admitted_0.7.0",
   "warning": "Spec 0.7.0 admits every row marked 'admitted': its clauses are frozen, the toolchain implements and enforces them, and its acceptance cases have executed evidence (constitution §6, D83). Rows marked 'denied' stay rejected. Admission does not widen any row beyond its clauses; everything the clauses do not name is rejected.",
   "default_decision": "reject",
@@ -775,7 +775,7 @@
         "SGO-AUTH-002",
         "SGO-AUTH-003"
       ],
-      "normative_text_digest": "882e0a1fb91722ffa10b411796a5f4503c4646efb6b9f533ccbee85aa64f1ada",
+      "normative_text_digest": "54b32d04472fe40647d1eb8963662ce5a6efe10dd1b01c3431d5e44398e4dffa",
       "admitted_in": [
         "0.7.0"
       ],
@@ -797,7 +797,7 @@
       "subset0": "denied",
       "clause_digests": {
         "SGO-AUTH-001": "d672d6e298826ed13c783ed0487106f8262f42bace3410719fec1373b53e5c4b",
-        "SGO-AUTH-002": "7a352f89eb0d847e7869a508abb307c48927c74c93d2d7ed0efd7aad0e8b1b23",
+        "SGO-AUTH-002": "2de548c4041b62044cb3f7e28fa0fda826e5e296cc4f56c54369ddd6dfb7045f",
         "SGO-AUTH-003": "6301abe9220d9304e623c41b91787d661f05b25a3132cb3b3001502e3df36de5"
       },
       "clause_status": {
@@ -807,7 +807,7 @@
       },
       "clause_versions": {
         "SGO-AUTH-001": 1,
-        "SGO-AUTH-002": 2,
+        "SGO-AUTH-002": 3,
         "SGO-AUTH-003": 2
       }
     },
@@ -855,9 +855,11 @@
       "status": "admitted",
       "clause_ids": [
         "SGO-IMP-001",
-        "SGO-IMP-002"
+        "SGO-IMP-002",
+        "SGO-IMP-003",
+        "SGO-IMP-004"
       ],
-      "normative_text_digest": "aa76738b65dc5c527f44ab4085f0c37ed34a9950ed92a0da0bfccc314c5bf0eb",
+      "normative_text_digest": "ed5a56015de949f84780ddb6ec03b3d40f8d47ed205ba3403ba4cf813643e37b",
       "admitted_in": [
         "0.7.0"
       ],
@@ -875,16 +877,22 @@
       ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-IMP-001": "e3622c8b2f9109d66ef1835a9ae0d7c1ed719b47e95a2acfb4e95f781796d6d7",
-        "SGO-IMP-002": "41dbe48f4eee70c3a6662bfdac21192897ef1ffa4b5372c0186f7ae0a9029126"
+        "SGO-IMP-001": "b668273274d28cb56c944c6570d4d0c8656404061bacfb02a14c28d5960870bb",
+        "SGO-IMP-002": "657c93f709097b2a58b4b46949d27fa9334a2c1f2822e6c8425b5445049f73b1",
+        "SGO-IMP-003": "4b5e63a48cbb381ac50a0d66db13f9e6c2435880801918393f4e8ea63b6ebc6e",
+        "SGO-IMP-004": "06a1852335a1e37614615685188f0147d92c4e083dc2f9fd98d06d47705db2b9"
       },
       "clause_status": {
         "SGO-IMP-001": "frozen",
-        "SGO-IMP-002": "frozen"
+        "SGO-IMP-002": "frozen",
+        "SGO-IMP-003": "frozen",
+        "SGO-IMP-004": "frozen"
       },
       "clause_versions": {
-        "SGO-IMP-001": 2,
-        "SGO-IMP-002": 1
+        "SGO-IMP-001": 3,
+        "SGO-IMP-002": 2,
+        "SGO-IMP-003": 1,
+        "SGO-IMP-004": 1
       }
     },
     {
@@ -1650,5 +1658,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "0957095cdddecc727bb6207347a60dfccdeb2ba8862fad048c825994d481a6b7"
+  "rows_digest": "e921e334d8cdf9f12ebecde8a4cfcde4b20ad9be07fcf2d95d6f57f46ce05573"
 }

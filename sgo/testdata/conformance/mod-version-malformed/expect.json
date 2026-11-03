@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IMP-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_MODULE_VERSION",
+   "at": "require",
+   "file": "sgo.mod"
+  }
+ ],
+ "note": "A version not of the form vMAJOR.MINOR.PATCH."
+}

@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IMP-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_USAGE",
+   "file": "sgo.mod",
+   "at": "replace example.com"
+  }
+ ],
+ "note": "The main module cannot be replaced; replace lines name required modules only."
+}

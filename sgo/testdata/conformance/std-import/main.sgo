@@ -1,0 +1,28 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	n, err := strconv.Atoi("-9223372036854775808")
+	if err != nil {
+		return err
+	}
+	if werr := out.WriteString(strconv.Itoa(n) + " " + strconv.Itoa(n+1) + " " + strconv.Itoa(0) + "\n"); werr != nil {
+		return werr
+	}
+	for _, s := range []string{"", "+", "12x", "9223372036854775808", "+42"} {
+		v, aerr := strconv.Atoi(s)
+		msg := "ok " + strconv.Itoa(v)
+		if aerr != nil {
+			msg = aerr.Error()
+		}
+		if werr := out.WriteString(msg + "\n"); werr != nil {
+			return werr
+		}
+	}
+	return nil
+}

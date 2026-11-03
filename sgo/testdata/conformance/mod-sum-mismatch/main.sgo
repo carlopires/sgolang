@@ -1,0 +1,10 @@
+package main
+
+import (
+	"example.com/lib"
+	"sgo"
+)
+
+func main(root *sgo.Context) error {
+	return root.Stdout().WriteString(lib.Greeting("main") + "\n")
+}

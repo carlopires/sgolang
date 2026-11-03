@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IMP-004"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNDEFINED",
+   "at": "\"std/nosuch\""
+  }
+ ],
+ "note": "std/nosuch is not a package of the standard library."
+}

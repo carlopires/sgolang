@@ -1,3 +1,3 @@
 module example.com/cancel-wakes-sleep
 
-sgo 0.10.1
+sgo 0.11.0

@@ -25,12 +25,12 @@ Capabilities for effects other than stdout (D24, D25; plan §8). Part of spec 0.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-AUTH-002 — Root grants declared in sgo.mod
-- **version:** 2
+- **version:** 3
 - **status:** frozen
-- **reference_closure:** SGO-FILE-002, SGO-NET-002, SGO-IMP-001, SGO-TOOL-001, SGO-BUILD-001, SGO-AUTH-001; D25.
+- **reference_closure:** SGO-IMP-003, SGO-FILE-002, SGO-NET-002, SGO-IMP-001, SGO-TOOL-001, SGO-BUILD-001, SGO-AUTH-001; D25.
 - **grammar_and_types:** `sgo.mod` may contain lines `grant <kind>` for the kinds of SGO-AUTH-003, each at most once. `root.K(...)` on the root context returns the root handle of kind `K`. Spec 0.5.0 adds the file and network grants `grant dir`, `grant connect`, and `grant listen` (SGO-FILE-002, SGO-NET-002); they are not effect kinds and do not enter ceilings: their handles come only from the root task's `root.Dir`, `root.Dial`, and `root.Listen`, and children receive lent handles. They are part of the build identity like the kinds.
 - **preconditions:** Only the root context provides root handles, as `Stdout` (SGO-PROC-003).
-- **evaluation_and_value_semantics:** The root task's ceiling is exactly the kinds granted in the main module's `sgo.mod`. `root.K(...)` for a kind that is not granted fails with `MissingCapability`. Dependencies cannot add grants: only the main module's `sgo.mod` counts.
+- **evaluation_and_value_semantics:** The root task's ceiling is exactly the kinds granted in the main module's `sgo.mod`. `root.K(...)` for a kind that is not granted fails with `MissingCapability`. Dependencies cannot add grants: only the main module's `sgo.mod` counts. A required module's `grant` lines are a bound, not a source of authority: each must name a kind the main module also grants, and file and network grants are refused in dependencies (SGO-IMP-003, D114).
 - **ownership_and_lifecycle:** Root handles live for the whole program.
 - **effect_and_capability_requirements:** Defines the root of authority.
 - **concurrency_and_memory_order:** n/a — fixed at build time.

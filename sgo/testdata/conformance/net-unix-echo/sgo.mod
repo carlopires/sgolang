@@ -1,5 +1,5 @@
 module example.com/net-unix-echo
 
-sgo 0.10.1
+sgo 0.11.0
 grant listen unix:echo.sock
 grant connect unix:echo.sock

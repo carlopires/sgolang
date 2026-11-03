@@ -23,6 +23,8 @@ jobs:
         run: sgo/scripts/inventory-check.py
       - name: Runtime TCB manifest (SGO-TCB-002)
         run: sgo/scripts/tcb-manifest.py
+      - name: Standard library MANIFEST (SGO-IMP-004)
+        run: sgo/scripts/std-manifest.py
       - name: go/types generator inputs untouched (upstream TestGenerate stays green)
         run: sgo/scripts/generated-twin-check.py
       - name: Clause adoption ledger (S04)

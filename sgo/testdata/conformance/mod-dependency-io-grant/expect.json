@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IMP-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_DEPENDENCY_GRANT",
+   "position": "example.com/lib/sgo.mod:4:1"
+  }
+ ],
+ "note": "File and network grants are refused in dependencies (D114)."
+}

@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-IMP-001",
+  "SGO-IMP-003"
+ ],
+ "exit": 0,
+ "stdout": "hello from lib to main\n",
+ "note": "A required module found under vendor/<module path> (D112)."
+}

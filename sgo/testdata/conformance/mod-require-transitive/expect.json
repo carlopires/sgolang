@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-IMP-001",
+  "SGO-IMP-003"
+ ],
+ "exit": 0,
+ "stdout": "hello via base to main\n",
+ "note": "A dependency's own require lines are followed; every module is vendored in the main module (D112)."
+}

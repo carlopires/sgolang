@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IMP-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_USAGE",
+   "at": "replace example.com/lib => ./b",
+   "file": "sgo.mod"
+  }
+ ],
+ "note": "One module path replaced twice."
+}

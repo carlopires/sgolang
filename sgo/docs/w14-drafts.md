@@ -1,6 +1,6 @@
 # W14 drafts — packages beyond the module (for approval)
 
-Status: **draft, awaiting owner approval.** These clauses live here, outside `sgo/spec/`, so the
+Status: **approved 2026-11-03; frozen at spec 0.11.0** (sgo/spec/SPEC-IMPORT.md, SPEC-AUTH.md). Kept as the record of the drafts. These clauses live here, outside `sgo/spec/`, so the
 frozen 0.10.1 digest does not move; on approval they freeze at spec 0.11.0. They implement the
 approved decisions D103 (`std/`, not trusted), D104 (`require`/`replace`/`sgo.sum`, local only),
 D105 (contracts and grants across modules), D109 (no package state), and D110 (process) of

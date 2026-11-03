@@ -1,4 +1,4 @@
 module example.com/file-grant-bad-mode
 
-sgo 0.10.1
+sgo 0.11.0
 grant dir data data rx

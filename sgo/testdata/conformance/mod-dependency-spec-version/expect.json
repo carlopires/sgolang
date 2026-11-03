@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IMP-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_SPEC_VERSION",
+   "position": "example.com/lib/sgo.mod:3:1"
+  }
+ ],
+ "note": "Every module of a build names the toolchain's spec version."
+}

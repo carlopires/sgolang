@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-IMP-003"
+ ],
+ "exit": 0,
+ "stdout": "hello from lib to main\n",
+ "note": "A dependency may name effect kinds the main module also grants (D114)."
+}

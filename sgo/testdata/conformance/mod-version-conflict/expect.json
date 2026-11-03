@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IMP-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_MODULE_VERSION",
+   "position": "example.com/other/sgo.mod:4:1"
+  }
+ ],
+ "note": "Two versions of one module path in a build (D111); reported at the second require."
+}

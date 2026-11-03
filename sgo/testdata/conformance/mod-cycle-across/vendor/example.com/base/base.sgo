@@ -1,0 +1,8 @@
+package base
+
+import "example.com/lib"
+
+// Name is a name.
+const Name = "x"
+
+var _ = lib.Greeting

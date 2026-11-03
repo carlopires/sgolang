@@ -1,0 +1,6 @@
+package lib
+
+// Greeting returns a greeting for the nth caller.
+func Greeting(n int) string {
+	return "hello from lib, version 2"
+}
