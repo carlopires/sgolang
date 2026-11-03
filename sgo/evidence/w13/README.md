@@ -36,3 +36,9 @@ compiler's checks are tested against the same cases when stage 2 lands.
 
 `sgo/testdata/w13-programs/` holds the five programs with their expected output. They become
 conformance cases in the stage that admits their last construct.
+
+## Stage 1 drafts (awaiting approval)
+
+`sgo/docs/w13-stage1-drafts.md`: SGO-COMP-002 (value structs and arrays), SGO-COMP-003 (array
+indexing, `BoundsViolation`), SGO-UTYPE-002 (named types, value-receiver methods). Kept outside
+`sgo/spec/` so the 0.7.0 release registry and its admission digest do not move before approval.
