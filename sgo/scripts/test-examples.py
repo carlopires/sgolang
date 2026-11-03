@@ -26,7 +26,12 @@ EXAMPLES = {
     "pipeline": (["."], "0..63"),
     "service": (["."], "0..63"),
     "replay": (["./fixed"], "0..63"),
+    "happyeyeballs": (["."], "0..63"),
 }
+
+# Happy Eyeballs lab scenarios (W18, D146): each main checks its own winner and RFC 8305 step, so
+# the sweep needs no -expect (the order in which the two DNS answers arrive varies by schedule).
+HE_SCENARIOS = ["silent-v6", "slow-aaaa", "prefer-v6", "slow-v6", "all-refused"]
 
 
 def main():
@@ -55,6 +60,15 @@ def main():
             r = run("check", "./...")
             if r.returncode != 0:
                 problems.append(f"{name}: sgo check: {r.stderr.strip()[:300]}")
+            if name == "happyeyeballs":
+                r = run("run", ".")
+                if r.returncode != 0 or r.stdout != expected:
+                    problems.append(f"{name}: sgo run: exit {r.returncode}, stdout {r.stdout!r}, want {expected!r}; {r.stderr[-200:]!r}")
+                for sc in HE_SCENARIOS:
+                    r = run("lab", "sweep", "-seeds", seeds, "./lab/" + sc)
+                    if r.returncode != 0 or " 0 failed" not in r.stderr + r.stdout:
+                        problems.append(f"{name}: lab sweep {sc}: exit {r.returncode}: {(r.stdout + r.stderr)[-300:]!r}")
+                continue
             r = run("test", "./...")
             if r.returncode != 0 or "--- FAIL" in r.stdout or "--- PASS" not in r.stdout:
                 problems.append(f"{name}: sgo test: exit {r.returncode}: {r.stdout[-400:]!r} {r.stderr[-300:]!r}")

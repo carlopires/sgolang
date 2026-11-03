@@ -1,0 +1,5 @@
+# Both families resolve at once; the IPv6 address is a blackhole (no SYN-ACK, ever).
+resolve example.test 2001:db8::1
+resolve example.test 192.0.2.1
+blackhole [2001:db8::1]:443
+peer 192.0.2.1:443

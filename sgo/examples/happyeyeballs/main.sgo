@@ -41,7 +41,11 @@ func main(root *sgo.Context) error {
 		slot := root.NewConnSlot()
 		steps := &trace{}
 		addr, cerr := he.Connect(root, d, slot, "localhost", steps)
+		// The attempts, not the answers: which of the two answers comes first varies run to run.
 		for _, line := range steps.lines {
+			if isAnswer(line) {
+				continue
+			}
 			if werr := root.Stdout().WriteString("he: " + line + "\n"); werr != nil {
 				return werr
 			}
@@ -72,3 +76,5 @@ func main(root *sgo.Context) error {
 	}
 	return l.Close()
 }
+
+func isAnswer(line string) bool { return line == "A answer in" || line == "AAAA answer in" }

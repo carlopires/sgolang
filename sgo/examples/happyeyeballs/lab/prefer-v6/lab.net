@@ -1,0 +1,5 @@
+# The AAAA answer takes 20ms, within the 50ms resolution delay. Both families accept.
+resolve example.test 2001:db8::1 20
+resolve example.test 192.0.2.1
+peer [2001:db8::1]:443
+peer 192.0.2.1:443

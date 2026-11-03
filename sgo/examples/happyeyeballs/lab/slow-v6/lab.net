@@ -1,0 +1,4 @@
+resolve example.test 2001:db8::1
+resolve example.test 192.0.2.1
+peer [2001:db8::1]:443 400
+peer 192.0.2.1:443 10

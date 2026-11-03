@@ -1,0 +1,72 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package demo runs one Happy Eyeballs race to example.test:443 for the lab scenarios. Each
+// scenario's lab.net describes the network: what the names resolve to, after how long, and which
+// addresses answer. Run fails unless the race reaches want, so `sgo lab sweep` checks the RFC 8305
+// behavior under every schedule it tries.
+package demo
+
+import (
+	"example.com/happyeyeballs/he"
+	"sgo"
+)
+
+type trace struct{ lines []string }
+
+func (t *trace) Log(line string) error {
+	t.lines = append(t.lines, line)
+	return nil
+}
+
+// Run races to example.test and prints the steps, then what the winning peer says. want is the
+// address the race must reach ("" if every address must fail); step, if not "", is a step the
+// race must take (the RFC 8305 rule the scenario is about).
+func Run(root *sgo.Context, want, step string) error {
+	d := root.Dialer([]string{"example.test:443"})
+	slot := root.NewConnSlot()
+	steps := &trace{}
+	addr, cerr := he.Connect(root, d, slot, "example.test", steps)
+	seen := step == ""
+	for _, line := range steps.lines {
+		if werr := root.Stdout().WriteString(line + "\n"); werr != nil {
+			return werr
+		}
+		seen = seen || line == step
+	}
+	if !seen {
+		return sgo.NewError("the race did not take the step " + step)
+	}
+	if cerr != nil {
+		if want == "" {
+			return closeAll(slot, d, root.Stdout().WriteString("no connection, as expected\n"))
+		}
+		return cerr
+	}
+	if addr != want {
+		return sgo.NewError("the race reached " + addr + ", not " + want)
+	}
+	conn, ok := slot.Take()
+	if !ok {
+		return sgo.NewError("the slot is empty")
+	}
+	msg, rerr := conn.Read(64)
+	if rerr != nil {
+		return rerr
+	}
+	if werr := root.Stdout().WriteString("read: " + msg); werr != nil {
+		return werr
+	}
+	return closeAll(slot, d, conn.Close())
+}
+
+func closeAll(slot *sgo.ConnSlot, d *sgo.Dialer, first error) error {
+	if first != nil {
+		return first
+	}
+	if serr := slot.Close(); serr != nil {
+		return serr
+	}
+	return d.Close()
+}

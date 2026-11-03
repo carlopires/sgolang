@@ -1,0 +1,5 @@
+he: attempt [::1]:47970
+he: failed [::1]:47970
+he: attempt 127.0.0.1:47970
+he: connected 127.0.0.1:47970
+reached 127.0.0.1:47970: hello over the winning family

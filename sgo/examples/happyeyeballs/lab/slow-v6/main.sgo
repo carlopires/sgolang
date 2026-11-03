@@ -1,0 +1,13 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Command slow-v6 is a Happy Eyeballs lab scenario: IPv6 connects at 400ms, IPv4 at 10ms after its start at 250ms: IPv4 wins and IPv6 is cancelled (see lab.net).
+package main
+
+import (
+	"example.com/happyeyeballs/demo"
+	"sgo"
+)
+
+func main(root *sgo.Context) error { return demo.Run(root, "192.0.2.1:443", "no answer from [2001:db8::1]:443 after 250ms") }
