@@ -174,6 +174,9 @@ def check_archive(tmp):
             problems.append(f"archive: make-release.py {' '.join(args)}: exit {rr.returncode} (want {want}), wrote {wrote}")
     tcb = json.load(open(os.path.join(ROOT, "sgo", "TARGET_TCB.json")))
     want_src = {f["path"] for f in tcb["files"]}
+    # The standard library ships as source with its MANIFEST (SGO-IMP-004): not TCB, but exactly the
+    # git-tracked files of src/sgostd, as make-release.py copies them.
+    want_std = set(subprocess.check_output(["git", "ls-files", "src/sgostd"], cwd=ROOT, text=True).split())
     spec = importlib.util.spec_from_file_location("mkrel", os.path.join(ROOT, "sgo", "scripts", "make-release.py"))
     mk = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mk)
@@ -196,10 +199,12 @@ def check_archive(tmp):
                     problems.append(f"archive: unexpected executable {rel}")
                 if rel.startswith("src/"):
                     srcs.add(rel)
-                    if rel not in want_src and rel not in headers:
-                        problems.append(f"archive: {rel} is not a TCB file")
+                    if rel not in want_src and rel not in headers and rel not in want_std:
+                        problems.append(f"archive: {rel} is not a TCB or standard-library file")
     for f in sorted(want_src - srcs):
         problems.append(f"archive: TCB file {f} missing")
+    for f in sorted(want_std - srcs):
+        problems.append(f"archive: standard-library file {f} missing")
     return problems
 
 

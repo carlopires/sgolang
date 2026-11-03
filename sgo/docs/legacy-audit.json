@@ -380,7 +380,8 @@
       "timeout"
     ],
     "not_flags": {
-      "testdata": "a directory name the module loader skips, not a flag"
+      "testdata": "a directory name the module loader skips, not a flag",
+      "vendor": "a directory name: required modules' sources (SGO-IMP-003), skipped as packages of the main module, not a flag"
     },
     "commands": [
       [
