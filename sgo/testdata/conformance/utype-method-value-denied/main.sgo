@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+type C struct {
+	N int
+}
+
+func (c C) Get() int { return c.N }
+
+func main(root *sgo.Context) error {
+	f := C{1}.Get
+	_ = f
+	return nil
+}

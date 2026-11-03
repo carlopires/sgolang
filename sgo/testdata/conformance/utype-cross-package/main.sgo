@@ -1,0 +1,15 @@
+package main
+
+import (
+	"example.com/utype-cross-package/geo"
+	"sgo"
+)
+
+func main(root *sgo.Context) error {
+	a := geo.Vec{X: 1, Y: 2}
+	b := a.Add(geo.Vec{X: 3, Y: 4})
+	if b.Dot(a) == 4+12 {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

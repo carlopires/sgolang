@@ -1,0 +1,13 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	a := [4]int{10, 20, 30, 40}
+	i := 3
+	a[i-1] = a[i] + a[0]
+	if a[2] == 50 {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

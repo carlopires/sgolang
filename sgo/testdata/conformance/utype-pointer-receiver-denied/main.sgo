@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+type C struct {
+	N int
+}
+
+func (c *C) Inc() {
+	c.N++
+}
+
+func main(root *sgo.Context) error {
+	return nil
+}

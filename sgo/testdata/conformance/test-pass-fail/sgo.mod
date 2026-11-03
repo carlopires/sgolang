@@ -1,3 +1,3 @@
 module example.com/test-pass-fail
 
-sgo 0.7.0
+sgo 0.8.0

@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+type Key struct {
+	A string
+	B [2]int
+}
+
+func main(root *sgo.Context) error {
+	k1 := Key{"x", [2]int{1, 2}}
+	k2 := Key{A: "x", B: [2]int{1, 2}}
+	k3 := Key{A: "x", B: [2]int{1, 3}}
+	if k1 == k2 && k1 != k3 && !(k2 == k3) {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

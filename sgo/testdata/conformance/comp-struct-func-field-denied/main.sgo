@@ -1,0 +1,11 @@
+package main
+
+import "sgo"
+
+type Handler struct {
+	Run func() int
+}
+
+func main(root *sgo.Context) error {
+	return nil
+}

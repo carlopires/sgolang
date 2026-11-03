@@ -39,9 +39,11 @@
         "SPEC-BIND",
         "SPEC-TYPE",
         "SPEC-VALUE",
-        "SPEC-CONTROL"
+        "SPEC-CONTROL",
+        "SPEC-COMPOSITE",
+        "SPEC-USERTYPE"
       ],
-      "statement": "A program compiles only if every construct it uses is in the closed S-Go subset (spec 0.6.0): .sgo sources, int/bool/string/error, function values, the admitted statements. Integer overflow, division by zero, and out-of-range string indexing are checked failures with a specified record, never wraparound or undefined behavior.",
+      "statement": "A program compiles only if every construct it uses is in the closed S-Go subset (spec 0.8.0): .sgo sources, int/bool/string/error, value structs and arrays, named value types with value-receiver methods, function values, the admitted statements. Integer overflow, division by zero, and an out-of-range array index are checked failures with a specified record, never wraparound or undefined behavior.",
       "scope": [
         "admission",
         "runtime_enforced",
@@ -51,6 +53,7 @@
         "src/cmd/compile/internal/syntax/",
         "src/cmd/compile/internal/types2/sgo.go",
         "src/cmd/compile/internal/types2/sgo_flow.go",
+        "src/cmd/compile/internal/types2/sgo_values.go",
         "src/cmd/compile/internal/sgoadmit/admit.go",
         "src/cmd/compile/internal/sgoadmit/admit_expr.go",
         "src/cmd/compile/internal/ssagen/sgo.go"
@@ -60,15 +63,13 @@
       "id": "G-DENY",
       "families": [
         "SPEC-FLOAT",
-        "SPEC-COMPOSITE",
-        "SPEC-USERTYPE",
         "SPEC-IFACE",
         "SPEC-GENERIC",
         "SPEC-REFLECT",
         "SPEC-NATIVE",
         "SPEC-RANDOM"
       ],
-      "statement": "Floating point, composite and user-defined types, interfaces, generics, reflection, math/rand, unsafe, cgo, assembly, go:linkname, plugins and raw system calls are rejected at compile time with SGO_E_UNADMITTED; there is no flag, build mode or environment setting that admits them.",
+      "statement": "Floating point, slices, maps, pointers, anonymous struct types, interfaces, generics, reflection, math/rand, unsafe, cgo, assembly, go:linkname, plugins and raw system calls are rejected at compile time with SGO_E_UNADMITTED; there is no flag, build mode or environment setting that admits them. (Value structs, arrays, and named types are admitted from spec 0.8.0: G-LANG.)",
       "scope": [
         "admission",
         "tested"

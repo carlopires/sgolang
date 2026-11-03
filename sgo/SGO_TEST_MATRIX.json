@@ -2805,9 +2805,11 @@
       ],
       "scenario": "Declare, compare, assign, pass and send structs and arrays of admitted types; capture them in Spawn callbacks.",
       "expected": "Every crossing copies the value; no reference-free aggregate is shared between tasks.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W13 stage 1: fixtures comp-struct-value, comp-array-value, comp-struct-compare, comp-value-send, comp-value-capture and the denials comp-*-denied, comp-captured-field-write pass (darwin-arm64; linux in sgo-w00); sgo/evidence/w13/README.md"
+      ]
     },
     {
       "id": "G03",
@@ -2820,9 +2822,11 @@
       ],
       "scenario": "Named types over admitted types with value-receiver methods (stage 1) and pointer receivers on task-local data (stage 2).",
       "expected": "Method sets and calls follow the clauses; pointer receivers never reach another task.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W13 stage 1: fixtures utype-named-int, utype-struct-methods, utype-cross-package, utype-conversion, utype-declaration and the denials utype-*-denied, utype-method pass; sgo/evidence/w13/README.md"
+      ]
     },
     {
       "id": "G04",
@@ -2885,9 +2889,11 @@
       ],
       "scenario": "Index or slice out of range, dereference nil, write a nil map, in the root and in a child task.",
       "expected": "Defined failure kinds (D91) with the specified record, exit status and propagation; no Go traceback.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W13 stage 1 (arrays): comp-array-index, comp-array-bounds-exit-2, comp-array-bounds-child (BoundsViolation, exit 2, position), comp-array-const-index (SGO_E_CONST_RANGE); slices, maps and nil are stage 2; sgo/evidence/w13/README.md"
+      ]
     },
     {
       "id": "G08",

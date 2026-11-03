@@ -1,3 +1,3 @@
 module example.com/cancel-basic
 
-sgo 0.7.0
+sgo 0.8.0

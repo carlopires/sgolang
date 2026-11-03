@@ -1,0 +1,26 @@
+package main
+
+import "sgo"
+
+type Grid struct {
+	Cells [3]int
+}
+
+func main(root *sgo.Context) error {
+	a := [3]int{1, 2, 3}
+	b := a
+	b[0] = 100
+	g := Grid{Cells: [3]int{2: 9}}
+	g2 := g
+	g2.Cells[1] = 5
+	sum := 0
+	for i, v := range a {
+		sum = sum + i*v
+	}
+	l := [...]string{"x", "y"}
+	out := root.Stdout()
+	if a[0] == 1 && b[0] == 100 && g.Cells[1] == 0 && g2.Cells[1] == 5 && g.Cells[2] == 9 && sum == 8 && len(l) == 2 && len(a) == 3 && a != b && a == [3]int{1, 2, 3} {
+		return out.WriteString("ok\n")
+	}
+	return out.WriteString("wrong\n")
+}

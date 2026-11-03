@@ -1,0 +1,25 @@
+package main
+
+import "sgo"
+
+type Point struct {
+	X, Y int
+	Name string
+}
+
+func move(p Point, dx int) Point {
+	p.X = p.X + dx // p is a copy: the caller's value is unchanged
+	return p
+}
+
+func main(root *sgo.Context) error {
+	a := Point{X: 1, Y: 2, Name: "a"}
+	b := move(a, 10)
+	c := Point{3, 4, "c"}
+	z := Point{}
+	out := root.Stdout()
+	if a.X == 1 && b.X == 11 && b.Y == 2 && c.Name == "c" && z.X == 0 && z.Name == "" && a != b && move(b, -10) == a {
+		return out.WriteString("ok\n")
+	}
+	return out.WriteString("wrong\n")
+}

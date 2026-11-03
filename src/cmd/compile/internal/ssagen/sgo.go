@@ -6,6 +6,7 @@ package ssagen
 
 import (
 	"math"
+	"strings"
 	"sync"
 
 	"cmd/compile/internal/base"
@@ -25,13 +26,14 @@ import (
 // by proving the branch dead.
 
 var sgoSyms struct {
-	overflow, divideByZero, shiftRange *obj.LSym
+	overflow, divideByZero, shiftRange, bounds *obj.LSym
 }
 
 func sgoInitSyms() {
 	sgoSyms.overflow = typecheck.LookupRuntimeFunc("sgoOverflow")
 	sgoSyms.divideByZero = typecheck.LookupRuntimeFunc("sgoDivideByZero")
 	sgoSyms.shiftRange = typecheck.LookupRuntimeFunc("sgoShiftRange")
+	sgoSyms.bounds = typecheck.LookupRuntimeFunc("sgoBoundsViolation")
 }
 
 // sgoStringMu serializes creation of position-string symbols. SSA construction runs functions
@@ -158,4 +160,22 @@ func (s *state) sgoNeg(n *ir.UnaryExpr, a *ssa.Value) *ssa.Value {
 	t := s.sgoIntType(n)
 	s.sgoCheck(s.sgoBool(ir.ONE, t, a, s.constInt64(t, math.MinInt64)), sgoSyms.overflow)
 	return s.newValue1(s.ssaOp(ir.ONEG, t), t, a)
+}
+
+// sgoSource reports whether the code being compiled at the current position comes from an S-Go
+// source file (.sgo). Inlined bodies keep their source positions, so this holds for S-Go code
+// inlined anywhere.
+func (s *state) sgoSource() bool {
+	return strings.HasSuffix(base.Ctxt.PosTable.Pos(s.peekPos()).Filename(), ".sgo")
+}
+
+// sgoBoundsFail ends the current block with the S-Go bounds failure (SGO-COMP-003): a call of
+// runtime.sgoBoundsViolation(position, index, length) that does not return.
+func (s *state) sgoBoundsFail(idx, len *ssa.Value) {
+	pos := s.sgoPos()
+	sgoStringMu.Lock()
+	staticdata.StringSym(s.peekPos(), pos)
+	sgoStringMu.Unlock()
+	str := s.entryNewValue0A(ssa.OpConstString, types.Types[types.TSTRING], ssa.StringToAux(pos))
+	s.rtcall(sgoSyms.bounds, false, nil, str, idx, len)
 }

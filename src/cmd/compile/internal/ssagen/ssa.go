@@ -5562,7 +5562,10 @@ func (s *state) boundsCheck(idx, len *ssa.Value, kind ssa.BoundsKind, bounded bo
 	b.AddEdgeTo(bPanic)
 
 	s.startBlock(bPanic)
-	if Arch.LinkArch.Family == sys.Wasm {
+	if (kind == ssa.BoundsIndex || kind == ssa.BoundsIndexU) && s.sgoSource() {
+		// S-Go code: the checked failure BoundsViolation with the source position (SGO-COMP-003).
+		s.sgoBoundsFail(idx, len)
+	} else if Arch.LinkArch.Family == sys.Wasm {
 		// TODO(khr): figure out how to do "register" based calling convention for bounds checks.
 		// Should be similar to gcWriteBarrier, but I can't make it work.
 		s.rtcall(BoundsCheckFunc[kind], false, nil, idx, len)

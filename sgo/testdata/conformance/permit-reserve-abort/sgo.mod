@@ -1,3 +1,3 @@
 module example.com/permit-reserve-abort
 
-sgo 0.7.0
+sgo 0.8.0

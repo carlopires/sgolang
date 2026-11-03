@@ -32,6 +32,9 @@ func (check *Checker) sgoEnsureInfo() {
 	if check.Uses == nil {
 		check.Uses = make(map[*syntax.Name]Object)
 	}
+	if check.Selections == nil {
+		check.Selections = make(map[*syntax.SelectorExpr]*Selection)
+	}
 }
 
 // sgoLocalScope reports whether s is a function or block scope (not the universe, a package, or
@@ -51,6 +54,7 @@ func (check *Checker) sgoLocalVar(obj Object) *Var {
 
 // sgoFlowChecks applies the flow rules to every function declaration.
 func (check *Checker) sgoFlowChecks(files []*syntax.File) {
+	check.sgoTypeDecls(files)
 	for _, f := range files {
 		for _, d := range f.DeclList {
 			if fd, _ := d.(*syntax.FuncDecl); fd != nil && fd.Body != nil {
@@ -63,8 +67,27 @@ func (check *Checker) sgoFlowChecks(files []*syntax.File) {
 func (check *Checker) sgoFuncFlow(fd *syntax.FuncDecl) {
 	var lits []*syntax.FuncLit
 	binders := make(map[*Var]bool)
+	called := make(map[*syntax.SelectorExpr]bool) // selectors that are the function of a call
+	syntax.Inspect(fd, func(n syntax.Node) bool {
+		if c, _ := n.(*syntax.CallExpr); c != nil {
+			if sel, _ := syntax.Unparen(c.Fun).(*syntax.SelectorExpr); sel != nil {
+				called[sel] = true
+			}
+		}
+		return true
+	})
 	syntax.Inspect(fd, func(n syntax.Node) bool {
 		switch n := n.(type) {
+		case *syntax.ArrayType:
+			check.sgoArrayType(n)
+		case *syntax.ChanType:
+			check.sgoChanType(n)
+		case *syntax.IndexExpr:
+			check.sgoIndex(n)
+		case *syntax.CompositeLit:
+			check.sgoCompositeLit(n)
+		case *syntax.SelectorExpr:
+			check.sgoMethodValue(n, called)
 		case *syntax.Name:
 			check.sgoShadow(n)
 		case *syntax.DeclStmt:
@@ -86,6 +109,7 @@ func (check *Checker) sgoFuncFlow(fd *syntax.FuncDecl) {
 		case *syntax.CallExpr:
 			check.sgoPanicArg(n)
 			check.sgoChanLen(n)
+			check.sgoConversion(n)
 		case *syntax.ForStmt:
 			check.sgoRange(n)
 		case *syntax.FuncType:
@@ -270,7 +294,7 @@ func (check *Checker) sgoAssignments(fd *syntax.FuncDecl, captured map[*Var]*syn
 			lhs = l.ElemList
 		}
 		for _, e := range lhs {
-			name, _ := syntax.Unparen(e).(*syntax.Name)
+			name := sgoAssignedRoot(e) // x, x.F, x[i]: each assigns x (SGO-MEM-002, SGO-COMP-002)
 			if name == nil {
 				continue
 			}
@@ -308,8 +332,13 @@ func (check *Checker) sgoRange(s *syntax.ForStmt) {
 	if r == nil {
 		return
 	}
-	if tv, ok := check.Types[r.X]; ok && tv.Type != nil && isChanType(tv.Type) {
-		return
+	if tv, ok := check.Types[r.X]; ok && tv.Type != nil {
+		if isChanType(tv.Type) {
+			return
+		}
+		if _, isArray := tv.Type.Underlying().(*Array); isArray {
+			return // range over an array (SGO-COMP-002)
+		}
 	}
 	check.errorf(r.Pos(), UnsupportedFeature, "SGO_E_UNADMITTED: range clause is not admitted in S-Go subset 0 (SGO-COMP-001)")
 }

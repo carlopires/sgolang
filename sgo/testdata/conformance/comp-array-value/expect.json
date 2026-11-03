@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-COMP-002",
+  "SGO-COMP-003"
+ ],
+ "exit": 0,
+ "stdout": "ok\n"
+}

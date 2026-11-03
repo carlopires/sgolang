@@ -47,12 +47,12 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §7, decisions D12, D13, resolution
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-DEF-003 — Checked failure kinds
-- **version:** 2
+- **version:** 3
 - **status:** frozen
-- **reference_closure:** SGO-VAL-001, SGO-SPAWN-002, SGO-WAIT-001, SGO-PROC-003, SGO-TYPE-006, SGO-NUR-004, SGO-DEF-005.
+- **reference_closure:** SGO-VAL-001, SGO-SPAWN-002, SGO-WAIT-001, SGO-PROC-003, SGO-TYPE-006, SGO-NUR-004, SGO-DEF-005, SGO-COMP-003.
 - **grammar_and_types:** n/a — dynamic rule.
 - **preconditions:** n/a — dynamic rule.
-- **evaluation_and_value_semantics:** The complete set of failure kinds that unwind a task in subset 0 is: `Panic` (SGO-DEF-002), `IntegerOverflow`, `DivideByZero`, `ShiftRange` (SGO-VAL-001), `SpawnContractViolation` (SGO-SPAWN-002, SGO-CANCEL-001), `InvalidArgument` (SGO-WAIT-001), `MissingCapability` (SGO-PROC-003), `NilError` (SGO-TYPE-006), `ChildError` (SGO-NUR-004); spec 0.3.0 adds `ClosedChannel` (a send on a closed channel, SGO-CHAN-002, SGO-CHAN-004). Each carries a message and the source position where it arose. All unwind exactly like `panic` (SGO-DEF-005).
+- **evaluation_and_value_semantics:** The complete set of failure kinds that unwind a task in subset 0 is: `Panic` (SGO-DEF-002), `IntegerOverflow`, `DivideByZero`, `ShiftRange` (SGO-VAL-001), `SpawnContractViolation` (SGO-SPAWN-002, SGO-CANCEL-001), `InvalidArgument` (SGO-WAIT-001), `MissingCapability` (SGO-PROC-003), `NilError` (SGO-TYPE-006), `ChildError` (SGO-NUR-004); spec 0.3.0 adds `ClosedChannel` (a send on a closed channel, SGO-CHAN-002, SGO-CHAN-004); spec 0.8.0 adds `BoundsViolation` (an array index out of range, SGO-COMP-003). Each carries a message and the source position where it arose. All unwind exactly like `panic` (SGO-DEF-005).
 - **ownership_and_lifecycle:** n/a — dynamic rule.
 - **effect_and_capability_requirements:** n/a — dynamic rule.
 - **concurrency_and_memory_order:** n/a — per-task rule.

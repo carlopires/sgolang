@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			a := [2]int{1, 2}
+			i := -1
+			a[i] = 5
+			return nil
+		})
+	}
+	return root.Stdout().WriteString("unreachable\n")
+}

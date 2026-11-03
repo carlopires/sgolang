@@ -1,0 +1,16 @@
+package main
+
+import "sgo"
+
+type Base struct {
+	ID int
+}
+
+type Derived struct {
+	Base
+	Name string
+}
+
+func main(root *sgo.Context) error {
+	return nil
+}

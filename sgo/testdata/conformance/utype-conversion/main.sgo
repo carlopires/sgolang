@@ -1,0 +1,17 @@
+package main
+
+import "sgo"
+
+type Name string
+
+type Label string
+
+func main(root *sgo.Context) error {
+	n := Name("ann")
+	l := Label(n)
+	s := string(l)
+	if s == "ann" && Name(s) == n {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

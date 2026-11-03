@@ -1,3 +1,3 @@
 module example.com/lab-pair-permit-owner-exits
 
-sgo 0.7.0
+sgo 0.8.0

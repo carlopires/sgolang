@@ -42,3 +42,26 @@ conformance cases in the stage that admits their last construct.
 `sgo/docs/w13-stage1-drafts.md`: SGO-COMP-002 (value structs and arrays), SGO-COMP-003 (array
 indexing, `BoundsViolation`), SGO-UTYPE-002 (named types, value-receiver methods). Kept outside
 `sgo/spec/` so the 0.7.0 release registry and its admission digest do not move before approval.
+
+## Stage 1 — value structs, arrays, named types (spec 0.8.0)
+
+Drafts approved 2026-11-02 and frozen as SGO-COMP-002, SGO-COMP-003, SGO-UTYPE-002, with
+SGO-COMP-001 v3, SGO-UTYPE-001 v2, SGO-TYPE-002 v2, SGO-DEF-003 v3, SGO-CHAN-002 v2,
+SGO-PERMIT-002 v2, SGO-MEM-002 v3 (`sgo/spec/CHANGELOG.md` 0.8.0). One clarification against the
+approved draft: the denial of method values applies to user-declared types; method values of
+package sgo's handles were already admitted (fixture `auth-function-value`) and stay so.
+
+| Piece | Where |
+|---|---|
+| Admission of the syntax | `sgoadmit/admit.go` (`typeDecl`, `structType`, `recvOK`), `admit_expr.go` |
+| Value-type, index, literal, conversion, method-value rules | `types2/sgo_values.go`, wired in `sgo_flow.go` |
+| Field/element assignment assigns the variable (MEM-002 v3) | `sgoAssignedRoot` |
+| `BoundsViolation` | `ssagen/ssa.go` `boundsCheck` → `ssagen/sgo.go` `sgoBoundsFail` → `runtime.sgoBoundsViolation` |
+| Constant index out of range | `types2/sgo.go` (`SGO_E_CONST_RANGE`) |
+| Inventory | `sgo/spec/INVENTORY.map`: struct/array/index/range/type surfaces admitted under SGO-COMP-002 / SGO-UTYPE-002 |
+
+Results (darwin-arm64): conformance 366 cases, 0 unexpected (25 new: `comp-*`, `utype-*`;
+`utype-declaration` turned from a rejection into a run case); test-identity, test-tcb, test-flags,
+test-check (350 cases, check and build agree), test-negative, test-fmt, test-mutations,
+test-native-lowering, test-isolation pass. Matrix G02, G03, G07 (arrays part) passed. Linux: sgo-w00
+on the 0.8.0 commit.

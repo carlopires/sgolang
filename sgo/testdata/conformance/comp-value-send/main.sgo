@@ -1,0 +1,45 @@
+package main
+
+import "sgo"
+
+type Job struct {
+	ID   int
+	Args [2]int
+}
+
+func main(root *sgo.Context) error {
+	jobs := make(chan Job, 2)
+	results := sgo.NewChannel[Job](0)
+	j := Job{ID: 7, Args: [2]int{3, 4}}
+	jobs <- j
+	j.ID = 8 // the sent value is a copy
+	jobs <- j
+	close(jobs)
+	total := 0
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			for x := range jobs {
+				x.Args[0] = x.Args[0] * 10
+				p, err := results.Reserve(t)
+				if err != nil {
+					return err
+				}
+				if cerr := p.Commit(x); cerr != nil {
+					return cerr
+				}
+			}
+			return nil
+		})
+		for i := 0; i < 2; i++ {
+			r, _, err := results.Receive(root)
+			if err != nil {
+				return err
+			}
+			total = total + r.ID + r.Args[0] + r.Args[1]
+		}
+	}
+	if total == 7+30+4+8+30+4 {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

@@ -2,6 +2,24 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.8.0 — 2026-11-02
+
+Core data model, stage 1 (W13; D85–D92; drafts approved 2026-11-02): value structs and arrays, named value types, and value-receiver methods. Every program valid under 0.7.0 keeps its meaning; the admission digest and toolchain identity change, so objects built for 0.7.0 are refused by a 0.8.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.8.0`.
+
+New frozen clauses:
+
+- SGO-COMP-002 v1 — value structs and arrays: fields and elements of value types (int, bool, string, value structs and arrays, named value types); composite literals, field and element access and assignment, `range` over arrays, `==`; always copied; admitted as channel elements and `sgo.Channel[T]` payloads.
+- SGO-COMP-003 v1 — array indexing: the checked failure `BoundsViolation` (with position, index, and length); a constant index out of range is `SGO_E_CONST_RANGE`.
+- SGO-UTYPE-002 v1 — package-level named value types and value-receiver methods; explicit conversions only between identical underlying types. Method values of user-declared types are denied; those of package sgo's handles stay admitted by their own clauses.
+
+Amended:
+
+- SGO-COMP-001 v3, SGO-UTYPE-001 v2 — narrowed to what stays denied (slices, maps, pointers, anonymous structs, embedding, aliases, pointer receivers, ...).
+- SGO-TYPE-002 v2 — identity of named, array, and struct types; the explicit conversions of SGO-UTYPE-002.
+- SGO-DEF-003 v3 — adds the failure kind `BoundsViolation`.
+- SGO-CHAN-002 v2, SGO-PERMIT-002 v2 — value types as channel elements and payloads.
+- SGO-MEM-002 v3 — an assignment to a field or element of a variable assigns the variable, so a captured struct or array is final as a whole.
+
 ## 0.7.0 — 2026-11-02
 
 Release registry (D83): every implemented family is admitted, and the independent review's corrections are part of the text (W12, Q01). Programs keep their meaning except where a review fix made a hole an error; the admission digest and toolchain identity change, so objects built for 0.6.0 are refused by a 0.7.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.7.0`.

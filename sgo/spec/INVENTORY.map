@@ -16,13 +16,14 @@ token  _Lparen|_Rparen|_Lbrace|_Rbrace|_Comma|_Semi|_Colon|_Dot  admit  SGO-LEX-
 token  _Break|_Case|_Const|_Continue|_Default|_Defer|_Else|_For|_Func|_If|_Import|_Package|_Return|_Switch|_Var  admit  SGO-LEX-003
 token  _Nursery  admit  SGO-NUR-001  # S-Go keyword (W03)
 token  _Arrow|_Chan|_Select  deny  SGO-CHAN-001
-token  _Lbrack|_Rbrack|_Map|_Struct|_Range  deny  SGO-COMP-001
+token  _Lbrack|_Rbrack|_Struct|_Range  admit  SGO-COMP-002  # arrays, value structs, range over arrays (0.8.0); [ ] also sgo.Channel[T]
+token  _Map  deny  SGO-COMP-001
 token  _DotDotDot  deny  SGO-TYPE-003
 token  _Fallthrough  deny  SGO-CTL-002
 token  _Go  deny  SGO-SPAWN-005
 token  _Goto  deny  SGO-CTL-001
 token  _Interface  deny  SGO-IFACE-001
-token  _Type  deny  SGO-UTYPE-001
+token  _Type  admit  SGO-UTYPE-002  # package-level definitions of named value types (0.8.0)
 token  tokenCount  internal  SGO-LEX-002  # sentinel, not a token
 
 # ---- operators (syntax/tokens.go) ----------------------------------------------------------
@@ -44,8 +45,9 @@ syntax-node  CallStmt  admit  SGO-DEF-001  # defer; the go form is denied by SGO
 syntax-node  NurseryStmt  admit  SGO-NUR-001  # anonymous form denied by SGO-NUR-001 at admission
 syntax-node  EmptyStmt  deny  SGO-CTL-001
 syntax-node  BadExpr  internal  SGO-ERR-001  # parser error recovery node
-syntax-node  TypeDecl  deny  SGO-UTYPE-001
-syntax-node  CompositeLit|KeyValueExpr|IndexExpr|SliceExpr|ArrayType|SliceType|StructType|MapType|RangeClause  deny  SGO-COMP-001
+syntax-node  TypeDecl  admit  SGO-UTYPE-002  # aliases, local and generic declarations denied (SGO-UTYPE-001)
+syntax-node  CompositeLit|KeyValueExpr|IndexExpr|ArrayType|StructType|RangeClause  admit  SGO-COMP-002  # value types only; index of arrays only (SGO-COMP-003)
+syntax-node  SliceExpr|SliceType|MapType  deny  SGO-COMP-001
 syntax-node  AssertExpr|TypeSwitchGuard|InterfaceType  deny  SGO-IFACE-001
 syntax-node  DotsType  deny  SGO-TYPE-003
 syntax-node  ChanType|SendStmt|SelectStmt|CommClause  deny  SGO-CHAN-001
@@ -123,8 +125,10 @@ ir-op  OGO  deny  SGO-SPAWN-005
 ir-op  OMIN|OMAX  deny  SGO-VAL-001
 ir-op  OREAL|OIMAG|OCOMPLEX  deny  SGO-FLOAT-001
 ir-op  OUNSAFE(ADD|SLICE|SLICEDATA|STRING|STRINGDATA)  deny  SGO-NATIVE-001
-ir-op  OADDR|ODEREF|ODOT|ODOTPTR|OPTRLIT|ONEW|OAPPEND|OCAP|OCLEAR|OCOPY|ODELETE|OINDEX|OINDEXMAP|OKEY|OSTRUCTKEY|OAS2MAPR|ORANGE|ORUNESTR  deny  SGO-COMP-001
-ir-op  OCOMPLIT|OMAPLIT|OSTRUCTLIT|OARRAYLIT|OSLICELIT|OMAKE|OMAKEMAP|OMAKESLICE|OMAKESLICECOPY|OSLICE|OSLICEARR|OSLICESTR|OSLICE3|OSLICE3ARR|OSLICEHEADER|OSTRINGHEADER  deny  SGO-COMP-001
+ir-op  ODOT|OINDEX|OKEY|OSTRUCTKEY|ORANGE  admit  SGO-COMP-002  # field selection, array indexing (SGO-COMP-003), literal keys, range over channels and arrays
+ir-op  OADDR|ODEREF|ODOTPTR|OPTRLIT|ONEW|OAPPEND|OCAP|OCLEAR|OCOPY|ODELETE|OINDEXMAP|OAS2MAPR|ORUNESTR  deny  SGO-COMP-001
+ir-op  OCOMPLIT|OSTRUCTLIT|OARRAYLIT  admit  SGO-COMP-002
+ir-op  OMAPLIT|OSLICELIT|OMAKE|OMAKEMAP|OMAKESLICE|OMAKESLICECOPY|OSLICE|OSLICEARR|OSLICESTR|OSLICE3|OSLICE3ARR|OSLICEHEADER|OSTRINGHEADER  deny  SGO-COMP-001
 ir-op  OBYTES2STR|OBYTES2STRTMP|ORUNES2STR|OSTR2BYTES|OSTR2BYTESTMP|OSTR2RUNES|OSLICE2ARR|OSLICE2ARRPTR  deny  SGO-COMP-001
 ir-op  OAS2DOTTYPE|ODOTTYPE|ODOTTYPE2|OCONVIFACE|ODOTINTER|OCALLINTER|OTYPESW|OMAKEFACE|OITAB|OIDATA|OINTERFACESWITCH|ODYNAMICDOTTYPE|ODYNAMICDOTTYPE2|ODYNAMICTYPE  deny  SGO-IFACE-001
 ir-op  OAS2RECV|ORECV|OSEND|OSELRECV2|OCLOSE|OMAKECHAN|OSELECT  deny  SGO-CHAN-001

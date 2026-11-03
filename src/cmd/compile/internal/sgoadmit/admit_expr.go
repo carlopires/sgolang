@@ -26,9 +26,6 @@ var TestMain bool
 // channel element type (SGO-PERMIT-002); user-declared type parameters stay denied (SGO-GEN-001).
 var sgoGeneric = map[string]bool{"Channel": true, "SendPermit": true, "NewChannel": true}
 
-// chanElemTypes are the admitted channel element types (D29).
-var chanElemTypes = map[string]bool{"int": true, "bool": true, "string": true, "error": true}
-
 // sgoHandleTypes may appear behind a pointer in types (SGO-TYPE-005).
 var sgoHandleTypes = map[string]bool{"Context": true, "Nursery": true, "Writer": true, "Ready": true,
 	"Clock": true, "WallClock": true, "Random": true, "Entropy": true, "SimStore": true,
@@ -49,9 +46,6 @@ var deniedNames = map[string]string{
 	"max": "SGO-VAL-001", "min": "SGO-VAL-001", "print": "SGO-PROC-003", "println": "SGO-PROC-003",
 	"recover": "SGO-DEF-002",
 }
-
-// conversionTypes are type names whose call form would be a conversion (SGO-TYPE-002).
-var conversionTypes = map[string]bool{"int": true, "string": true, "bool": true, "error": true}
 
 var legacyOctal = regexp.MustCompile(`^0[0-9_]+$`)
 
@@ -189,14 +183,21 @@ func (a *admitter) typ(e syntax.Expr) {
 		a.funcType(e)
 	case *syntax.ParenExpr:
 		a.typ(e.X)
-	case *syntax.ArrayType, *syntax.SliceType:
-		a.deny(e.Pos(), "array or slice type", "SGO-COMP-001")
+	case *syntax.ArrayType:
+		// [N]T with a value element type (SGO-COMP-002); types2 checks T (sgoValueTypes).
+		if e.Len != nil {
+			a.expr(e.Len)
+		}
+		a.typ(e.Elem)
+	case *syntax.SliceType:
+		a.deny(e.Pos(), "slice type", "SGO-COMP-001")
 	case *syntax.MapType:
 		a.deny(e.Pos(), "map type", "SGO-COMP-001")
 	case *syntax.ChanType:
 		a.chanElem(e.Elem)
 	case *syntax.StructType:
-		a.deny(e.Pos(), "struct type", "SGO-COMP-001")
+		// Admitted only as the definition of a named type (typeDecl, SGO-COMP-002).
+		a.deny(e.Pos(), "anonymous struct type", "SGO-COMP-001")
 	case *syntax.InterfaceType:
 		a.deny(e.Pos(), "interface type", "SGO-IFACE-001")
 	case *syntax.IndexExpr:
@@ -224,10 +225,10 @@ func (a *admitter) sgoInstance(e *syntax.IndexExpr, ms ...string) bool {
 	if !found {
 		return false
 	}
-	if n, ok := e.Index.(*syntax.Name); ok && chanElemTypes[n.Value] {
-		return true
+	if a.valueTypeSyntax(e.Index) {
+		return true // types2 checks the type (sgoChanElemOK)
 	}
-	a.deny(e.Index.Pos(), "channel element type "+syntax.String(e.Index)+" (admitted: int, bool, string, error)", "SGO-PERMIT-002")
+	a.deny(e.Index.Pos(), "channel element type "+syntax.String(e.Index)+" (admitted: int, bool, string, error, and value types)", "SGO-PERMIT-002")
 	return true
 }
 
@@ -235,10 +236,6 @@ func (a *admitter) sgoInstance(e *syntax.IndexExpr, ms ...string) bool {
 // (D36; SGO-CHAN-002).
 func (a *admitter) chanElem(e syntax.Expr) {
 	switch t := e.(type) {
-	case *syntax.Name:
-		if chanElemTypes[t.Value] {
-			return
-		}
 	case *syntax.ChanType:
 		a.chanElem(t.Elem)
 		return
@@ -246,7 +243,29 @@ func (a *admitter) chanElem(e syntax.Expr) {
 		a.chanElem(t.X)
 		return
 	}
-	a.deny(e.Pos(), "channel element type "+syntax.String(e)+" (admitted: int, bool, string, error, and channels of them)", "SGO-CHAN-002")
+	if a.valueTypeSyntax(e) {
+		return // a named or array type: types2 checks it is a value type (sgoChanElemOK)
+	}
+	a.deny(e.Pos(), "channel element type "+syntax.String(e)+" (admitted: int, bool, string, error, value types, and channels of them)", "SGO-CHAN-002")
+}
+
+// valueTypeSyntax reports whether e can denote an admitted element type: a type name (int, bool,
+// string, error, or a named value type, SGO-COMP-002), a qualified name of another package's type,
+// or an array type; it checks e as a type. The type checker decides whether the type is a value
+// type.
+func (a *admitter) valueTypeSyntax(e syntax.Expr) bool {
+	switch t := syntax.Unparen(e).(type) {
+	case *syntax.Name, *syntax.ArrayType:
+		a.typ(t)
+		return true
+	case *syntax.SelectorExpr:
+		if isSgo(t) {
+			return false // no type of package sgo is a value type
+		}
+		a.typ(t)
+		return true
+	}
+	return false
 }
 
 func isSgo(sel *syntax.SelectorExpr) bool {
@@ -280,7 +299,20 @@ func (a *admitter) expr(e syntax.Expr) {
 	case *syntax.BasicLit:
 		a.basicLit(e)
 	case *syntax.CompositeLit:
-		a.deny(e.Pos(), "composite literal", "SGO-COMP-001")
+		// Literals of named struct types and of array types (SGO-COMP-002); types2 checks the type.
+		if e.Type != nil {
+			a.typ(e.Type)
+		}
+		for _, x := range e.ElemList {
+			if kv, ok := x.(*syntax.KeyValueExpr); ok {
+				if _, isName := kv.Key.(*syntax.Name); !isName {
+					a.expr(kv.Key) // an array index; a field name is not an expression
+				}
+				a.expr(kv.Value)
+				continue
+			}
+			a.expr(x)
+		}
 	case *syntax.KeyValueExpr:
 		a.deny(e.Pos(), "key-value expression", "SGO-COMP-001")
 	case *syntax.FuncLit:
@@ -294,7 +326,9 @@ func (a *admitter) expr(e syntax.Expr) {
 		if a.sgoInstance(e, "NewChannel") {
 			return
 		}
-		a.deny(e.Pos(), "index expression", "SGO-COMP-001")
+		// Array indexing (SGO-COMP-003); types2 denies every other operand (sgoIndex).
+		a.expr(e.X)
+		a.expr(e.Index)
 	case *syntax.SliceExpr:
 		a.deny(e.Pos(), "slice expression", "SGO-COMP-001")
 	case *syntax.AssertExpr:
@@ -312,10 +346,8 @@ func (a *admitter) expr(e syntax.Expr) {
 			a.expr(e.Y)
 		}
 	case *syntax.CallExpr:
-		if n, ok := e.Fun.(*syntax.Name); ok && conversionTypes[n.Value] {
-			a.deny(n.Pos(), "conversion to "+n.Value, "SGO-TYPE-002")
-			return
-		}
+		// Conversions to int, string, bool, and error are checked by types2: only from a named type
+		// with that underlying type (SGO-TYPE-002, SGO-UTYPE-002; sgoConversion).
 		if n, ok := e.Fun.(*syntax.Name); ok && n.Value == "make" && len(e.ArgList) > 0 {
 			if ct, ok := e.ArgList[0].(*syntax.ChanType); ok {
 				// make(chan T) and make(chan T, n) are the only constructors (SGO-CHAN-002).

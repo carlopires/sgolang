@@ -1,0 +1,11 @@
+package main
+
+import "sgo"
+
+type Name string
+
+func main(root *sgo.Context) error {
+	n := Name(65)
+	_ = n
+	return nil
+}

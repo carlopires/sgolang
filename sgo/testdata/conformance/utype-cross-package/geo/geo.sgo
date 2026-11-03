@@ -1,0 +1,10 @@
+package geo
+
+// Vec is a value type exported by another package of the module.
+type Vec struct {
+	X, Y int
+}
+
+func (v Vec) Add(w Vec) Vec { return Vec{v.X + w.X, v.Y + w.Y} }
+
+func (v Vec) Dot(w Vec) int { return v.X*w.X + v.Y*w.Y }

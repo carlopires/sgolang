@@ -11,6 +11,7 @@ package types2
 import (
 	"cmd/compile/internal/syntax"
 	. "internal/types/errors"
+	"strings"
 )
 
 // isSgoSelector reports whether e is sgo.<name>.
@@ -79,6 +80,9 @@ func sgoCoded(code Code, msg string) string {
 		return msg
 	}
 	c, ok := sgoCodes[code]
+	if code == InvalidIndex && (strings.Contains(msg, "out of bounds") || strings.Contains(msg, "must not be negative")) {
+		c, ok = "SGO_E_CONST_RANGE", true // a constant index outside the array (SGO-COMP-003)
+	}
 	if !ok {
 		c = "SGO_E_TYPE_MISMATCH"
 	}

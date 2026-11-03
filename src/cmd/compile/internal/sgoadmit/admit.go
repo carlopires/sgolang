@@ -141,7 +141,7 @@ func (a *admitter) file(f *syntax.File) {
 		case *syntax.VarDecl:
 			a.deny(a.tokenBefore(d.Pos(), "var"), "package-level variable", "SGO-BIND-003")
 		case *syntax.TypeDecl:
-			a.deny(a.tokenBefore(d.Pos(), "type"), "type declaration", "SGO-UTYPE-001")
+			a.typeDecl(d)
 		case *syntax.FuncDecl:
 			a.funcDecl(d)
 		}
@@ -170,15 +170,74 @@ func (a *admitter) importDecl(d *syntax.ImportDecl) {
 	}
 }
 
-func (a *admitter) funcDecl(d *syntax.FuncDecl) {
+// typeDecl checks a package-level type declaration: a definition `type T U` of a named value type
+// (SGO-UTYPE-002). Aliases and type parameters stay denied (SGO-UTYPE-001, SGO-GEN-001); a struct
+// type literal is admitted only here, as the definition (SGO-COMP-002). types2 checks that U is a
+// value type (sgoValueTypes).
+func (a *admitter) typeDecl(d *syntax.TypeDecl) {
 	switch {
-	case d.Recv != nil:
-		a.deny(a.tokenBefore(d.Recv.Pos(), "("), "method declaration", "SGO-UTYPE-001")
+	case d.Alias:
+		a.deny(a.tokenBefore(d.Pos(), "type"), "type alias", "SGO-UTYPE-001")
 		return
 	case len(d.TParamList) > 0:
 		a.deny(a.tokenBefore(d.TParamList[0].Pos(), "["), "type parameters", "SGO-GEN-001")
 		return
-	case d.Name.Value == "init":
+	}
+	if st, ok := d.Type.(*syntax.StructType); ok {
+		a.structType(st)
+		return
+	}
+	a.typ(d.Type)
+}
+
+// structType checks the fields of a struct type definition: named fields only, no tags, no blank
+// fields (SGO-COMP-002).
+func (a *admitter) structType(st *syntax.StructType) {
+	var last syntax.Expr
+	for i, f := range st.FieldList {
+		switch {
+		case f.Name == nil:
+			a.deny(f.Type.Pos(), "embedded field", "SGO-COMP-001")
+			continue
+		case f.Name.Value == "_":
+			a.deny(f.Name.Pos(), "blank field", "SGO-COMP-001")
+		case i < len(st.TagList) && st.TagList[i] != nil:
+			a.deny(st.TagList[i].Pos(), "struct tag", "SGO-COMP-001")
+		}
+		if f.Type != last { // fields declared in one list share their type expression
+			a.typ(f.Type)
+			last = f.Type
+		}
+	}
+}
+
+// recvOK checks a method receiver: a value receiver whose type is a name (SGO-UTYPE-002). Pointer
+// receivers wait for stage 2; generic receivers are denied with type parameters.
+func (a *admitter) recvOK(r *syntax.Field) bool {
+	switch t := syntax.Unparen(r.Type).(type) {
+	case *syntax.Name:
+		return true
+	case *syntax.Operation:
+		if t.Op == syntax.Mul && t.Y == nil {
+			a.deny(a.tokenBefore(r.Pos(), "("), "method with a pointer receiver", "SGO-UTYPE-001")
+			return false
+		}
+	case *syntax.IndexExpr:
+		a.deny(a.tokenBefore(r.Pos(), "("), "method with a generic receiver", "SGO-GEN-001")
+		return false
+	}
+	a.deny(a.tokenBefore(r.Pos(), "("), "method receiver type", "SGO-UTYPE-001")
+	return false
+}
+
+func (a *admitter) funcDecl(d *syntax.FuncDecl) {
+	switch {
+	case d.Recv != nil && !a.recvOK(d.Recv):
+		return
+	case len(d.TParamList) > 0:
+		a.deny(a.tokenBefore(d.TParamList[0].Pos(), "["), "type parameters", "SGO-GEN-001")
+		return
+	case d.Recv == nil && d.Name.Value == "init":
 		a.deny(a.tokenBefore(d.Name.Pos(), "func"), "func init", "SGO-BIND-003")
 		return
 	case d.Body == nil:

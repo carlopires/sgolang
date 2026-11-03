@@ -1,0 +1,24 @@
+package main
+
+import "sgo"
+
+type Rect struct {
+	W, H int
+}
+
+func (r Rect) Area() int { return r.W * r.H }
+
+func (r Rect) Scaled(k int) Rect {
+	r.W = r.W * k // the receiver is a copy
+	r.H = r.H * k
+	return r
+}
+
+func main(root *sgo.Context) error {
+	r := Rect{W: 2, H: 3}
+	s := r.Scaled(2)
+	if r.Area() == 6 && s.Area() == 24 && r.W == 2 {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

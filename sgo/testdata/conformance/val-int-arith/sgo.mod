@@ -1,3 +1,3 @@
 module example.com/val-int-arith
 
-sgo 0.7.0
+sgo 0.8.0

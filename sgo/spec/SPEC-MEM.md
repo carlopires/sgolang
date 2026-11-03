@@ -25,10 +25,10 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §5 and decision D01.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-MEM-002 — Captured variables are effectively final
-- **version:** 2
+- **version:** 3
 - **status:** frozen
-- **reference_closure:** SGO-MEM-001, SGO-TYPE-003, SGO-TYPE-004; D01.
-- **grammar_and_types:** A local variable (including a parameter or named result) that is referenced inside any function literal is *captured*. A captured variable must be effectively final: after its declaration, nothing assigns to it anywhere, neither in the declaring function nor in any function literal. The assignments are: `=`, `op=`, `++`, `--`, a `:=` that re-assigns it, a `select` receive arm with `=` (`case v = <-ch`), and a `return` with operands in a function whose named results include it (the operands are assigned to the named results). A bare `return` assigns nothing. (`range` with `=` is denied in S-Go, so it cannot assign.) The rule applies to every function literal, not only to `Spawn` callbacks, because a function value can reach another task.
+- **reference_closure:** SGO-MEM-001, SGO-TYPE-003, SGO-TYPE-004, SGO-COMP-002; D01.
+- **grammar_and_types:** A local variable (including a parameter or named result) that is referenced inside any function literal is *captured*. A captured variable must be effectively final: after its declaration, nothing assigns to it anywhere, neither in the declaring function nor in any function literal. The assignments are: `=`, `op=`, `++`, `--`, a `:=` that re-assigns it, a `select` receive arm with `=` (`case v = <-ch`), and a `return` with operands in a function whose named results include it (the operands are assigned to the named results). A bare `return` assigns nothing. Each of these forms applied to a field or element of the variable (`x.F = v`, `x[i] op= v`, `x.F[i]++`, and their combinations, SGO-COMP-002) assigns the variable. (`range` with `=` is denied in S-Go, so it cannot assign.) The rule applies to every function literal, not only to `Spawn` callbacks, because a function value can reach another task.
 - **preconditions:** n/a — static rule.
 - **evaluation_and_value_semantics:** A function literal observes the single value its captured variables were initialized with.
 - **ownership_and_lifecycle:** Captured variables live as long as the longest-lived function value capturing them.

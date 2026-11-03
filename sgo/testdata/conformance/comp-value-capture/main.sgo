@@ -1,0 +1,29 @@
+package main
+
+import "sgo"
+
+type Config struct {
+	Limit int
+	Tags  [2]string
+}
+
+func main(root *sgo.Context) error {
+	cfg := Config{Limit: 3, Tags: [2]string{"a", "b"}}
+	done := make(chan int, 2)
+	nursery (n) {
+		for w := 0; w < 2; w++ {
+			k := w // the loop variable is assigned by w++, so it cannot be captured
+			n.Spawn(func(t *sgo.Context) error {
+				local := cfg // a copy of the captured, final value
+				local.Limit = local.Limit + k
+				done <- local.Limit
+				return nil
+			})
+		}
+	}
+	s := <-done + <-done
+	if s == 7 && cfg.Limit == 3 {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

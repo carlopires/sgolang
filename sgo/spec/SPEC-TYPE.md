@@ -25,10 +25,10 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-TYPE-002 — Identity and assignability
-- **version:** 1
+- **version:** 2
 - **status:** frozen
-- **reference_closure:** SGO-TYPE-001, SGO-VAL-004.
-- **grammar_and_types:** Two types are identical if they are the same predeclared or opaque type, or function types with the same number of parameters and results and pairwise identical parameter and result types (parameter names do not matter). A value `v` is assignable to a variable of type `T` only if (a) `v`'s type is identical to `T`; or (b) `v` is an untyped constant representable as a value of `T`, where untyped integer constants are representable as `int` within its range, untyped string constants as `string`, untyped boolean constants as `bool`; or (c) `v` is the predeclared `nil` and `T` is `error`. These rules apply to assignment, initialization, argument passing, results, and comparison operands. There are no implicit conversions and no explicit conversion expressions.
+- **reference_closure:** SGO-TYPE-001, SGO-VAL-004, SGO-COMP-002, SGO-UTYPE-002.
+- **grammar_and_types:** Two types are identical if they are the same predeclared or opaque type; the same named type (SGO-UTYPE-002), which is identical only to itself; array types with the same length and identical element types; struct type literals with the same sequence of fields, pairwise with the same names and identical types (two such types with an unexported field are identical only within one package); or function types with the same number of parameters and results and pairwise identical parameter and result types (parameter names do not matter). A value `v` is assignable to a variable of type `T` only if (a) `v`'s type is identical to `T`; or (b) `v` is an untyped constant representable as a value of `T`, where untyped integer constants are representable as `int` within its range, untyped string constants as `string`, untyped boolean constants as `bool`; or (c) `v` is the predeclared `nil` and `T` is `error`. These rules apply to assignment, initialization, argument passing, results, and comparison operands. There are no implicit conversions; the only explicit conversion expressions are those of SGO-UTYPE-002 (between types with identical underlying types).
 - **preconditions:** n/a — static rule.
 - **evaluation_and_value_semantics:** An untyped constant takes the target type at the point of assignment. An untyped constant used where no type is given defaults to `int`, `string`, or `bool`.
 - **ownership_and_lifecycle:** n/a — static rule.

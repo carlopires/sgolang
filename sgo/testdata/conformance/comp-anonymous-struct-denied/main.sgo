@@ -1,0 +1,9 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	p := struct{ X int }{1}
+	_ = p
+	return nil
+}

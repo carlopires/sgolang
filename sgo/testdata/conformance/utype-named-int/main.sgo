@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+type Celsius int
+
+func (c Celsius) Warmer(d int) Celsius { return c + Celsius(d) }
+
+func (c Celsius) Hot() bool { return c > 30 }
+
+func main(root *sgo.Context) error {
+	t := Celsius(25)
+	u := t.Warmer(10)
+	if u.Hot() && !t.Hot() && int(u) == 35 {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

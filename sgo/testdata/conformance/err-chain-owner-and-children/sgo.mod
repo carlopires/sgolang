@@ -1,3 +1,3 @@
 module example.com/err-chain-owner-and-children
 
-sgo 0.7.0
+sgo 0.8.0

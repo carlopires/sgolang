@@ -96,6 +96,21 @@ func sgoShiftRange(pos string) {
 	panic(error(&sgoFailure{"ShiftRange", "shift count outside 0..63", pos}))
 }
 
+// sgoBoundsViolation is an array index outside 0..n-1 in S-Go code (SGO-COMP-003, D91), called by
+// compiled S-Go code with the position of the index expression, the index, and the length.
+func sgoBoundsViolation(pos string, i, n int) {
+	panic(error(&sgoFailure{"BoundsViolation", "index " + sgoIntString(i) + " out of range for length " + sgoIntString(n), pos}))
+}
+
+// sgoIntString formats v in decimal.
+func sgoIntString(v int) string {
+	var buf [24]byte
+	if v < 0 {
+		return "-" + string(itoa(buf[:], uint64(-v)))
+	}
+	return string(itoa(buf[:], uint64(v)))
+}
+
 var sgoStdoutLock mutex
 
 // sgo_write writes all of s to fd 1, atomically with respect to other calls (SGO-PROC-003). It
