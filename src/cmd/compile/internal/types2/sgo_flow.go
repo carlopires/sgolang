@@ -128,7 +128,8 @@ func (check *Checker) sgoFuncFlow(fd *syntax.FuncDecl) {
 		}
 		return true
 	})
-	check.sgoFrozenPaths(fd) // sgo_frozen.go
+	check.sgoFrozenPaths(fd)      // sgo_frozen.go
+	check.sgoIfaceConversions(fd) // sgo_local.go
 	captured := check.sgoCaptured(lits)
 	check.sgoAssignments(fd, captured, binders)
 	check.sgoTaskLocalRules(fd, lits, captured) // sgo_local.go

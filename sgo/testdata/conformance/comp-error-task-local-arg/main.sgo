@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+type E struct {
+	s []int
+}
+
+func (e E) Error() string {
+	return "e"
+}
+
+func report(err error) {
+	_ = err
+}
+
+func main(c *sgo.Context) error {
+	report(E{s: []int{0}})
+	return nil
+}

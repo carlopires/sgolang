@@ -284,14 +284,148 @@ func sgoIsNamedSgo(T Type, name string) bool {
 func sgoIsNursery(T Type) bool { return sgoIsNamedSgo(T, "Nursery") }
 func sgoIsPermit(T Type) bool  { return sgoIsNamedSgo(T, "SendPermit") }
 
-// sgoIfaceConversion reports a value of a task-local type converted to an interface type (error,
-// the only admitted one): error values are shareable (captured by Spawn callbacks, sent without
-// sgo.Copy), so only shareable types may become errors (SGO-COMP-004, W13 review V2).
-func (check *Checker) sgoIfaceConversion(x *operand, T Type) {
-	if !IsInterface(T) || x.typ() == nil || IsInterface(x.typ()) || x.isNil() {
+// sgoIfaceConversions reports every value of a task-local type converted implicitly to an
+// interface type (error, the only admitted one) in fd: error values are shareable (captured by
+// Spawn callbacks, sent without sgo.Copy), so only shareable types may become errors (SGO-COMP-004
+// rule 4, W13 review V2). The conversion sites are assignments, typed variable declarations, call
+// arguments, return operands, sends, and composite-literal elements; explicit conversions to error
+// are denied by SGO-UTYPE-002. (The check is a pass over the recorded types rather than a hook in
+// assignment, which is an input of the go/types generator and stays as upstream wrote it.)
+func (check *Checker) sgoIfaceConversions(fd *syntax.FuncDecl) {
+	var sigs []*Signature
+	if obj, _ := check.Defs[fd.Name].(*Func); obj != nil {
+		sigs = append(sigs, obj.Signature())
+	}
+	var stack []syntax.Node
+	syntax.Inspect(fd.Body, func(n syntax.Node) bool {
+		if n == nil {
+			if _, lit := stack[len(stack)-1].(*syntax.FuncLit); lit {
+				sigs = sigs[:len(sigs)-1]
+			}
+			stack = stack[:len(stack)-1]
+			return true
+		}
+		stack = append(stack, n)
+		switch n := n.(type) {
+		case *syntax.FuncLit:
+			sig, _ := check.typeOf(n).(*Signature)
+			sigs = append(sigs, sig)
+		case *syntax.AssignStmt:
+			if n.Op == 0 && n.Rhs != nil { // = (not :=, op=, ++)
+				lhs, rhs := sgoList(n.Lhs), sgoList(n.Rhs)
+				if len(lhs) == len(rhs) {
+					for i := range lhs {
+						check.sgoToIface(rhs[i], check.typeOf(lhs[i]))
+					}
+				}
+			}
+		case *syntax.VarDecl:
+			if n.Type != nil {
+				T := check.typeOf(n.Type)
+				for _, v := range sgoList(n.Values) {
+					check.sgoToIface(v, T)
+				}
+			}
+		case *syntax.CallExpr:
+			if sig, _ := check.typeOf(n.Fun).(*Signature); sig != nil {
+				params := sig.Params()
+				for i, a := range n.ArgList {
+					switch {
+					case sig.Variadic() && i >= params.Len()-1 && !n.HasDots:
+						if s, _ := params.At(params.Len() - 1).Type().(*Slice); s != nil {
+							check.sgoToIface(a, s.elem)
+						}
+					case i < params.Len():
+						check.sgoToIface(a, params.At(i).Type())
+					}
+				}
+			}
+		case *syntax.ReturnStmt:
+			if len(sigs) > 0 && sigs[len(sigs)-1] != nil {
+				res := sigs[len(sigs)-1].Results()
+				vals := sgoList(n.Results)
+				if len(vals) == res.Len() {
+					for i, v := range vals {
+						check.sgoToIface(v, res.At(i).Type())
+					}
+				}
+			}
+		case *syntax.SendStmt:
+			if T := check.typeOf(n.Chan); T == nil {
+				break
+			} else if c, _ := T.Underlying().(*Chan); c != nil {
+				check.sgoToIface(n.Value, c.elem)
+			}
+		case *syntax.CompositeLit:
+			check.sgoCompositeIface(n)
+		}
+		return true
+	})
+}
+
+// sgoCompositeIface checks the elements of a composite literal against their target types.
+func (check *Checker) sgoCompositeIface(n *syntax.CompositeLit) {
+	T := check.typeOf(n)
+	if T == nil {
 		return
 	}
-	if sgoTaskLocal(x.typ()) {
-		check.errorf(x, UnsupportedFeature, "SGO_E_TASK_LOCAL_CAPTURE: a value of the task-local type %s cannot become %s: error values are shared between tasks; only shareable types may implement error (SGO-COMP-004)", x.typ(), T)
+	for i, e := range n.ElemList {
+		v := e
+		if kv, _ := e.(*syntax.KeyValueExpr); kv != nil {
+			v = kv.Value
+		}
+		switch u := T.Underlying().(type) {
+		case *Slice:
+			check.sgoToIface(v, u.elem)
+		case *Array:
+			check.sgoToIface(v, u.elem)
+		case *Map:
+			check.sgoToIface(v, u.elem)
+		case *Struct:
+			if kv, _ := e.(*syntax.KeyValueExpr); kv != nil {
+				if name, _ := kv.Key.(*syntax.Name); name != nil {
+					for _, f := range u.fields {
+						if f.name == name.Value {
+							check.sgoToIface(v, f.typ)
+						}
+					}
+				}
+			} else if i < len(u.fields) {
+				check.sgoToIface(v, u.fields[i].typ)
+			}
+		}
 	}
+}
+
+// sgoToIface reports x, of a task-local type, used where a value of interface type T is expected.
+func (check *Checker) sgoToIface(x syntax.Expr, T Type) {
+	if x == nil || T == nil || !IsInterface(T) {
+		return
+	}
+	tv, ok := check.Types[x]
+	if !ok || tv.Type == nil || tv.IsNil() || IsInterface(tv.Type) {
+		return
+	}
+	if sgoTaskLocal(tv.Type) {
+		check.errorf(x, UnsupportedFeature, "SGO_E_TASK_LOCAL_CAPTURE: a value of the task-local type %s cannot become %s: error values are shared between tasks; only shareable types may implement error (SGO-COMP-004)", tv.Type, T)
+	}
+}
+
+// typeOf returns the recorded type of e, or nil.
+func (check *Checker) typeOf(e syntax.Expr) Type {
+	if e == nil {
+		return nil
+	}
+	if tv, ok := check.Types[e]; ok {
+		return tv.Type
+	}
+	if name, _ := e.(*syntax.Name); name != nil {
+		if obj := check.Uses[name]; obj != nil {
+			return obj.Type()
+		}
+		if obj := check.Defs[name]; obj != nil {
+			return obj.Type()
+		}
+	}
+	return nil
 }
