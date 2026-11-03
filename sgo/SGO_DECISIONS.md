@@ -638,6 +638,26 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 ## D92 — W13 process **[NEEDS USER]** · APPROVED 2026-11-02
 
 **Recommendation.** As W04–W12: step 13.0 models the sharing rule (task-local, copy, freeze, move) and adds the plan's five example programs as pending conformance fixtures; each stage then gets drafts for approval, positive and negative fixtures, a spec version, CI on both linux runners, and reviewer verification. The five programs (P1 using copy) are the acceptance bar for W13.
+
+## D93 — The byte type (W13 stage 2) **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Admit `byte` (0..255) with checked arithmetic: a result outside the range is `IntegerOverflow`; `int(b)` always succeeds, `byte(i)` fails with `IntegerOverflow` outside 0..255. No `rune`; `range` over a string stays denied (iterate `[]byte(s)`). Draft SGO-TYPE-007 (`sgo/docs/w13-stage2-drafts.md`).
+
+## D94 — Function literals that capture task-local variables **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Such a literal is task-local: it may be called, deferred, or assigned to a local variable (then task-local too), but not passed as an argument, returned, or captured by a `Spawn` callback (`SGO_E_TASK_LOCAL_CAPTURE`). This closes the path by which a closure over a slice or map could reach another task through a helper that spawns it. Draft SGO-COMP-004 rule (2).
+
+## D95 — Channels as struct fields and array elements **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** A channel type is shareable: structs and arrays of value and channel types are copied like values and share their channels, as channels already are. They are not comparable (channels are not). Needed for request/reply structs (P2).
+
+## D96 — nil for pointers, slices, and maps **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** `nil` is a value of pointer, slice, and map types (not of channels, function types, or handles): nil literals and `== nil`. A nil slice or map reads as empty; writing a nil map is `NilMapWrite`; dereferencing nil is `NilDereference` (D91). Draft SGO-COMP-008.
+
+## D97 — P1 in stage 2 **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Capturing `sgo.Copy(in)` in a `Spawn` callback is a move into a closure (stage 4), so P1 is rewritten for stage 2 with value-array inputs (`[3]string`, copied on capture); results still return through a channel with `sgo.Copy`.
 ---
 
 ## Approval record

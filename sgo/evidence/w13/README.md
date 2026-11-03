@@ -80,3 +80,11 @@ CI on `28d6c0aa56` (spec 0.8.0): sgo-spec 41566921097 success; sgo-runtime 41566
 linux/arm64 (conformance, check, test, examples, release archive, identity, fmt, TCB, X10, S12, lab,
 negative fixtures, spec gates, benchmarks); the upstream baseline step (B03) was still running when
 this was recorded.
+
+## Stage 2 drafts (awaiting approval)
+
+`sgo/docs/w13-stage2-drafts.md`: SGO-COMP-004 (task-local types, `sgo.Copy`, capture and send
+rules), SGO-COMP-005 (slices, `[]byte`, string indexing), SGO-COMP-006 (maps with insertion order),
+SGO-COMP-007 (pointers, pointer receivers), SGO-COMP-008 (nil, `NilDereference`, `NilMapWrite`),
+SGO-TYPE-007 (`byte`), with decisions D93–D97. `spec-tool.py check` on the drafts placed in
+`sgo/spec/` reports only the not-yet-added matrix cases G10–G12.
