@@ -68,21 +68,26 @@ func ExploreShare(p SProgram) ShareResult {
 // fitting kind) so that most rejections come from the sharing rule, not from type errors; the
 // sharing-relevant choices (plain, copy or move sends, captures of any kind, aliasing, use after
 // move, writes through frozen values) are left unconstrained.
-func GenShare(r *rand.Rand) SProgram { return genShare(r, false, false) }
+func GenShare(r *rand.Rand) SProgram { return genShare(r, false, false, false) }
 
 // GenShareErr is GenShare with error values (W13 review V2): it also generates V := error(W) for W
 // of any kind, a fourth channel of error values, and child reads and writes through errors (the
 // Error method of a value-receiver type writing what its value refers to). GenShare's stream is
 // unchanged, so its recorded acceptance figures stay reproducible.
-func GenShareErr(r *rand.Rand) SProgram { return genShare(r, true, false) }
+func GenShareErr(r *rand.Rand) SProgram { return genShare(r, true, false, false) }
 
 // GenShareIface is GenShareErr with interface values (W17, D132): V := I(W) for Val and Ref W,
 // assertions back to a Ref, a fifth channel of interface values, method calls (reads and writes,
 // direct and through the dynamic value's referents), and error(i). Sends of interfaces use any mode,
 // captures any kind; GenShare's and GenShareErr's streams are unchanged.
-func GenShareIface(r *rand.Rand) SProgram { return genShare(r, true, true) }
+func GenShareIface(r *rand.Rand) SProgram { return genShare(r, true, true, false) }
 
-func genShare(r *rand.Rand, withErr, withIface bool) SProgram {
+// GenShareAssertErr is GenShareIface with assertions to error, V, ok := W.(error), from interfaces
+// and errors (review X1). GenShareIface's stream is unchanged, so its recorded figures stay
+// reproducible.
+func GenShareAssertErr(r *rand.Rand) SProgram { return genShare(r, true, true, true) }
+
+func genShare(r *rand.Rand, withErr, withIface, withAssertErr bool) SProgram {
 	p := SProgram{Chans: []SKind{SRef, SFrozen, SVal}}
 	lastOp := SSpawn
 	childKinds := []SKind{SRef, SFrozen}
@@ -94,6 +99,9 @@ func genShare(r *rand.Rand, withErr, withIface bool) SProgram {
 	if withIface {
 		p.Chans = append(p.Chans, SIface)
 		lastOp = SAssert
+		if withAssertErr {
+			lastOp = SAssertErr
+		}
 		childKinds = append(childKinds, SIface)
 	}
 	nb := 1 + r.Intn(3)
@@ -188,6 +196,13 @@ func genShare(r *rand.Rand, withErr, withIface bool) SProgram {
 				if ok {
 					kinds[fresh] = SRef
 				}
+			case SAssertErr:
+				var w string
+				w, ok = defined(SIface, SErr)
+				st = SStmt{Op: op, V: fresh, W: w}
+				if ok {
+					kinds[fresh] = SErr
+				}
 			case SRecv:
 				ch := r.Intn(len(p.Chans))
 				st = SStmt{Op: op, V: fresh, Ch: ch}
@@ -226,6 +241,11 @@ func genShare(r *rand.Rand, withErr, withIface bool) SProgram {
 // first accepted program with a violation.
 func ShareSoundness(seed int64, n int) (accepted, bounded int, bad *SProgram, err error) {
 	return shareSoundness(GenShare, seed, n)
+}
+
+// ShareAssertErrSoundness is ShareSoundness over GenShareAssertErr's programs.
+func ShareAssertErrSoundness(seed int64, n int) (accepted, bounded int, bad *SProgram, err error) {
+	return shareSoundness(GenShareAssertErr, seed, n)
 }
 
 // ShareIfaceSoundness is ShareSoundness over GenShareIface's programs.

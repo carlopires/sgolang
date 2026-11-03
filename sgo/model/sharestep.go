@@ -241,6 +241,15 @@ func (s *sState) step(p SProgram, t int) (blocked bool, err error) {
 	case SAssert:
 		v[st.V] = v[st.W]
 		tk.Kinds[st.V] = SRef
+	case SAssertErr:
+		// From an error: the same shared box. From an interface (accepted only under a checker
+		// mutation): an error box through which Error reaches the interface's dynamic value.
+		if tk.Kinds[st.W] == SErr {
+			v[st.V] = v[st.W]
+		} else {
+			v[st.V] = s.alloc(sObj{Frozen: true, Child: v[st.W]})
+		}
+		tk.Kinds[st.V] = SErr
 	case SSpawn:
 		child := sTask{Body: st.Body, Vars: map[string]int{}, Kinds: map[string]SKind{}}
 		n := len(s.Tasks)

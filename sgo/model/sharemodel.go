@@ -49,6 +49,7 @@ const (
 	SToErr                 // V := error(W)          (W's value boxed; its Error method may write W's referents)
 	SToIface               // V := I(W)              (W boxed: a Val is copied, a Ref (pointer receiver) is shared)
 	SAssert                // V, ok := W.(*T)        (V refers to the boxed object: the worst case)
+	SAssertErr             // V, ok := W.(error)     (V is an error holding W's dynamic value; W12/W17 review X1)
 )
 
 // SMode is how a send passes its value.
@@ -91,6 +92,7 @@ var (
 	shareAllowIfaceCapture bool // accept a Spawn capture of an interface variable
 	shareAllowIfaceError   bool // accept error(i) for an interface i
 	shareIfaceNoTaint      bool // boxing a Ref or asserting from an interface does not mark it aliased
+	shareAllowAssertErr    bool // accept W.(error) for a task-local interface W (review X1)
 )
 
 // CheckShare applies the proposed compile-time rule and returns the diagnostic code of the first
@@ -252,6 +254,21 @@ func checkBody(p SProgram, b int, caps map[string]SKind) string {
 			if !shareIfaceNoTaint {
 				tainted[s.V], tainted[s.W] = true, true
 			}
+		case SAssertErr:
+			k, e := use(s.W)
+			if e != "" {
+				return e
+			}
+			if k != SIface && k != SErr {
+				return "SGO_E_TYPE"
+			}
+			// A task-local interface may hold a task-local value with an Error method: asserting it
+			// to error would make that value shareable. Only an error operand is admitted.
+			if k == SIface && !shareAllowAssertErr {
+				return "SGO_E_TASK_LOCAL_CAPTURE"
+			}
+			kinds[s.V] = SErr
+			delete(dead, s.V)
 		case SSpawn:
 			cm := map[string]SKind{}
 			for _, c := range s.Caps {

@@ -117,6 +117,17 @@ var ShareScenarios = map[string]struct {
 	"reject-move-iface":   {[][]SStmt{{alloc("s", SRef), op(SToIface, "i", "s"), send("i", 4, SMove)}}, "SGO_E_TYPE"},
 	"reject-freeze-iface": {[][]SStmt{{alloc("s", SRef), op(SToIface, "i", "s"), op(SFreeze, "f", "i")}}, "SGO_E_TYPE"},
 	"reject-assert-ref":   {[][]SStmt{{alloc("s", SRef), op(SAssert, "p", "s")}}, "SGO_E_TYPE"},
+
+	// Review X1: an assertion to error from a task-local interface would make its task-local
+	// dynamic value shareable; from an error it is the same shared box.
+	"reject-assert-to-error": {[][]SStmt{
+		{alloc("s", SRef), op(SToIface, "i", "s"), op(SAssertErr, "err", "i"), spawn(1, "err"), op(SWrite, "s", "")},
+		{op(SWriteChild, "err", "")},
+	}, "SGO_E_TASK_LOCAL_CAPTURE"},
+	"error-assert-error": {[][]SStmt{
+		{alloc("v", SVal), op(SToErr, "e", "v"), op(SAssertErr, "f", "e"), spawn(1, "f"), op(SWrite, "v", "")},
+		{op(SWriteChild, "f", ""), op(SRead, "f", "")},
+	}, ""},
 }
 
 func TestShareScenarios(t *testing.T) {
@@ -210,6 +221,33 @@ func TestShareIfaceGeneratorFindsMutations(t *testing.T) {
 	}
 }
 
+// Soundness with assertions to error (review X1): GenShareAssertErr adds V, ok := W.(error) from
+// interfaces and errors.
+func TestShareAssertErrSoundness(t *testing.T) {
+	acc, bounded, bad, err := ShareAssertErrSoundness(shareSeed, sharePrograms)
+	if err != nil {
+		t.Fatalf("accepted program violates ownership: %v\n%+v", err, *bad)
+	}
+	if bounded != 0 {
+		t.Fatalf("%d explorations reached the state bound: soundness is not established for them", bounded)
+	}
+	if acc < sharePrograms/20 {
+		t.Fatalf("only %d of %d generated programs accepted: the generator is too weak", acc, sharePrograms)
+	}
+	t.Logf("%d of %d generated programs with assertions to error accepted; all explored without a violation", acc, sharePrograms)
+}
+
+// With W.(error) of an interface accepted, GenShareAssertErr's programs alone show a violation.
+func TestShareAssertErrGeneratorFindsMutation(t *testing.T) {
+	shareAllowAssertErr = true
+	defer func() { shareAllowAssertErr = false }()
+	_, _, bad, err := ShareAssertErrSoundness(shareSeed, 5*sharePrograms)
+	if err == nil {
+		t.Fatal("with W.(error) of an interface accepted, no generated program violates ownership")
+	}
+	t.Logf("found: %v\n%+v", err, *bad)
+}
+
 // The generated programs, not only the hand-written scenario, reach the error route: with error(v)
 // of a Ref accepted, GenShareErr's programs alone show a violation.
 func TestShareErrGeneratorFindsRefError(t *testing.T) {
@@ -239,6 +277,7 @@ func TestShareMutations(t *testing.T) {
 		{"iface-capture", &shareAllowIfaceCapture},
 		{"iface-error", &shareAllowIfaceError},
 		{"iface-no-taint", &shareIfaceNoTaint},
+		{"assert-to-error", &shareAllowAssertErr},
 	} {
 		*m.flag = true
 		by, err := "TestShareScenarios", shareScenarioViolation()
@@ -253,6 +292,10 @@ func TestShareMutations(t *testing.T) {
 		if err == nil {
 			by = "TestShareIfaceSoundness"
 			_, _, _, err = ShareIfaceSoundness(shareSeed, 5*sharePrograms)
+		}
+		if err == nil {
+			by = "TestShareAssertErrSoundness"
+			_, _, _, err = ShareAssertErrSoundness(shareSeed, 5*sharePrograms)
 		}
 		*m.flag = false
 		if err == nil {
