@@ -69,10 +69,10 @@ Named interface types, `any`, implicit implementation, dynamic dispatch, comma-o
 - **supported_execution_configurations:** production and lab.
 
 ### SGO-IFACE-004 — Type assertions and type switches
-- **version:** 1
+- **version:** 2
 - **status:** frozen
 - **reference_closure:** SGO-IFACE-001, SGO-IFACE-002, SGO-CTL-001, SGO-COMP-004; D129, D132.
-- **grammar_and_types:** `v, ok := x.(T)`, `v, ok = x.(T)`, and `var v, ok = x.(T)` for an interface-typed x, where T is a type that implements x's interface type, or an interface type. `switch v := x.(type) { case T1, T2: ...; case nil: ...; default: ... }` and `switch x.(type) { ... }`. An assertion or case whose concrete T cannot implement x's interface type is a compile error; a type listed in two cases is a compile error.
+- **grammar_and_types:** `v, ok := x.(T)`, `v, ok = x.(T)`, and `var v, ok = x.(T)` for an interface-typed x, where T is a type that implements x's interface type, or an interface type. `switch v := x.(type) { case T1, T2: ...; case nil: ...; default: ... }` and `switch x.(type) { ... }`. An assertion or case whose concrete T cannot implement x's interface type is a compile error; a type listed in two cases is a compile error. An assertion or type-switch case whose T is `error` (a shareable interface type) is admitted only when x is itself an `error`: from a task-local interface, the dynamic value could be a task-local type with an `Error` method, and the assertion would make it shareable without SGO-COMP-004 rule 4 (spec 0.14.1, W17 review X1).
 - **preconditions:** n/a — static rule.
 - **evaluation_and_value_semantics:** Comma-ok: ok is true, and v is the dynamic value (for an interface T, the interface value re-typed as T), when x is not nil and its dynamic type is T or implements the interface type T; otherwise ok is false and v is T's zero value. Type switch: x is evaluated once; the first case whose type matches is chosen, `case nil` matches a nil x, and `default` runs otherwise. In a case with exactly one type, v has that type; in other cases v has x's type.
 - **ownership_and_lifecycle:** An asserted v of a pointer type refers to the same variable as the interface value; both stay with the owning task (D132).
@@ -81,11 +81,11 @@ Named interface types, `any`, implicit implementation, dynamic dispatch, comma-o
 - **allowed_nondeterminism:** None.
 - **failure_and_partial_progress:** None: an assertion never fails at run time.
 - **cancellation_and_cleanup:** n/a — no cancellation point.
-- **compile_link_checks:** `SGO_E_UNADMITTED` for the single-value form (SGO-IFACE-001); `SGO_E_TYPE_MISMATCH` for an impossible T; `SGO_E_DUPLICATE_CASE` for a repeated case type.
+- **compile_link_checks:** `SGO_E_UNADMITTED` for the single-value form (SGO-IFACE-001); `SGO_E_TYPE_MISMATCH` for an impossible T; `SGO_E_DUPLICATE_CASE` for a repeated case type; `SGO_E_TASK_LOCAL_CAPTURE` for an assertion or case to `error` from a task-local interface, at T.
 - **runtime_guards:** n/a — no failure path.
 - **tcb_assumptions:** Go's assertion and type-switch lowering (`runtime.typeAssert`, `runtime.interfaceSwitch`, and the itab caches).
-- **positive_tests:** fixture:iface-assert-ok, fixture:iface-type-switch, fixture:iface-type-switch-nil, fixture:iface-any.
-- **negative_tests:** fixture:iface-assert-impossible, fixture:iface-switch-duplicate, fixture:iface-assert-single-denied.
+- **positive_tests:** fixture:iface-assert-ok, fixture:iface-type-switch, fixture:iface-type-switch-nil, fixture:iface-any, fixture:iface-error-assert-concrete; model: TestShareAssertErrSoundness.
+- **negative_tests:** fixture:iface-assert-impossible, fixture:iface-switch-duplicate, fixture:iface-assert-single-denied, fixture:iface-assert-to-error-denied, fixture:iface-type-switch-error-denied; model: TestShareAssertErrGeneratorFindsMutation.
 - **implementation_coverage:** `sgoadmit` (comma-ok forms, type switches); types2 assertion and type-switch checks; Go's lowering.
 - **executed_evidence:** W17 conformance on darwin/arm64, linux/amd64, linux/arm64 (`sgo/evidence/w17/README.md`).
 - **supported_execution_configurations:** production and lab.

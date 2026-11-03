@@ -1,3 +1,3 @@
 module example.com/type-rune-const-negative
 
-sgo 0.14.0
+sgo 0.14.1

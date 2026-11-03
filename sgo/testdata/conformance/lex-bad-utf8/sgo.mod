@@ -1,3 +1,3 @@
 module example.com/lex-bad-utf8
 
-sgo 0.14.0
+sgo 0.14.1

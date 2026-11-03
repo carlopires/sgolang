@@ -1,4 +1,4 @@
 module example.com/lib
 
-sgo 0.14.0
+sgo 0.14.1
 require example.com/base v0.1.0

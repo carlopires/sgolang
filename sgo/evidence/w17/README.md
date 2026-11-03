@@ -72,6 +72,25 @@ checker rules. It was committed (`e5a94b9d59`) before any compiler change.
   boundaries and several merge levels) and 4 key ranges, with a swap bound; a planted stability
   bug fails `TestSortStable`. `std/errors` tests `Unwrap` on chains, nil, and non-wrappers.
 
+## Review fix X1 (spec 0.14.1)
+
+The reviewer (`sgolang-reviewer`) found that a type assertion or type-switch case to `error` from
+a task-local interface (`a.(error)` for `a any`) turned a task-local value with an `Error` method
+into a shareable `error`, with lost updates in 3 of 3 runs of its probe. The model's `SAssert`
+only asserted to a concrete pointer type, so the generators never reached it.
+
+- **Model (`80f5db0bf6`):** `SAssertErr` (`V, ok := W.(error)`), refused unless W is an error.
+  `GenShareAssertErr` (the earlier streams unchanged): 17,621 of 20,000 accepted, every
+  interleaving explored, no violation; with the rule removed, generated programs alone find a
+  violation.
+- **Compiler (`a32c8f319f`):** `types2.sgoAssertToShared` refuses an assertion or case to `error`
+  from a task-local interface (`SGO_E_TASK_LOCAL_CAPTURE` at the target type). Fixtures
+  `iface-assert-to-error-denied`, `iface-type-switch-error-denied` (both caught when the check is
+  removed) and `iface-error-assert-concrete` (the forms that stay legal).
+- **Spec 0.14.1:** SGO-IFACE-004 v2, SGO-COMP-004 v5.
+- **Re-check:** the reviewer verified the fix on linux/amd64 (564/564, its original probe and four
+  more variants refused, the controls accepted) and reports no open W17 findings.
+
 ## Results
 
 - darwin/arm64 (local, on the freeze tree): conformance 561/561 (307 run, 217 reject, 31 lab, 6

@@ -1,3 +1,3 @@
 module example.com/bind-package-var
 
-sgo 0.14.0
+sgo 0.14.1

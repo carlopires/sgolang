@@ -2,6 +2,15 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.14.1 — 2026-11-03
+
+Review fix (W17 review X1). A type assertion or type-switch case to `error` from a task-local interface (`a.(error)` for `a any`, `case error` in a switch on `any`) was accepted and could turn a task-local value with an `Error` method into a shareable `error`; it is now refused with `SGO_E_TASK_LOCAL_CAPTURE`. Assertions from an `error` are unchanged. Every other program valid under 0.14.0 keeps its meaning; the admission digest and toolchain identity change, and every module declares `sgo 0.14.1`.
+
+Amended:
+
+- SGO-IFACE-004 v2 — an assertion or case to `error` is admitted only from an `error` operand.
+- SGO-COMP-004 v5 — rule 4 names that assertion form.
+
 ## 0.14.0 — 2026-11-03
 
 Interfaces (W17; D107, D127–D133; drafts approved 2026-11-03). Every program valid under 0.13.0 keeps its meaning, with one exception: comparing an `error` value with a non-nil value of a concrete type (`err == T{...}`) was accepted and is now refused, since interface values compare only with `nil` (D128). The admission digest and toolchain identity change, so objects built for 0.13.0 are refused by a 0.14.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.14.0`.

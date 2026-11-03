@@ -1,3 +1,3 @@
 module example.com/sync-token-double-release
 
-sgo 0.14.0
+sgo 0.14.1

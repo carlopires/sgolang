@@ -1,3 +1,3 @@
 module example.com/comp-rune-slice
 
-sgo 0.14.0
+sgo 0.14.1
