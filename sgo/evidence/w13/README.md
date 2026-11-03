@@ -63,5 +63,20 @@ package sgo's handles were already admitted (fixture `auth-function-value`) and 
 Results (darwin-arm64): conformance 366 cases, 0 unexpected (25 new: `comp-*`, `utype-*`;
 `utype-declaration` turned from a rejection into a run case); test-identity, test-tcb, test-flags,
 test-check (350 cases, check and build agree), test-negative, test-fmt, test-mutations,
-test-native-lowering, test-isolation pass. Matrix G02, G03, G07 (arrays part) passed. Linux: sgo-w00
-on the 0.8.0 commit.
+test-native-lowering, test-isolation, test-lab, test-x10, test-test, test-examples, and the runtime
+lane (`TestSGo|TestAPI`, runtime and sgo) pass. Matrix G02, G03, G07 (arrays part) passed.
+
+Mutations of the new checks (each rebuilt into stage 0 and run against its fixtures; restored and
+rebuilt after):
+
+| Mutation | Detected by |
+|---|---|
+| `sgoValueType` accepts every type | comp-struct-func-field-denied, comp-array-chan-elem-denied (build succeeded) |
+| `sgoAssignedRoot` sees only bare names | comp-captured-field-write (build succeeded) |
+| bounds failures in `.sgo` code use Go's panic path | comp-array-bounds-exit-2, comp-array-bounds-child (RuntimeDefect, exit 4) |
+
+CI on `28d6c0aa56` (spec 0.8.0): sgo-spec 41566921097 success; sgo-runtime 41566921103 success
+(linux lane and race lane); sgo-w00 41566921092: every S-Go step passed on linux/amd64 and
+linux/arm64 (conformance, check, test, examples, release archive, identity, fmt, TCB, X10, S12, lab,
+negative fixtures, spec gates, benchmarks); the upstream baseline step (B03) was still running when
+this was recorded.
