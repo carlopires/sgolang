@@ -12,5 +12,10 @@ func runtime_copy(v any) any
 // strings and channels are shared (SGO-COMP-004). A value of a task-local type crosses to another
 // task only as the result of Copy.
 func Copy[T any](x T) T {
-	return runtime_copy(x).(T)
+	r := runtime_copy(x)
+	if r == nil {
+		var zero T // x is a nil interface value: Copy(nil) is nil (SGO-COMP-004, D132)
+		return zero
+	}
+	return r.(T)
 }
