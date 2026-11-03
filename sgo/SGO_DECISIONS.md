@@ -710,6 +710,26 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation.** As W13: drafts of each work package's clauses for approval, conformance cases with negative fixtures, a spec version per work package, mutation tests, and reviewer verification on linux. The standard library's packages get conformance cases *and* their own `sgo test` suites, run in CI. (sgo/docs/stdlib-foundations-plan.md)
 
+## D111 — What does a `require` version mean without a network or VCS? **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** A label checked only through `sgo.sum`: `sgo.sum` binds `(path, version)` to the digest of the module's files, so the same label can never silently name different code. Versions have the form `vMAJOR.MINOR.PATCH`. Each module path appears at most once in a build; two modules requiring different versions of one path is `SGO_E_MODULE_VERSION`. No minimum-version selection. (sgo/docs/w14-drafts.md)
+
+## D112 — Where is a required module's source? **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Only from the main module: a `replace <path> => <dir>` line (a directory relative to the main module root) or else `vendor/<path>/`. Dependencies' own `replace` lines are ignored (as in Go); their `require` lines count. (sgo/docs/w14-drafts.md)
+
+## D113 — Who writes `sgo.sum`? **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Only `sgo mod sum`, an explicit command. Builds, checks, tests and lab runs never write it; a missing or mismatched entry fails the build with the command to run. `sgo mod verify` rechecks every entry. (sgo/docs/w14-drafts.md)
+
+## D114 — Which grants may a dependency's `sgo.mod` contain? **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Effect-kind grants only, each also granted by the main module (D105). File and network grants (`grant dir/connect/listen`) are refused in a dependency: their handles come only from the root task and reach a library only as arguments. (sgo/docs/w14-drafts.md)
+
+## D115 — Who may import `std/`? What may `std/` import? **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Any package may import `std/...`. A `std/` package imports only other `std/` packages and `sgo`, never a user module. `std` is one implicit module that is always present, never required, replaced, or vendored. (sgo/docs/w14-drafts.md)
+
 ---
 
 ## Approval record
