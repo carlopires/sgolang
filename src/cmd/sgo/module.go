@@ -286,6 +286,9 @@ func (m *module) loadPkg(s *modSrc, dir string, from *importRef) (*pkg, error) {
 			}
 			t := m.modOf(ip)
 			switch {
+			case s.std && (t == nil || !t.std):
+				// std imports only std and sgo (SGO-IMP-004, D115), whatever the main module requires.
+				return nil, &toolErr{pos, "SGO_E_UNADMITTED", fmt.Sprintf("import of %q by the standard library (std imports only std and sgo) is not admitted (SGO-IMP-004)", ip), 1}
 			case t == nil:
 				if first, _, _ := strings.Cut(ip, "/"); strings.Contains(first, ".") {
 					return nil, &toolErr{pos, "SGO_E_UNDEFINED", fmt.Sprintf("package %s is in no module of the build; require its module in sgo.mod (SGO-IMP-001, SGO-IMP-003)", ip), 1}

@@ -34,6 +34,20 @@ type modSrc struct {
 // trim is the -trimpath replacement for the module's root: positions in the main module stay
 // relative to its root; those of other modules are prefixed with their module path, so that a
 // diagnostic or runtime record names the module it comes from.
+// compileFiles names a package's files for the compiler: relative to the main module's root, absolute
+// elsewhere, so that -trimpath (trim) rewrites a required module's or std's positions to
+// <module path>/<file>.
+func (s *modSrc) compileFiles(files []string) []string {
+	if s.main {
+		return files
+	}
+	out := make([]string, len(files))
+	for i, f := range files {
+		out[i] = filepath.Join(s.root, f)
+	}
+	return out
+}
+
 func (s *modSrc) trim() string {
 	if s.main {
 		return s.root + "=>"
@@ -133,9 +147,13 @@ func (m *module) walkRequires(t *toolchain) (map[string]*modSrc, map[string]stri
 // spec version the toolchain's, and its grants effect kinds the main module also grants (D105,
 // D114). Its replace lines are ignored (D112); its require lines are returned.
 func (m *module) readDependency(t *toolchain, dir string, r modReq) ([]modReq, error) {
+	shown := dir
+	if rel, err := filepath.Rel(m.root, dir); err == nil {
+		shown = filepath.ToSlash(rel) // diagnostics name directories relative to the main module
+	}
 	f, err := os.Open(filepath.Join(dir, "sgo.mod"))
 	if err != nil {
-		return nil, &toolErr{r.at, "SGO_E_MODULE_MISSING", fmt.Sprintf("%s %s: no sgo.mod in %s (add replace %s => <dir> or vendor it under vendor/%s) (SGO-IMP-003)", r.path, r.version, dir, r.path, r.path), 1}
+		return nil, &toolErr{r.at, "SGO_E_MODULE_MISSING", fmt.Sprintf("%s %s: no sgo.mod in %s (add replace %s => <dir> or vendor it under vendor/%s) (SGO-IMP-003)", r.path, r.version, shown, r.path, r.path), 1}
 	}
 	defer f.Close()
 	sc := bufio.NewScanner(f)
@@ -178,7 +196,7 @@ func (m *module) readDependency(t *toolchain, dir string, r modReq) ([]modReq, e
 		}
 	}
 	if path != r.path {
-		return nil, &toolErr{r.at, "SGO_E_MODULE_MISSING", fmt.Sprintf("%s declares module %q, not the required %s (SGO-IMP-003)", filepath.Join(dir, "sgo.mod"), path, r.path), 1}
+		return nil, &toolErr{r.at, "SGO_E_MODULE_MISSING", fmt.Sprintf("%s/sgo.mod declares module %q, not the required %s (SGO-IMP-003)", shown, path, r.path), 1}
 	}
 	return reqs, sc.Err()
 }

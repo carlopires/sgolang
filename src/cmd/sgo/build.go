@@ -192,7 +192,7 @@ func (t *toolchain) compileUser(m *module, p *pkg, isMain, lab bool, archives ma
 	}
 	archive := filepath.Join(work, name+".a")
 	args := append([]string{"-o", archive, "-p", pkgpath, "-importcfg", importcfg, "-pack", "-complete",
-		"-trimpath", p.mod.trim()}, p.files...)
+		"-trimpath", p.mod.trim()}, p.mod.compileFiles(p.files)...)
 	if lab {
 		args = append([]string{"-sgolab"}, args...)
 	}

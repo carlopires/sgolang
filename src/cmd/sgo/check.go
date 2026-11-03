@@ -131,7 +131,7 @@ func (t *toolchain) checkPkg(m *module, p *pkg, archives map[string]string, work
 	}
 	archive := filepath.Join(work, name+".a")
 	args := append([]string{"-sgocheck", "-o", archive, "-p", pkgpath, "-importcfg", importcfg, "-pack", "-complete",
-		"-trimpath", p.mod.trim()}, p.files...)
+		"-trimpath", p.mod.trim()}, p.mod.compileFiles(p.files)...)
 	cmd := exec.Command(t.tool("compile"), args...)
 	cmd.Dir, cmd.Env = p.mod.root, env
 	var out bytes.Buffer
