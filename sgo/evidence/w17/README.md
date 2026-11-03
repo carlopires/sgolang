@@ -90,6 +90,9 @@ only asserted to a concrete pointer type, so the generators never reached it.
 - **Spec 0.14.1:** SGO-IFACE-004 v2, SGO-COMP-004 v5.
 - **Re-check:** the reviewer verified the fix on linux/amd64 (564/564, its original probe and four
   more variants refused, the controls accepted) and reports no open W17 findings.
+- **Linux:** sgo-w00 run 41723121935 on the 0.14.1 freeze `3b834f05ce` passed on linux/amd64 and
+  linux/arm64 (conformance 564 cases and every other lane, including B03); sgo-spec run 41723121787
+  passed on the same commit.
 
 ## Results
 
