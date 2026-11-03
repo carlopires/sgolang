@@ -1,0 +1,15 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package errors creates error values (SGO-STD-001). Is, As, Unwrap, and Join need interfaces and
+// type assertions and come with them (D121).
+package errors
+
+import "sgo"
+
+// New returns an error whose Error method returns text. Each call returns a distinct value; error
+// values are not comparable (SGO-TYPE-006).
+func New(text string) error {
+	return sgo.NewError(text)
+}

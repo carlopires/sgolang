@@ -1,0 +1,182 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package sort sorts slices and searches sorted data (SGO-STD-006). Every sort is stable and uses
+// one merge sort (D123), so results are the same on every platform and run.
+package sort
+
+// Perm returns the indices 0..n-1 in stable sorted order under less: Perm(n, less)[k] is the index
+// of the k-th smallest element, and equal elements keep their index order. less must be a strict
+// weak order; if it is not, the result is still a permutation of 0..n-1, the one this merge sort
+// produces. A negative n panics. A function value that captures task-local data cannot be passed
+// as an argument (SGO-COMP-004, D94), so less computes from the indices or from shareable data.
+func Perm(n int, less func(i, j int) bool) []int {
+	if n < 0 {
+		panic("sort.Perm: negative length")
+	}
+	return mergePerm(n, byLess, nil, nil, less)
+}
+
+// Comparison modes of mergePerm. Function values have no nil (SGO-TYPE-003), so the typed sorts
+// pass never as less.
+const (
+	byLess    = 0
+	byInts    = 1
+	byStrings = 2
+)
+
+func never(i, j int) bool { return false }
+
+// mergePerm is the one stable merge sort (D123) of the indices 0..n-1, comparing by less, by ik
+// (ints), or by sk (strings), as mode says.
+func mergePerm(n int, mode int, ik []int, sk []string, less func(i, j int) bool) []int {
+	p := make([]int, n)
+	for i := range p {
+		p[i] = i
+	}
+	tmp := make([]int, n)
+	for width := 1; width < n; width *= 2 {
+		for lo := 0; lo < n; lo += 2 * width {
+			mid := lo + width
+			if mid > n {
+				mid = n
+			}
+			hi := lo + 2*width
+			if hi > n {
+				hi = n
+			}
+			i, j, k := lo, mid, lo
+			for i < mid && j < hi {
+				before := false
+				switch mode {
+				case byLess:
+					before = less(p[j], p[i])
+				case byInts:
+					before = ik[p[j]] < ik[p[i]]
+				default:
+					before = sk[p[j]] < sk[p[i]]
+				}
+				if before {
+					tmp[k] = p[j]
+					j++
+				} else {
+					tmp[k] = p[i]
+					i++
+				}
+				k++
+			}
+			for ; i < mid; i++ {
+				tmp[k] = p[i]
+				k++
+			}
+			for ; j < hi; j++ {
+				tmp[k] = p[j]
+				k++
+			}
+		}
+		p, tmp = tmp, p
+	}
+	return p
+}
+
+// Ints sorts x in increasing order.
+func Ints(x []int) {
+	y := append([]int{}, x...)
+	for k, i := range mergePerm(len(y), byInts, y, nil, never) {
+		x[k] = y[i]
+	}
+}
+
+// Strings sorts x in increasing order (by bytes).
+func Strings(x []string) {
+	y := append([]string{}, x...)
+	for k, i := range mergePerm(len(y), byStrings, nil, y, never) {
+		x[k] = y[i]
+	}
+}
+
+// Runes sorts x in increasing order.
+func Runes(x []rune) {
+	y := make([]int, len(x))
+	for i, r := range x {
+		y[i] = int(r)
+	}
+	for k, i := range mergePerm(len(y), byInts, y, nil, never) {
+		x[k] = rune(y[i])
+	}
+}
+
+// Bytes sorts x in increasing order.
+func Bytes(x []byte) {
+	y := make([]int, len(x))
+	for i, b := range x {
+		y[i] = int(b)
+	}
+	for k, i := range mergePerm(len(y), byInts, y, nil, never) {
+		x[k] = byte(y[i])
+	}
+}
+
+// IntsAreSorted reports whether x is in increasing order.
+func IntsAreSorted(x []int) bool {
+	for i := len(x) - 1; i > 0; i-- {
+		if x[i] < x[i-1] {
+			return false
+		}
+	}
+	return true
+}
+
+// StringsAreSorted reports whether x is in increasing order.
+func StringsAreSorted(x []string) bool {
+	for i := len(x) - 1; i > 0; i-- {
+		if x[i] < x[i-1] {
+			return false
+		}
+	}
+	return true
+}
+
+// Search returns the smallest index i in [0, n) at which f(i) is true, assuming f is false then
+// true over the range, or n if there is none.
+func Search(n int, f func(int) bool) int {
+	i, j := 0, n
+	for i < j {
+		h := i + (j-i)/2
+		if !f(h) {
+			i = h + 1
+		} else {
+			j = h
+		}
+	}
+	return i
+}
+
+// SearchInts returns the index at which x is, or would be inserted, in the sorted slice a.
+func SearchInts(a []int, x int) int {
+	i, j := 0, len(a)
+	for i < j {
+		h := i + (j-i)/2
+		if a[h] < x {
+			i = h + 1
+		} else {
+			j = h
+		}
+	}
+	return i
+}
+
+// SearchStrings returns the index at which x is, or would be inserted, in the sorted slice a.
+func SearchStrings(a []string, x string) int {
+	i, j := 0, len(a)
+	for i < j {
+		h := i + (j-i)/2
+		if a[h] < x {
+			i = h + 1
+		} else {
+			j = h
+		}
+	}
+	return i
+}

@@ -1,0 +1,56 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package math provides integer helpers (SGO-STD-007). Floating point stays denied
+// (SGO-FLOAT-001), so these functions take int, unlike Go's math functions of the same names.
+package math
+
+const (
+	MaxInt = 9223372036854775807    // the largest int
+	MinInt = -9223372036854775807 - 1 // the smallest int
+)
+
+// Abs returns the absolute value of x. Abs(MinInt) is IntegerOverflow.
+func Abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
+// Min returns the smaller of a and b.
+func Min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// Max returns the larger of a and b.
+func Max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+// Pow returns x to the power n (Pow(x, 0) is 1). A negative n panics; a result outside the range
+// of int is IntegerOverflow. x is squared only while bits of n remain, so an intermediate
+// overflow happens only when the result itself is out of range.
+func Pow(x, n int) int {
+	if n < 0 {
+		panic("math.Pow: negative exponent")
+	}
+	result := 1
+	for {
+		if n%2 == 1 {
+			result *= x
+		}
+		n /= 2
+		if n == 0 {
+			return result
+		}
+		x *= x
+	}
+}

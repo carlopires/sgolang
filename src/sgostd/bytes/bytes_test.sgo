@@ -1,0 +1,37 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package bytes
+
+import "sgo"
+
+func TestBytes(t *sgo.T) error {
+	s := []byte("a,b,,c")
+	if !Equal(nil, []byte{}) || Equal([]byte("a"), []byte("b")) || Compare([]byte("a"), []byte("ab")) != -1 || Compare(nil, nil) != 0 {
+		return sgo.NewError("Equal/Compare")
+	}
+	if Index(s, []byte(",")) != 1 || LastIndex(s, []byte(",")) != 4 || IndexByte(s, 'c') != 5 || Count(s, []byte(",")) != 3 || Count([]byte("h\u00e9"), nil) != 3 {
+		return sgo.NewError("search")
+	}
+	parts := Split(s, []byte(","))
+	if len(parts) != 4 || string(parts[2]) != "" || cap(parts[0]) != 1 || string(Join(parts, []byte("+"))) != "a+b++c" {
+		return sgo.NewError("Split/Join")
+	}
+	runes := Split([]byte("h\u00e9!"), nil)
+	if len(runes) != 3 || string(runes[1]) != "\u00e9" || cap(runes) != 4 {
+		return sgo.NewError("Split empty sep")
+	}
+	if TrimSpace([]byte(" \u3000 ")) != nil || string(TrimSpace([]byte("\t x y\u00a0"))) != "x y" {
+		return sgo.NewError("TrimSpace")
+	}
+	if Clone(nil) != nil || Join(nil, nil) == nil || Join([][]byte{{}}, nil) != nil {
+		return sgo.NewError("nil results")
+	}
+	c := Clone(s)
+	c[0] = 'z'
+	if s[0] != 'a' || !HasPrefix(s, []byte("a,")) || !HasSuffix(s, []byte(",c")) || !Contains(s, []byte(",,")) {
+		return sgo.NewError("Clone/prefix")
+	}
+	return nil
+}

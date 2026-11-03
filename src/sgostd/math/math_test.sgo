@@ -1,0 +1,17 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package math
+
+import "sgo"
+
+func TestMath(t *sgo.T) error {
+	if Abs(-5) != 5 || Abs(MaxInt) != MaxInt || Min(2, -3) != -3 || Max(2, -3) != 2 {
+		return sgo.NewError("Abs/Min/Max")
+	}
+	if Pow(2, 10) != 1024 || Pow(7, 0) != 1 || Pow(0, 0) != 1 || Pow(-2, 63) != MinInt || Pow(-3, 3) != -27 || Pow(1, 1000000000000) != 1 {
+		return sgo.NewError("Pow")
+	}
+	return nil
+}
