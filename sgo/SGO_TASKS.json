@@ -791,6 +791,83 @@
       "blockers": [],
       "commit": null,
       "completion_note": "Stages 1-3 frozen at specs 0.8.0, 0.9.0, 0.10.0; review findings V1-V4 fixed (spec 0.10.1, 98b664e3d2) and verified by the reviewer on linux/amd64; the five acceptance programs pass (G09); sharing model extended to error values. Stage 4 (move) deferred (D102). Closing CI: sgo-w00 41621313273 : every S-Go step green on linux/amd64 and linux/arm64 (B03 upstream baseline running at closure). Next: standard-library foundations (sgo/docs/stdlib-foundations-plan.md, D103-D110)."
+    },
+    {
+      "id": "W14",
+      "title": "Packages beyond the module (std/ and required modules)",
+      "depends_on": [
+        "W13"
+      ],
+      "risk": "medium",
+      "status": "in_progress",
+      "plan_section": "sgo/docs/stdlib-foundations-plan.md",
+      "deliverables": [
+        "Clause drafts for approval (SGO-IMP-001 v2, SGO-IMP-002 v2, SGO-IMP-003, SGO-IMP-004, dependency grants)",
+        "std/ resolved from src/sgostd/ under the same admission rules (D103)",
+        "require/replace/sgo.sum from local directories (D104)",
+        "contract digests and grant bounds across modules (D105)",
+        "a first std/ package end to end"
+      ],
+      "acceptance_case_ids": [],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": null
+    },
+    {
+      "id": "W15",
+      "title": "Runes and text iteration",
+      "depends_on": [
+        "W14"
+      ],
+      "risk": "low",
+      "status": "pending",
+      "plan_section": "sgo/docs/stdlib-foundations-plan.md",
+      "deliverables": [
+        "rune type, rune literals, range over strings by rune, conversions (D106)"
+      ],
+      "acceptance_case_ids": [],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": null
+    },
+    {
+      "id": "W16",
+      "title": "Standard library v1",
+      "depends_on": [
+        "W14",
+        "W15"
+      ],
+      "risk": "medium",
+      "status": "pending",
+      "plan_section": "sgo/docs/stdlib-foundations-plan.md",
+      "deliverables": [
+        "std/errors, strings, bytes, strconv, utf8, sort, math in S-Go, no package state (D109), sgo test suites (D110)"
+      ],
+      "acceptance_case_ids": [],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": null
+    },
+    {
+      "id": "W17",
+      "title": "Interfaces",
+      "depends_on": [
+        "W16"
+      ],
+      "risk": "high",
+      "status": "pending",
+      "plan_section": "sgo/docs/stdlib-foundations-plan.md",
+      "deliverables": [
+        "user interfaces under the sharing rule (D107), model first; type assertions and switches"
+      ],
+      "acceptance_case_ids": [],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": null
     }
   ],
   "language_policy": "One specification-defined S-Go language; no Go compatibility path. Bare go rejected; explicit nursery capabilities; missing contracts rejected transitively. Host/reference tools are external build dependencies.",

@@ -678,35 +678,35 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Decision.** The narrow `move` of D86/D87 (stage 4, optional) is not built in W13. Every W13 acceptance program passes with copy and freeze; move would only save a copy (P1's hand-over, `sgo.Freeze(move(x))`) at the cost of the "no other live reference" analysis. It is reconsidered when a real program needs zero-copy hand-over. W13 closes with stages 1–3 and the review (V1–V4 verified).
 
-## D103 — Where does the standard library live, and is it trusted? **[NEEDS USER]** · PROPOSED
+## D103 — Where does the standard library live, and is it trusted? **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** S-Go source shipped with the toolchain under the reserved import prefix `std/` (`std/strings`, …), compiled under exactly the same admission and sharing rules as user code. It is **not** part of the TCB: it gains no privilege, and its packages are identified by contract digests like any dependency. A user module path may not equal or lie under `std` (as for `sgo`, D38). (sgo/docs/stdlib-foundations-plan.md)
 
-## D104 — How are other modules required? **[NEEDS USER]** · PROPOSED
+## D104 — How are other modules required? **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** `require <module path> <version>` lines in `sgo.mod`, resolved only from local directories in this version: a `replace <path> => <dir>` line, or a vendored copy under `vendor/`. No network fetch. `sgo.sum` records a content digest of every required module's files; a mismatch is an error. Versions are compared but no minimum-version selection is attempted: each module path appears once in the build, and two different required versions of one path are an error. (sgo/docs/stdlib-foundations-plan.md)
 
-## D105 — What crosses a module boundary? **[NEEDS USER]** · PROPOSED
+## D105 — What crosses a module boundary? **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** Exported names only, checked by the existing SGO-IMP-002 contract digests extended to required modules; a dependency's effect grants are not inherited (the root module's grants bound the program, SGO-AUTH-*), and a dependency's own `sgo.mod` grants must be a subset of the root's or the build fails. (sgo/docs/stdlib-foundations-plan.md)
 
-## D106 — Runes **[NEEDS USER]** · PROPOSED
+## D106 — Runes **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** `rune` as a checked integer type (0..0x10FFFF, overflow is `IntegerOverflow` like `byte`), rune literals, `range` over a string yielding (byte index, rune) with U+FFFD for invalid UTF-8, and `string(r)`, `[]rune(s)`, `string(rs)` conversions. `range` over a string stays an iteration *by rune*, never by byte (bytes are `[]byte(s)` or indexing). (sgo/docs/stdlib-foundations-plan.md)
 
-## D107 — Interfaces and the sharing rule (W17, decided now so W16 avoids designs W17 would break) **[NEEDS USER]** · PROPOSED
+## D107 — Interfaces and the sharing rule (W17, decided now so W16 avoids designs W17 would break) **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** Interface values take the sharing class of what they may hold: an ordinary interface type is **task-local** (any admitted type converts to it; it crosses tasks only through `sgo.Copy`, which deep-copies the dynamic value); `error` stays **shareable** and only shareable types convert to it (as V2 fixed). Type assertions and type switches come with interfaces. (sgo/docs/stdlib-foundations-plan.md)
 
-## D108 — Generics **[NEEDS USER]** · PROPOSED
+## D108 — Generics **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** Deferred. The first standard library uses per-type functions (`sort.Ints`, `sort.Strings`) and function parameters (`sort.Slice`-style with an index `less`), which S-Go already admits. Generics get their own decision when containers are needed. (sgo/docs/stdlib-foundations-plan.md)
 
-## D109 — Package-level state in the standard library **[NEEDS USER]** · PROPOSED
+## D109 — Package-level state in the standard library **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** None. Every `std/` package is functions, types and constants only; there is no package-level variable to race on, no `init`, and no hidden global (e.g. no global random source: randomness stays a capability, `*sgo.Random`, SGO-AUTH-*). (sgo/docs/stdlib-foundations-plan.md)
 
-## D110 — Process **[NEEDS USER]** · PROPOSED
+## D110 — Process **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** As W13: drafts of each work package's clauses for approval, conformance cases with negative fixtures, a spec version per work package, mutation tests, and reviewer verification on linux. The standard library's packages get conformance cases *and* their own `sgo test` suites, run in CI. (sgo/docs/stdlib-foundations-plan.md)
 
@@ -735,3 +735,4 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - 2026-11-02: user approved D93-D97 and the W13 stage 2 drafts (sgo/docs/w13-stage2-drafts.md: SGO-COMP-004..008, SGO-TYPE-007) as recommended ("approved; go ahead"). Stage 2 implementation starts; the drafts freeze at spec 0.9.0.
 - 2026-11-03: user approved D98–D101 and the W13 stage 3 draft (sgo/docs/w13-stage3-drafts.md: SGO-COMP-009) as recommended ("approved; go ahead"). Stage 3 implementation starts; the draft freezes at spec 0.10.0.
 - 2026-11-03: user directed "close W13" (D102: stage 4 deferred) and to prepare for the standard library.
+- 2026-11-03: user approved D103–D110 and the standard-library foundations plan (sgo/docs/stdlib-foundations-plan.md) as recommended ("looks good; approved"). W14 clause drafts follow for approval before implementation.
