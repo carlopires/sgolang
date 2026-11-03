@@ -22,7 +22,7 @@ func sgoResolveHost(host string, v6 bool) ([]sgoNetGrant, *sgoIOErr) {
 		return sgoFakeResolve(host, v6)
 	}
 	if found, ips := sgoHostsLookup(host, v6); found {
-		return ips, nil
+		return sgoKeepResolvable(ips), nil
 	}
 	if err := sgoTaskCancellation(sgoCurrent()); err != nil {
 		return nil, &sgoIOErr{"Cancelled", 0}
@@ -37,7 +37,7 @@ func sgoResolveHost(host string, v6 bool) ([]sgoNetGrant, *sgoIOErr) {
 		for i := range servers {
 			ips, e := sgoDNSQuery(&servers[i], host, qtype)
 			if e == nil {
-				return ips, nil
+				return sgoKeepResolvable(ips), nil
 			}
 			if e.kind == "Cancelled" {
 				return nil, e
@@ -215,72 +215,160 @@ func sgoDNSQuery(server *sgoNetGrant, host string, qtype uint16) ([]sgoNetGrant,
 		case r < 0:
 			return nil, &sgoIOErr{sgoNetErrKind(r), 0}
 		}
-		if ips, ok := sgoDNSAnswer(buf[:r], id, qtype); ok {
+		if ips, ok := sgoDNSAnswer(buf[:r], id, qtype, host); ok {
 			return ips, nil
 		}
 		// Not an answer to this query (or malformed): keep waiting for one until the deadline.
 	}
 }
 
-// sgoDNSAnswer extracts the qtype addresses of a response to query id; ok is false if msg is not
-// such a response. A name that does not exist yields no addresses.
-func sgoDNSAnswer(msg []byte, id, qtype uint16) (ips []sgoNetGrant, ok bool) {
+// sgoDNSAnswer extracts the qtype addresses of a response to query id for host; ok is false if
+// msg is not such a response. The response must echo the one question (host, qtype, IN), and an
+// answer record counts only if its owner is host or the target of a CNAME record of this answer
+// whose owner counts (W18 review Y4). A name that does not exist yields no addresses.
+func sgoDNSAnswer(msg []byte, id, qtype uint16, host string) (ips []sgoNetGrant, ok bool) {
 	u16 := func(i int) int { return int(msg[i])<<8 | int(msg[i+1]) }
-	if len(msg) < 12 || u16(0) != int(id) || msg[2]&0x80 == 0 {
+	if len(msg) < 12 || u16(0) != int(id) || msg[2]&0x80 == 0 || u16(4) != 1 {
 		return nil, false
 	}
 	rcode := msg[3] & 0x0f
+	if rcode != 0 && rcode != 3 {
+		return nil, false
+	}
+	// The question: an uncompressed name, then type and class.
+	qname, i, qok := sgoDNSName(msg, 12, false)
+	if !qok || i+4 > len(msg) || qname != host || u16(i) != int(qtype) || u16(i+2) != 1 {
+		return nil, false
+	}
+	i += 4
 	if rcode == 3 {
 		return nil, true
 	}
-	if rcode != 0 {
-		return nil, false
+	type rr struct {
+		owner      string
+		typ, class int
+		at, n      int
 	}
-	skipName := func(i int) int {
-		for i < len(msg) {
-			n := int(msg[i])
-			switch {
-			case n == 0:
-				return i + 1
-			case n&0xc0 == 0xc0:
-				return i + 2
-			}
-			i += n + 1
-		}
-		return -1
-	}
-	i := 12
-	for k := u16(4); k > 0; k-- {
-		if i = skipName(i); i < 0 || i+4 > len(msg) {
-			return nil, false
-		}
-		i += 4
-	}
+	var rrs []rr
 	for k := u16(6); k > 0; k-- {
-		if i = skipName(i); i < 0 || i+10 > len(msg) {
+		owner, next, nok := sgoDNSName(msg, i, true)
+		if !nok || next+10 > len(msg) {
 			return nil, false
 		}
-		typ, class, n := u16(i), u16(i+2), u16(i+8)
-		i += 10
-		if i+n > len(msg) {
+		r := rr{owner: owner, typ: u16(next), class: u16(next + 2), at: next + 10, n: u16(next + 8)}
+		if r.at+r.n > len(msg) {
 			return nil, false
 		}
-		if class == 1 && typ == int(qtype) {
-			var g sgoNetGrant
-			switch {
-			case typ == 1 && n == 4:
-				g.ip[10], g.ip[11] = 0xff, 0xff
-				copy(g.ip[12:], msg[i:i+4])
-				ips = append(ips, g)
-			case typ == 28 && n == 16:
-				g.v6 = true
-				copy(g.ip[:], msg[i:i+16])
-				ips = append(ips, g)
+		rrs = append(rrs, r)
+		i = r.at + r.n
+	}
+	names := []string{host}
+	known := func(n string) bool {
+		for _, m := range names {
+			if m == n {
+				return true
 			}
 		}
-		i += n
+		return false
+	}
+	for grew := true; grew && len(names) <= 16; {
+		grew = false
+		for _, r := range rrs {
+			if r.typ != 5 || r.class != 1 || !known(r.owner) {
+				continue
+			}
+			if target, end, tok := sgoDNSName(msg, r.at, true); tok && end <= r.at+r.n && !known(target) {
+				names = append(names, target)
+				grew = true
+			}
+		}
+	}
+	for _, r := range rrs {
+		if r.class != 1 || r.typ != int(qtype) || !known(r.owner) {
+			continue
+		}
+		var g sgoNetGrant
+		switch {
+		case r.typ == 1 && r.n == 4:
+			g.ip[10], g.ip[11] = 0xff, 0xff
+			copy(g.ip[12:], msg[r.at:r.at+4])
+			ips = append(ips, g)
+		case r.typ == 28 && r.n == 16:
+			g.v6 = true
+			copy(g.ip[:], msg[r.at:r.at+16])
+			ips = append(ips, g)
+		}
 	}
 	return ips, true
+}
+
+// sgoDNSName decodes the domain name at msg[i:] in lower case, without the trailing dot; next is
+// the offset after it in place. Compression pointers are followed (at most 32) only if compressed.
+func sgoDNSName(msg []byte, i int, compressed bool) (name string, next int, ok bool) {
+	var b []byte
+	next = -1
+	for hops := 0; i < len(msg); {
+		n := int(msg[i])
+		switch {
+		case n == 0:
+			if next < 0 {
+				next = i + 1
+			}
+			return string(b), next, len(b) <= 253
+		case n&0xc0 == 0xc0:
+			if !compressed || i+1 >= len(msg) || hops == 32 {
+				return "", 0, false
+			}
+			if next < 0 {
+				next = i + 2
+			}
+			hops++
+			i = (n&0x3f)<<8 | int(msg[i+1])
+			continue
+		case n > 63 || i+1+n > len(msg):
+			return "", 0, false
+		}
+		if len(b) > 0 {
+			b = append(b, '.')
+		}
+		for _, c := range msg[i+1 : i+1+n] {
+			if 'A' <= c && c <= 'Z' {
+				c += 'a' - 'A'
+			}
+			b = append(b, c)
+		}
+		i += 1 + n
+	}
+	return "", 0, false
+}
+
+// sgoResolvable reports whether a resolved address may be a result (W18 review Y3): not the
+// unspecified address of either family (0.0.0.0 and :: reach the local host on Linux) and not an
+// IPv4-mapped IPv6 address (D57 refuses those forms in grants).
+func sgoResolvable(g *sgoNetGrant) bool {
+	zero := func(b []byte) bool {
+		for _, c := range b {
+			if c != 0 {
+				return false
+			}
+		}
+		return true
+	}
+	if !g.v6 {
+		return !zero(g.ip[12:])
+	}
+	return !zero(g.ip[:]) && !(zero(g.ip[:10]) && g.ip[10] == 0xff && g.ip[11] == 0xff)
+}
+
+// sgoKeepResolvable drops the addresses that may not be results.
+func sgoKeepResolvable(ips []sgoNetGrant) []sgoNetGrant {
+	out := ips[:0]
+	for i := range ips {
+		if sgoResolvable(&ips[i]) {
+			out = append(out, ips[i])
+		}
+	}
+	return out
 }
 
 // sgoFormatAddr is the canonical text of an IP address and port, as grants write it: a.b.c.d:port

@@ -47,7 +47,11 @@ sgo lab sweep -seeds 0..199 ./lab/all-refused # everything refuses: an error, no
 
 The real run resolves `localhost` from `/etc/hosts` (`::1`, then `127.0.0.1`). Other names go to
 the resolv.conf servers over UDP. The server listens on IPv4 only, so the preferred `[::1]` is
-refused and the race moves to IPv4 at once.
+refused and the race moves to IPv4 at once. `expected.txt` is that run on a host whose
+`/etc/hosts` lists `::1 localhost`; where it lists only `127.0.0.1`, there is no IPv6 attempt and
+the race is the IPv4 lines alone. The real run uses the fixed port 47970 (grants name exact ports);
+the exact attempt order of every RFC rule is checked by the lab scenarios, which do not depend on
+the host.
 
 Limits of this version (W18): no TCP fallback for truncated DNS answers, no search domains, and
 no address sorting beyond family interleaving (RFC 6724 is not applied).

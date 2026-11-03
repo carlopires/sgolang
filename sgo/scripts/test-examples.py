@@ -14,6 +14,7 @@ committed trace replays to the buggy output, and replaying it against ./fixed di
 import sgoargs
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -61,9 +62,19 @@ def main():
             if r.returncode != 0:
                 problems.append(f"{name}: sgo check: {r.stderr.strip()[:300]}")
             if name == "happyeyeballs":
+                # The real run depends on the host: localhost is answered from /etc/hosts, which may
+                # or may not list ::1 (W18 review Y1). Assert what holds on every host: exit 0, the
+                # final line of expected.txt, well-formed race lines, a failed IPv6 attempt if one
+                # was made, and the IPv4 connection. The exact attempt order is the lab's to check.
                 r = run("run", ".")
-                if r.returncode != 0 or r.stdout != expected:
-                    problems.append(f"{name}: sgo run: exit {r.returncode}, stdout {r.stdout!r}, want {expected!r}; {r.stderr[-200:]!r}")
+                lines = r.stdout.splitlines()
+                last = expected.splitlines()[-1]
+                race = lines[:-1]
+                ok = r.returncode == 0 and lines[-1:] == [last] and "he: connected 127.0.0.1:47970" in race
+                ok = ok and all(re.fullmatch(r"he: (attempt|failed|connected) (\[::1\]|127\.0\.0\.1):47970", x) for x in race)
+                ok = ok and ("he: attempt [::1]:47970" not in race or "he: failed [::1]:47970" in race)
+                if not ok:
+                    problems.append(f"{name}: sgo run: exit {r.returncode}, stdout {r.stdout!r}, want a race ending {last!r} (reference {expected!r}); {r.stderr[-200:]!r}")
                 for sc in HE_SCENARIOS:
                     r = run("lab", "sweep", "-seeds", seeds, "./lab/" + sc)
                     if r.returncode != 0 or " 0 failed" not in r.stderr + r.stdout:

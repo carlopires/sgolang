@@ -43,6 +43,7 @@ func sgoLabNetLine(val string) {
 		case f[0] == "resolve" && (len(f) == 3 || len(f) == 4):
 			e.host = f[1]
 			e.at, ok = sgoParseIPLit(f[2])
+			ok = ok && sgoResolvable(&e.at) // a lab table cannot answer what production refuses (Y3)
 			if len(f) == 4 {
 				e.ms = sgoLabAtoi(f[3])
 			}

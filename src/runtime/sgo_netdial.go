@@ -117,25 +117,14 @@ func sgo_dialerResolve(p unsafe.Pointer, host, family string) ([]string, error) 
 			r := ips[i]
 			r.port, r.host = pg.port, ""
 			r.addr = sgoFormatAddr(&r, r.port)
-			add = append(add, r)
 			out = append(out, r.addr)
+			if !sgoGrantIn(add, &r) {
+				add = append(add, r)
+			}
 		}
 	}
-	for {
-		lock(&d.mu)
-		cur := d.resolved
-		unlock(&d.mu)
-		grown := make([]sgoNetGrant, len(cur), len(cur)+len(add))
-		copy(grown, cur)
-		grown = append(grown, add...)
-		lock(&d.mu)
-		if len(d.resolved) == len(cur) {
-			d.resolved = grown
-			unlock(&d.mu)
-			return out, nil
-		}
-		unlock(&d.mu)
-	}
+	sgoDialerPublish(d, add)
+	return out, nil
 }
 
 //go:linkname sgo_slotNew sgo.runtime_slotNew
@@ -226,5 +215,40 @@ func sgoSlotFree(h *sgoHandle) {
 	unlock(&s.mu)
 	if c != nil && !c.closed {
 		sgoHandleFree(c) // unlinked: owned by the slot's owner, in no list
+	}
+}
+
+// sgoGrantIn reports whether list holds an entry with g's address, family, and port.
+func sgoGrantIn(list []sgoNetGrant, g *sgoNetGrant) bool {
+	for i := range list {
+		if list[i].ip == g.ip && list[i].v6 == g.v6 && list[i].port == g.port {
+			return true
+		}
+	}
+	return false
+}
+
+// sgoDialerPublish adds the entries of add that d.resolved lacks. The grown table is built outside
+// the lock (no allocation under a runtime lock, W12 R9); the lock only checks and publishes it.
+func sgoDialerPublish(d *sgoDialer, add []sgoNetGrant) {
+	for {
+		lock(&d.mu)
+		cur := d.resolved
+		unlock(&d.mu)
+		// Re-resolving keeps one entry per address and port (W18 review Y2).
+		grown := make([]sgoNetGrant, len(cur), len(cur)+len(add))
+		copy(grown, cur)
+		for i := range add {
+			if !sgoGrantIn(cur, &add[i]) {
+				grown = append(grown, add[i])
+			}
+		}
+		lock(&d.mu)
+		if len(d.resolved) == len(cur) {
+			d.resolved = grown
+			unlock(&d.mu)
+			return
+		}
+		unlock(&d.mu)
 	}
 }
