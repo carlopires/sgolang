@@ -80,4 +80,7 @@ checker rules. It was committed (`e5a94b9d59`) before any compiler change.
   test-identity, test-tcb, test-modules, test-std (20 tests), test-negative, test-flags,
   test-check (544 cases, check and build agree), test-test, test-std-diff (9,784 checks identical
   to Go), test-map-lowering; the share model tests.
-- linux/amd64, linux/arm64 (sgo-w00): pending.
+- linux/amd64, linux/arm64: sgo-w00 run 41709938064 on the freeze commit `c44d0975f0` passed on both
+  runners: stage-0 builds, conformance (561 cases), test-std, test-std-diff, the module tests,
+  legacy-audit, the negative fixtures, and the upstream baseline (B03). sgo-spec run 41709938000
+  (spec checks and the share model on both Linux architectures) passed on the same commit.

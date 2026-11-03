@@ -867,16 +867,19 @@
         "W16"
       ],
       "risk": "high",
-      "status": "in_progress",
+      "status": "passed",
       "plan_section": "sgo/docs/stdlib-foundations-plan.md",
       "deliverables": [
         "user interfaces under the sharing rule (D107), model first; type assertions and switches"
       ],
       "acceptance_case_ids": [],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w17/README.md",
+        "sgo-w00 run 41709938064 (linux/amd64, linux/arm64) on the 0.14.0 freeze"
+      ],
       "blockers": [],
-      "commit": null,
-      "completion_note": null
+      "commit": "c44d0975f0",
+      "completion_note": "Interfaces admitted at spec 0.14.0 (D127-D133): model first (SIface), 30 conformance cases, 7 compiler/runtime mutants caught; errors.Unwrap and sort.Sort."
     }
   ],
   "language_policy": "One specification-defined S-Go language; no Go compatibility path. Bare go rejected; explicit nursery capabilities; missing contracts rejected transitively. Host/reference tools are external build dependencies.",
