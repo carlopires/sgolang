@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-COMP-007",
+  "SGO-COMP-006",
+  "SGO-UTYPE-002"
+ ],
+ "exit": 0,
+ "stdout": "14\n",
+ "note": "W13 acceptance program (D92), sgo/testdata/w13-programs/p4-eval."
+}

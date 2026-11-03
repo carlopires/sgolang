@@ -1,4 +1,4 @@
-# W13 acceptance programs (not yet compilable)
+# W13 acceptance programs
 
 The five programs of `sgo/docs/w13-data-model-plan.md` §3, written against the data model approved
 in D85–D92. They are the acceptance bar for W13 (D92): each becomes a conformance case (`kind: run`,
@@ -16,3 +16,13 @@ spec 0.7.0 denies (`SGO_E_UNADMITTED`), and `sgo.Copy` / `sgo.Freeze` / `sgo.Fro
 
 The model of the sharing rule these programs rely on is `sgo/model/sharemodel.go`
 (scenarios `p1-copy` … `p5-frozen-table` in `sharemodel_test.go`).
+
+## Status (spec 0.9.0)
+
+P1–P4 compile and pass as conformance cases `w13-p1-aggregate` … `w13-p4-eval`. Changes from the
+drafts, all forced by rules that hold in every stage: rune literals (`'0'`, `'v'`) and `iota` are
+denied (SGO-LEX-004, SGO-VAL-004), so the programs use `48`, `118`, and explicit constants; `var b
+[]byte` needs an initializer (SGO-BIND-003); P1 uses value-array inputs (D97); P2 copies at the send
+(`r.Reply <- sgo.Copy(s.Get(k))`: a task-local value crosses only as an `sgo.Copy` result,
+SGO-COMP-004); P3's worker writes through the root's `*sgo.Writer` (stdout is a root grant,
+SGO-PROC-003). P5 needs frozen values (stage 3).

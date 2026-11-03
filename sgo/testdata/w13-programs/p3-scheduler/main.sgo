@@ -38,10 +38,11 @@ func main(c *sgo.Context) error {
 	q.Push(Job{ID: 3, Prio: 9})
 	q.Push(Job{ID: 2, Prio: 5})
 	jobs := make(chan Job) // Job has no references: it crosses by value
+	out := c.Stdout()      // stdout is a root grant; the worker gets the writer handle
 	nursery (n) {
 		n.Spawn(func(t *sgo.Context) error {
 			for j := range jobs {
-				if err := t.Stdout().WriteString("ran " + itoa(j.ID) + "\n"); err != nil {
+				if err := out.WriteString("ran " + itoa(j.ID) + "\n"); err != nil {
 					return err
 				}
 			}
@@ -60,9 +61,9 @@ func itoa(v int) string {
 	if v == 0 {
 		return "0"
 	}
-	var b []byte
+	b := []byte{}
 	for ; v > 0; v /= 10 {
-		b = append([]byte{byte('0' + v%10)}, b...)
+		b = append([]byte{byte(48 + v%10)}, b...)
 	}
 	return string(b)
 }

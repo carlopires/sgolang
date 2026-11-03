@@ -1,0 +1,19 @@
+package main
+
+import "sgo"
+
+func main(c *sgo.Context) error {
+	a := [2]int{1, 2}
+	n := 0
+	for range a {
+		n++
+	}
+	s := []int{1}
+	for range s {
+		n++
+	}
+	if n == 3 {
+		return c.Stdout().WriteString("ok\n")
+	}
+	return nil
+}

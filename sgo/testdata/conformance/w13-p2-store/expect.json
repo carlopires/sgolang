@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-COMP-004",
+  "SGO-COMP-006",
+  "SGO-COMP-007"
+ ],
+ "exit": 0,
+ "stdout": "get k1 v1\nget k2 missing\n",
+ "note": "W13 acceptance program (D92), sgo/testdata/w13-programs/p2-store."
+}

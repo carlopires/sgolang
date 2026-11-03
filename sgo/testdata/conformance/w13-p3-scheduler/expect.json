@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-COMP-007",
+  "SGO-COMP-005",
+  "SGO-CHAN-002"
+ ],
+ "exit": 0,
+ "stdout": "ran 3\nran 2\nran 1\n",
+ "note": "W13 acceptance program (D92), sgo/testdata/w13-programs/p3-scheduler."
+}

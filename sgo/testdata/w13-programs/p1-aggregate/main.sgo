@@ -13,12 +13,12 @@ type Stat struct {
 }
 
 func main(c *sgo.Context) error {
-	inputs := [][]string{{"a", "b", "a"}, {"a", "c", "b"}}
+	inputs := [2][3]string{{"a", "b", "a"}, {"a", "c", "b"}} // value arrays: copied on capture (D97)
 	parts := make(chan map[string]Stat)
 	totals := map[string]Stat{}
 	nursery (n) {
 		for _, in := range inputs {
-			words := sgo.Copy(in) // in is task-local to main: the worker gets its own copy
+			words := in // a [3]string value: the worker captures its own copy
 			n.Spawn(func(t *sgo.Context) error {
 				part := map[string]Stat{}
 				for _, w := range words {
@@ -53,9 +53,9 @@ func itoa(v int) string {
 	if v == 0 {
 		return "0"
 	}
-	var b []byte
+	b := []byte{}
 	for ; v > 0; v /= 10 {
-		b = append([]byte{byte('0' + v%10)}, b...)
+		b = append([]byte{byte(48 + v%10)}, b...)
 	}
 	return string(b)
 }

@@ -40,9 +40,9 @@ func itoa(v int) string {
 	if v == 0 {
 		return "0"
 	}
-	var b []byte
+	b := []byte{}
 	for ; v > 0; v /= 10 {
-		b = append([]byte{byte('0' + v%10)}, b...)
+		b = append([]byte{byte(48 + v%10)}, b...)
 	}
 	return string(b)
 }

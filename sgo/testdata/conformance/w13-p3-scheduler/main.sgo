@@ -1,0 +1,69 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// p3-scheduler: a dispatcher owns a priority queue and hands reference-free jobs to a worker.
+package main
+
+import "sgo"
+
+type Job struct {
+	ID   int
+	Prio int
+}
+
+type Queue struct {
+	items []Job
+}
+
+func (q *Queue) Push(j Job) { q.items = append(q.items, j) }
+
+func (q *Queue) Pop() Job {
+	best := 0
+	for i, j := range q.items {
+		if j.Prio > q.items[best].Prio {
+			best = i
+		}
+	}
+	j := q.items[best]
+	q.items = append(q.items[:best], q.items[best+1:]...)
+	return j
+}
+
+func (q *Queue) Len() int { return len(q.items) }
+
+func main(c *sgo.Context) error {
+	q := &Queue{}
+	q.Push(Job{ID: 1, Prio: 1})
+	q.Push(Job{ID: 3, Prio: 9})
+	q.Push(Job{ID: 2, Prio: 5})
+	jobs := make(chan Job) // Job has no references: it crosses by value
+	out := c.Stdout()      // stdout is a root grant; the worker gets the writer handle
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			for j := range jobs {
+				if err := out.WriteString("ran " + itoa(j.ID) + "\n"); err != nil {
+					return err
+				}
+			}
+			return nil
+		})
+		for q.Len() > 0 {
+			jobs <- q.Pop()
+		}
+		close(jobs)
+	}
+	return nil
+}
+
+// itoa formats a non-negative integer (stage 2: []byte, append, string conversion).
+func itoa(v int) string {
+	if v == 0 {
+		return "0"
+	}
+	b := []byte{}
+	for ; v > 0; v /= 10 {
+		b = append([]byte{byte(48 + v%10)}, b...)
+	}
+	return string(b)
+}

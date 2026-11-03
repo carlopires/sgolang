@@ -340,11 +340,22 @@ func (check *Checker) sgoRange(s *syntax.ForStmt) {
 	if r == nil {
 		return
 	}
-	if tv, ok := check.Types[r.X]; ok && tv.Type != nil {
-		if isChanType(tv.Type) {
+	var T Type
+	if tv, ok := check.Types[r.X]; ok {
+		T = tv.Type
+	}
+	if name, _ := syntax.Unparen(r.X).(*syntax.Name); name != nil && check.Uses[name] != nil {
+		// A keyless range over an array of constant length records its operand as the int
+		// length (a range over an integer); the operand's object has the array type.
+		if _, isVar := check.Uses[name].(*Var); isVar {
+			T = check.Uses[name].Type()
+		}
+	}
+	if T != nil {
+		if isChanType(T) {
 			return
 		}
-		switch u := tv.Type.Underlying().(type) {
+		switch u := T.Underlying().(type) {
 		case *Array, *Slice, *Map:
 			return // SGO-COMP-002, SGO-COMP-005, SGO-COMP-006
 		case *Pointer:

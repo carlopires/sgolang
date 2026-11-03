@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-COMP-002",
+  "SGO-COMP-005"
+ ],
+ "exit": 0,
+ "stdout": "ok\n",
+ "note": "for range a over an array (types2 records the operand as its int length) and over a slice."
+}

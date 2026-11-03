@@ -8,10 +8,10 @@ package main
 import "sgo"
 
 const (
-	Num = iota
-	Var
-	Add
-	Mul
+	Num = 0
+	Var = 1
+	Add = 2
+	Mul = 3
 )
 
 type Expr struct {
@@ -73,9 +73,9 @@ func itoa(v int) string {
 	if v == 0 {
 		return "0"
 	}
-	var b []byte
+	b := []byte{}
 	for ; v > 0; v /= 10 {
-		b = append([]byte{byte('0' + v%10)}, b...)
+		b = append([]byte{byte(48 + v%10)}, b...)
 	}
 	return string(b)
 }

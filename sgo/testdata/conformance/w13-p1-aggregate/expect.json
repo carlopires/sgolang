@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-COMP-004",
+  "SGO-COMP-006",
+  "SGO-COMP-005"
+ ],
+ "exit": 0,
+ "stdout": "a 3 9\nb 2 6\nc 1 3\n",
+ "note": "W13 acceptance program (D92), sgo/testdata/w13-programs/p1-aggregate."
+}

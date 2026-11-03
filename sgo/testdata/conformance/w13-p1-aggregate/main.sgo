@@ -1,0 +1,61 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// p1-aggregate: workers count keys in their own map and send a copy to the collector.
+package main
+
+import "sgo"
+
+type Stat struct {
+	Count int
+	Bytes int
+}
+
+func main(c *sgo.Context) error {
+	inputs := [2][3]string{{"a", "b", "a"}, {"a", "c", "b"}} // value arrays: copied on capture (D97)
+	parts := make(chan map[string]Stat)
+	totals := map[string]Stat{}
+	nursery (n) {
+		for _, in := range inputs {
+			words := in // a [3]string value: the worker captures its own copy
+			n.Spawn(func(t *sgo.Context) error {
+				part := map[string]Stat{}
+				for _, w := range words {
+					s := part[w]
+					s.Count++
+					s.Bytes += len(w) * 3
+					part[w] = s
+				}
+				parts <- sgo.Copy(part) // a plain `parts <- part` is SGO_E_UNCOPIED_SEND
+				return nil
+			})
+		}
+		for range inputs {
+			for k, s := range <-parts {
+				t := totals[k]
+				t.Count += s.Count
+				t.Bytes += s.Bytes
+				totals[k] = t
+			}
+		}
+	}
+	for _, k := range []string{"a", "b", "c"} {
+		if err := c.Stdout().WriteString(k + " " + itoa(totals[k].Count) + " " + itoa(totals[k].Bytes) + "\n"); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// itoa formats a non-negative integer (stage 2: []byte, append, string conversion).
+func itoa(v int) string {
+	if v == 0 {
+		return "0"
+	}
+	b := []byte{}
+	for ; v > 0; v /= 10 {
+		b = append([]byte{byte(48 + v%10)}, b...)
+	}
+	return string(b)
+}

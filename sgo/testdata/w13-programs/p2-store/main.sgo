@@ -23,7 +23,7 @@ type Store struct {
 
 func (s *Store) Get(k string) Reply {
 	v, ok := s.data[k]
-	return Reply{Value: sgo.Copy(v), Found: ok} // the session must not see the store's slice
+	return Reply{Value: v, Found: ok}
 }
 
 func main(c *sgo.Context) error {
@@ -32,7 +32,7 @@ func main(c *sgo.Context) error {
 		n.Spawn(func(t *sgo.Context) error {
 			s := Store{data: map[string][]byte{"k1": []byte("v1")}}
 			for r := range reqs {
-				r.Reply <- s.Get(r.Key)
+				r.Reply <- sgo.Copy(s.Get(r.Key)) // the session must not see the store's slice
 			}
 			return nil
 		})
@@ -42,7 +42,7 @@ func main(c *sgo.Context) error {
 			r := <-reply
 			line := "get " + k + " missing\n"
 			if r.Found {
-				r.Value[0] = 'v' // mutating our copy cannot affect the store
+				r.Value[0] = 118 // mutating our copy cannot affect the store
 				line = "get " + k + " " + string(r.Value) + "\n"
 			}
 			if err := c.Stdout().WriteString(line); err != nil {
