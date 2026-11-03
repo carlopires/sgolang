@@ -2934,9 +2934,11 @@
       ],
       "scenario": "Run sgo/testdata/w13-programs p1-p5 as conformance cases.",
       "expected": "Each prints its expected output (README) on both linux runners and darwin.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "Conformance cases w13-p1-aggregate, w13-p2-store, w13-p3-scheduler, w13-p4-eval (spec 0.9.0) and w13-p5-table (spec 0.10.0) pass with the D92 outputs on darwin-arm64 and linux/amd64 (reviewer, 469/469 at 98b664e3d2); sgo/evidence/w13/README.md"
+      ]
     },
     {
       "id": "G10",
