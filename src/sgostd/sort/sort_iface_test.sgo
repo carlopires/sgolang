@@ -1,0 +1,82 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package sort
+
+import "sgo"
+
+type pair struct {
+	key int
+	seq int
+}
+
+// byKey sorts pairs by key only, so stability is visible in seq.
+type byKey struct {
+	ps    []pair
+	swaps int
+}
+
+func (b *byKey) Len() int           { return len(b.ps) }
+func (b *byKey) Less(i, j int) bool { return b.ps[i].key < b.ps[j].key }
+func (b *byKey) Swap(i, j int) {
+	b.ps[i], b.ps[j] = b.ps[j], b.ps[i]
+	b.swaps = b.swaps + 1
+}
+
+// gen returns n pairs with keys from a linear congruential sequence in 0..k-1 and seq = index.
+func gen(n, k, seed int) []pair {
+	ps := []pair{}
+	x := seed
+	for i := 0; i < n; i++ {
+		x = (x*1103515245 + 12345) % 2147483648
+		ps = append(ps, pair{key: x % k, seq: i})
+	}
+	return ps
+}
+
+// reference is a stable insertion sort by key.
+func reference(ps []pair) []pair {
+	r := append([]pair{}, ps...)
+	for i := 1; i < len(r); i++ {
+		for j := i; j > 0 && r[j].key < r[j-1].key; j-- {
+			r[j], r[j-1] = r[j-1], r[j]
+		}
+	}
+	return r
+}
+
+func TestSortStable(t *sgo.T) error {
+	sizes := []int{0, 1, 2, 3, 19, 20, 21, 39, 40, 41, 79, 80, 81, 100, 159, 160, 161, 333, 1000, 2500}
+	for _, n := range sizes {
+		for _, k := range []int{1, 2, 7, 1000000} {
+			ps := gen(n, k, n*31+k)
+			want := reference(ps)
+			b := &byKey{ps: ps}
+			Sort(b)
+			for i := range want {
+				if b.ps[i] != want[i] {
+					return sgo.NewError("Sort: wrong or unstable order")
+				}
+			}
+			if !isSorted(b) {
+				return sgo.NewError("isSorted: false after Sort")
+			}
+			// Swap count stays within n*log2(n)^2 (here bounded by n*16*16 for n <= 2500, log2 < 12).
+			if b.swaps > n*144+1 {
+				return sgo.NewError("Sort: too many swaps")
+			}
+		}
+	}
+	return nil
+}
+
+func TestIsSortedHelper(t *sgo.T) error {
+	if !isSorted(&byKey{ps: []pair{}}) || !isSorted(&byKey{ps: []pair{{1, 0}, {1, 1}, {2, 2}}}) {
+		return sgo.NewError("isSorted: false for a sorted collection")
+	}
+	if isSorted(&byKey{ps: []pair{{2, 0}, {1, 1}}}) {
+		return sgo.NewError("isSorted: true for an unsorted collection")
+	}
+	return nil
+}

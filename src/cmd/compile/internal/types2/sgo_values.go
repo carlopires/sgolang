@@ -100,9 +100,9 @@ func sgoTypeRec(T Type, seen map[Type]bool, refs bool) (bool, string) {
 		}
 		return true, ""
 	case *Interface:
-		if sgoTaskLocal(T) {
-			return true, "" // a task-local interface (SGO-IFACE-002, D132)
-		}
+		// An interface field or element: task-local, or shareable for error (SGO-IFACE-002, D132).
+		// Interfaces are never value types (no == beyond nil, D128), so never map keys.
+		return true, ""
 	}
 	return false, "type " + TypeString(T, nil)
 }

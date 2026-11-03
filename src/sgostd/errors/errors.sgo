@@ -13,3 +13,17 @@ import "sgo"
 func New(text string) error {
 	return sgo.NewError(text)
 }
+
+// wrapper is an error that wraps another.
+type wrapper interface {
+	Unwrap() error
+}
+
+// Unwrap returns the result of calling err's Unwrap method, or nil if err is nil or has no
+// Unwrap() error method (SGO-STD-001, D133).
+func Unwrap(err error) error {
+	if w, ok := err.(wrapper); ok {
+		return w.Unwrap()
+	}
+	return nil
+}

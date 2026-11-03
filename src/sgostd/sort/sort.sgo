@@ -180,3 +180,139 @@ func SearchStrings(a []string, x string) int {
 	}
 	return i
 }
+
+// Interface is a collection that can be sorted by Sort: Len is the number of elements, Less reports
+// whether element i sorts before element j, and Swap exchanges elements i and j (SGO-STD-006, D133).
+type Interface interface {
+	Len() int
+	Less(i, j int) bool
+	Swap(i, j int)
+}
+
+// Sort sorts data in increasing order of Less. It is stable, like every S-Go sort (D123): equal
+// elements keep their order. It calls Less O(n*log(n)) and Swap O(n*log(n)*log(n)) times, using
+// insertion-sorted blocks merged by SymMerge (Kim and Kutzner), with no extra memory.
+func Sort(data Interface) {
+	n := data.Len()
+	blockSize := 20
+	a, b := 0, blockSize
+	for b <= n {
+		insertionSort(data, a, b)
+		a = b
+		b = b + blockSize
+	}
+	insertionSort(data, a, n)
+	for blockSize < n {
+		a, b = 0, 2*blockSize
+		for b <= n {
+			symMerge(data, a, a+blockSize, b)
+			a = b
+			b = b + 2*blockSize
+		}
+		if a+blockSize < n {
+			symMerge(data, a, a+blockSize, n)
+		}
+		blockSize = blockSize * 2
+	}
+}
+
+// isSorted reports whether data is sorted in increasing order of Less.
+func isSorted(data Interface) bool {
+	for i := data.Len() - 1; i > 0; i-- {
+		if data.Less(i, i-1) {
+			return false
+		}
+	}
+	return true
+}
+
+func insertionSort(data Interface, a, b int) {
+	for i := a + 1; i < b; i++ {
+		for j := i; j > a && data.Less(j, j-1); j-- {
+			data.Swap(j, j-1)
+		}
+	}
+}
+
+// symMerge merges the sorted runs data[a:m] and data[m:b] stably.
+func symMerge(data Interface, a, m, b int) {
+	if m-a == 1 {
+		// Insert data[a] into data[m:b] after the last element not greater than it.
+		i, j := m, b
+		for i < j {
+			h := (i + j) / 2
+			if data.Less(h, a) {
+				i = h + 1
+			} else {
+				j = h
+			}
+		}
+		for k := a; k < i-1; k++ {
+			data.Swap(k, k+1)
+		}
+		return
+	}
+	if b-m == 1 {
+		// Insert data[m] into data[a:m] before the first element greater than it.
+		i, j := a, m
+		for i < j {
+			h := (i + j) / 2
+			if !data.Less(m, h) {
+				i = h + 1
+			} else {
+				j = h
+			}
+		}
+		for k := m; k > i; k-- {
+			data.Swap(k, k-1)
+		}
+		return
+	}
+	mid := (a + b) / 2
+	n := mid + m
+	start, r := a, m
+	if m > mid {
+		start, r = n-b, mid
+	}
+	p := n - 1
+	for start < r {
+		c := (start + r) / 2
+		if !data.Less(p-c, c) {
+			start = c + 1
+		} else {
+			r = c
+		}
+	}
+	end := n - start
+	if start < m && m < end {
+		rotate(data, start, m, end)
+	}
+	if a < start && start < mid {
+		symMerge(data, a, start, mid)
+	}
+	if mid < end && end < b {
+		symMerge(data, mid, end, b)
+	}
+}
+
+// rotate exchanges the runs data[a:m] and data[m:b].
+func rotate(data Interface, a, m, b int) {
+	i := m - a
+	j := b - m
+	for i != j {
+		if i > j {
+			swapRange(data, m-i, m, j)
+			i = i - j
+		} else {
+			swapRange(data, m-i, m+j-i, i)
+			j = j - i
+		}
+	}
+	swapRange(data, m-i, m, i)
+}
+
+func swapRange(data Interface, a, b, n int) {
+	for i := 0; i < n; i++ {
+		data.Swap(a+i, b+i)
+	}
+}

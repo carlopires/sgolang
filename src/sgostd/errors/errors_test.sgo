@@ -6,9 +6,40 @@ package errors
 
 import "sgo"
 
+type wrap struct {
+	msg   string
+	inner error
+}
+
+func (w wrap) Error() string { return w.msg }
+func (w wrap) Unwrap() error { return w.inner }
+
 func TestNew(t *sgo.T) error {
 	if New("boom").Error() != "boom" || New("").Error() != "" {
 		return sgo.NewError("New")
+	}
+	return nil
+}
+
+func TestUnwrap(t *sgo.T) error {
+	base := New("base")
+	var mid error = wrap{msg: "mid", inner: base}
+	var top error = wrap{msg: "top", inner: mid}
+	if u := Unwrap(top); u == nil || u.Error() != "mid" {
+		return New("Unwrap(top) is not mid")
+	}
+	if u := Unwrap(Unwrap(top)); u == nil || u.Error() != "base" {
+		return New("Unwrap(Unwrap(top)) is not base")
+	}
+	if Unwrap(base) != nil {
+		return New("Unwrap of an error without Unwrap is not nil")
+	}
+	if Unwrap(nil) != nil {
+		return New("Unwrap(nil) is not nil")
+	}
+	var leaf error = wrap{msg: "leaf", inner: nil}
+	if Unwrap(leaf) != nil {
+		return New("Unwrap of a wrapper holding nil is not nil")
 	}
 	return nil
 }
