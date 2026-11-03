@@ -33,4 +33,4 @@ SGO-IMP-002 v2, SGO-IMP-003 v1, SGO-IMP-004 v1, SGO-AUTH-002 v3.
 
 ## Linux
 
-Pending the sgo-w00 run on the freeze commit (linux/amd64, linux/arm64).
+sgo-w00 run 41644366563 on `632a83cc2f` (0.11.0 freeze plus the license-audit, legacy-audit and single-record throw fixes): both jobs passed on linux/amd64 and linux/arm64 — stage-0 builds, conformance (490 cases), test-modules, test-std, legacy-audit, and the release archive check.

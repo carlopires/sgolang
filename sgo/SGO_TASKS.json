@@ -799,7 +799,7 @@
         "W13"
       ],
       "risk": "medium",
-      "status": "in_progress",
+      "status": "passed",
       "plan_section": "sgo/docs/stdlib-foundations-plan.md",
       "deliverables": [
         "Clause drafts for approval (SGO-IMP-001 v2, SGO-IMP-002 v2, SGO-IMP-003, SGO-IMP-004, dependency grants)",
@@ -809,7 +809,10 @@
         "a first std/ package end to end"
       ],
       "acceptance_case_ids": [],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w14/README.md",
+        "sgo-w00 run 41644366563 (linux/amd64, linux/arm64) on the 0.11.0 freeze"
+      ],
       "blockers": [],
       "commit": null,
       "completion_note": null
