@@ -196,7 +196,32 @@ func (a *admitter) typeDecl(d *syntax.TypeDecl) {
 		a.structType(st)
 		return
 	}
+	if it, ok := d.Type.(*syntax.InterfaceType); ok {
+		a.interfaceType(it)
+		return
+	}
 	a.typ(d.Type)
+}
+
+// interfaceType checks an interface type definition (SGO-IFACE-002, D127): methods with admitted
+// signatures and embedded named interface types. Type-set elements (~T, unions, and non-interface
+// types, which make a constraint interface) are generics (SGO-IFACE-001, D108); types2 checks that
+// an embedded name is an interface (sgoIfaceDecl).
+func (a *admitter) interfaceType(it *syntax.InterfaceType) {
+	for _, m := range it.MethodList {
+		if m.Name != nil {
+			if ft, ok := m.Type.(*syntax.FuncType); ok {
+				a.funcType(ft)
+			}
+			continue
+		}
+		switch t := m.Type.(type) {
+		case *syntax.Name, *syntax.SelectorExpr:
+			a.typ(t)
+		default:
+			a.deny(m.Type.Pos(), "type set element "+syntax.String(m.Type), "SGO-IFACE-001")
+		}
+	}
 }
 
 // structType checks the fields of a struct type definition: named fields only, no tags, no blank

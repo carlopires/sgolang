@@ -2,13 +2,13 @@
  "kind": "reject",
  "clauses": [
   "SGO-LEX-002",
-  "SGO-COMP-001"
+  "SGO-IFACE-001"
  ],
  "diagnostics": [
   {
    "code": "SGO_E_UNADMITTED",
-   "at": "interface"
+   "at": "~int"
   }
  ],
- "note": "The ~ operator stays denied: it occurs only in interface type sets, which are denied (SGO-COMP-001); the formerly denied [ ] and ... are admitted by SGO-COMP-005 from 0.9.0."
+ "note": "The ~ operator stays denied: it occurs only in interface type sets, which are generics (SGO-IFACE-001, D127); interface declarations themselves are admitted from 0.14.0. The formerly denied [] and ... are admitted by SGO-COMP-005 from 0.9.0."
 }

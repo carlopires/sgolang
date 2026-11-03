@@ -40,7 +40,7 @@ var deniedNames = map[string]string{
 	"uint64": "SGO-TYPE-001", "uintptr": "SGO-TYPE-001", // rune is admitted (SGO-TYPE-008)
 	"float32": "SGO-FLOAT-001", "float64": "SGO-FLOAT-001", "complex64": "SGO-FLOAT-001",
 	"complex128": "SGO-FLOAT-001", "real": "SGO-FLOAT-001", "imag": "SGO-FLOAT-001", "complex": "SGO-FLOAT-001",
-	"any": "SGO-IFACE-001", "comparable": "SGO-GEN-001", "iota": "SGO-VAL-004",
+	"comparable": "SGO-GEN-001", "iota": "SGO-VAL-004", // any is admitted (SGO-IFACE-002)
 	"max": "SGO-VAL-001", "min": "SGO-VAL-001", "print": "SGO-PROC-003", "println": "SGO-PROC-003",
 	"recover": "SGO-DEF-002",
 }
@@ -79,6 +79,10 @@ func (a *admitter) stmt(s syntax.Stmt) {
 				if d.Type != nil {
 					a.typ(d.Type)
 				}
+				if x, ok := d.Values.(*syntax.AssertExpr); ok && len(d.NameList) == 2 {
+					a.commaOK(x) // var v, ok = x.(T) (SGO-IFACE-004)
+					break
+				}
 				a.expr(d.Values)
 			case *syntax.TypeDecl:
 				a.deny(a.tokenBefore(d.Pos(), "type"), "type declaration", "SGO-UTYPE-001")
@@ -86,6 +90,12 @@ func (a *admitter) stmt(s syntax.Stmt) {
 		}
 	case *syntax.AssignStmt:
 		a.expr(s.Lhs)
+		if x, ok := s.Rhs.(*syntax.AssertExpr); ok {
+			if l, ok := s.Lhs.(*syntax.ListExpr); ok && len(l.ElemList) == 2 {
+				a.commaOK(x) // v, ok := x.(T) and v, ok = x.(T) (SGO-IFACE-004)
+				return
+			}
+		}
 		a.expr(s.Rhs)
 	case *syntax.BranchStmt:
 		switch s.Tok {
@@ -128,7 +138,18 @@ func (a *admitter) stmt(s syntax.Stmt) {
 		a.stmt(s.Body)
 	case *syntax.SwitchStmt:
 		if g, ok := s.Tag.(*syntax.TypeSwitchGuard); ok {
-			a.deny(g.Pos(), "type switch", "SGO-IFACE-001")
+			// switch v := x.(type) (SGO-IFACE-004); types2 checks x and the case types.
+			a.stmt(s.Init)
+			a.expr(g.X)
+			for _, c := range s.Body {
+				for _, t := range syntax.UnpackListExpr(c.Cases) {
+					if n, ok := t.(*syntax.Name); ok && n.Value == "nil" {
+						continue
+					}
+					a.typ(t)
+				}
+				a.stmtList(c.Body)
+			}
 			return
 		}
 		a.stmt(s.Init)
@@ -355,7 +376,8 @@ func (a *admitter) expr(e syntax.Expr) {
 			a.expr(x)
 		}
 	case *syntax.AssertExpr:
-		a.deny(e.Pos(), "type assertion", "SGO-IFACE-001")
+		// Only the comma-ok form is admitted (stmt, D129); x.(T) would panic on a mismatch.
+		a.deny(e.Pos(), "single-value type assertion "+syntax.String(e)+" (use v, ok := x.(T) or a type switch)", "SGO-IFACE-001")
 	case *syntax.Operation:
 		switch {
 		case e.Y == nil && e.Op == syntax.And:
@@ -396,6 +418,12 @@ func (a *admitter) expr(e syntax.Expr) {
 	default:
 		a.typ(e)
 	}
+}
+
+// commaOK checks the operands of a comma-ok type assertion v, ok := x.(T) (SGO-IFACE-004).
+func (a *admitter) commaOK(x *syntax.AssertExpr) {
+	a.expr(x.X)
+	a.typ(x.Type)
 }
 
 func (a *admitter) basicLit(l *syntax.BasicLit) {

@@ -55,6 +55,25 @@ func walkConvInterface(n *ir.ConvExpr, init *ir.Nodes) ir.Node {
 		}
 	}
 
+	if !fromType.IsInterface() && base.SGo && fromType.IsPtr() {
+		// S-Go has no typed nil (SGO-IFACE-002, D130): a nil pointer converts to the nil
+		// interface, so the type word is set only for a non-nil pointer.
+		//
+		//	d := x; var tw *uint8; if d != nil { tw = typeWord }; iface{tw, d}
+		typeWord := reflectdata.ConvIfaceTypeWord(base.Pos, n)
+		data := dataWord(n, init)
+		d := typecheck.TempAt(base.Pos, ir.CurFunc, data.Type())
+		init.Append(ir.NewAssignStmt(base.Pos, d, data))
+		tw := typecheck.TempAt(base.Pos, ir.CurFunc, types.NewPtr(types.Types[types.TUINT8]))
+		init.Append(ir.NewAssignStmt(base.Pos, tw, nil))
+		nif := ir.NewIfStmt(base.Pos, typecheck.Expr(ir.NewBinaryExpr(base.Pos, ir.ONE, typecheck.Conv(d, types.Types[types.TUNSAFEPTR]), typecheck.NodNil())), nil, nil)
+		nif.Body = []ir.Node{ir.NewAssignStmt(base.Pos, tw, typecheck.Conv(typecheck.Conv(typeWord, types.Types[types.TUNSAFEPTR]), tw.Type()))}
+		init.Append(nif)
+		l := ir.NewBinaryExpr(base.Pos, ir.OMAKEFACE, tw, d)
+		l.SetType(toType)
+		l.SetTypecheck(n.Typecheck())
+		return l
+	}
 	if !fromType.IsInterface() {
 		typeWord := reflectdata.ConvIfaceTypeWord(base.Pos, n)
 		l := ir.NewBinaryExpr(base.Pos, ir.OMAKEFACE, typeWord, dataWord(n, init))

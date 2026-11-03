@@ -99,6 +99,10 @@ func sgoTypeRec(T Type, seen map[Type]bool, refs bool) (bool, string) {
 			return false, "pointer target: " + why
 		}
 		return true, ""
+	case *Interface:
+		if sgoTaskLocal(T) {
+			return true, "" // a task-local interface (SGO-IFACE-002, D132)
+		}
 	}
 	return false, "type " + TypeString(T, nil)
 }
@@ -124,6 +128,9 @@ func sgoTaskLocalRec(T Type, seen map[Type]bool) bool {
 	switch u := T.Underlying().(type) {
 	case *Slice, *Map, *Pointer:
 		return true
+	case *Interface:
+		// Every interface type but error is task-local, whatever its dynamic value (D132).
+		return !Identical(T, universeError)
 	case *Struct:
 		for _, f := range u.fields {
 			if sgoTaskLocalRec(f.typ, seen) {
@@ -156,6 +163,24 @@ func sgoHasChan(T Type) bool {
 	return false
 }
 
+// sgoHoldsIface reports whether a value of T holds an interface value, at the top or in a field or
+// element (D128: interface values are compared only with nil).
+func sgoHoldsIface(T Type) bool {
+	switch u := T.Underlying().(type) {
+	case *Interface:
+		return true
+	case *Struct:
+		for _, f := range u.fields {
+			if sgoHoldsIface(f.typ) {
+				return true
+			}
+		}
+	case *Array:
+		return sgoHoldsIface(u.elem)
+	}
+	return false
+}
+
 // sgoTypeDecls checks the package's type definitions (SGO-UTYPE-002, SGO-COMP-002).
 func (check *Checker) sgoTypeDecls(files []*syntax.File) {
 	for _, f := range files {
@@ -166,6 +191,11 @@ func (check *Checker) sgoTypeDecls(files []*syntax.File) {
 			}
 			tn, _ := check.Defs[td.Name].(*TypeName)
 			if tn == nil {
+				continue
+			}
+			if it, _ := tn.typ.Underlying().(*Interface); it != nil && !it.IsMethodSet() {
+				// An embedded non-interface type makes a constraint interface (generics, D108).
+				check.errorf(td.Type, UnsupportedFeature, "SGO_E_UNADMITTED: interface %s has a type set element; constraint interfaces are generics (SGO-IFACE-001)", td.Name.Value)
 				continue
 			}
 			if ok, why := sgoFieldType(tn.typ); !ok {

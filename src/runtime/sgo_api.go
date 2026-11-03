@@ -113,6 +113,11 @@ func sgoNilDereference(pos string) {
 	panic(error(&sgoFailure{"NilDereference", "dereference of a nil pointer", pos}))
 }
 
+// sgoNilInterfaceCall is a method call on a nil interface value in S-Go code (SGO-IFACE-003, D130).
+func sgoNilInterfaceCall(pos string) {
+	panic(error(&sgoFailure{"NilDereference", "method call on a nil interface value", pos}))
+}
+
 // sgoIntString formats v in decimal.
 func sgoIntString(v int) string {
 	var buf [24]byte

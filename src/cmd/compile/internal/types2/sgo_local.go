@@ -441,11 +441,14 @@ func (check *Checker) sgoToIface(x syntax.Expr, T Type) {
 // the interface type dst. Every conversion site calls it (single values and the elements of
 // multi-value calls, W13 review V2).
 func (check *Checker) sgoTypeToIface(at syntax.Expr, src, dst Type) {
-	if src == nil || dst == nil || !IsInterface(dst) || IsInterface(src) {
+	if src == nil || dst == nil || !IsInterface(dst) {
 		return
 	}
 	if _, tuple := src.(*Tuple); tuple {
 		return
+	}
+	if sgoTaskLocal(dst) {
+		return // a task-local interface may hold any admitted value (SGO-IFACE-002, D132)
 	}
 	if sgoTaskLocal(src) {
 		check.errorf(at, UnsupportedFeature, "SGO_E_TASK_LOCAL_CAPTURE: a value of the task-local type %s cannot become %s: error values are shared between tasks; only shareable types may implement error (SGO-COMP-004)", src, dst)

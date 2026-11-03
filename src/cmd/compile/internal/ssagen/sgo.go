@@ -26,7 +26,7 @@ import (
 // by proving the branch dead.
 
 var sgoSyms struct {
-	overflow, divideByZero, shiftRange, bounds, sliceBounds, nilDeref *obj.LSym
+	overflow, divideByZero, shiftRange, bounds, sliceBounds, nilDeref, nilIface *obj.LSym
 }
 
 func sgoInitSyms() {
@@ -36,6 +36,7 @@ func sgoInitSyms() {
 	sgoSyms.bounds = typecheck.LookupRuntimeFunc("sgoBoundsViolation")
 	sgoSyms.sliceBounds = typecheck.LookupRuntimeFunc("sgoSliceBoundsViolation")
 	sgoSyms.nilDeref = typecheck.LookupRuntimeFunc("sgoNilDereference")
+	sgoSyms.nilIface = typecheck.LookupRuntimeFunc("sgoNilInterfaceCall")
 }
 
 // sgoStringMu serializes creation of position-string symbols. SSA construction runs functions
@@ -286,4 +287,15 @@ func (s *state) sgoConvCheck(from, to *types.Type, x *ssa.Value) {
 		return
 	}
 	s.sgoCheck(s.newValue2(ssa.OpLeq64U, types.Types[types.TBOOL], s.sgoWiden(x), s.constInt64(types.Types[types.TUINT64], limit)), sgoSyms.overflow)
+}
+
+// sgoNilIfaceCheck checks the itab of an interface method call. In S-Go code a call on a nil
+// interface value is the checked failure NilDereference at the call (SGO-IFACE-003, D130); a call on
+// a nil error keeps Go's nil check, which the runtime reports as NilError (SGO-TYPE-006).
+func (s *state) sgoNilIfaceCheck(itab *ssa.Value, recv *types.Type) {
+	if !s.sgoSource() || base.Debug.DisableNil != 0 || s.curfn.NilCheckDisabled() || types.Identical(recv, types.ErrorType) {
+		s.nilCheck(itab)
+		return
+	}
+	s.sgoCheck(s.newValue1(ssa.OpIsNonNil, types.Types[types.TBOOL], itab), sgoSyms.nilIface)
 }

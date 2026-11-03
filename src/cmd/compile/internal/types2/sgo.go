@@ -165,20 +165,27 @@ func (check *Checker) sgoComparisonOK(x, y *operand) bool {
 			return false
 		}
 	}
-	if x.mode() != nilvalue && y.mode() != nilvalue && Identical(x.typ(), universeError) && Identical(y.typ(), universeError) {
+	if x.mode() == nilvalue || y.mode() == nilvalue {
+		return true
+	}
+	if Identical(x.typ(), universeError) && Identical(y.typ(), universeError) {
 		check.errorf(x, MismatchedTypes, "SGO_E_UNADMITTED: comparison of two error values is not admitted in S-Go subset 0 (SGO-TYPE-006)")
+		return false
+	}
+	if sgoHoldsIface(x.typ()) || sgoHoldsIface(y.typ()) {
+		check.errorf(x, MismatchedTypes, "SGO_E_UNADMITTED: comparison of interface values is not admitted; compare with nil or use a type switch (SGO-IFACE-001, D128)")
 		return false
 	}
 	return true
 }
 
-// sgoNilable reports whether nil is a value of T: pointers (not handles), slices, and maps
-// (SGO-COMP-008, D96).
+// sgoNilable reports whether nil is a value of T: pointers (not handles), slices, maps (SGO-COMP-008,
+// D96), and interfaces (SGO-IFACE-002).
 func sgoNilable(T Type) bool {
 	switch T.Underlying().(type) {
 	case *Pointer:
 		return !isSgoHandle(T)
-	case *Slice, *Map:
+	case *Slice, *Map, *Interface:
 		return true
 	}
 	return false
