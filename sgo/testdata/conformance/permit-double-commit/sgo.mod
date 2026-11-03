@@ -1,3 +1,3 @@
 module example.com/permit-double-commit
 
-sgo 0.13.0
+sgo 0.14.0

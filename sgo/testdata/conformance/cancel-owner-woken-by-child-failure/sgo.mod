@@ -1,3 +1,3 @@
 module example.com/cancel-owner-woken-by-child-failure
 
-sgo 0.13.0
+sgo 0.14.0

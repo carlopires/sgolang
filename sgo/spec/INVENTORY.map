@@ -63,7 +63,7 @@ universe  byte  admit  SGO-TYPE-007  # (0.9.0)
 universe  rune  admit  SGO-TYPE-008  # (0.12.0)
 universe  int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|uintptr  deny  SGO-TYPE-001
 universe  float32|float64|complex64|complex128|real|imag|complex  deny  SGO-FLOAT-001
-universe  any  deny  SGO-IFACE-001
+universe  any  admit  SGO-IFACE-002
 universe  comparable  deny  SGO-GEN-001
 universe  iota  deny  SGO-VAL-004
 universe  append|cap|copy|make  admit  SGO-COMP-005  # slices (0.9.0); make of a channel SGO-CHAN-002, of a map SGO-COMP-006; cap of a channel stays denied

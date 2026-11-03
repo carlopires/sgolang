@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": "0.13.0",
+  "spec_version": "0.14.0",
   "status": "admitted_0.7.0",
   "warning": "Spec 0.7.0 admits every row marked 'admitted': its clauses are frozen, the toolchain implements and enforces them, and its acceptance cases have executed evidence (constitution §6, D83). Rows marked 'denied' stay rejected. Admission does not widen any row beyond its clauses; everything the clauses do not name is rejected.",
   "default_decision": "reject",
@@ -167,7 +167,7 @@
         "SGO-TYPE-007",
         "SGO-TYPE-008"
       ],
-      "normative_text_digest": "de8e7f0ffe27998d61a028d27ab5c36afe6c8ddcfc5b8ff4326e2b926d842537",
+      "normative_text_digest": "a1e43141fb6a0c493e24916f404e63dc8df5d5a9d1465b2d9946251128e2db3f",
       "admitted_in": [
         "0.7.0"
       ],
@@ -183,12 +183,12 @@
       ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-TYPE-001": "73af199fe8d580fab570b672a07c978c509ed7d32faaf3535328c60e50934fa7",
+        "SGO-TYPE-001": "c70ab3cc2b713c38b4c1aaeac10ca399aba4c817288f50fe8d9dfe57b58f2e7f",
         "SGO-TYPE-002": "e481cecacd6eb940825227acbb9d9e7f9acd8e916f4ef27039785caf16f63045",
         "SGO-TYPE-003": "a1e06f6a06fccd6bc4d5a83ecf208d1a612639b582bf70abef98331e8b841343",
         "SGO-TYPE-004": "ed7f04b19e34d997c1d626f4056021977c51e644d9adc52207ca5a149f9d4819",
         "SGO-TYPE-005": "69b3904d8fdaa89bab09eb3ea66a912cf72ba0bc60e2d4c9dde2ec1817b31c2c",
-        "SGO-TYPE-006": "782ac892c2affcdc43a6c63e4007c4e2bf47c7f98583e0f194194c9b7febc992",
+        "SGO-TYPE-006": "5fbeab16e0c098663c5bb4a4483273368a6d861add3ca05df1e3442f479c56a6",
         "SGO-TYPE-007": "3852fbc51de112f4ef9d74d9ebf1469e97e29020f74e2bae3baff25e93101f55",
         "SGO-TYPE-008": "260f9ec87ffcdfd4c08f4fef0f42965105383cc2c0986a5d48a70ce18a5c1618"
       },
@@ -203,12 +203,12 @@
         "SGO-TYPE-008": "frozen"
       },
       "clause_versions": {
-        "SGO-TYPE-001": 8,
+        "SGO-TYPE-001": 9,
         "SGO-TYPE-002": 3,
         "SGO-TYPE-003": 1,
         "SGO-TYPE-004": 1,
         "SGO-TYPE-005": 5,
-        "SGO-TYPE-006": 1,
+        "SGO-TYPE-006": 2,
         "SGO-TYPE-007": 2,
         "SGO-TYPE-008": 1
       }
@@ -320,7 +320,7 @@
         "SGO-CTL-003",
         "SGO-CTL-004"
       ],
-      "normative_text_digest": "8e21c0a4f6adc0f053f47091b33e15d15c806c2bd37bc64964140781b1f88394",
+      "normative_text_digest": "5ad00d5d2430dfafdb57631839007264e440aa3ae0e5b9cd34486e4180625605",
       "admitted_in": [
         "0.7.0"
       ],
@@ -337,7 +337,7 @@
       ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-CTL-001": "9ed4d5bcbd38d6a3ca98cd7877dd76ab65d8ad9b500528f4baadf04d1716b628",
+        "SGO-CTL-001": "2c6b123d6fd956f40c05f762a97b151ecb85d565e3a17c9ec4f1b0bd98549730",
         "SGO-CTL-002": "3087cd21a820d14ed4f0e06471a6ad4337740c0c517db067c7baf24cc73e62e4",
         "SGO-CTL-003": "ca88b5232a175d679c9f77ed15214bf1a95f0f774346dd974e391ed29a3805d9",
         "SGO-CTL-004": "9e4a91bbd310b58c76f8d4529f545e0aa3a45a2b6f220bd87ae51d21d6c502b8"
@@ -349,7 +349,7 @@
         "SGO-CTL-004": "frozen"
       },
       "clause_versions": {
-        "SGO-CTL-001": 1,
+        "SGO-CTL-001": 2,
         "SGO-CTL-002": 1,
         "SGO-CTL-003": 1,
         "SGO-CTL-004": 1
@@ -1332,7 +1332,7 @@
         "SGO-COMP-008",
         "SGO-COMP-009"
       ],
-      "normative_text_digest": "a2eb056e68e7a8b2965f5d9a144aebd87e3b6bec055b787035aa82fe8ec71f8a",
+      "normative_text_digest": "a66e2a326260043c7bf6fcab4b76fddf590ea4a1c62c43a7c4e18f168cbbd3ca",
       "admitted_in": [
         "0.8.0"
       ],
@@ -1351,7 +1351,7 @@
         "SGO-COMP-001": "23b0b3fec15a1844fa302b89249ac9c02bc006fe6642f4b94510dc6b7b05fb1a",
         "SGO-COMP-002": "2f7e59d06a512a54f3e1b2b7cbfecfad412881de43b56807430d0ace484a555d",
         "SGO-COMP-003": "98bedebc77160c333f08581a2e187e0ace614d2d7ebc0673f0479752825b3447",
-        "SGO-COMP-004": "3e93f88b9c1377b3aa64b3745da98eea0cc6721f5e24fa6484e70314d289eba8",
+        "SGO-COMP-004": "4f7cfe5cf01db3e89f73aac542f10f70a3ec49fee8c09b2e4b118c39a212e05f",
         "SGO-COMP-005": "30285f70fc95e3bd0a9dbca34df4d7556398ca3afceb7d51cbd07b53edb6650e",
         "SGO-COMP-006": "bb39567d75a84983104484d7081fdc346f6ca963323d4514118f31751cd5ecbe",
         "SGO-COMP-007": "36a23a04740d9c7e98a8567e38525fff70679421b038ed62b57f645480623d6e",
@@ -1373,7 +1373,7 @@
         "SGO-COMP-001": 5,
         "SGO-COMP-002": 2,
         "SGO-COMP-003": 1,
-        "SGO-COMP-004": 3,
+        "SGO-COMP-004": 4,
         "SGO-COMP-005": 2,
         "SGO-COMP-006": 1,
         "SGO-COMP-007": 1,
@@ -1422,28 +1422,44 @@
       "id": "SPEC-IFACE",
       "surface_family": "Interfaces, dynamic dispatch, type assertions/switches and their effect summaries",
       "specification_work_package": "W01",
-      "implementation_owner_work_package": "W03",
-      "status": "denied",
+      "implementation_owner_work_package": "W17",
+      "status": "admitted",
       "clause_ids": [
-        "SGO-IFACE-001"
+        "SGO-IFACE-001",
+        "SGO-IFACE-002",
+        "SGO-IFACE-003",
+        "SGO-IFACE-004"
       ],
-      "normative_text_digest": "b492f8d10ee563817de556ae81fb73e637e41902f9a94dac68c3df861ad85fd9",
-      "admitted_in": [],
+      "normative_text_digest": "07d0d1d3953a120bbc211d3cd2f94c5c2c815249a28ca5574901fe33b9f6546a",
+      "admitted_in": [
+        "0.14.0"
+      ],
       "acceptance_case_ids": [
         "S10",
         "S17"
       ],
-      "evidence": [],
-      "decision_refs": "D05,D87",
+      "evidence": [
+        "sgo/evidence/w17/README.md"
+      ],
+      "decision_refs": "D05,D87,D107,D127,D128,D129,D130,D131,D132,D133",
       "subset0": "denied",
       "clause_digests": {
-        "SGO-IFACE-001": "8bd53e28b3e54673b6277c983e8c8ba992df2a9066fc2325ae094ca2a938ec3e"
+        "SGO-IFACE-001": "a20a7c32b345da88abe6fd5b59dbdc72e835fc4fe134453e07cc09565443ef7a",
+        "SGO-IFACE-002": "93ccb8f57ddd224f22b8fd7a670c51efc3d743f022c747de95971efcc043a5fd",
+        "SGO-IFACE-003": "bd8285c48bb993f467be03977f0d1bee6ae8e8f266522f05b146522b5f531504",
+        "SGO-IFACE-004": "575e23316f1cb9a5526528c6b7ff0157274db89b9f17a642d0ea407dd7827957"
       },
       "clause_status": {
-        "SGO-IFACE-001": "frozen"
+        "SGO-IFACE-001": "frozen",
+        "SGO-IFACE-002": "frozen",
+        "SGO-IFACE-003": "frozen",
+        "SGO-IFACE-004": "frozen"
       },
       "clause_versions": {
-        "SGO-IFACE-001": 1
+        "SGO-IFACE-001": 2,
+        "SGO-IFACE-002": 1,
+        "SGO-IFACE-003": 1,
+        "SGO-IFACE-004": 1
       }
     },
     {
@@ -1675,7 +1691,7 @@
         "SGO-STD-006",
         "SGO-STD-007"
       ],
-      "normative_text_digest": "c305524275f495a29bb6211922c3fd83b9d8f4817a22367b7e85b1eb4050f6e4",
+      "normative_text_digest": "faf75402d8f177dd5fcc533aea1556175fe7449eff764b8c68f017230c3e814c",
       "admitted_in": [
         "0.13.0"
       ],
@@ -1685,12 +1701,12 @@
       ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-STD-001": "ee5660765fc16e824d786c38c167e79e0b6d6c39053ef0b191ef029c4818dfd3",
+        "SGO-STD-001": "bad1618814fd934c9f3e480cfc490a6dbc9b1dc18152994f5562db742cfee5a2",
         "SGO-STD-002": "ae36faebefabe35416de54a21b821fab6341b039ffe05f85819b9712d1470d49",
         "SGO-STD-003": "d6dcda1731d7d0a34656b71581ad31368f1bd1d3aebbd1c55c110c8af08031dc",
         "SGO-STD-004": "fc48784da91533f216a151cdd1d1b67f36c5a3e9b10ee51091e12891dc01cee9",
         "SGO-STD-005": "48e4ffb537df21c0774ddf50c897beb75e250e18b40df33838a4f9f2922969ef",
-        "SGO-STD-006": "b7ac145f7d295f391aee11bf4cc5e58b8b781f429e67aca3957dbce10a241ab1",
+        "SGO-STD-006": "38cdc25df6ae73744496c06a6c17a5ffde477bd98e4eef5c1672dc561dfdcccf",
         "SGO-STD-007": "6d6a9a8955d6cc046c70eae9f1d698f1d8f47992860ebf75cb187e4128035d7c"
       },
       "clause_status": {
@@ -1703,16 +1719,16 @@
         "SGO-STD-007": "frozen"
       },
       "clause_versions": {
-        "SGO-STD-001": 1,
+        "SGO-STD-001": 2,
         "SGO-STD-002": 1,
         "SGO-STD-003": 1,
         "SGO-STD-004": 1,
         "SGO-STD-005": 1,
-        "SGO-STD-006": 1,
+        "SGO-STD-006": 2,
         "SGO-STD-007": 1
       }
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "6320d6451492d42d95b17c0b8ccad9009f72991f7bdc5e60508949b045793e40"
+  "rows_digest": "c39d833adf0447b631b63c2680c845f20f3a180179455526d22d70f4d9810a24"
 }

@@ -2,6 +2,26 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.14.0 — 2026-11-03
+
+Interfaces (W17; D107, D127–D133; drafts approved 2026-11-03). Every program valid under 0.13.0 keeps its meaning, with one exception: comparing an `error` value with a non-nil value of a concrete type (`err == T{...}`) was accepted and is now refused, since interface values compare only with `nil` (D128). The admission digest and toolchain identity change, so objects built for 0.13.0 are refused by a 0.14.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.14.0`.
+
+New frozen clauses (family SPEC-IFACE, now admitted):
+
+- SGO-IFACE-002 v1 — named interface types, `any`, implicit implementation by method sets (D127, D131); interface values are task-local except `error` (D132).
+- SGO-IFACE-003 v1 — dynamic dispatch; no typed nil: a nil pointer converts to the nil interface, and a method call on a nil interface is `NilDereference` (D130).
+- SGO-IFACE-004 v1 — comma-ok type assertions and type switches (D129).
+
+Amended:
+
+- SGO-IFACE-001 v2 — what stays denied: interface literals outside a declaration, type-set elements and constraint interfaces, `==` between interface values, interface map keys, the single-value assertion, method values and expressions of interface types.
+- SGO-TYPE-001 v9 — named interface types and `any` join the admitted types.
+- SGO-TYPE-006 v2 — `error` is the one shareable interface type: assertions, type switches, and wrapping (`errors.Unwrap`) on errors; `error` fields keep a struct shareable.
+- SGO-COMP-004 v4 — interface types other than `error` are task-local; `sgo.Copy` deep-copies an interface's dynamic value, and `Copy` of nil is nil.
+- SGO-CTL-001 v2 — type switches admitted; the denials of `select` and range forms, lifted by later clauses, are replaced by references to them.
+- SGO-STD-001 v2 — `errors.Unwrap` (D133).
+- SGO-STD-006 v2 — `sort.Interface` and the stable `sort.Sort` (D133).
+
 ## 0.13.0 — 2026-11-03
 
 Standard library v1 (W16; D103, D108–D110, D121–D126; drafts approved 2026-11-03). Every program valid under 0.12.0 keeps its meaning, except that `std/strconv` errors now carry Go's messages (`strconv.Atoi: parsing "x": invalid syntax`, D121); the admission digest and toolchain identity change, so objects built for 0.12.0 are refused by a 0.13.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.13.0`.

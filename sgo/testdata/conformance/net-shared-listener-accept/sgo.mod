@@ -1,5 +1,5 @@
 module example.com/net-shared-listener-accept
 
-sgo 0.13.0
+sgo 0.14.0
 grant listen unix:shared.sock
 grant connect unix:shared.sock

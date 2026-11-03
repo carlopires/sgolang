@@ -3,10 +3,10 @@
 Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §6, decision D14, resolutions R3/R4, and plan §4.4.
 
 ### SGO-CTL-001 — Statements
-- **version:** 1
+- **version:** 2
 - **status:** frozen
-- **reference_closure:** SGO-BIND-003, SGO-VAL-001, SGO-DEF-001, SGO-NUR-001, SGO-CTL-002; D14; R3, R4.
-- **grammar_and_types:** Admitted statements: blocks `{ … }`; declarations (SGO-BIND-003); assignments `=`, `:=`, `op=`; `x++`, `x--`; `_ = e` (explicit discard); expression statements that are calls; `if [init;] cond { … } [else if … | else { … }]`; `for { … }`, `for cond { … }`, `for [init]; [cond]; [post] { … }`; expression `switch` (SGO-CTL-002); `return [e, …]`; `break [label]`; `continue [label]`; labeled statements `L: stmt` where stmt is `for`, `switch`, or a block; `defer` (SGO-DEF-001); `panic(msg)` as a call statement (SGO-DEF-002); `nursery (n) { … }` (SGO-NUR-001). Init and post statements are simple statements (assignment, `:=`, `++`/`--`, call). Denied: `goto`, `fallthrough`, `select`, type switches, `for … range`, `go`, and empty statements other than an empty block. An expression statement whose call returns one or more results including an `error` is denied; `_ = f()` (or `_, _ = f()`) is the explicit discard. A label must be used.
+- **reference_closure:** SGO-BIND-003, SGO-VAL-001, SGO-DEF-001, SGO-NUR-001, SGO-CTL-002, SGO-CHAN-002, SGO-CHAN-004, SGO-COMP-002, SGO-COMP-005, SGO-COMP-006, SGO-VAL-002, SGO-IFACE-004; D14, D129; R3, R4.
+- **grammar_and_types:** Admitted statements: blocks `{ … }`; declarations (SGO-BIND-003); assignments `=`, `:=`, `op=`; `x++`, `x--`; `_ = e` (explicit discard); expression statements that are calls; `if [init;] cond { … } [else if … | else { … }]`; `for { … }`, `for cond { … }`, `for [init]; [cond]; [post] { … }`; expression `switch` (SGO-CTL-002); type switches (SGO-IFACE-004, spec 0.14.0); `select` (SGO-CHAN-004); `for k, v := range x` over channels (SGO-CHAN-002), arrays (SGO-COMP-002), slices (SGO-COMP-005), maps (SGO-COMP-006), and strings (SGO-VAL-002); `return [e, …]`; `break [label]`; `continue [label]`; labeled statements `L: stmt` where stmt is `for`, `switch`, or a block; `defer` (SGO-DEF-001); `panic(msg)` as a call statement (SGO-DEF-002); `nursery (n) { … }` (SGO-NUR-001). Init and post statements are simple statements (assignment, `:=`, `++`/`--`, call). Denied: `goto`, `fallthrough`, `go`, `for … range` over any other operand (integers, functions), and empty statements other than an empty block. Version 1 also denied `select`, type switches, and every range form; the clauses named above admit them. An expression statement whose call returns one or more results including an `error` is denied; `_ = f()` (or `_, _ = f()`) is the explicit discard. A label must be used.
 - **preconditions:** Conditions have type `bool` (SGO-VAL-003). `break` appears inside a `for` or `switch`; `continue` inside a `for`; a label names an enclosing labeled statement of the right kind.
 - **evaluation_and_value_semantics:** `if` evaluates init, then cond, then runs one branch. `for` runs init once, then repeatedly: evaluate cond (absent means `true`), run the body, run post. `break` leaves the innermost (or labeled) `for`/`switch`; `continue` starts the next iteration of the innermost (or labeled) `for`, running its post statement. `return` ends the function (SGO-CTL-004 for nursery exits, SGO-DEF-001 for defers).
 - **ownership_and_lifecycle:** Variables declared in init statements are scoped to the statement (SGO-BIND-004). In a three-clause `for`, the loop variable is one variable for the whole loop (it is reassigned by post, so it cannot be captured, SGO-MEM-002).
@@ -18,11 +18,11 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §6, decision D14, resolutions R3/R
 - **compile_link_checks:** `SGO_E_UNADMITTED` (denied statements); `SGO_E_DISCARDED_ERROR`; `SGO_E_UNUSED_LABEL`; `SGO_E_MISPLACED_BRANCH`; `SGO_E_UNSTRUCTURED_SPAWN` for `go`.
 - **runtime_guards:** n/a — control flow itself cannot fail.
 - **tcb_assumptions:** n/a — generated code.
-- **positive_tests:** X04, X07; fixture:ctl-statements, fixture:ctl-labeled-loops.
-- **negative_tests:** X08, S17; fixture:ctl-goto, fixture:ctl-range, fixture:ctl-discarded-error, fixture:ctl-select.
+- **positive_tests:** X04, X07; fixture:ctl-statements, fixture:ctl-labeled-loops, fixture:iface-type-switch.
+- **negative_tests:** X08, S17; fixture:ctl-goto, fixture:ctl-range, fixture:ctl-discarded-error.
 - **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/types2/sgo_flow.go`, `src/runtime/sgo_nursery.go`.
 - **executed_evidence:** conformance fixtures ctl-discarded-error, ctl-goto, ctl-labeled-loops, ctl-range, ctl-select, ctl-statements (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
-- **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
+- **supported_execution_configurations:** production and lab.
 
 ### SGO-CTL-002 — Switch
 - **version:** 1

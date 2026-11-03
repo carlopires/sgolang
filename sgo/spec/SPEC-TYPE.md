@@ -3,10 +3,10 @@
 Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 
 ### SGO-TYPE-001 — Admitted types
-- **version:** 8
+- **version:** 9
 - **status:** frozen
-- **reference_closure:** SGO-TYPE-003, SGO-TYPE-005, SGO-TYPE-006, SGO-PERMIT-002, SGO-READY-002, SGO-AUTH-003, SGO-FILE-002, SGO-FILE-003, SGO-NET-002, SGO-TYPE-007, SGO-TYPE-008; D04, D05, D06, D28, D29.
-- **grammar_and_types:** The admitted types are exactly: `bool`; `byte` (SGO-TYPE-007, spec 0.9.0); `rune` (SGO-TYPE-008, spec 0.12.0); pointer, slice, and map types (SGO-COMP-005, SGO-COMP-006, SGO-COMP-007, spec 0.9.0); `sgo.Frozen[T]` (SGO-COMP-009, spec 0.10.0); `int`, a 64-bit two's-complement signed integer on every target; `string`, an immutable sequence of bytes; function types `func(P1, …, Pn) R` or `func(P1, …, Pn) (R1, …, Rm)` whose parameter and result types are admitted (SGO-TYPE-003); `error` (SGO-TYPE-006); and the pointer types of the capability types of SGO-TYPE-005 (`*sgo.Context`, `*sgo.Nursery`, `*sgo.Writer`, `*sgo.Ready`, `*sgo.Clock`, `*sgo.WallClock`, `*sgo.Random`, `*sgo.Entropy`, `*sgo.SimStore`, and `*sgo.Channel[T]`, `*sgo.SendPermit[T]` for the element types of SGO-PERMIT-002; spec 0.3.0 adds `*sgo.Event`, `*sgo.CapacityLimiter`, `*sgo.Token` of SGO-SYNC-002; spec 0.5.0 adds `*sgo.Dir`, `*sgo.Listing`, and `*sgo.File` of SGO-FILE-002 and SGO-FILE-003 and `*sgo.Conn` and `*sgo.Listener` of SGO-NET-002; spec 0.6.0 adds `*sgo.T` of SGO-TEST-002); and the channel types `chan T`, `<-chan T`, `chan<- T` of SGO-CHAN-002. Any other type name, type literal (array, slice, map, struct, pointer, interface; channel types other than those of SGO-CHAN-002), type parameter, or type declaration is denied. Other integer widths (including `int32` and `uint8`), floating-point, complex, `uintptr`, and `any` are denied.
+- **reference_closure:** SGO-TYPE-003, SGO-TYPE-005, SGO-TYPE-006, SGO-PERMIT-002, SGO-READY-002, SGO-AUTH-003, SGO-FILE-002, SGO-FILE-003, SGO-NET-002, SGO-TYPE-007, SGO-TYPE-008, SGO-IFACE-002; D04, D05, D06, D28, D29.
+- **grammar_and_types:** The admitted types are exactly: `bool`; `byte` (SGO-TYPE-007, spec 0.9.0); `rune` (SGO-TYPE-008, spec 0.12.0); pointer, slice, and map types (SGO-COMP-005, SGO-COMP-006, SGO-COMP-007, spec 0.9.0); `sgo.Frozen[T]` (SGO-COMP-009, spec 0.10.0); `int`, a 64-bit two's-complement signed integer on every target; `string`, an immutable sequence of bytes; function types `func(P1, …, Pn) R` or `func(P1, …, Pn) (R1, …, Rm)` whose parameter and result types are admitted (SGO-TYPE-003); `error` (SGO-TYPE-006); named interface types and `any` (SGO-IFACE-002, spec 0.14.0); and the pointer types of the capability types of SGO-TYPE-005 (`*sgo.Context`, `*sgo.Nursery`, `*sgo.Writer`, `*sgo.Ready`, `*sgo.Clock`, `*sgo.WallClock`, `*sgo.Random`, `*sgo.Entropy`, `*sgo.SimStore`, and `*sgo.Channel[T]`, `*sgo.SendPermit[T]` for the element types of SGO-PERMIT-002; spec 0.3.0 adds `*sgo.Event`, `*sgo.CapacityLimiter`, `*sgo.Token` of SGO-SYNC-002; spec 0.5.0 adds `*sgo.Dir`, `*sgo.Listing`, and `*sgo.File` of SGO-FILE-002 and SGO-FILE-003 and `*sgo.Conn` and `*sgo.Listener` of SGO-NET-002; spec 0.6.0 adds `*sgo.T` of SGO-TEST-002); and the channel types `chan T`, `<-chan T`, `chan<- T` of SGO-CHAN-002. Any other type name, type literal (array, slice, map, struct, pointer, interface; channel types other than those of SGO-CHAN-002), type parameter, or type declaration is denied. Other integer widths (including `int32` and `uint8`), floating-point, complex, and `uintptr` are denied; interface type literals outside a type declaration are denied (SGO-IFACE-001).
 - **preconditions:** n/a — static rule.
 - **evaluation_and_value_semantics:** `int` arithmetic is defined by SGO-VAL-001, strings by SGO-VAL-002, booleans by SGO-VAL-003.
 - **ownership_and_lifecycle:** Values of all admitted types are copied by assignment; `string` and function values may share immutable backing storage, which is never observable.
@@ -112,11 +112,11 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 - **executed_evidence:** conformance fixtures cap-compare-nursery, cap-nil-context, cap-pass-handles, sync-nil-event-denied, sync-token-compare-denied (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
-### SGO-TYPE-006 — Sealed error
-- **version:** 1
+### SGO-TYPE-006 — The error type
+- **version:** 2
 - **status:** frozen
-- **reference_closure:** SGO-TYPE-002, SGO-CANCEL-003, SGO-SPAWN-004.
-- **grammar_and_types:** `error` is a predeclared type. Its values are `nil`, values returned by `sgo.NewError(msg string) error`, and values returned by `sgo` functions (cancellation errors, SGO-CANCEL-003; write errors, SGO-PROC-003). Admitted operations: `e == nil`, `e != nil`, `nil == e`, `nil != e`, and `e.Error() string`. Comparing two non-nil-literal error operands, defining types that implement `error`, wrapping, and type assertions are denied.
+- **reference_closure:** SGO-TYPE-002, SGO-CANCEL-003, SGO-SPAWN-004, SGO-COMP-004, SGO-IFACE-001, SGO-IFACE-002, SGO-IFACE-004, SGO-STD-001; D107, D128, D132.
+- **grammar_and_types:** `error` is the predeclared interface type with the single method `Error() string` (SGO-IFACE-002). Its values are `nil`, values returned by `sgo.NewError(msg string) error` and `errors.New`, values returned by `sgo` functions (cancellation errors, SGO-CANCEL-003; write errors, SGO-PROC-003), and values of user types that implement it, which are shareable types only (SGO-COMP-004 rule 4). Admitted operations: `e == nil`, `e != nil`, `nil == e`, `nil != e`, `e.Error() string`, comma-ok assertions and type switches on `e` (SGO-IFACE-004), and wrapping through a type with an `Unwrap() error` method, read by `errors.Unwrap` (SGO-STD-001). Comparing two non-nil-literal error operands is denied (D128). `error` is the one shareable interface type (D132): a struct with an `error` field stays shareable. Version 1 denied user error types, wrapping, and assertions; user error types were admitted by SGO-COMP-004 (spec 0.10.1), the rest by spec 0.14.0.
 - **preconditions:** `e.Error()` requires `e != nil`.
 - **evaluation_and_value_semantics:** `sgo.NewError(msg)` returns a new non-nil error whose `Error()` is `msg`. `e.Error()` returns the message the error was created with.
 - **ownership_and_lifecycle:** Error values are immutable.
@@ -125,14 +125,14 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 - **allowed_nondeterminism:** None.
 - **failure_and_partial_progress:** Calling `Error()` on a `nil` error is a checked failure of kind `NilError` that unwinds like `panic` (SGO-DEF-003).
 - **cancellation_and_cleanup:** n/a — pure values.
-- **compile_link_checks:** `SGO_E_UNADMITTED` (error comparison, user error types, assertions).
+- **compile_link_checks:** `SGO_E_UNADMITTED` (error comparison, single-value assertions); `SGO_E_TASK_LOCAL_CAPTURE` (a value of a task-local type converted to `error`, SGO-COMP-004).
 - **runtime_guards:** `NilError` on `Error()` of `nil`.
 - **tcb_assumptions:** n/a — error values are ordinary runtime objects.
-- **positive_tests:** S08; fixture:type-errors.
-- **negative_tests:** S08; fixture:type-error-compare, fixture:type-nil-error-call.
+- **positive_tests:** S08; fixture:type-errors, fixture:comp-error-shareable, fixture:iface-error-field.
+- **negative_tests:** S08; fixture:type-error-compare, fixture:type-nil-error-call, fixture:iface-to-error-denied.
 - **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`.
-- **executed_evidence:** conformance fixtures type-error-compare, type-errors, type-nil-error-call (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
-- **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
+- **executed_evidence:** conformance fixtures type-error-compare, type-errors, type-nil-error-call (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`; W17 fixtures `sgo/evidence/w17/README.md`.
+- **supported_execution_configurations:** production and lab.
 
 ### SGO-TYPE-007 — The byte type
 - **version:** 2

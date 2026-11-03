@@ -3,12 +3,12 @@
 The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived from `sgo/docs/stdlib-foundations-plan.md` and `sgo/docs/w16-drafts.md` (D103, D108–D110, D121–D126).
 
 ### SGO-STD-001 — `std/errors`: Errors
-- **version:** 1
+- **version:** 2
 - **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-TYPE-001, SGO-COMP-004, SGO-ERR-003; D103, D109, D125, D126, D121.
-- **grammar_and_types:** The package `std/errors` exports exactly: `func New(text string) error`.
+- **grammar_and_types:** The package `std/errors` exports exactly: `func New(text string) error`; `func Unwrap(err error) error` (spec 0.14.0, D133).
 - **preconditions:** None.
-- **evaluation_and_value_semantics:** `New(text)` returns an error value whose `Error()` is text, as `sgo.NewError`. Two calls give two values; error values are not comparable (SGO-TYPE-006). `Is`, `As`, `Unwrap`, and `Join` are not provided (D121): they need interfaces and type assertions.
+- **evaluation_and_value_semantics:** `New(text)` returns an error value whose `Error()` is text, as `sgo.NewError`. Two calls give two values; error values are not comparable (SGO-TYPE-006). `Unwrap(err)` returns the result of err's `Unwrap() error` method, or nil when err is nil or has no such method (spec 0.14.0, D133). `Is`, `As`, and `Join` are not provided (D121, D133): `Is` needs error comparison, which SGO-TYPE-006 denies, and `As` needs generics or reflection.
 - **ownership_and_lifecycle:** As user code: values returned are owned by the calling task; slices are task-local (SGO-COMP-004).
 - **effect_and_capability_requirements:** None: the package holds no capability and has no package-level state (D109).
 - **concurrency_and_memory_order:** n/a — ordinary functions of the calling task; no synchronization.
@@ -18,7 +18,7 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export; every admission diagnostic for calls as for user code.
 - **runtime_guards:** None.
 - **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code: the package is S-Go source compiled under the same admission and sharing rules as user code (SGO-IMP-004), not part of the TCB.
-- **positive_tests:** fixture:std-errors-new; the `sgo test` suite of `std/errors`; test-std-diff.
+- **positive_tests:** fixture:std-errors-new, fixture:iface-error-field; the `sgo test` suite of `std/errors`; test-std-diff.
 - **negative_tests:** fixture:std-undefined-name.
 - **implementation_coverage:** `src/sgostd/errors/`.
 - **executed_evidence:** W16: its `sgo test` suite (`sgo/scripts/test-std.py`), `sgo/scripts/test-std-diff.py`, `sgo/scripts/std-api-check.py`, conformance (sgo/evidence/w16/README.md).
@@ -113,12 +113,12 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-006 — `std/sort`: Sorting and searching
-- **version:** 1
+- **version:** 2
 - **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-TYPE-001, SGO-COMP-004, SGO-ERR-003; D103, D109, D125, D126, D123, D124.
-- **grammar_and_types:** The package `std/sort` exports exactly: `func Bytes(x []byte)`; `func Ints(x []int)`; `func IntsAreSorted(x []int) bool`; `func Perm(n int, less func(i, j int) bool) []int`; `func Runes(x []rune)`; `func Search(n int, f func(int) bool) int`; `func SearchInts(a []int, x int) int`; `func SearchStrings(a []string, x string) int`; `func Strings(x []string)`; `func StringsAreSorted(x []string) bool`.
+- **grammar_and_types:** The package `std/sort` exports exactly: `func Bytes(x []byte)`; `func Ints(x []int)`; `func IntsAreSorted(x []int) bool`; `type Interface` (spec 0.14.0, D133); `func Perm(n int, less func(i, j int) bool) []int`; `func Runes(x []rune)`; `func Search(n int, f func(int) bool) int`; `func SearchInts(a []int, x int) int`; `func SearchStrings(a []string, x string) int`; `func Sort(data Interface)` (spec 0.14.0, D133); `func Strings(x []string)`; `func StringsAreSorted(x []string) bool`.
 - **preconditions:** For `Perm`: n ≥ 0; less is a strict weak order on 0..n-1 (if it is not, the result is still a permutation). A function value that captures task-local data cannot be passed as an argument (SGO-COMP-004, D94), so less and f compute from their arguments or from shareable data.
-- **evaluation_and_value_semantics:** Every sort is stable and uses one fixed merge sort (D123), so results are the same on every platform and run: `Perm(n, less)` returns the indices 0..n-1 in stable sorted order; `Ints`, `Strings`, `Runes`, and `Bytes` sort in place in increasing order (strings by bytes); `Search` returns the smallest i in [0, n) with f(i) true, or n, as Go's; `SearchInts` and `SearchStrings` return the insertion index of x in a sorted slice.
+- **evaluation_and_value_semantics:** Every sort is stable and uses one fixed merge sort (D123), so results are the same on every platform and run: `Perm(n, less)` returns the indices 0..n-1 in stable sorted order; `Sort(data)` sorts data in place in increasing order of `data.Less`, stably, using only `Len`, `Less`, and `Swap` (insertion-sorted blocks merged in place, O(n·log n) calls of Less and O(n·log² n) calls of Swap; spec 0.14.0, D133); `Ints`, `Strings`, `Runes`, and `Bytes` sort in place in increasing order (strings by bytes); `Search` returns the smallest i in [0, n) with f(i) true, or n, as Go's; `SearchInts` and `SearchStrings` return the insertion index of x in a sorted slice.
 - **ownership_and_lifecycle:** As user code: values returned are owned by the calling task; slices are task-local (SGO-COMP-004).
 - **effect_and_capability_requirements:** None: the package holds no capability and has no package-level state (D109).
 - **concurrency_and_memory_order:** n/a — ordinary functions of the calling task; no synchronization.
@@ -128,7 +128,7 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export; every admission diagnostic for calls as for user code.
 - **runtime_guards:** None.
 - **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code: the package is S-Go source compiled under the same admission and sharing rules as user code (SGO-IMP-004), not part of the TCB.
-- **positive_tests:** fixture:std-sort-stable; the `sgo test` suite of `std/sort`; test-std-diff.
+- **positive_tests:** fixture:std-sort-stable, fixture:std-sort-interface; the `sgo test` suite of `std/sort`; test-std-diff.
 - **negative_tests:** fixture:std-sort-perm-negative, fixture:std-sort-capture-denied.
 - **implementation_coverage:** `src/sgostd/sort/`.
 - **executed_evidence:** W16: its `sgo test` suite (`sgo/scripts/test-std.py`), `sgo/scripts/test-std-diff.py`, `sgo/scripts/std-api-check.py`, conformance (sgo/evidence/w16/README.md).

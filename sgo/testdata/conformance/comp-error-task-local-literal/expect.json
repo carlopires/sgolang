@@ -6,13 +6,9 @@
  ],
  "diagnostics": [
   {
-   "code": "SGO_E_UNADMITTED",
-   "position": "main.sgo:14:10"
-  },
-  {
    "code": "SGO_E_TASK_LOCAL_CAPTURE",
    "position": "main.sgo:14:18"
   }
  ],
- "note": "W13 review V2: only shareable types may become error values."
+ "note": "W13 review V2: only shareable types may become error values. Until 0.13.0 the slice type []error was also refused (error was not an element type); from 0.14.0 interface elements are admitted (SGO-IFACE-002), and only the conversion is refused."
 }
