@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.15.0",
- "allowlist_digest": "52c2cd412a1d747d2d0d815bd366626b56ef8f818e8e0103a518f6dddf914bf4",
+ "allowlist_digest": "1f80de8af84db5713fb2b60c61b416f596d96eb219dcfff06b648819740a8426",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -4591,7 +4591,7 @@
   },
   {
    "path": "src/runtime/sgo_netdial.go",
-   "sha256": "5f4b6bc169344ee762d306e6419f84ebc8f82383005d2c7489eae7e73afb439c",
+   "sha256": "40310ae459803997a27670ae433074c98c3b183ca5387fddedbe218c61a0b53c",
    "upstream_identical": false
   },
   {

@@ -108,19 +108,34 @@ func sgo_dialerResolve(p unsafe.Pointer, host, family string) ([]string, error) 
 	if e != nil {
 		return nil, sgoIOResult(e, "Dialer.Resolve")
 	}
+	// Build the new entries outside the lock (no allocation under a runtime
+	// lock, W12 R9); the lock only publishes the grown table.
 	var out []string
-	lock(&d.mu)
+	var add []sgoNetGrant
 	for i := range ips {
 		for _, pg := range ports {
 			r := ips[i]
 			r.port, r.host = pg.port, ""
 			r.addr = sgoFormatAddr(&r, r.port)
-			d.resolved = append(d.resolved, r)
+			add = append(add, r)
 			out = append(out, r.addr)
 		}
 	}
-	unlock(&d.mu)
-	return out, nil
+	for {
+		lock(&d.mu)
+		cur := d.resolved
+		unlock(&d.mu)
+		grown := make([]sgoNetGrant, len(cur), len(cur)+len(add))
+		copy(grown, cur)
+		grown = append(grown, add...)
+		lock(&d.mu)
+		if len(d.resolved) == len(cur) {
+			d.resolved = grown
+			unlock(&d.mu)
+			return out, nil
+		}
+		unlock(&d.mu)
+	}
 }
 
 //go:linkname sgo_slotNew sgo.runtime_slotNew
