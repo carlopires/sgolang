@@ -1,0 +1,19 @@
+package main
+
+import "sgo"
+
+// Only the slot's owner takes its connection.
+func main(root *sgo.Context) error {
+	slot := root.NewConnSlot()
+	nursery (n) {
+		slot.LendTo(n)
+		n.Spawn(func(t *sgo.Context) error {
+			_, ok := slot.Take()
+			if ok {
+				return sgo.NewError("took")
+			}
+			return nil
+		})
+	}
+	return slot.Close()
+}

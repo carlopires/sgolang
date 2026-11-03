@@ -1,0 +1,55 @@
+package main
+
+import "sgo"
+
+func attempt(d *sgo.Dialer, slot *sgo.ConnSlot, addr string) error {
+	c, err := d.Dial(addr)
+	if err != nil {
+		return nil // a failed attempt is not an error of the race
+	}
+	if slot.Put(c) != nil {
+		return c.Close() // lost the race
+	}
+	return nil
+}
+
+func main(root *sgo.Context) error {
+	l, err := root.Listen("127.0.0.1:47950")
+	if err != nil {
+		return err
+	}
+	d := root.Dialer([]string{"[::1]:47950", "127.0.0.1:47950"})
+	slot := root.NewConnSlot()
+	nursery (n) {
+		d.LendTo(n)
+		slot.LendTo(n)
+		for _, addr := range []string{"[::1]:47950", "127.0.0.1:47950"} {
+			a := addr
+			n.Spawn(func(t *sgo.Context) error { return attempt(d, slot, a) })
+		}
+	}
+	c, ok := slot.Take()
+	if !ok {
+		return sgo.NewError("no connection")
+	}
+	s, aerr := l.Accept()
+	if aerr != nil {
+		return aerr
+	}
+	if _, werr := c.Write("ping"); werr != nil {
+		return werr
+	}
+	msg, rerr := s.Read(16)
+	if rerr != nil {
+		return rerr
+	}
+	if e := root.Stdout().WriteString("server got " + msg + "\n"); e != nil {
+		return e
+	}
+	for _, e := range []error{c.Close(), s.Close(), slot.Close(), d.Close(), l.Close()} {
+		if e != nil {
+			return e
+		}
+	}
+	return nil
+}

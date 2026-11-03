@@ -1,0 +1,27 @@
+package main
+
+import "sgo"
+
+// Only a connection's owner hands it over, even when the connection is lent to the putter.
+func main(root *sgo.Context) error {
+	l, err := root.Listen("127.0.0.1:47958")
+	if err != nil {
+		return err
+	}
+	c, derr := root.Dial("127.0.0.1:47958")
+	if derr != nil {
+		return derr
+	}
+	slot := root.NewConnSlot()
+	nursery (n) {
+		c.LendTo(n)
+		slot.LendTo(n)
+		n.Spawn(func(t *sgo.Context) error { return slot.Put(c) })
+	}
+	for _, e := range []error{c.Close(), slot.Close(), l.Close()} {
+		if e != nil {
+			return e
+		}
+	}
+	return nil
+}

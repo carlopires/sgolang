@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-NET-003",
+  "SGO-NET-004"
+ ],
+ "exit": 0,
+ "stdout": "server got ping\n"
+}
