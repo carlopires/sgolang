@@ -659,19 +659,19 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation.** Capturing `sgo.Copy(in)` in a `Spawn` callback is a move into a closure (stage 4), so P1 is rewritten for stage 2 with value-array inputs (`[3]string`, copied on capture); results still return through a channel with `sgo.Copy`.
 
-## D98 — What sgo.Freeze does to its argument (W13 stage 3) **[NEEDS USER]** · PROPOSED
+## D98 — What sgo.Freeze does to its argument (W13 stage 3) **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** `sgo.Freeze(x)` makes one deep copy (the `sgo.Copy` of SGO-COMP-004) and seals it; `x` stays the caller's mutable value. One copy per freeze, none per reader. With the narrow move of stage 4, `sgo.Freeze(move(x))` can skip the copy. Rejected: freezing in place, which needs the stage-4 "no other live reference" analysis now. Draft SGO-COMP-009 (`sgo/docs/w13-stage3-drafts.md`).
 
-## D99 — How frozen contents are read **[NEEDS USER]** · PROPOSED
+## D99 — How frozen contents are read **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** Access paths: `f.Get()` appears only at the head of a selector/index chain, as the argument of `len`, or as a `range` operand; the chain must end in a value type, a `Frozen[U]`, or a channel, and `range` binds value-typed variables only. Any other use of a frozen-derived reference (assign, pass, return, send, capture, `sgo.Copy`, write, `append`, `delete`, slicing) is `SGO_E_FROZEN_WRITE`. Rejected: `Get` returning a deep copy (defeats sharing); flow-sensitive taint tracking (larger, worse diagnostics).
 
-## D100 — Which types may be frozen **[NEEDS USER]** · PROPOSED
+## D100 — Which types may be frozen **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** Any admitted type holding no handle and no channel. Freezing a value type is allowed and shares it without copying on each capture.
 
-## D101 — Frozen identity and zero value **[NEEDS USER]** · PROPOSED
+## D101 — Frozen identity and zero value **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** `sgo.Frozen[T]` has no zero value of its own (must be initialized), no `nil`, and no `==`. It is shareable: captured by `Spawn` callbacks and sent or committed without `sgo.Copy`.
 ---
@@ -697,3 +697,4 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - 2026-11-02: user approved D85-D92 as recommended ("looks good; go ahead"). W13 starts with step 13.0 (sharing-rule model, pending fixtures for the five programs).
 - 2026-11-02: user approved the W13 stage 1 drafts SGO-COMP-002, SGO-COMP-003, SGO-UTYPE-002 (sgo/docs/w13-stage1-drafts.md) as written ("approved; go ahead"). Stage 1 implementation starts; the drafts move into sgo/spec at the 0.8.0 freeze.
 - 2026-11-02: user approved D93-D97 and the W13 stage 2 drafts (sgo/docs/w13-stage2-drafts.md: SGO-COMP-004..008, SGO-TYPE-007) as recommended ("approved; go ahead"). Stage 2 implementation starts; the drafts freeze at spec 0.9.0.
+- 2026-11-03: user approved D98–D101 and the W13 stage 3 draft (sgo/docs/w13-stage3-drafts.md: SGO-COMP-009) as recommended ("approved; go ahead"). Stage 3 implementation starts; the draft freezes at spec 0.10.0.
