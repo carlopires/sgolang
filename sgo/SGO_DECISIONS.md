@@ -606,6 +606,38 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 ## D84 — `GOMAXPROCS` in S-Go programs (W12 R2) **[NEEDS USER]** · APPROVED 2026-11-02
 
 **Recommendation.** An S-Go program's runtime reads no environment setting at all: `GODEBUG`, `GOTRACEBACK`, `GOGC`, `GOMEMLIMIT`, `GOMAXPROCS`, and `GOROOT` are ignored, and the build's fixed defaults apply (`GOMAXPROCS` = the CPU count). No spec amendment is needed, since this is what SGO-PROC-004 already says. The S-Go linker marks every binary (`runtime.sgoLinked`) so this holds from the first instruction. Binaries linked by the upstream linker (the runtime test lane) keep upstream behavior. D80's stress runs at 1, 4 and 16 processors vary the CPU set (`taskset` on linux), not an environment variable. D82's rationale is corrected: GODEBUG was **not** ignored before R2; allocation counts stay unmeasured because S-Go programs cannot read runtime statistics and a benchmark-only hook would widen the TCB.
+
+## D85 — Next work package: the core data model (W13) **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** W13 is the core data model, ahead of library modules and a standard library, because every later step is built on composite types and the sharing rule is the largest open safety question. Plan: `sgo/docs/w13-data-model-plan.md`. A standard library waits for W13 stages 1–3 and a library-module work package.
+
+## D86 — Sharing rule for mutable aggregates **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Option E of the W13 plan §5: mutable aggregates (slices, maps, pointers, structs containing them) are task-local and cannot be captured by a `Spawn` callback; crossing a task boundary is by copy, by a frozen (deeply immutable) value, or later by a narrow whole-variable move. Go-style sharing with run-time race detection (option D) is rejected because SGO-MEM-003 is a static guarantee.
+
+## D87 — Stage order **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Stage 1 values (structs, arrays of admitted types, named types with value-receiver methods), spec 0.8.0 → stage 2 task-local slices, `append`, `[]byte`, string indexing, maps, pointers and pointer receivers, copy-only crossing, spec 0.9.0 → stage 3 freeze → stage 4 move, only if needed. Interfaces follow stage 2 as a separate work package.
+
+## D88 — Map iteration order **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Insertion order, specified and identical in production and the lab, so runs and replays agree. Go's randomized order is rejected (nondeterminism outside the scheduler); sorted order is rejected (cost, needs ordered keys).
+
+## D89 — Copy semantics **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Values without internal references copy implicitly, as integers do. Values with internal references cross a task only through an explicit `sgo.Copy(x)` (a deep copy), and an uncopied send is `SGO_E_UNCOPIED_SEND`. No user-defined copy hooks.
+
+## D90 — Representation of frozen values **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** A distinct type `sgo.Frozen[T]`, produced by `sgo.Freeze(x)` (which consumes or copies `x`), with read-only access checked at compile time. A run-time immutability flag is rejected: misuse would be a run-time failure and the check would grow the TCB.
+
+## D91 — Bounds, nil and map failures **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Index or slice out of range, nil dereference and writes to a nil map are defined failures with their own failure kinds (for example `BoundsViolation`), recorded and propagated like other task failures (SGO-ERR-*), with exit status and diagnostic format specified, not upstream panics with Go tracebacks.
+
+## D92 — W13 process **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** As W04–W12: step 13.0 models the sharing rule (task-local, copy, freeze, move) and adds the plan's five example programs as pending conformance fixtures; each stage then gets drafts for approval, positive and negative fixtures, a spec version, CI on both linux runners, and reviewer verification. The five programs (P1 using copy) are the acceptance bar for W13.
 ---
 
 ## Approval record
