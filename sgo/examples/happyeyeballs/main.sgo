@@ -1,0 +1,74 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Command happyeyeballs connects to localhost with Happy Eyeballs (RFC 8305). A server listens on
+// 127.0.0.1 only, so the preferred IPv6 address [::1] is refused and the race moves to IPv4 at
+// once, without waiting out the 250ms attempt delay.
+package main
+
+import (
+	"example.com/happyeyeballs/he"
+	"sgo"
+)
+
+// trace collects the steps of the race.
+type trace struct{ lines []string }
+
+func (t *trace) Log(line string) error {
+	t.lines = append(t.lines, line)
+	return nil
+}
+
+func main(root *sgo.Context) error {
+	l, err := root.Listen("127.0.0.1:47970")
+	if err != nil {
+		return err
+	}
+	d := root.Dialer([]string{"localhost:47970"})
+	nursery (n) {
+		ll := l.LendTo(n)
+		n.Spawn(func(t *sgo.Context) error {
+			s, aerr := ll.Accept()
+			if aerr != nil {
+				return aerr
+			}
+			if _, werr := s.Write("hello over the winning family\n"); werr != nil {
+				return werr
+			}
+			return s.Close()
+		})
+		slot := root.NewConnSlot()
+		steps := &trace{}
+		addr, cerr := he.Connect(root, d, slot, "localhost", steps)
+		for _, line := range steps.lines {
+			if werr := root.Stdout().WriteString("he: " + line + "\n"); werr != nil {
+				return werr
+			}
+		}
+		if cerr != nil {
+			return cerr
+		}
+		conn, ok := slot.Take()
+		if !ok {
+			return sgo.NewError("the slot is empty")
+		}
+		msg, rerr := conn.Read(64)
+		if rerr != nil {
+			return rerr
+		}
+		if werr := root.Stdout().WriteString("reached " + addr + ": " + msg); werr != nil {
+			return werr
+		}
+		if cerr2 := conn.Close(); cerr2 != nil {
+			return cerr2
+		}
+		if serr := slot.Close(); serr != nil {
+			return serr
+		}
+	}
+	if derr := d.Close(); derr != nil {
+		return derr
+	}
+	return l.Close()
+}
