@@ -105,6 +105,14 @@ def main():
             dst = os.path.join(top, f)
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             shutil.copy2(os.path.join(ROOT, f), dst)
+        # The standard library (SGO-IMP-004): its .sgo sources and MANIFEST, as tracked by git; the
+        # driver checks every std file against the MANIFEST before compiling it.
+        if subprocess.run([sys.executable, os.path.join(ROOT, "sgo", "scripts", "std-manifest.py")], cwd=ROOT).returncode != 0:
+            sys.exit("make-release: src/sgostd/MANIFEST is stale")
+        for f in subprocess.check_output(["git", "ls-files", "src/sgostd"], cwd=ROOT, text=True).split():
+            dst = os.path.join(top, f)
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copy2(os.path.join(ROOT, f), dst)
         ex = subprocess.check_output(["git", "ls-files", "sgo/examples"], cwd=ROOT, text=True).split()
         for f in ex:
             dst = os.path.join(top, "examples", os.path.relpath(f, "sgo/examples"))

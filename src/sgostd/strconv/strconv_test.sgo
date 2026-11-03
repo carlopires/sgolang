@@ -1,0 +1,55 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package strconv
+
+import "sgo"
+
+func TestItoa(t *sgo.T) error {
+	cases := []int{0, 1, -1, 9, 10, -10, 1234567890, 9223372036854775807, -9223372036854775807 - 1}
+	want := []string{"0", "1", "-1", "9", "10", "-10", "1234567890", "9223372036854775807", "-9223372036854775808"}
+	for i, v := range cases {
+		if got := Itoa(v); got != want[i] {
+			return sgo.NewError("Itoa(" + want[i] + ") = " + got)
+		}
+	}
+	return nil
+}
+
+func TestAtoiValid(t *sgo.T) error {
+	in := []string{"0", "-0", "+7", "42", "-42", "007", "9223372036854775807", "-9223372036854775808"}
+	want := []int{0, 0, 7, 42, -42, 7, 9223372036854775807, -9223372036854775807 - 1}
+	for i, s := range in {
+		v, err := Atoi(s)
+		if err != nil {
+			return sgo.NewError("Atoi(" + s + "): " + err.Error())
+		}
+		if v != want[i] {
+			return sgo.NewError("Atoi(" + s + ") = " + Itoa(v))
+		}
+	}
+	return nil
+}
+
+func TestAtoiInvalid(t *sgo.T) error {
+	for _, s := range []string{"", "+", "-", "1 ", " 1", "1a", "--1", "9223372036854775808", "-9223372036854775809", "99999999999999999999"} {
+		if _, err := Atoi(s); err == nil {
+			return sgo.NewError("Atoi(" + quote(s) + ") did not fail")
+		}
+	}
+	return nil
+}
+
+func TestRoundTrip(t *sgo.T) error {
+	for v := -1000; v <= 1000; v += 7 {
+		back, err := Atoi(Itoa(v))
+		if err != nil {
+			return err
+		}
+		if back != v {
+			return sgo.NewError("round trip of " + Itoa(v) + " gave " + Itoa(back))
+		}
+	}
+	return nil
+}

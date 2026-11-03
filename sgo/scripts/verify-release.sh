@@ -49,6 +49,12 @@ if sgo lab replay buggy.trace.jsonl ./fixed >/dev/null 2>"$work/div"; then fail 
 grep -q SGO_E_LAB_DIVERGENCE "$work/div" || fail "replay: want SGO_E_LAB_DIVERGENCE"
 sgo lab sweep -seeds 0..63 -expect expected.txt ./fixed >/dev/null 2>&1 || fail "replay: the fix fails a schedule"
 
+# The shipped standard library (SGO-IMP-004): a program importing std/strconv builds and runs.
+mkdir -p "$work/std" && cd "$work/std"
+printf 'module example.com/std\n\nsgo %s\n' "$(cat "$top/sgo/spec/VERSION")" > sgo.mod
+printf 'package main\n\nimport (\n\t"sgo"\n\t"std/strconv"\n)\n\nfunc main(root *sgo.Context) error {\n\tn, err := strconv.Atoi("-42")\n\tif err != nil {\n\t\treturn err\n\t}\n\treturn root.Stdout().WriteString(strconv.Itoa(n) + "\\n")\n}\n' > main.sgo
+[ "$(sgo run .)" = "-42" ] || fail "std: a program importing std/strconv"
+
 # A program that is not S-Go is refused, with no fallback.
 mkdir -p "$work/legacy" && cd "$work/legacy"
 printf 'module example.com/legacy\n\nsgo %s\n' "$(cat "$top/sgo/spec/VERSION")" > sgo.mod
