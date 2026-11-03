@@ -730,6 +730,26 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation.** Any package may import `std/...`. A `std/` package imports only other `std/` packages and `sgo`, never a user module. `std` is one implicit module that is always present, never required, replaced, or vendored. (sgo/docs/w14-drafts.md)
 
+## D116 — Are surrogates rune values? **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Yes, as values: the rune range check is 0..0x10FFFF only. A rune literal or `\u` escape naming a surrogate is a compile error, and encoding a surrogate (`string(r)`, `string(rs)`) yields U+FFFD, as in Go. (sgo/docs/w15-drafts.md)
+
+## D117 — How is invalid UTF-8 decoded? **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** As Go: each invalid or truncated sequence, overlong form, or encoded surrogate decodes to U+FFFD and advances one byte; `range` over strings, `[]rune(s)`, and `std/utf8` share this rule. (sgo/docs/w15-drafts.md)
+
+## D118 — Untyped rune constants **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** A rune literal is an untyped rune constant with default type `rune`, assignable to int, byte, or rune (and named types over them) when representable; typed operands are not mixed without a conversion. (sgo/docs/w15-drafts.md)
+
+## D119 — Admitted escapes **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Admit `\u` and `\U` in string and rune literals and `\'` in rune literals; surrogates and values above 0x10FFFF are compile errors; `\a \b \f \v` and octal escapes stay denied; `\xHH` in a rune literal is the code point 0xHH. (sgo/docs/w15-drafts.md)
+
+## D120 — Rune conversions **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** `rune(i)`, `int(r)`, `rune(b)`, `byte(r)` (checked), `string(r)`, `[]rune(s)`, `string(rs)`. `string(i)` for an int stays denied (use `string(rune(i))`); conversions between slice types stay denied. (sgo/docs/w15-drafts.md)
+
 ---
 
 ## Approval record
