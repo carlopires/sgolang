@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-004"
+ ],
+ "exit": 0,
+ "stdout": "31\n-5\n1000\nstrconv.ParseInt: parsing \"12a\": invalid syntax\nstrconv.ParseInt: parsing \"9223372036854775808\": value out of range\n-9223372036854775808\nstrconv.ParseInt: parsing \"z\": invalid base 37\ntrue-ff \"\\u00e9\\n\\xff\"\nok\n"
+}

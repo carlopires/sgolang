@@ -1,0 +1,12 @@
+package main
+
+import (
+	"sgo"
+	"std/errors"
+)
+
+func main(root *sgo.Context) error {
+	err := errors.New("disk full")
+	out := err.Error() + "\n"
+	return root.Stdout().WriteString(out)
+}

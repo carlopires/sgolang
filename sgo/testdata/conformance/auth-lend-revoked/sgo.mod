@@ -1,4 +1,4 @@
 module example.com/auth-lend-revoked
 
-sgo 0.12.0
+sgo 0.13.0
 grant simstore

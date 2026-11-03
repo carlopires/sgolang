@@ -1,0 +1,13 @@
+package main
+
+import (
+	"sgo"
+	"std/strings"
+)
+
+func main(root *sgo.Context) error {
+	n := -1
+	_ = root.Stdout().WriteString("before\n")
+	_ = strings.Repeat("ab", n)
+	return nil
+}

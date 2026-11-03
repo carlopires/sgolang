@@ -1,0 +1,26 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+func main(root *sgo.Context) error {
+	out := ""
+	for _, s := range []string{"0x1F", "-0b101", "1_000", "12a", "9223372036854775808", "-9223372036854775808"} {
+		v, err := strconv.ParseInt(s, 0)
+		if err != nil {
+			out += err.Error() + "\n"
+		} else {
+			out += strconv.Itoa(v) + "\n"
+		}
+	}
+	_, err := strconv.ParseInt("z", 37)
+	b, berr := strconv.ParseBool("True")
+	u, uerr := strconv.Unquote("\"\\u00e9\\x41\"")
+	out += err.Error() + "\n" + strconv.FormatBool(b) + strconv.FormatInt(-255, 16) + " " + strconv.QuoteToASCII("\u00e9\n\xff") + "\n"
+	if berr == nil && uerr == nil && u == "\u00e9A" {
+		out += "ok\n"
+	}
+	return root.Stdout().WriteString(out)
+}

@@ -69,10 +69,10 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §14, decisions D15, D103–D105, D
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-IMP-004 — The standard library
-- **version:** 1
+- **version:** 2
 - **status:** frozen
-- **reference_closure:** SGO-IMP-001, SGO-IMP-002, SGO-BIND-003, SGO-TCB-002; D103, D109, D115.
-- **grammar_and_types:** The standard library is the implicit module `std`, always present in every build: its packages are imported as `std/<dir>` and their sources are the `.sgo` files of `$GOROOT/src/sgostd/<dir>` (D103; not `src/std/`, a reserved pattern of the go command). It is never required, replaced, or vendored. A `std/` package may import only other `std/` packages and `sgo` (D115). Its packages are written in S-Go under the same admission and sharing rules as user code: in particular they have no package-level variables (SGO-BIND-003) and so no package state (D109); they hold no capability except those passed to them as arguments.
+- **reference_closure:** SGO-IMP-001, SGO-IMP-002, SGO-BIND-003, SGO-TCB-002, SGO-STD-001, SGO-STD-002, SGO-STD-003, SGO-STD-004, SGO-STD-005, SGO-STD-006, SGO-STD-007; D103, D109, D115, D126.
+- **grammar_and_types:** The standard library is the implicit module `std`, always present in every build: its packages are imported as `std/<dir>` and their sources are the `.sgo` files of `$GOROOT/src/sgostd/<dir>` (D103; not `src/std/`, a reserved pattern of the go command). It is never required, replaced, or vendored. A `std/` package may import only other `std/` packages and `sgo` (D115). Its packages are written in S-Go under the same admission and sharing rules as user code: in particular they have no package-level variables (SGO-BIND-003) and so no package state (D109); they hold no capability except those passed to them as arguments. The library of this specification version is the seven packages of SGO-STD-001 to SGO-STD-007 (`std/errors`, `std/strings`, `std/bytes`, `std/strconv`, `std/utf8`, `std/sort`, `std/math`; spec 0.13.0), and each package exports exactly the declarations its clause lists (D126).
 - **preconditions:** n/a — static rule.
 - **evaluation_and_value_semantics:** `std/` packages behave exactly as user packages with the same source would. `$GOROOT/src/sgostd/MANIFEST` lists every non-test `.sgo` file of the standard library with its SHA-256; the driver refuses to compile a `std/` package any of whose files differs from, is missing from, or is absent from the manifest (the release archive ships both), so a modified installation is detected rather than trusted. Diagnostics in `std/` name its files as `std/<relative path>`.
 - **ownership_and_lifecycle:** n/a — build structure.
@@ -81,7 +81,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §14, decisions D15, D103–D105, D
 - **allowed_nondeterminism:** None.
 - **failure_and_partial_progress:** A violation fails the build; no object is produced.
 - **cancellation_and_cleanup:** n/a — build structure.
-- **compile_link_checks:** `SGO_E_UNDEFINED` (no such `std/` package), `SGO_E_STD_MANIFEST` (a `std/` file differs from, is missing from, or is not listed in the manifest), `SGO_E_UNADMITTED` (a `std/` package importing anything but `std/` packages and `sgo`, checked by the driver and again by compiler admission), and every admission diagnostic for `std/` code as for user code.
+- **compile_link_checks:** `SGO_E_UNDEFINED` (no such `std/` package), `SGO_E_STD_MANIFEST` (a `std/` file differs from, is missing from, or is not listed in the manifest), `SGO_E_UNADMITTED` (a `std/` package importing anything but `std/` packages and `sgo`, checked by the driver and again by compiler admission), and every admission diagnostic for `std/` code as for user code; a `std/` package exporting a declaration its SGO-STD clause does not list, or missing one it lists, fails `sgo/scripts/std-api-check.py` in CI (D126).
 - **runtime_guards:** n/a — build time.
 - **tcb_assumptions:** None beyond the driver's (SGO-IMP-003).
 - **positive_tests:** fixture:std-import (`std/strconv` end to end); `sgo/scripts/test-std.py` (`sgo test` of every `std/` package, D110).

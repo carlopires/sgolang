@@ -1,3 +1,3 @@
 module example.com/select-send-closed
 
-sgo 0.12.0
+sgo 0.13.0

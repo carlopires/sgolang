@@ -1,0 +1,11 @@
+package main
+
+import (
+	"sgo"
+	"std/strings"
+)
+
+func main(root *sgo.Context) error {
+	_ = strings.ToUpper("x")
+	return nil
+}

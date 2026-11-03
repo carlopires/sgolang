@@ -1,0 +1,21 @@
+package main
+
+import (
+	"sgo"
+	"std/strings"
+)
+
+func main(root *sgo.Context) error {
+	b := strings.Builder{}
+	for _, f := range strings.Fields("  go\u3000 s-go\tlang ") {
+		_, _ = b.WriteString(strings.ToUpperASCII(f))
+		_ = b.WriteByte('|')
+	}
+	before, after, ok := strings.Cut("k=v=w", "=")
+	out := b.String() + strings.Join(strings.Split("a,b,,c", ","), "+") + " " + before + after + " " + strings.ReplaceAll("banana", "a", "o") + " " + strings.TrimSpace("\u00a0 x \n")
+	if ok && strings.Contains("seafood", "foo") && strings.Index("chicken", "ken") == 4 && strings.Count("cheese", "e") == 3 {
+		out += " ok"
+	}
+	out += "\n"
+	return root.Stdout().WriteString(out)
+}

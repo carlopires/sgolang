@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-006"
+ ],
+ "exit": 0,
+ "stdout": "0361425 -1 -1 0 2 3 Bab 3\n"
+}

@@ -1,3 +1,3 @@
 module example.com/mem-capture-range-assign-value
 
-sgo 0.12.0
+sgo 0.13.0

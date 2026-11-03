@@ -1,5 +1,5 @@
 module example.com/mod-require-local
 
-sgo 0.12.0
+sgo 0.13.0
 require example.com/lib v1.0.0
 replace example.com/lib => ./lib

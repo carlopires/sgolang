@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-002"
+ ],
+ "exit": 0,
+ "stdout": "GO|S-GO|LANG|a+b++c kv=w bonono x ok\n"
+}

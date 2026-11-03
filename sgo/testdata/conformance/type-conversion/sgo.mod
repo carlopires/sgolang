@@ -1,3 +1,3 @@
 module example.com/type-conversion
 
-sgo 0.12.0
+sgo 0.13.0

@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-006"
+ ],
+ "exit": 2,
+ "stdout": "before\n",
+ "stderr_kind": "Panic"
+}

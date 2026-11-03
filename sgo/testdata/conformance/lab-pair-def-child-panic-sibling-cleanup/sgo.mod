@@ -1,3 +1,3 @@
 module example.com/lab-pair-def-child-panic-sibling-cleanup
 
-sgo 0.12.0
+sgo 0.13.0

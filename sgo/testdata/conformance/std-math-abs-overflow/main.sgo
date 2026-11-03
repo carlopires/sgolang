@@ -1,0 +1,13 @@
+package main
+
+import (
+	"sgo"
+	"std/math"
+)
+
+func main(root *sgo.Context) error {
+	x := math.MinInt
+	_ = root.Stdout().WriteString("before\n")
+	_ = math.Abs(x)
+	return nil
+}

@@ -25,6 +25,8 @@ jobs:
         run: sgo/scripts/tcb-manifest.py
       - name: Standard library MANIFEST (SGO-IMP-004)
         run: sgo/scripts/std-manifest.py
+      - name: Standard library exports exactly its specified API (D126, SGO-STD-*)
+        run: sgo/scripts/std-api-check.py
       - name: go/types generator inputs untouched (upstream TestGenerate stays green)
         run: sgo/scripts/generated-twin-check.py
       - name: Clause adoption ledger (S04)

@@ -1,0 +1,24 @@
+package main
+
+import (
+	"sgo"
+	"std/sort"
+	"std/strconv"
+)
+
+func main(root *sgo.Context) error {
+	p := sort.Perm(7, func(i, j int) bool { return i%3 < j%3 })
+	x := []int{3, -1, 2, -1, 0}
+	sort.Ints(x)
+	s := []string{"b", "\u00e9", "B", "a"}
+	sort.Strings(s)
+	out := ""
+	for _, v := range p {
+		out += strconv.Itoa(v)
+	}
+	for _, v := range x {
+		out += " " + strconv.Itoa(v)
+	}
+	out += " " + s[0] + s[1] + s[2] + " " + strconv.Itoa(sort.SearchInts(x, 2)) + "\n"
+	return root.Stdout().WriteString(out)
+}

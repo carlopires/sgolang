@@ -1,0 +1,12 @@
+package main
+
+import (
+	"sgo"
+	"std/math"
+	"std/strconv"
+)
+
+func main(root *sgo.Context) error {
+	out := strconv.Itoa(math.Abs(-7)) + " " + strconv.Itoa(math.Pow(-2, 63)) + " " + strconv.Itoa(math.Min(3, math.Max(1, 2))) + " " + strconv.Itoa(math.MaxInt) + "\n"
+	return root.Stdout().WriteString(out)
+}

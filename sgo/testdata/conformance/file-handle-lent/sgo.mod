@@ -1,4 +1,4 @@
 module example.com/file-handle-lent
 
-sgo 0.12.0
+sgo 0.13.0
 grant dir data data ro

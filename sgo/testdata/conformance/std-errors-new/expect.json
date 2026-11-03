@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-001"
+ ],
+ "exit": 0,
+ "stdout": "disk full\n"
+}

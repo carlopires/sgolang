@@ -2,6 +2,24 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.13.0 — 2026-11-03
+
+Standard library v1 (W16; D103, D108–D110, D121–D126; drafts approved 2026-11-03). Every program valid under 0.12.0 keeps its meaning, except that `std/strconv` errors now carry Go's messages (`strconv.Atoi: parsing "x": invalid syntax`, D121); the admission digest and toolchain identity change, so objects built for 0.12.0 are refused by a 0.13.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.13.0`.
+
+New frozen clauses (new family SPEC-STD):
+
+- SGO-STD-001 v1 — `std/errors`: `New` (D121).
+- SGO-STD-002 v1 — `std/strings`: search, split and join, trim, `Repeat`, `Replace`, ASCII case functions (D122), `Builder`.
+- SGO-STD-003 v1 — `std/bytes`: the core byte-slice functions, with Go's aliasing, lengths, and capacities.
+- SGO-STD-004 v1 — `std/strconv`: `Itoa`, `Atoi`, `ParseInt` (no bitSize), `FormatInt`, `ParseBool`, `FormatBool`, `QuoteToASCII`, `Unquote`; Go's error messages with the input quoted by `QuoteToASCII`.
+- SGO-STD-005 v1 — `std/utf8`: Go's `unicode/utf8` API, decoding as D117.
+- SGO-STD-006 v1 — `std/sort`: stable typed sorts, `Perm`, `Search` (D123).
+- SGO-STD-007 v1 — `std/math`: `MaxInt`, `MinInt`, checked `Abs`, `Min`, `Max`, `Pow`.
+
+Amended:
+
+- SGO-IMP-004 v2 — the library of this version is the seven SGO-STD packages, each exporting exactly its clause's declarations (D126, checked by `std-api-check.py`).
+
 ## 0.12.0 — 2026-11-03
 
 Runes and text iteration (W15; D106, D116–D120; drafts approved 2026-11-03). Every program valid under 0.11.0 keeps its meaning; the admission digest and toolchain identity change, so objects built for 0.11.0 are refused by a 0.12.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.12.0`.

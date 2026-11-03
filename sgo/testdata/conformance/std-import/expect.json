@@ -4,6 +4,6 @@
   "SGO-IMP-004"
  ],
  "exit": 0,
- "stdout": "-9223372036854775808 -9223372036854775807 0\nstrconv.Atoi: empty string\nstrconv.Atoi: no digits in \"+\"\nstrconv.Atoi: invalid digit in \"12x\"\nstrconv.Atoi: \"9223372036854775808\" is out of range\nok 42\n",
+ "stdout": "-9223372036854775808 -9223372036854775807 0\nstrconv.Atoi: parsing \"\": invalid syntax\nstrconv.Atoi: parsing \"+\": invalid syntax\nstrconv.Atoi: parsing \"12x\": invalid syntax\nstrconv.Atoi: parsing \"9223372036854775808\": value out of range\nok 42\n",
  "note": "std/strconv end to end, including the minimum int and each Atoi error."
 }

@@ -1,0 +1,18 @@
+package main
+
+import (
+	"sgo"
+	"std/bytes"
+)
+
+func main(root *sgo.Context) error {
+	s := []byte("a,b,,c")
+	parts := bytes.Split(s, []byte(","))
+	parts[0][0] = 'X'
+	out := string(bytes.Join(parts, []byte("+"))) + " " + string(s)
+	if bytes.TrimSpace([]byte(" \t ")) == nil && bytes.Equal(nil, []byte{}) && bytes.Compare([]byte("a"), []byte("b")) == -1 && cap(parts[1]) == 1 {
+		out += " ok"
+	}
+	out += "\n"
+	return root.Stdout().WriteString(out)
+}

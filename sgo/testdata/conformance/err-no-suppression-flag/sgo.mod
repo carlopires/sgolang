@@ -1,3 +1,3 @@
 module example.com/err-no-suppression-flag
 
-sgo 0.12.0
+sgo 0.13.0

@@ -1,0 +1,19 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+	"std/utf8"
+)
+
+func main(root *sgo.Context) error {
+	s := "h\u00e9\xff\U0001F600"
+	out := ""
+	for i := 0; i < len(s); {
+		r, n := utf8.DecodeRuneInString(s[i:])
+		out += strconv.Itoa(int(r)) + "/" + strconv.Itoa(n) + " "
+		i += n
+	}
+	out += strconv.Itoa(utf8.RuneCountInString(s)) + " " + strconv.FormatBool(utf8.ValidString(s)) + " " + string(utf8.AppendRune(nil, 0x1F600)) + "\n"
+	return root.Stdout().WriteString(out)
+}

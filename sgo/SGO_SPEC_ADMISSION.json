@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": "0.12.0",
+  "spec_version": "0.13.0",
   "status": "admitted_0.7.0",
   "warning": "Spec 0.7.0 admits every row marked 'admitted': its clauses are frozen, the toolchain implements and enforces them, and its acceptance cases have executed evidence (constitution §6, D83). Rows marked 'denied' stay rejected. Admission does not widen any row beyond its clauses; everything the clauses do not name is rejected.",
   "default_decision": "reject",
@@ -863,7 +863,7 @@
         "SGO-IMP-003",
         "SGO-IMP-004"
       ],
-      "normative_text_digest": "ed5a56015de949f84780ddb6ec03b3d40f8d47ed205ba3403ba4cf813643e37b",
+      "normative_text_digest": "68a2f9dfaa55e95ae57b990b993263ddbc648b5bc150b89049f6ae995e6dd461",
       "admitted_in": [
         "0.7.0"
       ],
@@ -884,7 +884,7 @@
         "SGO-IMP-001": "b668273274d28cb56c944c6570d4d0c8656404061bacfb02a14c28d5960870bb",
         "SGO-IMP-002": "657c93f709097b2a58b4b46949d27fa9334a2c1f2822e6c8425b5445049f73b1",
         "SGO-IMP-003": "4b5e63a48cbb381ac50a0d66db13f9e6c2435880801918393f4e8ea63b6ebc6e",
-        "SGO-IMP-004": "06a1852335a1e37614615685188f0147d92c4e083dc2f9fd98d06d47705db2b9"
+        "SGO-IMP-004": "ba81e44cf40c52c4b61c140ae21a45868e9ad63c50634778f64dd9c93f6cd464"
       },
       "clause_status": {
         "SGO-IMP-001": "frozen",
@@ -896,7 +896,7 @@
         "SGO-IMP-001": 3,
         "SGO-IMP-002": 2,
         "SGO-IMP-003": 1,
-        "SGO-IMP-004": 1
+        "SGO-IMP-004": 2
       }
     },
     {
@@ -1659,8 +1659,60 @@
         "SGO-TEST-002": 1,
         "SGO-TEST-003": 1
       }
+    },
+    {
+      "id": "SPEC-STD",
+      "surface_family": "The standard library: std/ packages and their exported API",
+      "specification_work_package": "W16",
+      "implementation_owner_work_package": "W16",
+      "status": "admitted",
+      "clause_ids": [
+        "SGO-STD-001",
+        "SGO-STD-002",
+        "SGO-STD-003",
+        "SGO-STD-004",
+        "SGO-STD-005",
+        "SGO-STD-006",
+        "SGO-STD-007"
+      ],
+      "normative_text_digest": "c305524275f495a29bb6211922c3fd83b9d8f4817a22367b7e85b1eb4050f6e4",
+      "admitted_in": [
+        "0.13.0"
+      ],
+      "acceptance_case_ids": [],
+      "evidence": [
+        "sgo/evidence/w16/README.md"
+      ],
+      "subset0": "partial_see_SGO_SPEC_SUBSET0",
+      "clause_digests": {
+        "SGO-STD-001": "ee5660765fc16e824d786c38c167e79e0b6d6c39053ef0b191ef029c4818dfd3",
+        "SGO-STD-002": "ae36faebefabe35416de54a21b821fab6341b039ffe05f85819b9712d1470d49",
+        "SGO-STD-003": "d6dcda1731d7d0a34656b71581ad31368f1bd1d3aebbd1c55c110c8af08031dc",
+        "SGO-STD-004": "fc48784da91533f216a151cdd1d1b67f36c5a3e9b10ee51091e12891dc01cee9",
+        "SGO-STD-005": "48e4ffb537df21c0774ddf50c897beb75e250e18b40df33838a4f9f2922969ef",
+        "SGO-STD-006": "b7ac145f7d295f391aee11bf4cc5e58b8b781f429e67aca3957dbce10a241ab1",
+        "SGO-STD-007": "6d6a9a8955d6cc046c70eae9f1d698f1d8f47992860ebf75cb187e4128035d7c"
+      },
+      "clause_status": {
+        "SGO-STD-001": "frozen",
+        "SGO-STD-002": "frozen",
+        "SGO-STD-003": "frozen",
+        "SGO-STD-004": "frozen",
+        "SGO-STD-005": "frozen",
+        "SGO-STD-006": "frozen",
+        "SGO-STD-007": "frozen"
+      },
+      "clause_versions": {
+        "SGO-STD-001": 1,
+        "SGO-STD-002": 1,
+        "SGO-STD-003": 1,
+        "SGO-STD-004": 1,
+        "SGO-STD-005": 1,
+        "SGO-STD-006": 1,
+        "SGO-STD-007": 1
+      }
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "30a7a666296c82a3c2a195321af2662af78514a00a7c513a70b045d1eaebc7ce"
+  "rows_digest": "6320d6451492d42d95b17c0b8ccad9009f72991f7bdc5e60508949b045793e40"
 }

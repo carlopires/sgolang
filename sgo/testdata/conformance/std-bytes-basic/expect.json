@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-003"
+ ],
+ "exit": 0,
+ "stdout": "X+b++c X,b,,c ok\n"
+}

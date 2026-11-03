@@ -1,3 +1,3 @@
 module example.com/comp-error-tuple-assign
 
-sgo 0.12.0
+sgo 0.13.0

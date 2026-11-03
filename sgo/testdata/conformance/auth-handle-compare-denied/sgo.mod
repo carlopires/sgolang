@@ -1,4 +1,4 @@
 module example.com/auth-handle-compare-denied
 
-sgo 0.12.0
+sgo 0.13.0
 grant clock

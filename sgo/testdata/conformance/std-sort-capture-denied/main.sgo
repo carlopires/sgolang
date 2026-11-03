@@ -1,0 +1,12 @@
+package main
+
+import (
+	"sgo"
+	"std/sort"
+)
+
+func main(root *sgo.Context) error {
+	keys := []int{3, 1, 2}
+	_ = sort.Perm(len(keys), func(i, j int) bool { return keys[i] < keys[j] })
+	return nil
+}
