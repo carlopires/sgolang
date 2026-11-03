@@ -157,6 +157,9 @@ reproducible): 17,235 of 20,000 accepted, all explored without a violation. Muta
 (accept `error(Ref)`) is caught by the scenario `reject-ref-error` and, independently, by the
 generated programs (`TestShareErrGeneratorFindsRefError`). `range =` needs no model construct: it
 is denied again.
+Reviewer rerun on linux/amd64 at `6fa477acca` (pinned go1.26.10): TestShareScenarios, TestShareSoundness
+(17,362 of 20,000), TestShareErrSoundness (17,235 of 20,000), TestShareErrGeneratorFindsRefError and
+TestShareMutations pass with identical counts. The W13 review is closed: V1–V4 verified, nothing open.
 
 
 ## Stage 2 drafts (approved 2026-11-02; frozen at 0.9.0 above)
