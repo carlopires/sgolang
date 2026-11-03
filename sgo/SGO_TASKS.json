@@ -846,15 +846,18 @@
         "W15"
       ],
       "risk": "medium",
-      "status": "in_progress",
+      "status": "passed",
       "plan_section": "sgo/docs/stdlib-foundations-plan.md",
       "deliverables": [
         "std/errors, strings, bytes, strconv, utf8, sort, math in S-Go, no package state (D109), sgo test suites (D110)"
       ],
       "acceptance_case_ids": [],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w16/README.md",
+        "sgo-w00 run 41682646631 (linux/amd64, linux/arm64) on the 0.13.0 freeze"
+      ],
       "blockers": [],
-      "commit": null,
+      "commit": "c877824b07",
       "completion_note": null
     },
     {

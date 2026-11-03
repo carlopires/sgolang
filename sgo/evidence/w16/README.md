@@ -67,4 +67,6 @@ Implementation notes:
 
 ## Linux
 
-Pending: the sgo-w00 run on the freeze commit (linux/amd64, linux/arm64).
+sgo-w00 run 41682646631 on `5b0fbace8b` (the 0.13.0 freeze `c877824b07` plus the guarantee and conformance-compile fixes): both jobs passed on linux/amd64 and
+linux/arm64. That covers the stage-0 builds, conformance (532 cases), test-std, test-std-diff,
+the module tests, legacy-audit, the negative fixtures and the upstream baseline (B03).
