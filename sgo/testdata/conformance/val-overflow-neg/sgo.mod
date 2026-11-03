@@ -1,3 +1,3 @@
 module example.com/val-overflow-neg
 
-sgo 0.14.1
+sgo 0.15.0

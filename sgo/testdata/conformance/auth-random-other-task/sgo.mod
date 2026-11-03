@@ -1,4 +1,4 @@
 module example.com/auth-random-other-task
 
-sgo 0.14.1
+sgo 0.15.0
 grant random

@@ -1,3 +1,3 @@
 module example.com/native-chan-of-chan
 
-sgo 0.14.1
+sgo 0.15.0

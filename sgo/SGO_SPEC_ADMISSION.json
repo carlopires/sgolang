@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": "0.14.1",
+  "spec_version": "0.15.0",
   "status": "admitted_0.7.0",
   "warning": "Spec 0.7.0 admits every row marked 'admitted': its clauses are frozen, the toolchain implements and enforces them, and its acceptance cases have executed evidence (constitution §6, D83). Rows marked 'denied' stay rejected. Admission does not widen any row beyond its clauses; everything the clauses do not name is rejected.",
   "default_decision": "reject",
@@ -1048,9 +1048,11 @@
       "status": "admitted",
       "clause_ids": [
         "SGO-NET-001",
-        "SGO-NET-002"
+        "SGO-NET-002",
+        "SGO-NET-003",
+        "SGO-NET-004"
       ],
-      "normative_text_digest": "3645dd0053f78906bb02d884769da8b1a6021724c4b85f48bebfadf9f1614268",
+      "normative_text_digest": "4aeb48bf46c962e0c85642605f618cf4bbc658f0bbecb2d22d39873f01ead620",
       "admitted_in": [
         "0.7.0"
       ],
@@ -1066,15 +1068,21 @@
       "subset0": "denied",
       "clause_digests": {
         "SGO-NET-001": "43ad25475ebf42449599a21e9cd2bba385bb89586308025767f8d96656483eea",
-        "SGO-NET-002": "286a303380f7bf575bf213564bb25f841b1abb73e72c3ed006f4045c0c684afd"
+        "SGO-NET-002": "96032bef2b7c45827922d5c7e142654e471ee7d6f2edd5fb1c907061b6d4a0f3",
+        "SGO-NET-003": "a345efb8244e8a6a4f867663e32aa0994b2d1516b9e3ba2c04f7d6f215eb8c3b",
+        "SGO-NET-004": "4ea1019452a4fb66bbeede65bf020b9b524c4b800fb369b2646e65485d7d177d"
       },
       "clause_status": {
         "SGO-NET-001": "superseded",
-        "SGO-NET-002": "frozen"
+        "SGO-NET-002": "frozen",
+        "SGO-NET-003": "frozen",
+        "SGO-NET-004": "frozen"
       },
       "clause_versions": {
         "SGO-NET-001": 2,
-        "SGO-NET-002": 1
+        "SGO-NET-002": 2,
+        "SGO-NET-003": 1,
+        "SGO-NET-004": 1
       }
     },
     {
@@ -1730,5 +1738,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "d1f437d234af075c65f3d4bc56bfc6245cfb0f0bd65ee19b9e0143b3a382b990"
+  "rows_digest": "b14c0817b888f0dbc8f5103ce53a2787b66969dfddddd24155be75976d6ce13c"
 }

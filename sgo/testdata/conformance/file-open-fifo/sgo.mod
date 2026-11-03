@@ -1,4 +1,4 @@
 module example.com/file-open-fifo
 
-sgo 0.14.1
+sgo 0.15.0
 grant dir data data rw

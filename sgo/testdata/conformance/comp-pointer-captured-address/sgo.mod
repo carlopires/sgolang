@@ -1,3 +1,3 @@
 module example.com/comp-pointer-captured-address
 
-sgo 0.14.1
+sgo 0.15.0

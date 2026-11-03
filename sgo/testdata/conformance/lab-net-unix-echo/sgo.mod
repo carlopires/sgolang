@@ -1,5 +1,5 @@
 module example.com/lab-net-unix-echo
 
-sgo 0.14.1
+sgo 0.15.0
 grant listen unix:echo.sock
 grant connect unix:echo.sock

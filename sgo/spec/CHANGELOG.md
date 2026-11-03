@@ -2,6 +2,19 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.15.0 — 2026-11-04
+
+Happy Eyeballs (W18; D143–D146, owner-delegated decisions). Every program valid under 0.14.1 keeps its meaning. A connect grant may now name a host, but such a grant gives `root.Dial` nothing: only a `Dialer` resolves and dials a name.
+
+New frozen clauses:
+
+- SGO-NET-003 v1 — dialers: delegated connect authority for granted endpoints (D143); host-name connect grants and `Dialer.Resolve` (/etc/hosts, then DNS A/AAAA over UDP; D145); the lab network table `lab.net` (D146).
+- SGO-NET-004 v1 — connection slots: one connection handed between tasks, first `Put` wins (D144; model `sgo/model/handoff.go`).
+
+Amended:
+
+- SGO-NET-002 v2 — host names are admitted in connect grants for dialers (SGO-NET-003); `root.Dial` refuses them; listen grants stay IP or Unix.
+
 ## 0.14.1 — 2026-11-03
 
 Review fix (W17 review X1). A type assertion or type-switch case to `error` from a task-local interface (`a.(error)` for `a any`, `case error` in a switch on `any`) was accepted and could turn a task-local value with an `Error` method into a shareable `error`; it is now refused with `SGO_E_TASK_LOCAL_CAPTURE`. Assertions from an `error` are unchanged. Every other program valid under 0.14.0 keeps its meaning; the admission digest and toolchain identity change, and every module declares `sgo 0.14.1`.
