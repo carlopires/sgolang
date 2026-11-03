@@ -1,0 +1,53 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+type Coded struct {
+	code int
+}
+
+func (c Coded) Error() string { return "coded " + strconv.Itoa(c.code) }
+func (c Coded) Code() int     { return c.code }
+
+type Coder interface {
+	Code() int
+}
+
+type Namer interface {
+	Name() string
+}
+
+type N struct{}
+
+func (n N) Name() string { return "n" }
+func (n N) Code() int    { return 7 }
+
+func classify(err error) string {
+	switch v := err.(type) {
+	case nil:
+		return "nil"
+	case Coded:
+		return "Coded " + strconv.Itoa(v.code)
+	case error:
+		return "other " + v.Error()
+	}
+	return "none"
+}
+
+func main(root *sgo.Context) error {
+	var err error = Coded{code: 3}
+	c, ok1 := err.(Coded)
+	k, ok2 := err.(Coder)
+	var plain error = sgo.NewError("plain")
+	e2, ok3 := plain.(error)
+	var a any = N{}
+	nm, ok4 := a.(Namer)
+	cd, ok5 := a.(Coder)
+	out := strconv.Itoa(c.code) + strconv.FormatBool(ok1) + " " + strconv.Itoa(k.Code()) + strconv.FormatBool(ok2) + " "
+	out = out + e2.Error() + strconv.FormatBool(ok3) + " " + nm.Name() + strconv.FormatBool(ok4) + " " + strconv.Itoa(cd.Code()) + strconv.FormatBool(ok5) + " "
+	out = out + classify(err) + "|" + classify(plain) + "|" + classify(nil)
+	return root.Stdout().WriteString(out + "\n")
+}

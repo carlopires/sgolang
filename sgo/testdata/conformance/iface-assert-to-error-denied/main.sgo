@@ -1,0 +1,19 @@
+package main
+
+import "sgo"
+
+type E struct {
+	s []int
+}
+
+func (e E) Error() string {
+	e.s[0] = e.s[0] + 1
+	return "e"
+}
+
+func main(root *sgo.Context) error {
+	var a any = E{s: make([]int, 1)}
+	err, ok := a.(error)
+	_ = ok
+	return err
+}

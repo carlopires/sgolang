@@ -386,9 +386,36 @@ func (check *Checker) sgoIfaceConversions(fd *syntax.FuncDecl) {
 			}
 		case *syntax.CompositeLit:
 			check.sgoCompositeIface(n)
+		case *syntax.AssertExpr:
+			if n.Type != nil {
+				check.sgoAssertToShared(n.Type, check.typeOf(n.X), check.typeOf(n.Type))
+			}
+		case *syntax.SwitchStmt:
+			if g, _ := n.Tag.(*syntax.TypeSwitchGuard); g != nil {
+				src := check.typeOf(g.X)
+				for _, c := range n.Body {
+					for _, t := range syntax.UnpackListExpr(c.Cases) {
+						check.sgoAssertToShared(t, src, check.typeOf(t))
+					}
+				}
+			}
 		}
 		return true
 	})
+}
+
+// sgoAssertToShared reports a type assertion or type-switch case, at at, from a task-local interface
+// type src to a shareable interface type dst (error): the dynamic value may be a task-local value with
+// the methods of dst, and the assertion would make it a shareable value without the conversion check
+// of rule 4 (SGO-COMP-004, SGO-IFACE-004; W17 review X1). An assertion from error, or to a task-local
+// interface or a concrete type, is admitted.
+func (check *Checker) sgoAssertToShared(at syntax.Expr, src, dst Type) {
+	if src == nil || dst == nil || !IsInterface(src) || !IsInterface(dst) {
+		return
+	}
+	if sgoTaskLocal(src) && !sgoTaskLocal(dst) {
+		check.errorf(at, UnsupportedFeature, "SGO_E_TASK_LOCAL_CAPTURE: an assertion from %s to %s could produce an error holding a task-local value; only shareable types may implement error, so assert to error only from an error (SGO-COMP-004, SGO-IFACE-004)", src, dst)
+	}
 }
 
 // sgoCompositeIface checks the elements of a composite literal against their target types.

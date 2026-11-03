@@ -1,0 +1,24 @@
+package main
+
+import "sgo"
+
+type E struct {
+	s []int
+}
+
+func (e E) Error() string {
+	e.s[0] = e.s[0] + 1
+	return "e"
+}
+
+func pick(a any) error {
+	switch v := a.(type) {
+	case error:
+		return v
+	}
+	return nil
+}
+
+func main(root *sgo.Context) error {
+	return pick(E{s: make([]int, 1)})
+}
