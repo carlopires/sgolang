@@ -25,4 +25,4 @@ denied (SGO-LEX-004, SGO-VAL-004), so the programs use `48`, `118`, and explicit
 []byte` needs an initializer (SGO-BIND-003); P1 uses value-array inputs (D97); P2 copies at the send
 (`r.Reply <- sgo.Copy(s.Get(k))`: a task-local value crosses only as an `sgo.Copy` result,
 SGO-COMP-004); P3's worker writes through the root's `*sgo.Writer` (stdout is a root grant,
-SGO-PROC-003). P5 needs frozen values (stage 3).
+SGO-PROC-003). P5 runs from spec 0.10.0 (stage 3) as `w13-p5-table`, unchanged except the version.

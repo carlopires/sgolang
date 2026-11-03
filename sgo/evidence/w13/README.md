@@ -109,6 +109,25 @@ CI on `51f4424bd7`: sgo-spec 41574250765 success; sgo-runtime 41574250776 succes
 race lane); sgo-w00 41574250875 success on linux/amd64 and linux/arm64 (conformance 428 cases, check,
 test, examples, release archive, identity, fmt, TCB, X10, S12, lab, negative fixtures, spec gates).
 
+## Stage 3 — spec 0.10.0 (`bd20e81d0c`)
+
+Draft approved 2026-11-03 (D98–D101) and frozen at spec 0.10.0: SGO-COMP-009 (`sgo.Frozen[T]`,
+`sgo.Freeze`, access paths, `SGO_E_FROZEN_WRITE`); amended SGO-COMP-004 v2, SGO-GEN-001 v3,
+SGO-TYPE-001 v7. Acceptance program P5 runs as `w13-p5-table` (`sum 40`): one frozen table read by
+four tasks. 21 new conformance cases (6 run, 15 reject). With stage 2, all five W13 acceptance
+programs pass.
+
+darwin-arm64: conformance 454/454 (256 run, 161 reject, 31 lab, 6 test), test-identity, test-tcb,
+runtime lane, spec-tool, inventory, guarantee, license, lock-alloc, adoption, generated-twin, and
+policy checks pass. Matrix G08 passed.
+
+Mutations (rebuilt into stage 0 with a regenerated manifest, run, restored and rebuilt after):
+
+| Mutation | Detected by |
+|---|---|
+| the access-path rule accepts every use of `f.Get()` | frozen-write-field, frozen-write-map, frozen-escape-var, frozen-escape-arg, frozen-append, frozen-range-ref (build succeeded) |
+| `sgo.Freeze` shares its argument instead of copying it | frozen-caller-mutates (wrong output), w13-p5-table (`sum 436`) |
+
 ## Stage 2 drafts (approved 2026-11-02; frozen at 0.9.0 above)
 
 
