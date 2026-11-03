@@ -750,6 +750,30 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation.** `rune(i)`, `int(r)`, `rune(b)`, `byte(r)` (checked), `string(r)`, `[]rune(s)`, `string(rs)`. `string(i)` for an int stays denied (use `string(rune(i))`); conversions between slice types stay denied. (sgo/docs/w15-drafts.md)
 
+## D121 — Library errors without interfaces **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** `std/errors` v1 is `New` only; `Is`, `As`, `Unwrap`, `Join` come with W17. Library errors are distinguished by being non-nil and by their message, whose exact format each clause states (Go's formats). (sgo/docs/w16-drafts.md)
+
+## D122 — Unicode scope of the first library **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** White_Space classification is complete (25 code points, no table), so `TrimSpace` and `Fields` behave as in Go; case mapping is ASCII-only and named so (`ToUpperASCII`, `ToLowerASCII`, `EqualFoldASCII`); full case tables wait for a table representation without package variables. (sgo/docs/w16-drafts.md)
+
+## D123 — Sorting without generics or interfaces **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Typed in-place sorts (`Ints`, `Strings`, `Runes`, `Bytes`), `Search`/`SearchInts`/`SearchStrings`, and `Perm(n, less) []int` returning the sorted order as indices; every sort is stable and uses one fixed merge sort, so results are identical on every platform. (sgo/docs/w16-drafts.md)
+
+## D124 — Library functions outside their domain **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Input-caused conditions that Go reports as errors are errors; preconditions Go enforces by panicking are `panic` with a message naming the function; arithmetic overflow is the checked `IntegerOverflow` at the library's position. (sgo/docs/w16-drafts.md)
+
+## D125 — Checking "behaves like Go" **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** A function with a Go counterpart of the same name and parameter shape has its documented results; a differential test compares Go's package and `std/` on the same generated inputs (edge cases, seeded random strings including invalid UTF-8); deviations are listed in each clause. (sgo/docs/w16-drafts.md)
+
+## D126 — The library API is specified **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Each package's exported API and behavior is a frozen clause (SGO-STD-001..007, `SPEC-STD.md`); an exported name not in a clause is refused by `std-api-check.py`; adding a function is a clause amendment and a spec version. (sgo/docs/w16-drafts.md)
+
 ---
 
 ## Approval record
