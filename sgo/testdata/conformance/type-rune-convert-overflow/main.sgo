@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	i := 0x110000
+	_ = root.Stdout().WriteString("before\n")
+	_ = rune(i)
+	return nil
+}

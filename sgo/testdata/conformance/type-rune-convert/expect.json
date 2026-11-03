@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-TYPE-008",
+  "SGO-TYPE-007"
+ ],
+ "exit": 0,
+ "stdout": "1114111 200 255\n"
+}

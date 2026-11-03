@@ -1,0 +1,22 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	s := "h\u00e9\xff!"
+	rs := []rune(s)
+	out := ""
+	if len(rs) == 4 && cap(rs) == 4 && rs[1] == 0xE9 && rs[2] == 0xFFFD && string(rs) == "h\u00e9\uFFFD!" {
+		out += "decode "
+	}
+	rs[0] = 'j'
+	if s == "h\u00e9\xff!" && string(rs[0:1]) == "j" {
+		out += "copy "
+	}
+	rs[3] = 0xD800
+	if string(rs[3:]) == "\uFFFD" {
+		out += "surrogate"
+	}
+	out += "\n"
+	return root.Stdout().WriteString(out)
+}

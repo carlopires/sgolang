@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-TYPE-008"
+ ],
+ "exit": 0,
+ "stdout": "a2x1x1\n"
+}

@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+type Letter rune
+
+func main(root *sgo.Context) error {
+	var l Letter = 'y'
+	l = l + 1
+	out := string(rune(l)) + "\n"
+	return root.Stdout().WriteString(out)
+}

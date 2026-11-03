@@ -6,7 +6,10 @@ package types2
 
 import (
 	"cmd/compile/internal/syntax"
+	"go/constant"
+	"go/token"
 	. "internal/types/errors"
+	"sort"
 )
 
 // S-Go flow rules (SGO_SPEC_SUBSET0.md). They run once all function bodies are checked, over the
@@ -55,6 +58,7 @@ func (check *Checker) sgoLocalVar(obj Object) *Var {
 // sgoFlowChecks applies the flow rules to every function declaration.
 func (check *Checker) sgoFlowChecks(files []*syntax.File) {
 	check.sgoTypeDecls(files)
+	check.sgoRuneConsts()
 	for _, f := range files {
 		for _, d := range f.DeclList {
 			if fd, _ := d.(*syntax.FuncDecl); fd != nil && fd.Body != nil {
@@ -346,6 +350,9 @@ func (check *Checker) sgoRange(s *syntax.ForStmt) {
 	var T Type
 	if tv, ok := check.Types[r.X]; ok {
 		T = tv.Type
+	} else if info, ok := check.untyped[r.X]; ok && info.typ != nil {
+		// An untyped constant operand (range "ab") is recorded only when checking ends.
+		T = info.typ
 	}
 	if name, _ := syntax.Unparen(r.X).(*syntax.Name); name != nil && check.Uses[name] != nil {
 		// A keyless range over an array of constant length records its operand as the int
@@ -367,8 +374,7 @@ func (check *Checker) sgoRange(s *syntax.ForStmt) {
 			}
 		case *Basic:
 			if u.info&IsString != 0 {
-				check.errorf(r.Pos(), UnsupportedFeature, "SGO_E_UNADMITTED: range over a string is not admitted (it yields runes); range over []byte(s) (SGO-COMP-005)")
-				return
+				return // by rune: (byte offset, rune) (SGO-VAL-002 v3)
 			}
 		}
 	}
@@ -390,5 +396,38 @@ func (check *Checker) sgoChanResults(t *syntax.FuncType) {
 				check.errorf(f.Name, UnsupportedFeature, "SGO_E_UNINITIALIZED: a named result of type %s would start with no frozen value; sgo.Frozen has no zero value (SGO-COMP-009)", tv.Type)
 			}
 		}
+	}
+}
+
+// sgoRuneConsts reports typed constants of rune type (and named types over it) outside
+// 0..0x10FFFF (SGO-TYPE-008): the compiler represents rune as int32, whose range is wider.
+// Each offending constant expression is reported once, in source order.
+func (check *Checker) sgoRuneConsts() {
+	type bad struct {
+		e syntax.Expr
+		v constant.Value
+		t Type
+	}
+	var found []bad
+	for e, tv := range check.Types {
+		if tv.Value == nil || tv.Value.Kind() != constant.Int || tv.Type == nil {
+			continue
+		}
+		b, ok := tv.Type.Underlying().(*Basic)
+		if !ok || b.kind != Int32 {
+			continue
+		}
+		if name, _ := e.(*syntax.Name); name != nil {
+			if _, isConst := check.Uses[name].(*Const); isConst {
+				continue // reported where the constant is declared
+			}
+		}
+		if constant.Sign(tv.Value) < 0 || constant.Compare(tv.Value, token.GTR, constant.MakeInt64(0x10FFFF)) {
+			found = append(found, bad{e, tv.Value, tv.Type})
+		}
+	}
+	sort.Slice(found, func(i, j int) bool { return found[i].e.Pos().Cmp(found[j].e.Pos()) < 0 })
+	for _, f := range found {
+		check.errorf(f.e, NumericOverflow, "constant %s overflows %s: a rune lies in 0..0x10FFFF (SGO-TYPE-008)", f.v, f.t)
 	}
 }

@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	var a rune = 'A'
+	var e rune = 0xE9
+	var g rune = 0x1F600
+	var s rune = 0xDFFF
+	out := ""
+	if string(a) == "A" && string(e) == "\u00e9" && len(string(g)) == 4 && string(s) == "\uFFFD" {
+		out = "ok\n"
+	}
+	return root.Stdout().WriteString(out)
+}

@@ -1,0 +1,26 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+func main(root *sgo.Context) error {
+	m := map[rune]int{}
+	for _, r := range "abca" {
+		m[r] = m[r] + 1
+	}
+	out := ""
+	for _, r := range "abc" {
+		switch r {
+		case 'a':
+			out += "a" + strconv.Itoa(m[r])
+		case 'b', 'c':
+			out += "x" + strconv.Itoa(m[r])
+		}
+	}
+	if 'a' < 'b' {
+		out += "\n"
+	}
+	return root.Stdout().WriteString(out)
+}

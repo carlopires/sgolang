@@ -1,0 +1,16 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+func main(root *sgo.Context) error {
+	i := 0x10FFFF
+	r := rune(i)
+	var b byte = 200
+	rb := rune(b)
+	var small rune = 255
+	out := strconv.Itoa(int(r)) + " " + strconv.Itoa(int(rb)) + " " + strconv.Itoa(int(byte(small))) + "\n"
+	return root.Stdout().WriteString(out)
+}

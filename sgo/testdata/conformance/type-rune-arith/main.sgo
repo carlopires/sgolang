@@ -1,0 +1,18 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+func main(root *sgo.Context) error {
+	var a rune = 'a'
+	var z rune = 'z'
+	d := z - a
+	var top rune = 0x10FFFE
+	top = top + 1
+	h := (a * 2) / 3 % 50
+	s := a << 3 >> 1
+	out := strconv.Itoa(int(d)) + " " + strconv.Itoa(int(top)) + " " + strconv.Itoa(int(h)) + " " + strconv.Itoa(int(s)) + "\n"
+	return root.Stdout().WriteString(out)
+}

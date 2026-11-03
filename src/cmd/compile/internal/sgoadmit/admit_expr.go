@@ -37,7 +37,7 @@ var sgoHandleTypes = map[string]bool{"Context": true, "Nursery": true, "Writer":
 var deniedNames = map[string]string{
 	"int8": "SGO-TYPE-001", "int16": "SGO-TYPE-001", "int32": "SGO-TYPE-001", "int64": "SGO-TYPE-001",
 	"uint": "SGO-TYPE-001", "uint8": "SGO-TYPE-001", "uint16": "SGO-TYPE-001", "uint32": "SGO-TYPE-001",
-	"uint64": "SGO-TYPE-001", "uintptr": "SGO-TYPE-001", "rune": "SGO-TYPE-001",
+	"uint64": "SGO-TYPE-001", "uintptr": "SGO-TYPE-001", // rune is admitted (SGO-TYPE-008)
 	"float32": "SGO-FLOAT-001", "float64": "SGO-FLOAT-001", "complex64": "SGO-FLOAT-001",
 	"complex128": "SGO-FLOAT-001", "real": "SGO-FLOAT-001", "imag": "SGO-FLOAT-001", "complex": "SGO-FLOAT-001",
 	"any": "SGO-IFACE-001", "comparable": "SGO-GEN-001", "iota": "SGO-VAL-004",
@@ -403,7 +403,9 @@ func (a *admitter) basicLit(l *syntax.BasicLit) {
 	case syntax.FloatLit, syntax.ImagLit:
 		a.deny(l.Pos(), "floating-point or imaginary literal", "SGO-FLOAT-001")
 	case syntax.RuneLit:
-		a.deny(l.Pos(), "rune literal", "SGO-LEX-004")
+		// Admitted from spec 0.12.0 (SGO-LEX-004 v2, D119). The scanner has already refused
+		// malformed literals and \u/\U escapes naming a surrogate or a value above 0x10FFFF.
+		a.escapes(l, "ntr\\'xuU")
 	case syntax.IntLit:
 		if legacyOctal.MatchString(l.Value) {
 			a.report(l.Pos(), "SGO_E_SYNTAX", "legacy octal literal "+l.Value+"; write 0o"+strings.TrimLeft(l.Value, "0")+" (SGO-LEX-004)")
@@ -412,20 +414,33 @@ func (a *admitter) basicLit(l *syntax.BasicLit) {
 		if strings.HasPrefix(l.Value, "`") {
 			return
 		}
-		v := l.Value
-		for i := 1; i < len(v)-1; i++ {
-			if v[i] != '\\' {
-				continue
-			}
-			switch v[i+1] {
-			case 'n', 't', 'r', '\\', '"':
-				i++
-			case 'x':
-				i += 3
-			default:
-				a.deny(a.posAt(l.Pos(), a.offset(l.Pos())+i), "escape \\"+string(v[i+1]), "SGO-LEX-004")
-				return
-			}
+		a.escapes(l, "ntr\\\"xuU")
+	}
+}
+
+// escapes denies every escape of an interpreted string or rune literal whose letter is not in
+// allowed (SGO-LEX-004 v2, D119): \a \b \f \v and octal escapes stay denied. The scanner has
+// already checked each escape's form, so the digit counts below are exact.
+func (a *admitter) escapes(l *syntax.BasicLit, allowed string) {
+	v := l.Value
+	for i := 1; i < len(v)-1; i++ {
+		if v[i] != '\\' {
+			continue
+		}
+		c := v[i+1]
+		if !strings.ContainsRune(allowed, rune(c)) {
+			a.deny(a.posAt(l.Pos(), a.offset(l.Pos())+i), "escape \\"+string(c), "SGO-LEX-004")
+			return
+		}
+		switch c {
+		case 'x':
+			i += 3
+		case 'u':
+			i += 5
+		case 'U':
+			i += 9
+		default:
+			i++
 		}
 	}
 }

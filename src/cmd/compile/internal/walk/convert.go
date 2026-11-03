@@ -356,7 +356,7 @@ func walkStringToRunes(n *ir.ConvExpr, init *ir.Nodes) ir.Node {
 		a = stackBufAddr(tmpstringbufsize, types.Types[types.TINT32])
 	}
 	// stringtoslicerune(*[32]rune, string) []rune
-	return mkcall("stringtoslicerune", n.Type(), init, a, typecheck.Conv(n.X, types.Types[types.TSTRING]))
+	return sgoExactCap(mkcall("stringtoslicerune", n.Type(), init, a, typecheck.Conv(n.X, types.Types[types.TSTRING])), init) // S-Go: cap == len (sgo_text.go)
 }
 
 // dataWordFuncName returns the name of the function used to convert a value of type "from"

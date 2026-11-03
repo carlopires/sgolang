@@ -1623,10 +1623,10 @@ func (w *writer) sgoChecked(op syntax.Operator, typ types2.Type) bool {
 	default:
 		return false
 	}
-	// The underlying type: named types over int and byte are checked too (SGO-UTYPE-002,
-	// SGO-TYPE-007).
+	// The underlying type: named types over int, byte, and rune are checked too (SGO-UTYPE-002,
+	// SGO-TYPE-007, SGO-TYPE-008).
 	b, ok := typ.Underlying().(*types2.Basic)
-	return ok && (b.Kind() == types2.Int || b.Kind() == types2.Uint8)
+	return ok && (b.Kind() == types2.Int || b.Kind() == types2.Uint8 || b.Kind() == types2.Int32)
 }
 
 // nurseryStmt writes nursery (n) { ... } (SGO-NUR-001): the binder as a new local, then the body

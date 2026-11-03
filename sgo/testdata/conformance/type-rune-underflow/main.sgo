@@ -1,0 +1,11 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	var a rune = 'a'
+	var b rune = 'b'
+	_ = root.Stdout().WriteString("before\n")
+	_ = a - b
+	return nil
+}

@@ -3,6 +3,9 @@ package main
 import "sgo"
 
 func main(root *sgo.Context) error {
-	_ = "\u00e9"
-	return nil
+	s := "\u00e9\U0001F600"
+	if len(s) == 6 && s == "\xc3\xa9\xf0\x9f\x98\x80" {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("bad\n")
 }

@@ -3,8 +3,11 @@ package main
 import "sgo"
 
 func main(root *sgo.Context) error {
-	for i := range "ab" {
-		_ = i
+	out := ""
+	for i, r := range "ab" {
+		if i == 0 && r == 'a' || i == 1 && r == 'b' {
+			out += "x"
+		}
 	}
-	return nil
+	return root.Stdout().WriteString(out + "\n")
 }

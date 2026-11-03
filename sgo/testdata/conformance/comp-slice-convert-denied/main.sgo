@@ -1,0 +1,9 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	rs := []rune("ab")
+	_ = []byte(rs)
+	return nil
+}

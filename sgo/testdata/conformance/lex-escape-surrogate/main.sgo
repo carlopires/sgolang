@@ -1,0 +1,8 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	_ = "x\uD800"
+	return nil
+}

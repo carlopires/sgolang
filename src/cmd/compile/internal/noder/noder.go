@@ -139,6 +139,9 @@ func sgoSyntaxMsg(msg string) string {
 		return msg
 	case msg == "invalid UTF-8 encoding" || msg == "invalid NUL character" || msg == "invalid BOM in the middle of the file":
 		return "SGO_E_SOURCE_ENCODING: " + msg + " (SGO-LEX-001)"
+	case strings.HasPrefix(msg, "escape is invalid Unicode code point"):
+		// A \u or \U escape naming a surrogate or a value above 0x10FFFF (D119).
+		return "SGO_E_CONST_RANGE: " + msg + " (SGO-LEX-004)"
 	}
 	return "SGO_E_SYNTAX: " + msg
 }

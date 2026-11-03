@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-TYPE-008"
+ ],
+ "exit": 0,
+ "stdout": "25 1114111 14 388\n"
+}

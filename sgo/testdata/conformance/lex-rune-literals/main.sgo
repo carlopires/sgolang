@@ -1,0 +1,16 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+func main(root *sgo.Context) error {
+	out := ""
+	rs := []rune{'a', '\n', '\t', '\r', '\\', '\'', '\x41', '\u00e9', '\U0001F600', 'é'}
+	for _, r := range rs {
+		out += strconv.Itoa(int(r)) + " "
+	}
+	out += "\n"
+	return root.Stdout().WriteString(out)
+}

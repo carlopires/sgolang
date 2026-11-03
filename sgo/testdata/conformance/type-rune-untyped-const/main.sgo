@@ -1,0 +1,14 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	var b byte = 'A'
+	var i int = 'B'
+	r := 'C'
+	out := ""
+	if b == 'A' && i == 66 && r == 67 && 'a'+1 == 'b' {
+		out = "ok\n"
+	}
+	return root.Stdout().WriteString(out)
+}

@@ -1,0 +1,15 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+func main(root *sgo.Context) error {
+	out := ""
+	for i, r := range "a\xffb\xe2\x82" {
+		out += strconv.Itoa(i) + ":" + strconv.Itoa(int(r)) + " "
+	}
+	out += "\n"
+	return root.Stdout().WriteString(out)
+}

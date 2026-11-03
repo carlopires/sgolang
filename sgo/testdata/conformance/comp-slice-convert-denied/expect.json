@@ -1,0 +1,16 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-COMP-005"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNADMITTED",
+   "at": "[]byte(rs)"
+  },
+  {
+   "code": "SGO_E_TYPE_MISMATCH",
+   "position": "main.sgo:7:13"
+  }
+ ]
+}

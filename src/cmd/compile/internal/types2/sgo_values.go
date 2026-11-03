@@ -51,7 +51,8 @@ func sgoTypeRec(T Type, seen map[Type]bool, refs bool) (bool, string) {
 	switch u := T.Underlying().(type) {
 	case *Basic:
 		switch u.kind {
-		case Int, Bool, String, Uint8:
+		case Int, Bool, String, Uint8, Int32:
+			// Int32 is only reachable as rune: the name int32 is denied (SGO-TYPE-008).
 			return true, ""
 		}
 		return false, "type " + u.name
@@ -322,6 +323,7 @@ func (check *Checker) sgoConversion(call *syntax.CallExpr) {
 	}
 	isKind := func(u Type, k BasicKind) bool { b, ok := u.(*Basic); return ok && b.kind == k }
 	isBytes := func(u Type) bool { s, ok := u.(*Slice); return ok && isKind(s.elem.Underlying(), Uint8) }
+	isRunes := func(u Type) bool { s, ok := u.(*Slice); return ok && isKind(s.elem.Underlying(), Int32) }
 	bad := func() {
 		if name, _ := syntax.Unparen(call.Fun).(*syntax.Name); name != nil && sgoIsBasic(T) {
 			check.errorf(name, UnsupportedFeature, "SGO_E_UNADMITTED: conversion to %s is not admitted in S-Go subset 0 (SGO-TYPE-002)", name.Value)
@@ -339,8 +341,14 @@ func (check *Checker) sgoConversion(call *syntax.CallExpr) {
 		bad()
 	case isKind(tu, Int) && isKind(au, Uint8), isKind(tu, Uint8) && isKind(au, Int):
 		return // int(b), byte(i) (SGO-TYPE-007)
+	case isKind(tu, Int32) && (isKind(au, Int) || isKind(au, Uint8)), (isKind(tu, Int) || isKind(tu, Uint8)) && isKind(au, Int32):
+		return // rune(i), rune(b), int(r), byte(r) (SGO-TYPE-008, D120)
+	case isKind(tu, String) && isKind(au, Int32):
+		return // string(r) (SGO-VAL-002 v3); string(i) of an int stays denied (D120)
 	case isKind(tu, String) && isBytes(au), isBytes(tu) && isKind(au, String):
 		return // string(b), []byte(s) (SGO-COMP-005)
+	case isKind(tu, String) && isRunes(au), isRunes(tu) && isKind(au, String):
+		return // string(rs), []rune(s) (SGO-COMP-005 v2)
 	case Identical(tu, au):
 		if sgoIsBasic(T) && sgoIsBasic(A) {
 			bad() // int(x) of an int, ...: not a conversion S-Go has

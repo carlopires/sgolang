@@ -1,12 +1,8 @@
 {
- "kind": "reject",
+ "kind": "run",
  "clauses": [
   "SGO-LEX-004"
  ],
- "diagnostics": [
-  {
-   "code": "SGO_E_UNADMITTED",
-   "at": "\\u00e9"
-  }
- ]
+ "exit": 0,
+ "stdout": "ok\n"
 }

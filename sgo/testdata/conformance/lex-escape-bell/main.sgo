@@ -3,9 +3,6 @@ package main
 import "sgo"
 
 func main(root *sgo.Context) error {
-	s := "abc"
-	for i := range s {
-		_ = i
-	}
+	_ = '\a'
 	return nil
 }

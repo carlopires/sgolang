@@ -1,13 +1,12 @@
 {
  "kind": "reject",
  "clauses": [
-  "SGO-COMP-005",
-  "SGO-COMP-001"
+  "SGO-LEX-004"
  ],
  "diagnostics": [
   {
    "code": "SGO_E_UNADMITTED",
-   "at": "range s"
+   "at": "\\101"
   }
  ]
 }

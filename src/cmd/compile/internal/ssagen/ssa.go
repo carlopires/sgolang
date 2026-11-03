@@ -3225,8 +3225,8 @@ func (s *state) exprCheckPtr(n ir.Node, checkPtrOK bool) *ssa.Value {
 	case ir.OCONV:
 		n := n.(*ir.ConvExpr)
 		x := s.expr(n.X)
-		if ft, tt := n.X.Type(), n.Type(); ft.IsInteger() && ft.IsSigned() && ft.Size() == 8 && tt.IsInteger() && !tt.IsSigned() && tt.Size() == 1 && s.sgoSource() {
-			s.sgoConvByte(x) // byte(i): IntegerOverflow outside 0..255 (SGO-TYPE-007)
+		if s.sgoSource() {
+			s.sgoConvCheck(n.X.Type(), n.Type(), x) // byte(i), byte(r), rune(i): IntegerOverflow (SGO-TYPE-007, SGO-TYPE-008)
 		}
 		return s.conv(n, x, n.X.Type(), n.Type())
 

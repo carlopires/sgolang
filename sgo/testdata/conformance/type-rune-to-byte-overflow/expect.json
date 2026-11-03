@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-TYPE-008",
+  "SGO-TYPE-007"
+ ],
+ "exit": 2,
+ "stdout": "before\n",
+ "stderr_kind": "IntegerOverflow"
+}

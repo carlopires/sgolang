@@ -1,0 +1,17 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	s := "a\u00e9b"
+	n := 0
+	last := 0
+	for i := range s {
+		n++
+		last = i
+	}
+	if n == 3 && last == 3 {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("bad\n")
+}

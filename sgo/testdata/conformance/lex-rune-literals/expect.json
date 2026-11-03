@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-LEX-004",
+  "SGO-TYPE-008"
+ ],
+ "exit": 0,
+ "stdout": "97 10 9 13 92 39 65 233 128512 233 \n"
+}

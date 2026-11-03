@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	var r rune = 'a'
+	i := 1
+	_ = r + i
+	return nil
+}
