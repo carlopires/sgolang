@@ -105,8 +105,9 @@ restored and rebuilt after):
 | `sgo_copy` returns its argument (shallow) | comp-copy-deep, comp-copy-send, comp-copy-sharing, comp-copy-cycle (wrong output) |
 | `.sgo` map operations use Go's maps | comp-map-order, comp-map-delete-reinsert, comp-map-range-mutate (Go order), comp-map-nil-write (RuntimeDefect, exit 4) |
 
-CI on `51f4424bd7`: sgo-spec 41574250765 success; sgo-runtime 41574250776 and sgo-w00 41574250875
-were running when this was recorded.
+CI on `51f4424bd7`: sgo-spec 41574250765 success; sgo-runtime 41574250776 success (linux lane and
+race lane); sgo-w00 41574250875 success on linux/amd64 and linux/arm64 (conformance 428 cases, check,
+test, examples, release archive, identity, fmt, TCB, X10, S12, lab, negative fixtures, spec gates).
 
 ## Stage 2 drafts (approved 2026-11-02; frozen at 0.9.0 above)
 
