@@ -1,6 +1,6 @@
 # W16 drafts: standard library v1 (for approval)
 
-Status: **draft, awaiting owner approval.** These clauses are kept here, outside `sgo/spec/`, so the
+Status: **approved 2026-11-03** (D121–D126 as recommended); freezes at spec 0.13.0. These clauses are kept here, outside `sgo/spec/`, so the
 frozen 0.12.0 digest does not change. On approval they freeze at spec **0.13.0**. They implement
 D103 and D108–D110 of `sgo/docs/stdlib-foundations-plan.md` (approved 2026-11-03) for the packages
 the plan names: `errors`, `strings`, `bytes`, `strconv`, `utf8`, `sort`, `math`.

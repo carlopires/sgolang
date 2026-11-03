@@ -750,27 +750,27 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation.** `rune(i)`, `int(r)`, `rune(b)`, `byte(r)` (checked), `string(r)`, `[]rune(s)`, `string(rs)`. `string(i)` for an int stays denied (use `string(rune(i))`); conversions between slice types stay denied. (sgo/docs/w15-drafts.md)
 
-## D121 — Library errors without interfaces **[NEEDS USER]** · PROPOSED
+## D121 — Library errors without interfaces **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** `std/errors` v1 is `New` only; `Is`, `As`, `Unwrap`, `Join` come with W17. Library errors are distinguished by being non-nil and by their message, whose exact format each clause states (Go's formats). (sgo/docs/w16-drafts.md)
 
-## D122 — Unicode scope of the first library **[NEEDS USER]** · PROPOSED
+## D122 — Unicode scope of the first library **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** White_Space classification is complete (25 code points, no table), so `TrimSpace` and `Fields` behave as in Go; case mapping is ASCII-only and named so (`ToUpperASCII`, `ToLowerASCII`, `EqualFoldASCII`); full case tables wait for a table representation without package variables. (sgo/docs/w16-drafts.md)
 
-## D123 — Sorting without generics or interfaces **[NEEDS USER]** · PROPOSED
+## D123 — Sorting without generics or interfaces **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** Typed in-place sorts (`Ints`, `Strings`, `Runes`, `Bytes`), `Search`/`SearchInts`/`SearchStrings`, and `Perm(n, less) []int` returning the sorted order as indices; every sort is stable and uses one fixed merge sort, so results are identical on every platform. (sgo/docs/w16-drafts.md)
 
-## D124 — Library functions outside their domain **[NEEDS USER]** · PROPOSED
+## D124 — Library functions outside their domain **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** Input-caused conditions that Go reports as errors are errors; preconditions Go enforces by panicking are `panic` with a message naming the function; arithmetic overflow is the checked `IntegerOverflow` at the library's position. (sgo/docs/w16-drafts.md)
 
-## D125 — Checking "behaves like Go" **[NEEDS USER]** · PROPOSED
+## D125 — Checking "behaves like Go" **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** A function with a Go counterpart of the same name and parameter shape has its documented results; a differential test compares Go's package and `std/` on the same generated inputs (edge cases, seeded random strings including invalid UTF-8); deviations are listed in each clause. (sgo/docs/w16-drafts.md)
 
-## D126 — The library API is specified **[NEEDS USER]** · PROPOSED
+## D126 — The library API is specified **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** Each package's exported API and behavior is a frozen clause (SGO-STD-001..007, `SPEC-STD.md`); an exported name not in a clause is refused by `std-api-check.py`; adding a function is a clause amendment and a spec version. (sgo/docs/w16-drafts.md)
 
@@ -802,3 +802,4 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - 2026-11-03: user approved D103–D110 and the standard-library foundations plan (sgo/docs/stdlib-foundations-plan.md) as recommended ("looks good; approved"). W14 clause drafts follow for approval before implementation.
 - 2026-11-03: user approved D111–D115 and the W14 drafts (sgo/docs/w14-drafts.md: SGO-IMP-001 v2, SGO-IMP-002 v2, SGO-IMP-003, SGO-IMP-004) as recommended ("looks good; approved"). W14 implementation starts; the drafts freeze at spec 0.11.0.
 - 2026-11-03: user approved D116–D120 and the W15 drafts (sgo/docs/w15-drafts.md: SGO-LEX-004 v2, SGO-TYPE-008, SGO-TYPE-001 v8, SGO-TYPE-007 v2, SGO-VAL-002 v3, SGO-COMP-005 v2) as recommended ("looks good; approved"). W15 implementation starts; the drafts freeze at spec 0.12.0.
+- 2026-11-03: user approved D121–D126 and the W16 drafts (sgo/docs/w16-drafts.md: SGO-STD-001..007, SGO-IMP-004 v2) as recommended ("looks good; approved"). W16 implementation starts; the drafts freeze at spec 0.13.0.

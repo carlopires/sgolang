@@ -846,7 +846,7 @@
         "W15"
       ],
       "risk": "medium",
-      "status": "pending",
+      "status": "in_progress",
       "plan_section": "sgo/docs/stdlib-foundations-plan.md",
       "deliverables": [
         "std/errors, strings, bytes, strconv, utf8, sort, math in S-Go, no package state (D109), sgo test suites (D110)"
