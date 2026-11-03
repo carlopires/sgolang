@@ -128,6 +128,26 @@ Mutations (rebuilt into stage 0 with a regenerated manifest, run, restored and r
 | the access-path rule accepts every use of `f.Get()` | frozen-write-field, frozen-write-map, frozen-escape-var, frozen-escape-arg, frozen-append, frozen-range-ref (build succeeded) |
 | `sgo.Freeze` shares its argument instead of copying it | frozen-caller-mutates (wrong output), w13-p5-table (`sum 436`) |
 
+## Review (13.4) — findings V1–V3 and fixes
+
+Reviewer job note2, at `fb4d84ce23` on linux/amd64: conformance 454/454, runtime lane and race lane
+green, and three findings:
+
+| ID | Severity | Finding | Fix |
+|---|---|---|---|
+| V1 | blocker | `sgo.Copy` keyed copied objects by address alone: `&b.x` and `b` shared one allocation sized for an int (out-of-bounds heap writes) | `c09c5c56e1`: objects keyed by (address, type), slices by (array, element type, cap); interface values with user dynamic types deep-copied; SGO-COMP-004 v3 (spec 0.10.1) states that interior aliasing is not preserved |
+| V2 | blocker | a task-local named type converted to `error` crossed tasks by capture, `chan error`, `Commit`, or returns, with no `sgo.Copy` | `c09c5c56e1` + `0a82e925c1`: implicit conversions of task-local values to an interface are `SGO_E_TASK_LOCAL_CAPTURE` (a pass over recorded types in `types2/sgo_local.go`; `assignments.go` stays as upstream, a go/types generator input); SGO-COMP-004 v3 rule 4 |
+| V3 | minor | map lowering chosen per source position: a position-less node could fall back to Go's map | `74f4284f9d`: chosen by package mode; package sgo using a map is a compiler fatal; `test-map-lowering.py` in CI |
+
+Tests and mutants: `comp-copy-interior-pointer` and the runtime tests `TestSGoCopyInteriorPointer`
+(10 000 copies under GC percent 1) and `TestSGoCopyCycleAndSharing` catch the address-only key;
+`comp-error-task-local` (`-return`, `-send`, `-arg`, `-literal`) and `comp-error-pointer-receiver`
+catch the disabled conversion check; `test-map-lowering.py` catches Go maps in S-Go packages
+(comp-map-basic called `mapaccess1_faststr`, `mapassign_faststr`, `mapclear`, `mapdelete_faststr`).
+darwin-arm64 at `0a82e925c1`: conformance 462/462, generated-twin-check ok. Open: the G01 sharing
+model's generator does not yet produce user error types (reviewer note); linux re-check of V1–V3
+pending.
+
 ## Stage 2 drafts (approved 2026-11-02; frozen at 0.9.0 above)
 
 
