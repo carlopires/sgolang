@@ -867,7 +867,7 @@
         "W16"
       ],
       "risk": "high",
-      "status": "pending",
+      "status": "in_progress",
       "plan_section": "sgo/docs/stdlib-foundations-plan.md",
       "deliverables": [
         "user interfaces under the sharing rule (D107), model first; type assertions and switches"

@@ -1,6 +1,6 @@
 # W17 drafts: interfaces (for approval)
 
-Status: **draft, awaiting owner approval.** These clauses are kept here, outside `sgo/spec/`, so the
+Status: **approved 2026-11-03** (D127–D133 as recommended); freezes at spec 0.14.0. These clauses are kept here, outside `sgo/spec/`, so the
 frozen 0.13.0 digest does not change. On approval they freeze at spec **0.14.0**. They implement
 D107 (interfaces and the sharing rule, approved 2026-11-03) and follow D110's process. The plan
 marks W17 as the riskiest package and asks for it to be **model first**: the sharing model is

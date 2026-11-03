@@ -774,31 +774,31 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation.** Each package's exported API and behavior is a frozen clause (SGO-STD-001..007, `SPEC-STD.md`); an exported name not in a clause is refused by `std-api-check.py`; adding a function is a clause amendment and a spec version. (sgo/docs/w16-drafts.md)
 
-## D127 — Admitted interface forms **[NEEDS USER]** · PROPOSED
+## D127 — Admitted interface forms **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** Named interface types with admitted method signatures, embedding of named interface types, and `any`; interface type literals outside a declaration and type sets/unions stay denied. (sgo/docs/w17-drafts.md)
 
-## D128 — Comparing interface values **[NEEDS USER]** · PROPOSED
+## D128 — Comparing interface values **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** Only with nil; `==` between interface values and interface map keys are denied (Go's comparison can panic at run time), as for `error`. (sgo/docs/w17-drafts.md)
 
-## D129 — Type assertions **[NEEDS USER]** · PROPOSED
+## D129 — Type assertions **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** The comma-ok form and type switches; the single-value `x.(T)`, which panics on a mismatch, is denied; an impossible T is a compile error. (sgo/docs/w17-drafts.md)
 
-## D130 — No typed nil **[NEEDS USER]** · PROPOSED
+## D130 — No typed nil **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** A nil pointer converted to an interface type is the nil interface; a method call on a nil interface is `NilDereference`; a deliberate, stated difference from Go. (sgo/docs/w17-drafts.md)
 
-## D131 — Method sets and calls **[NEEDS USER]** · PROPOSED
+## D131 — Method sets and calls **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** Go's method-set rules; dynamic dispatch to the dynamic type's method; method values and method expressions of interface types stay denied. (sgo/docs/w17-drafts.md)
 
-## D132 — Interfaces under the sharing rule **[NEEDS USER]** · PROPOSED
+## D132 — Interfaces under the sharing rule **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** Every interface type but `error` is task-local whatever its dynamic value: no send without `sgo.Copy` (which deep-copies the dynamic value), no spawn capture, no frozen or shareable storage; `error` stays shareable and only shareable types convert to it. (sgo/docs/w17-drafts.md)
 
-## D133 — Library additions with interfaces **[NEEDS USER]** · PROPOSED
+## D133 — Library additions with interfaces **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** `errors.Unwrap` and `sort.Sort` with `sort.Interface` (stable); `std/io`, `fmt`, and `errors.Is`/`As` get their own drafts. (sgo/docs/w17-drafts.md)
 
@@ -831,3 +831,4 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - 2026-11-03: user approved D111–D115 and the W14 drafts (sgo/docs/w14-drafts.md: SGO-IMP-001 v2, SGO-IMP-002 v2, SGO-IMP-003, SGO-IMP-004) as recommended ("looks good; approved"). W14 implementation starts; the drafts freeze at spec 0.11.0.
 - 2026-11-03: user approved D116–D120 and the W15 drafts (sgo/docs/w15-drafts.md: SGO-LEX-004 v2, SGO-TYPE-008, SGO-TYPE-001 v8, SGO-TYPE-007 v2, SGO-VAL-002 v3, SGO-COMP-005 v2) as recommended ("looks good; approved"). W15 implementation starts; the drafts freeze at spec 0.12.0.
 - 2026-11-03: user approved D121–D126 and the W16 drafts (sgo/docs/w16-drafts.md: SGO-STD-001..007, SGO-IMP-004 v2) as recommended ("looks good; approved"). W16 implementation starts; the drafts freeze at spec 0.13.0.
+- 2026-11-03: user approved D127–D133 and the W17 drafts (sgo/docs/w17-drafts.md: SGO-IFACE-001 v2, SGO-IFACE-002..004, amendments) as recommended ("looks good; approved"). W17 starts with the share model; the drafts freeze at spec 0.14.0.
