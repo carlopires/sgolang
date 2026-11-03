@@ -81,7 +81,35 @@ linux/arm64 (conformance, check, test, examples, release archive, identity, fmt,
 negative fixtures, spec gates, benchmarks); the upstream baseline step (B03) was still running when
 this was recorded.
 
-## Stage 2 drafts (awaiting approval)
+## Stage 2 — spec 0.9.0 (`51f4424bd7`)
+
+Drafts approved 2026-11-02 (D93–D97) and frozen at spec 0.9.0: SGO-COMP-004 (task-local types,
+capture and send rules, `sgo.Copy`), SGO-COMP-005 (slices, `[]byte`, string indexing and slicing),
+SGO-COMP-006 (insertion-ordered maps), SGO-COMP-007 (pointers, pointer receivers), SGO-COMP-008
+(nil, `NilDereference`, `NilMapWrite`), SGO-TYPE-007 (`byte`), and 13 amended clauses (CHANGELOG
+0.9.0). 79 new conformance cases; seven former denials (type-slice, type-pointer, val-string-index,
+comp-array-slice, comp-array-chan-elem, utype-pointer-receiver, lex-denied-operators now on `~`)
+updated.
+
+darwin-arm64: conformance 428/428 (245 run, 146 reject, 31 lab, 6 test), runtime lane
+(`TestSGo|TestAPI`, runtime and sgo), test-identity, test-tcb, spec-tool, inventory (567 surfaces),
+guarantee, license, lock-alloc, adoption, generated-twin, and policy checks pass. Matrix G04, G05,
+G06, G07, G10, G11, G12 passed; G08 (frozen values) is stage 3.
+
+Mutations (each rebuilt into stage 0 with a regenerated manifest, run against its fixtures,
+restored and rebuilt after):
+
+| Mutation | Detected by |
+|---|---|
+| `sgoTaskLocal` reports no type task-local (capture and send rules off) | comp-spawn-capture-slice, comp-spawn-capture-map, comp-uncopied-send, comp-local-closure-arg (build succeeded) |
+| `sgo_copy` returns its argument (shallow) | comp-copy-deep, comp-copy-send, comp-copy-sharing, comp-copy-cycle (wrong output) |
+| `.sgo` map operations use Go's maps | comp-map-order, comp-map-delete-reinsert, comp-map-range-mutate (Go order), comp-map-nil-write (RuntimeDefect, exit 4) |
+
+CI on `51f4424bd7`: sgo-spec 41574250765 success; sgo-runtime 41574250776 and sgo-w00 41574250875
+were running when this was recorded.
+
+## Stage 2 drafts (approved 2026-11-02; frozen at 0.9.0 above)
+
 
 `sgo/docs/w13-stage2-drafts.md`: SGO-COMP-004 (task-local types, `sgo.Copy`, capture and send
 rules), SGO-COMP-005 (slices, `[]byte`, string indexing), SGO-COMP-006 (maps with insertion order),
