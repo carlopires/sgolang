@@ -1,6 +1,6 @@
 # W15 drafts: runes and text iteration (for approval)
 
-Status: **draft, awaiting owner approval.** These clauses are kept here, outside `sgo/spec/`, so the
+Status: **approved 2026-11-03** (D116–D120 as recommended); freezes at spec 0.12.0. These clauses are kept here, outside `sgo/spec/`, so the
 frozen 0.11.0 digest does not change. On approval they freeze at spec **0.12.0**. They implement
 D106 (runes, approved 2026-11-03) and follow the process of D110
 (`sgo/docs/stdlib-foundations-plan.md`).

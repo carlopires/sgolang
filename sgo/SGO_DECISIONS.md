@@ -730,23 +730,23 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation.** Any package may import `std/...`. A `std/` package imports only other `std/` packages and `sgo`, never a user module. `std` is one implicit module that is always present, never required, replaced, or vendored. (sgo/docs/w14-drafts.md)
 
-## D116 — Are surrogates rune values? **[NEEDS USER]** · PROPOSED
+## D116 — Are surrogates rune values? **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** Yes, as values: the rune range check is 0..0x10FFFF only. A rune literal or `\u` escape naming a surrogate is a compile error, and encoding a surrogate (`string(r)`, `string(rs)`) yields U+FFFD, as in Go. (sgo/docs/w15-drafts.md)
 
-## D117 — How is invalid UTF-8 decoded? **[NEEDS USER]** · PROPOSED
+## D117 — How is invalid UTF-8 decoded? **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** As Go: each invalid or truncated sequence, overlong form, or encoded surrogate decodes to U+FFFD and advances one byte; `range` over strings, `[]rune(s)`, and `std/utf8` share this rule. (sgo/docs/w15-drafts.md)
 
-## D118 — Untyped rune constants **[NEEDS USER]** · PROPOSED
+## D118 — Untyped rune constants **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** A rune literal is an untyped rune constant with default type `rune`, assignable to int, byte, or rune (and named types over them) when representable; typed operands are not mixed without a conversion. (sgo/docs/w15-drafts.md)
 
-## D119 — Admitted escapes **[NEEDS USER]** · PROPOSED
+## D119 — Admitted escapes **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** Admit `\u` and `\U` in string and rune literals and `\'` in rune literals; surrogates and values above 0x10FFFF are compile errors; `\a \b \f \v` and octal escapes stay denied; `\xHH` in a rune literal is the code point 0xHH. (sgo/docs/w15-drafts.md)
 
-## D120 — Rune conversions **[NEEDS USER]** · PROPOSED
+## D120 — Rune conversions **[NEEDS USER]** · APPROVED 2026-11-03
 
 **Recommendation.** `rune(i)`, `int(r)`, `rune(b)`, `byte(r)` (checked), `string(r)`, `[]rune(s)`, `string(rs)`. `string(i)` for an int stays denied (use `string(rune(i))`); conversions between slice types stay denied. (sgo/docs/w15-drafts.md)
 
@@ -777,3 +777,4 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - 2026-11-03: user directed "close W13" (D102: stage 4 deferred) and to prepare for the standard library.
 - 2026-11-03: user approved D103–D110 and the standard-library foundations plan (sgo/docs/stdlib-foundations-plan.md) as recommended ("looks good; approved"). W14 clause drafts follow for approval before implementation.
 - 2026-11-03: user approved D111–D115 and the W14 drafts (sgo/docs/w14-drafts.md: SGO-IMP-001 v2, SGO-IMP-002 v2, SGO-IMP-003, SGO-IMP-004) as recommended ("looks good; approved"). W14 implementation starts; the drafts freeze at spec 0.11.0.
+- 2026-11-03: user approved D116–D120 and the W15 drafts (sgo/docs/w15-drafts.md: SGO-LEX-004 v2, SGO-TYPE-008, SGO-TYPE-001 v8, SGO-TYPE-007 v2, SGO-VAL-002 v3, SGO-COMP-005 v2) as recommended ("looks good; approved"). W15 implementation starts; the drafts freeze at spec 0.12.0.
