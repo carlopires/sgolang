@@ -1,0 +1,163 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package strings
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+func fail(what, got, want string) error {
+	return sgo.NewError(what + ": got " + strconv.QuoteToASCII(got) + ", want " + strconv.QuoteToASCII(want))
+}
+
+func list(a []string) string {
+	b := Builder{}
+	_ = b.WriteByte('[')
+	for i, s := range a {
+		if i > 0 {
+			_ = b.WriteByte(' ')
+		}
+		_, _ = b.WriteString(strconv.QuoteToASCII(s))
+	}
+	_ = b.WriteByte(']')
+	return b.String()
+}
+
+type searchCase struct {
+	s, sub      string
+	index, last int
+	count       int
+}
+
+func TestSearch(t *sgo.T) error {
+	cases := []searchCase{
+		{"", "", 0, 0, 1},
+		{"", "a", -1, -1, 0},
+		{"abc", "", 0, 3, 4},
+		{"abcabc", "bc", 1, 4, 2},
+		{"aaaa", "aa", 0, 2, 2},
+		{"h\u00e9llo", "llo", 3, 3, 1},
+		{"x\xffy", "\xff", 1, 1, 1},
+	}
+	for _, c := range cases {
+		if Index(c.s, c.sub) != c.index || LastIndex(c.s, c.sub) != c.last || Count(c.s, c.sub) != c.count {
+			return sgo.NewError("search " + strconv.QuoteToASCII(c.s) + " " + strconv.QuoteToASCII(c.sub))
+		}
+	}
+	if IndexRune("a\xffb\uFFFD", 0xFFFD) != 1 || IndexRune("ab\uFFFD", 0xFFFD) != 2 || IndexRune("h\u00e9", 0xE9) != 1 || IndexRune("ab", 0xD800) != -1 {
+		return sgo.NewError("IndexRune")
+	}
+	if !HasPrefix("abc", "ab") || HasPrefix("a", "ab") || !HasSuffix("abc", "bc") || !Contains("abc", "") || ContainsRune("abc", 'd') {
+		return sgo.NewError("prefix/suffix/contains")
+	}
+	if Compare("a", "b") != -1 || Compare("b", "a") != 1 || Compare("a", "a") != 0 {
+		return sgo.NewError("Compare")
+	}
+	return nil
+}
+
+type splitCase struct {
+	s, sep string
+	n      int
+	want   string
+}
+
+func TestSplitJoin(t *sgo.T) error {
+	cases := []splitCase{
+		{"a,b,c", ",", -1, `["a" "b" "c"]`},
+		{"a,b,c", ",", 2, `["a" "b,c"]`},
+		{"a,b,c", ",", 0, `[]`},
+		{"", ",", -1, `[""]`},
+		{",", ",", -1, `["" ""]`},
+		{"abc", "", -1, `["a" "b" "c"]`},
+		{"h\u00e9\xff", "", -1, `["h" "\u00e9" "\xff"]`},
+		{"abc", "", 2, `["a" "bc"]`},
+	}
+	for _, c := range cases {
+		if got := list(SplitN(c.s, c.sep, c.n)); got != c.want {
+			return fail("SplitN("+c.s+")", got, c.want)
+		}
+	}
+	if SplitN("a", ",", 0) != nil {
+		return sgo.NewError("SplitN n=0 is not nil")
+	}
+	if got := Join([]string{"a", "b", "c"}, ", "); got != "a, b, c" {
+		return fail("Join", got, "a, b, c")
+	}
+	if Join(nil, ",") != "" || Join([]string{"x"}, ",") != "x" {
+		return sgo.NewError("Join edges")
+	}
+	if got := list(Fields("  a \t b\u2003c\u00a0 \n")); got != `["a" "b" "c"]` {
+		return fail("Fields", got, `["a" "b" "c"]`)
+	}
+	if got := list(Fields(" \u3000 ")); got != `[]` {
+		return fail("Fields space only", got, `[]`)
+	}
+	if b, a, ok := Cut("k=v=w", "="); b != "k" || a != "v=w" || !ok {
+		return sgo.NewError("Cut")
+	}
+	if b, a, ok := Cut("kv", "="); b != "kv" || a != "" || ok {
+		return sgo.NewError("Cut not found")
+	}
+	if r, ok := CutPrefix("prefix", "pre"); r != "fix" || !ok {
+		return sgo.NewError("CutPrefix")
+	}
+	if r, ok := CutSuffix("prefix", "x"); r != "prefi" || !ok {
+		return sgo.NewError("CutSuffix")
+	}
+	return nil
+}
+
+type gotWant struct{ got, want string }
+
+func TestTransform(t *sgo.T) error {
+	cases := []gotWant{
+		{Repeat("ab", 3), "ababab"},
+		{Repeat("", 5), ""},
+		{Replace("oink oink oink", "k", "ky", 2), "oinky oinky oink"},
+		{Replace("oink oink oink", "oink", "moo", -1), "moo moo moo"},
+		{Replace("abc", "", "-", -1), "-a-b-c-"},
+		{Replace("abc", "", "-", 2), "-a-bc"},
+		{ReplaceAll("banana", "a", "o"), "bonono"},
+		{Trim("xxhixx", "x"), "hi"},
+		{TrimLeft("\u00e9\u00e9a\u00e9", "\u00e9"), "a\u00e9"},
+		{TrimRight("a\xff\xff", "\uFFFD"), "a"},
+		{Trim("abc", ""), "abc"},
+		{TrimPrefix("abc", "ab"), "c"},
+		{TrimSuffix("abc", "bc"), "a"},
+		{TrimSpace(" \t\u2028hi there\u00a0\n"), "hi there"},
+		{TrimSpace("\xff "), "\xff"},
+		{ToUpperASCII("h\u00e9llo, World"), "H\u00e9LLO, WORLD"},
+		{ToLowerASCII("HeLLo \u00c9"), "hello \u00c9"},
+	}
+	for i, c := range cases {
+		if c.got != c.want {
+			return fail("case "+strconv.Itoa(i), c.got, c.want)
+		}
+	}
+	if !EqualFoldASCII("Go", "GO") || EqualFoldASCII("\u00e9", "\u00c9") || EqualFoldASCII("a", "ab") {
+		return sgo.NewError("EqualFoldASCII")
+	}
+	return nil
+}
+
+func TestBuilder(t *sgo.T) error {
+	b := Builder{}
+	n, _ := b.WriteString("h")
+	_ = b.WriteByte('i')
+	m, _ := b.WriteRune(0xE9)
+	k, _ := b.WriteRune(0xD800)
+	s := b.String()
+	_, _ = b.WriteString("!")
+	if s != "hi\u00e9\uFFFD" || n != 1 || m != 2 || k != 3 || b.Len() != 8 || b.String() != "hi\u00e9\uFFFD!" {
+		return fail("Builder", s, "hi\u00e9\uFFFD")
+	}
+	b.Reset()
+	if b.Len() != 0 || b.String() != "" {
+		return sgo.NewError("Reset")
+	}
+	return nil
+}

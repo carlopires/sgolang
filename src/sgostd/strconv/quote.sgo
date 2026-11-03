@@ -1,0 +1,264 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package strconv
+
+import (
+	"sgo"
+	"std/utf8"
+)
+
+const lowerhex = "0123456789abcdef"
+
+// QuoteToASCII returns a double-quoted literal of s using Go escape sequences: every non-ASCII
+// or non-printable rune is escaped (\t, \n, \xFF, \u00e9, \U0001f600), and each invalid UTF-8 byte
+// is written as \xHH, exactly as Go's strconv.QuoteToASCII.
+func QuoteToASCII(s string) string {
+	buf := make([]byte, 0, len(s)+2)
+	buf = append(buf, '"')
+	for len(s) > 0 {
+		r, width := utf8.DecodeRuneInString(s)
+		if width == 1 && r == utf8.RuneError {
+			buf = append(buf, '\\', 'x', lowerhex[s[0]>>4], lowerhex[s[0]&0xF])
+		} else {
+			buf = appendEscapedRune(buf, r)
+		}
+		s = s[width:]
+	}
+	buf = append(buf, '"')
+	return string(buf)
+}
+
+// appendEscapedRune appends r as Go's appendEscapedRune does for a double quote, ASCII only.
+func appendEscapedRune(buf []byte, r rune) []byte {
+	if r == '"' || r == '\\' {
+		return append(buf, '\\', byte(r))
+	}
+	if 0x20 <= r && r < 0x7F {
+		return append(buf, byte(r))
+	}
+	switch r {
+	case 0x07:
+		return append(buf, '\\', 'a')
+	case 0x08:
+		return append(buf, '\\', 'b')
+	case 0x0C:
+		return append(buf, '\\', 'f')
+	case '\n':
+		return append(buf, '\\', 'n')
+	case '\r':
+		return append(buf, '\\', 'r')
+	case '\t':
+		return append(buf, '\\', 't')
+	case 0x0B:
+		return append(buf, '\\', 'v')
+	}
+	if r < ' ' || r == 0x7F {
+		return append(buf, '\\', 'x', lowerhex[byte(r)>>4], lowerhex[byte(r)&0xF])
+	}
+	if !utf8.ValidRune(r) {
+		r = 0xFFFD
+	}
+	if r < 0x10000 {
+		buf = append(buf, '\\', 'u')
+		for s := 12; s >= 0; s -= 4 {
+			buf = append(buf, lowerhex[r>>s&0xF])
+		}
+		return buf
+	}
+	buf = append(buf, '\\', 'U')
+	for s := 28; s >= 0; s -= 4 {
+		buf = append(buf, lowerhex[r>>s&0xF])
+	}
+	return buf
+}
+
+// errSyntax is the error Unquote returns, with Go's message.
+func errSyntax() error {
+	return sgo.NewError("invalid syntax")
+}
+
+// unhex returns the value of the hexadecimal digit c.
+func unhex(c byte) (int, bool) {
+	switch {
+	case '0' <= c && c <= '9':
+		return int(c) - '0', true
+	case 'a' <= c && c <= 'f':
+		return int(c) - 'a' + 10, true
+	case 'A' <= c && c <= 'F':
+		return int(c) - 'A' + 10, true
+	}
+	return 0, false
+}
+
+// unquoteChar decodes the first character or escape of s inside a literal quoted by quote, as
+// Go's strconv.UnquoteChar: it returns the value, whether it must be written as UTF-8, the rest
+// of s, and whether s was well formed.
+func unquoteChar(s string, quote byte) (rune, bool, string, bool) {
+	if len(s) == 0 {
+		return 0, false, "", false
+	}
+	c := s[0]
+	switch {
+	case c == quote && (quote == '\'' || quote == '"'):
+		return 0, false, "", false
+	case c >= utf8.RuneSelf:
+		r, size := utf8.DecodeRuneInString(s)
+		return r, true, s[size:], true
+	case c != '\\':
+		return rune(c), false, s[1:], true
+	}
+	if len(s) <= 1 {
+		return 0, false, "", false
+	}
+	c = s[1]
+	s = s[2:]
+	switch c {
+	case 'a':
+		return 0x07, false, s, true
+	case 'b':
+		return 0x08, false, s, true
+	case 'f':
+		return 0x0C, false, s, true
+	case 'n':
+		return '\n', false, s, true
+	case 'r':
+		return '\r', false, s, true
+	case 't':
+		return '\t', false, s, true
+	case 'v':
+		return 0x0B, false, s, true
+	case 'x', 'u', 'U':
+		n := 2
+		if c == 'u' {
+			n = 4
+		} else if c == 'U' {
+			n = 8
+		}
+		if len(s) < n {
+			return 0, false, "", false
+		}
+		v := 0
+		for j := 0; j < n; j++ {
+			x, ok := unhex(s[j])
+			if !ok {
+				return 0, false, "", false
+			}
+			v = v<<4 | x
+		}
+		s = s[n:]
+		if c == 'x' {
+			return rune(v), false, s, true
+		}
+		if v > utf8.MaxRune || !utf8.ValidRune(rune(v)) {
+			return 0, false, "", false
+		}
+		return rune(v), true, s, true
+	case '0', '1', '2', '3', '4', '5', '6', '7':
+		v := int(c) - '0'
+		if len(s) < 2 {
+			return 0, false, "", false
+		}
+		for j := 0; j < 2; j++ {
+			if s[j] < '0' || s[j] > '7' {
+				return 0, false, "", false
+			}
+			v = v<<3 | (int(s[j]) - '0')
+		}
+		if v > 255 {
+			return 0, false, "", false
+		}
+		return rune(v), false, s[2:], true
+	case '\\':
+		return '\\', false, s, true
+	case '\'', '"':
+		if c != quote {
+			return 0, false, "", false
+		}
+		return rune(c), false, s, true
+	}
+	return 0, false, "", false
+}
+
+// Unquote interprets s as a single-quoted, double-quoted, or backquoted Go literal and returns
+// the string value it quotes, as Go's strconv.Unquote (a single-quoted literal gives the string
+// of its one character). A malformed literal gives the error "invalid syntax".
+func Unquote(s string) (string, error) {
+	if len(s) < 2 {
+		return "", errSyntax()
+	}
+	quote := s[0]
+	end := indexByteFrom(s, 1, quote)
+	if end < 0 {
+		return "", errSyntax()
+	}
+	end++ // position after the terminating quote; may be wrong if escape sequences are present
+	switch quote {
+	case '`':
+		if end != len(s) {
+			return "", errSyntax()
+		}
+		buf := make([]byte, 0, end-2)
+		for i := 1; i < end-1; i++ {
+			if s[i] != '\r' {
+				buf = append(buf, s[i])
+			}
+		}
+		return string(buf), nil
+	case '"', '\'':
+	default:
+		return "", errSyntax()
+	}
+	if !hasByte(s[:end], '\\') && !hasByte(s[:end], '\n') {
+		valid := false
+		if quote == '"' {
+			valid = utf8.ValidString(s[1 : end-1])
+		} else {
+			r, n := utf8.DecodeRuneInString(s[1 : end-1])
+			valid = 1+n+1 == end && (r != utf8.RuneError || n != 1)
+		}
+		if valid {
+			if end != len(s) {
+				return "", errSyntax()
+			}
+			return s[1 : end-1], nil
+		}
+	}
+	in := s[1:]
+	buf := make([]byte, 0, 3*end/2)
+	for len(in) > 0 && in[0] != quote {
+		r, multibyte, rem, ok := unquoteChar(in, quote)
+		if in[0] == '\n' || !ok {
+			return "", errSyntax()
+		}
+		in = rem
+		if r < utf8.RuneSelf || !multibyte {
+			buf = append(buf, byte(r))
+		} else {
+			buf = utf8.AppendRune(buf, r)
+		}
+		if quote == '\'' {
+			break
+		}
+	}
+	if !(len(in) > 0 && in[0] == quote) || len(in) != 1 {
+		return "", errSyntax()
+	}
+	return string(buf), nil
+}
+
+// indexByteFrom returns the index of the first c in s at or after
+// from, or -1.
+func indexByteFrom(s string, from int, c byte) int {
+	for i := from; i < len(s); i++ {
+		if s[i] == c {
+			return i
+		}
+	}
+	return -1
+}
+
+func hasByte(s string, c byte) bool {
+	return indexByteFrom(s, 0, c) >= 0
+}

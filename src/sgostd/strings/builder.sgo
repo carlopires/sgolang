@@ -1,0 +1,48 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package strings
+
+import "std/utf8"
+
+// A Builder builds a string by appending to a byte buffer. Its zero value is ready to use. It is
+// task-local (SGO-COMP-004); String returns a copy, so later writes never change a returned string.
+type Builder struct {
+	buf []byte
+}
+
+// WriteString appends s and returns len(s) and a nil error.
+func (b *Builder) WriteString(s string) (int, error) {
+	b.buf = append(b.buf, s...)
+	return len(s), nil
+}
+
+// WriteByte appends c and returns a nil error.
+func (b *Builder) WriteByte(c byte) error {
+	b.buf = append(b.buf, c)
+	return nil
+}
+
+// WriteRune appends the UTF-8 encoding of r (RuneError for a surrogate) and returns the number
+// of bytes written and a nil error.
+func (b *Builder) WriteRune(r rune) (int, error) {
+	n := len(b.buf)
+	b.buf = utf8.AppendRune(b.buf, r)
+	return len(b.buf) - n, nil
+}
+
+// Len returns the number of bytes written.
+func (b *Builder) Len() int {
+	return len(b.buf)
+}
+
+// String returns the bytes written, as a string.
+func (b *Builder) String() string {
+	return string(b.buf)
+}
+
+// Reset empties the Builder.
+func (b *Builder) Reset() {
+	b.buf = nil
+}

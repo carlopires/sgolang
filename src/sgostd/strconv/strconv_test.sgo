@@ -35,7 +35,7 @@ func TestAtoiValid(t *sgo.T) error {
 func TestAtoiInvalid(t *sgo.T) error {
 	for _, s := range []string{"", "+", "-", "1 ", " 1", "1a", "--1", "9223372036854775808", "-9223372036854775809", "99999999999999999999"} {
 		if _, err := Atoi(s); err == nil {
-			return sgo.NewError("Atoi(" + quote(s) + ") did not fail")
+			return sgo.NewError("Atoi(" + QuoteToASCII(s) + ") did not fail")
 		}
 	}
 	return nil
