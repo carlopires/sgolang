@@ -126,14 +126,14 @@ func (t *toolchain) checkPkg(m *module, p *pkg, archives map[string]string, work
 		return nil, false, err
 	}
 	pkgpath := p.path
-	if packageName(filepath.Join(m.root, p.files[0])) == "main" {
+	if p.mod.main && packageName(filepath.Join(p.mod.root, p.files[0])) == "main" {
 		pkgpath = "main"
 	}
 	archive := filepath.Join(work, name+".a")
 	args := append([]string{"-sgocheck", "-o", archive, "-p", pkgpath, "-importcfg", importcfg, "-pack", "-complete",
-		"-trimpath", m.root + "=>"}, p.files...)
+		"-trimpath", p.mod.trim()}, p.files...)
 	cmd := exec.Command(t.tool("compile"), args...)
-	cmd.Dir, cmd.Env = m.root, env
+	cmd.Dir, cmd.Env = p.mod.root, env
 	var out bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &out
 	if err := cmd.Run(); err != nil {
@@ -188,7 +188,7 @@ func (m *module) packageDirs() ([]string, error) {
 			return err
 		}
 		name := d.Name()
-		if d.IsDir() && path != m.root && (name == "testdata" || strings.HasPrefix(name, ".") || strings.HasPrefix(name, "_")) {
+		if d.IsDir() && path != m.root && (name == "testdata" || name == "vendor" || strings.HasPrefix(name, ".") || strings.HasPrefix(name, "_")) {
 			return filepath.SkipDir
 		}
 		if d.IsDir() && path != m.root {

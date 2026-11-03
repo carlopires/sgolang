@@ -76,6 +76,7 @@ func LoadPackage(filenames []string) {
 		base.ErrorExit()
 	}
 	sgoadmit.TestMain = base.Flag.SGoTestMain
+	sgoadmit.Pkgpath = base.Ctxt.Pkgpath
 
 	var lines uint
 	var m posMap

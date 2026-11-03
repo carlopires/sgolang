@@ -59,6 +59,10 @@ func mustRead(name string) []byte {
 	return data
 }
 
+// Pkgpath is the import path of the package being compiled (set by the noder): a std/ package
+// imports only std/ packages and sgo (SGO-IMP-004, D115).
+var Pkgpath string
+
 type admitter struct {
 	diags []Diag
 	src   map[string][]byte
@@ -165,8 +169,13 @@ func (a *admitter) importDecl(d *syntax.ImportDecl) {
 	case path == "sgo":
 	case path == "C" || path == "unsafe":
 		a.deny(d.Path.Pos(), "import of "+strconv.Quote(path), "SGO-NATIVE-001")
+	case first == "std" && path != "std":
+		// The S-Go standard library (SGO-IMP-004).
+	case strings.HasPrefix(Pkgpath, "std/"):
+		// A std package imports only std packages and sgo (SGO-IMP-004, D115).
+		a.deny(d.Path.Pos(), "import of "+strconv.Quote(path)+" by the standard library (std imports only std and sgo)", "SGO-IMP-004")
 	case !strings.Contains(first, "."):
-		a.deny(d.Path.Pos(), "import of standard-library package "+strconv.Quote(path), "SGO-BIND-002")
+		a.deny(d.Path.Pos(), "import of Go standard-library package "+strconv.Quote(path), "SGO-BIND-002")
 	}
 }
 

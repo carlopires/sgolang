@@ -192,11 +192,11 @@ func (t *toolchain) compileUser(m *module, p *pkg, isMain, lab bool, archives ma
 	}
 	archive := filepath.Join(work, name+".a")
 	args := append([]string{"-o", archive, "-p", pkgpath, "-importcfg", importcfg, "-pack", "-complete",
-		"-trimpath", m.root + "=>"}, p.files...)
+		"-trimpath", p.mod.trim()}, p.files...)
 	if lab {
 		args = append([]string{"-sgolab"}, args...)
 	}
-	return archive, t.runTool(m.root, env, "compile", args...)
+	return archive, t.runTool(p.mod.root, env, "compile", args...)
 }
 
 // buildInfo is the build metadata recorded in every binary (SGO-BUILD-001, SGO-TOOL-001): spec

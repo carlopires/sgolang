@@ -26,6 +26,11 @@ type module struct {
 	grants   []string // granted effect kinds, in canonical order (SGO-AUTH-002)
 	ioGrants []string // file and network grants, canonical and sorted (iogrant.go)
 	testDir  string   // sgo test: the package whose _test.sgo files are loaded ("" otherwise)
+
+	requires []modReq           // require lines of sgo.mod (SGO-IMP-003)
+	replaces map[string]string  // replace lines: module path => directory relative to the root
+	mods     map[string]*modSrc // every module of the build, by path (resolveModules)
+	tc       *toolchain         // the toolchain that read sgo.mod
 }
 
 // grantKinds are the effect kinds a grant line may name (SGO-AUTH-003), in canonical order.
@@ -33,9 +38,10 @@ var grantKinds = []string{"clock", "wallclock", "random", "entropy", "simstore"}
 
 // pkg is one package of the module: the .sgo files of one directory.
 type pkg struct {
-	path    string // import path
-	dir     string // directory relative to the module root ("." for the root)
-	files   []string
+	path    string      // import path
+	mod     *modSrc     // the module the package belongs to
+	dir     string      // directory relative to its module root ("." for the root)
+	files   []string    // relative to its module root
 	imports []importRef // imports of module packages, in source order
 	order   int         // position in dependency order
 }
@@ -61,7 +67,7 @@ func unadmittedInput(name string) *toolErr {
 func findModule(dir string, t *toolchain) (*module, error) {
 	for d := dir; ; d = filepath.Dir(d) {
 		if _, err := os.Stat(filepath.Join(d, "sgo.mod")); err == nil {
-			m := &module{root: d}
+			m := &module{root: d, tc: t}
 			return m, m.parseMod(t)
 		}
 		if filepath.Dir(d) == d {
@@ -81,6 +87,7 @@ func (m *module) parseMod(t *toolchain) error {
 	sc := bufio.NewScanner(f)
 	sawSgo := false
 	granted := map[string]bool{}
+	required := map[string]bool{}
 	for line := 1; sc.Scan(); line++ {
 		text := strings.TrimSpace(sc.Text())
 		if i := strings.Index(text, "//"); i >= 0 {
@@ -111,8 +118,25 @@ func (m *module) parseMod(t *toolchain) error {
 				return &toolErr{at, "SGO_E_USAGE", fmt.Sprintf("%s is granted twice (SGO-AUTH-002)", fields[1]), 2}
 			}
 			granted[fields[1]] = true
+		case fields[0] == "require":
+			r, err := parseRequire(fields, text, at, required)
+			if err != nil {
+				return err
+			}
+			m.requires = append(m.requires, r)
+		case fields[0] == "replace":
+			if len(fields) != 4 || fields[2] != "=>" || filepath.IsAbs(fields[3]) {
+				return &toolErr{at, "SGO_E_USAGE", fmt.Sprintf("%q: want replace <module path> => <relative dir> (SGO-IMP-003)", text), 2}
+			}
+			if _, dup := m.replaces[fields[1]]; dup {
+				return &toolErr{at, "SGO_E_USAGE", fmt.Sprintf("%s is replaced twice (SGO-IMP-003)", fields[1]), 2}
+			}
+			if m.replaces == nil {
+				m.replaces = map[string]string{}
+			}
+			m.replaces[fields[1]] = filepath.FromSlash(fields[3])
 		default:
-			return &toolErr{at, "SGO_E_UNADMITTED", fmt.Sprintf("sgo.mod directive %q is not admitted (module, sgo, and grant only)", text), 1}
+			return &toolErr{at, "SGO_E_UNADMITTED", fmt.Sprintf("sgo.mod directive %q is not admitted (module, sgo, grant, require, and replace only)", text), 1}
 		}
 	}
 	for _, k := range grantKinds {
@@ -137,34 +161,47 @@ func (m *module) importPath(dir string) string {
 	return m.path + "/" + filepath.ToSlash(dir)
 }
 
-// loadGraph loads the main package in dir (relative to the root) and every module package it
-// imports, checks inputs and package clauses, rejects import cycles, and returns the packages in
-// dependency order (imports first).
+// importPath maps a directory relative to the module root to its import path.
+func (s *modSrc) importPath(dir string) string {
+	if dir == "." {
+		return s.path
+	}
+	return s.path + "/" + filepath.ToSlash(dir)
+}
+
+// loadGraph loads the main package in dir (relative to the main module root) and every package it
+// imports from the main module, the required modules, and std (SGO-IMP-001 v2), checks inputs and
+// package clauses, rejects import cycles, and returns the packages in dependency order (imports
+// first). The modules are resolved and their sgo.sum entries checked first (SGO-IMP-003).
 func (m *module) loadGraph(dir string) ([]*pkg, error) {
+	if err := m.resolveModules(m.tc); err != nil {
+		return nil, err
+	}
 	pkgs := map[string]*pkg{}
-	var load func(dir string, from *importRef) (*pkg, error)
-	load = func(dir string, from *importRef) (*pkg, error) {
-		ip := m.importPath(dir)
+	var load func(s *modSrc, dir string, from *importRef) (*pkg, error)
+	load = func(s *modSrc, dir string, from *importRef) (*pkg, error) {
+		ip := s.importPath(dir)
 		if p := pkgs[ip]; p != nil {
 			return p, nil
 		}
-		p, err := m.loadPkg(dir, from)
+		p, err := m.loadPkg(s, dir, from)
 		if err != nil {
 			return nil, err
 		}
 		pkgs[ip] = p
 		for _, imp := range p.imports {
+			t := m.modOf(imp.path)
 			rel := "."
-			if imp.path != m.path {
-				rel = filepath.FromSlash(strings.TrimPrefix(imp.path, m.path+"/"))
+			if imp.path != t.path {
+				rel = filepath.FromSlash(strings.TrimPrefix(imp.path, t.path+"/"))
 			}
-			if _, err := load(rel, &imp); err != nil {
+			if _, err := load(t, rel, &imp); err != nil {
 				return nil, err
 			}
 		}
 		return p, nil
 	}
-	if _, err := load(dir, nil); err != nil {
+	if _, err := load(m.mods[m.path], dir, nil); err != nil {
 		return nil, err
 	}
 	if err := checkCycles(pkgs); err != nil {
@@ -173,28 +210,37 @@ func (m *module) loadGraph(dir string) ([]*pkg, error) {
 	return depOrder(pkgs), nil
 }
 
-// loadPkg reads the package clauses and imports of one directory's .sgo files.
-func (m *module) loadPkg(dir string, from *importRef) (*pkg, error) {
-	abs := filepath.Join(m.root, dir)
+// loadPkg reads the package clauses and imports of one directory's .sgo files in module s.
+func (m *module) loadPkg(s *modSrc, dir string, from *importRef) (*pkg, error) {
+	abs := filepath.Join(s.root, dir)
+	missing := func(why string) error {
+		if from != nil {
+			return &toolErr{from.pos, "SGO_E_UNDEFINED", fmt.Sprintf("package %s %s", from.path, why), 1}
+		}
+		return usage("no .sgo files in %s", dir)
+	}
 	ents, err := os.ReadDir(abs)
 	if err != nil || len(ents) == 0 {
 		if from != nil {
-			return nil, &toolErr{from.pos, "SGO_E_UNDEFINED", fmt.Sprintf("package %s is not in the module", from.path), 1}
+			if s.main {
+				return nil, missing("is not in the module")
+			}
+			return nil, missing(fmt.Sprintf("does not exist in module %s", s.path))
 		}
 		return nil, usage("cannot read package directory %s", dir)
 	}
-	p := &pkg{path: m.importPath(dir), dir: dir}
+	p := &pkg{path: s.importPath(dir), mod: s, dir: dir}
 	for _, e := range ents {
 		if e.IsDir() {
 			continue
 		}
 		name := filepath.Join(dir, e.Name())
-		if name == "sgo.mod" {
+		if name == "sgo.mod" || name == "sgo.sum" || s.std && name == "MANIFEST" {
 			continue
 		}
 		ext := filepath.Ext(e.Name())
 		if ext == ".sgo" {
-			if strings.HasSuffix(e.Name(), "_test.sgo") && (m.testDir == "" || filepath.Clean(dir) != filepath.Clean(m.testDir)) {
+			if strings.HasSuffix(e.Name(), "_test.sgo") && (!s.main || m.testDir == "" || filepath.Clean(dir) != filepath.Clean(m.testDir)) {
 				continue // test files belong only to sgo test of their own package (D62)
 			}
 			p.files = append(p.files, filepath.Clean(name))
@@ -203,17 +249,19 @@ func (m *module) loadPkg(dir string, from *importRef) (*pkg, error) {
 		}
 	}
 	if len(p.files) == 0 {
-		if from != nil {
-			return nil, &toolErr{from.pos, "SGO_E_UNDEFINED", fmt.Sprintf("package %s has no .sgo files", from.path), 1}
-		}
-		return nil, usage("no .sgo files in %s", dir)
+		return nil, missing("has no .sgo files")
 	}
 	sort.Strings(p.files)
+	if s.std {
+		if err := checkStdPackage(s.root, dir, p.files); err != nil {
+			return nil, err
+		}
+	}
 
 	fset := token.NewFileSet()
 	var pkgName string
 	for _, f := range p.files {
-		src, err := os.ReadFile(filepath.Join(m.root, f))
+		src, err := os.ReadFile(filepath.Join(s.root, f))
 		if err != nil {
 			return nil, err
 		}
@@ -229,14 +277,24 @@ func (m *module) loadPkg(dir string, from *importRef) (*pkg, error) {
 		}
 		for _, is := range af.Imports {
 			ip, err := strconv.Unquote(is.Path.Value)
-			if err != nil {
-				continue
+			if err != nil || ip == "sgo" || path.Clean(ip) != ip {
+				continue // sgo is the TCB; the compiler rejects a malformed path
 			}
-			if ip == m.path || strings.HasPrefix(ip, m.path+"/") {
-				if path.Clean(ip) != ip {
-					continue // the compiler rejects the malformed path
+			pos := fset.Position(is.Path.Pos()).String()
+			if !s.main {
+				pos = s.path + "/" + pos // positions name the module they are in
+			}
+			t := m.modOf(ip)
+			switch {
+			case t == nil:
+				if first, _, _ := strings.Cut(ip, "/"); strings.Contains(first, ".") {
+					return nil, &toolErr{pos, "SGO_E_UNDEFINED", fmt.Sprintf("package %s is in no module of the build; require its module in sgo.mod (SGO-IMP-001, SGO-IMP-003)", ip), 1}
 				}
-				p.imports = append(p.imports, importRef{ip, fset.Position(is.Path.Pos()).String()})
+				// Go standard-library, C, and unsafe imports are refused by the compiler.
+			case s.std && !t.std:
+				// A std package importing a user module is refused by the compiler (D115).
+			default:
+				p.imports = append(p.imports, importRef{ip, pos})
 			}
 		}
 	}

@@ -128,6 +128,9 @@ func (t *toolchain) checkModulePath(m *module, goos, goarch string) error {
 	for _, p := range pkgs {
 		paths = append(paths, p.path)
 	}
+	if stdPath(m.path) {
+		return &toolErr{m.pathAt, "SGO_E_USAGE", fmt.Sprintf("module path %s is the standard library's path or lies under it; std is reserved (SGO-IMP-001, D103)", m.path), 2}
+	}
 	for _, p := range paths {
 		if m.path == p || strings.HasPrefix(p, m.path+"/") || strings.HasPrefix(m.path, p+"/") {
 			return &toolErr{m.pathAt, "SGO_E_USAGE", fmt.Sprintf("module path %s collides with the trusted package path %s; a module path cannot equal, contain, or lie under a TCB package path (SGO-IMP-001)", m.path, p), 2}
