@@ -23,8 +23,8 @@
     "investigated_not_adopted"
   ],
   "dependency_satisfaction": "Dependencies normally require passed. For W11 only, investigated_not_adopted with evidence also satisfies W12; pending, failed, or undocumented deferral does not.",
-  "task_count": 13,
-  "acceptance_case_count": 147,
+  "task_count": 14,
+  "acceptance_case_count": 156,
   "evidence_required_fields": [
     "work_package_id",
     "state",
@@ -757,6 +757,40 @@
       "blockers": [],
       "commit": null,
       "completion_note": "Independent review R1-R14 (+R6b) fixed and verified by the reviewer on linux; spec 0.7.0 release registry; D76 guarantees, D77 legacy audit, D78 release qualification, D79 negative fixtures, D80 stress, D81 licensing in CI. Publishing a release is the owner's decision (D78)."
+    },
+    {
+      "id": "W13",
+      "title": "Core data model",
+      "depends_on": [
+        "W12"
+      ],
+      "risk": "high",
+      "status": "in_progress",
+      "plan_section": "sgo/docs/w13-data-model-plan.md",
+      "deliverables": [
+        "Sharing-rule model (13.0)",
+        "Stage 1: structs, arrays, named types, value methods (spec 0.8.0)",
+        "Stage 2: task-local slices, maps, pointers; copy at boundaries (spec 0.9.0)",
+        "Stage 3: sgo.Frozen and sgo.Freeze",
+        "The five W13 programs pass; reviewer verification"
+      ],
+      "acceptance_case_ids": [
+        "G01",
+        "G02",
+        "G03",
+        "G04",
+        "G05",
+        "G06",
+        "G07",
+        "G08",
+        "G09"
+      ],
+      "evidence": [
+        "sgo/evidence/w13/README.md"
+      ],
+      "blockers": [],
+      "commit": null,
+      "completion_note": null
     }
   ],
   "language_policy": "One specification-defined S-Go language; no Go compatibility path. Bare go rejected; explicit nursery capabilities; missing contracts rejected transitively. Host/reference tools are external build dependencies.",

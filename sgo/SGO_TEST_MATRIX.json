@@ -2,7 +2,7 @@
   "schema_version": 2,
   "plan_version": "2.0",
   "purpose": "Implementation acceptance scenarios, not existing executable tests or completed test results.",
-  "case_count": 147,
+  "case_count": 156,
   "lane_note": "Lanes are test categories, not alternate language dialects. upstream_reference and host_bootstrap are external builds, not S-Go target modes. Production/lab retain identical safety/admission rules. Shared model/typed/native cases must be instantiated per required implementation phase.",
   "cases": [
     {
@@ -2776,6 +2776,151 @@
         "W01 part passed: sgo/evidence/w01/README.md §2; remaining parts in later work packages",
         "W12: passed - guarantee-check.py refuses proof claims and checks scope vocabulary and model bounds; sgo/evidence/w12/README.md"
       ]
+    },
+    {
+      "id": "G01",
+      "name": "Sharing-rule model",
+      "required_for_work_packages": [
+        "W13"
+      ],
+      "execution_lanes": [
+        "model"
+      ],
+      "scenario": "Explore the proposed compile-time sharing rule (task-local Ref values; crossing by copy, frozen value, or whole-variable move) over every interleaving of the five W13 programs' patterns, their rejections, and generated programs.",
+      "expected": "Every accepted program keeps exclusive ownership of mutable objects on every schedule; each relaxation of the rule and a shallow copy produces a violation.",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W13 13.0: sgo/model/sharemodel.go, sharestep.go, shareexplore.go; sharemodel_test.go (scenarios, 20000 generated programs, 5 mutations); sgo/evidence/w13/README.md"
+      ]
+    },
+    {
+      "id": "G02",
+      "name": "Structs and arrays are values",
+      "required_for_work_packages": [
+        "W13"
+      ],
+      "execution_lanes": [
+        "conformance"
+      ],
+      "scenario": "Declare, compare, assign, pass and send structs and arrays of admitted types; capture them in Spawn callbacks.",
+      "expected": "Every crossing copies the value; no reference-free aggregate is shared between tasks.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "G03",
+      "name": "Named types and methods",
+      "required_for_work_packages": [
+        "W13"
+      ],
+      "execution_lanes": [
+        "conformance"
+      ],
+      "scenario": "Named types over admitted types with value-receiver methods (stage 1) and pointer receivers on task-local data (stage 2).",
+      "expected": "Method sets and calls follow the clauses; pointer receivers never reach another task.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "G04",
+      "name": "Task-local capture refused",
+      "required_for_work_packages": [
+        "W13"
+      ],
+      "execution_lanes": [
+        "conformance",
+        "negative"
+      ],
+      "scenario": "Capture a slice, map, pointer or struct containing one in a Spawn callback.",
+      "expected": "SGO_E_TASK_LOCAL_CAPTURE at the capture, naming sgo.Copy and sgo.Freeze.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "G05",
+      "name": "Uncopied send refused; sgo.Copy is deep",
+      "required_for_work_packages": [
+        "W13"
+      ],
+      "execution_lanes": [
+        "conformance",
+        "negative",
+        "runtime"
+      ],
+      "scenario": "Send, commit or return to another task a value with internal references, with and without sgo.Copy; mutate both sides afterwards.",
+      "expected": "Without sgo.Copy: SGO_E_UNCOPIED_SEND. With it: the copy shares no mutable memory with the original.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "G06",
+      "name": "Map iteration order",
+      "required_for_work_packages": [
+        "W13"
+      ],
+      "execution_lanes": [
+        "conformance",
+        "lab"
+      ],
+      "scenario": "Iterate maps after inserts, overwrites and deletes, in production and in the lab.",
+      "expected": "Insertion order (D88), identical in both, on every run.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "G07",
+      "name": "Bounds and nil failures",
+      "required_for_work_packages": [
+        "W13"
+      ],
+      "execution_lanes": [
+        "conformance",
+        "runtime"
+      ],
+      "scenario": "Index or slice out of range, dereference nil, write a nil map, in the root and in a child task.",
+      "expected": "Defined failure kinds (D91) with the specified record, exit status and propagation; no Go traceback.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "G08",
+      "name": "Frozen values",
+      "required_for_work_packages": [
+        "W13"
+      ],
+      "execution_lanes": [
+        "conformance",
+        "negative",
+        "model"
+      ],
+      "scenario": "Freeze a nested value, share it with several tasks, mutate the original; write through the frozen value.",
+      "expected": "Readers see the frozen contents; writes through Frozen are SGO_E_FROZEN_WRITE.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
+    },
+    {
+      "id": "G09",
+      "name": "The five W13 programs",
+      "required_for_work_packages": [
+        "W13"
+      ],
+      "execution_lanes": [
+        "conformance",
+        "release_review"
+      ],
+      "scenario": "Run sgo/testdata/w13-programs p1-p5 as conformance cases.",
+      "expected": "Each prints its expected output (README) on both linux runners and darwin.",
+      "implementation_status": "pending",
+      "execution_status": "unrun",
+      "evidence": []
     }
   ]
 }

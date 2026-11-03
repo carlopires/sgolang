@@ -1,0 +1,81 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// p4-eval: a tree of expressions in one task (no interfaces: a tagged node).
+package main
+
+import "sgo"
+
+const (
+	Num = iota
+	Var
+	Add
+	Mul
+)
+
+type Expr struct {
+	Op   int
+	V    int
+	Name string
+	L, R *Expr
+}
+
+type Env struct {
+	vars   map[string]int
+	parent *Env
+}
+
+func (e *Env) Lookup(name string) (int, error) {
+	for s := e; s != nil; s = s.parent {
+		if v, ok := s.vars[name]; ok {
+			return v, nil
+		}
+	}
+	return 0, sgo.NewError("undefined: " + name)
+}
+
+func eval(x *Expr, env *Env) (int, error) {
+	switch x.Op {
+	case Num:
+		return x.V, nil
+	case Var:
+		return env.Lookup(x.Name)
+	}
+	l, err := eval(x.L, env)
+	if err != nil {
+		return 0, err
+	}
+	r, err := eval(x.R, env)
+	if err != nil {
+		return 0, err
+	}
+	if x.Op == Add {
+		return l + r, nil
+	}
+	return l * r, nil
+}
+
+func main(c *sgo.Context) error {
+	global := &Env{vars: map[string]int{"x": 3}}
+	local := &Env{vars: map[string]int{"y": 4}, parent: global}
+	// (x + y) * 2
+	e := &Expr{Op: Mul, L: &Expr{Op: Add, L: &Expr{Op: Var, Name: "x"}, R: &Expr{Op: Var, Name: "y"}}, R: &Expr{Op: Num, V: 2}}
+	v, err := eval(e, local)
+	if err != nil {
+		return err
+	}
+	return c.Stdout().WriteString(itoa(v) + "\n")
+}
+
+// itoa formats a non-negative integer (stage 2: []byte, append, string conversion).
+func itoa(v int) string {
+	if v == 0 {
+		return "0"
+	}
+	var b []byte
+	for ; v > 0; v /= 10 {
+		b = append([]byte{byte('0' + v%10)}, b...)
+	}
+	return string(b)
+}

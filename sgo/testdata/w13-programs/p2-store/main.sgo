@@ -1,0 +1,55 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// p2-store: one task owns the store; sessions send requests and receive copies.
+package main
+
+import "sgo"
+
+type Request struct {
+	Key   string
+	Reply chan Reply
+}
+
+type Reply struct {
+	Value []byte
+	Found bool
+}
+
+type Store struct {
+	data map[string][]byte
+}
+
+func (s *Store) Get(k string) Reply {
+	v, ok := s.data[k]
+	return Reply{Value: sgo.Copy(v), Found: ok} // the session must not see the store's slice
+}
+
+func main(c *sgo.Context) error {
+	reqs := make(chan Request)
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			s := Store{data: map[string][]byte{"k1": []byte("v1")}}
+			for r := range reqs {
+				r.Reply <- s.Get(r.Key)
+			}
+			return nil
+		})
+		for _, k := range []string{"k1", "k2"} {
+			reply := make(chan Reply)
+			reqs <- Request{Key: k, Reply: reply}
+			r := <-reply
+			line := "get " + k + " missing\n"
+			if r.Found {
+				r.Value[0] = 'v' // mutating our copy cannot affect the store
+				line = "get " + k + " " + string(r.Value) + "\n"
+			}
+			if err := c.Stdout().WriteString(line); err != nil {
+				return err
+			}
+		}
+		close(reqs)
+	}
+	return nil
+}
