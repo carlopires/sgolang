@@ -170,3 +170,12 @@ rules), SGO-COMP-005 (slices, `[]byte`, string indexing), SGO-COMP-006 (maps wit
 SGO-COMP-007 (pointers, pointer receivers), SGO-COMP-008 (nil, `NilDereference`, `NilMapWrite`),
 SGO-TYPE-007 (`byte`), with decisions D93–D97. `spec-tool.py check` on the drafts placed in
 `sgo/spec/` reports only the not-yet-added matrix cases G10–G12.
+
+## Closure
+
+W13 is done (D102: stage 4, move, deferred). Closing CI on `98b664e3d2` (review fixes V1–V4):
+sgo-spec 41621313134 success; sgo-w00 41621313273: every S-Go step passed on linux/amd64 and linux/arm64 (conformance
+469 cases, map lowering, check, test, examples, release archive, identity, fmt, TCB, X10, S12, lab,
+negative fixtures, spec gates, benchmarks); the upstream baseline step (B03) was still running at
+closure. Matrix G01–G12 passed. The next work
+is the standard-library foundations plan (`sgo/docs/stdlib-foundations-plan.md`, D103–D110).
