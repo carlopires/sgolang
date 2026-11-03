@@ -824,15 +824,18 @@
         "W14"
       ],
       "risk": "low",
-      "status": "in_progress",
+      "status": "passed",
       "plan_section": "sgo/docs/stdlib-foundations-plan.md",
       "deliverables": [
         "rune type, rune literals, range over strings by rune, conversions (D106)"
       ],
       "acceptance_case_ids": [],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w15/README.md",
+        "sgo-w00 run 41663260839 (linux/amd64, linux/arm64) on the 0.12.0 freeze"
+      ],
       "blockers": [],
-      "commit": null,
+      "commit": "0a832a9bc6",
       "completion_note": null
     },
     {

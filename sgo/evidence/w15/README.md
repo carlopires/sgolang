@@ -62,5 +62,7 @@ Clauses frozen at 0.12.0:
 
 ## Linux
 
-Pending: the sgo-w00 run on the freeze commit `0a832a9bc6` (linux/amd64, linux/arm64). sgo-spec run
-41663261033 passed on that commit.
+sgo-w00 run 41663260839 on the freeze commit `0a832a9bc6`: both jobs passed on linux/amd64 and
+linux/arm64. That covers the stage-0 builds, conformance (519 cases), the module and
+standard-library tests, legacy-audit, the negative fixtures and the upstream baseline (B03).
+sgo-spec run 41663261033 also passed on that commit.
