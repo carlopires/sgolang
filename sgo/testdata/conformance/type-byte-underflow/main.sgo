@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	var a byte = 1
+	var b byte = 2
+	_ = a - b
+	return nil
+}

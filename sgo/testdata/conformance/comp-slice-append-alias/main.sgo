@@ -1,0 +1,17 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	a := make([]int, 2, 4)
+	b := append(a, 7) // fits: shares a's array
+	b[0] = 9
+	c := make([]int, 2)
+	d := append(c, 7) // does not fit: a new array
+	d[0] = 9
+	ok := a[0] == 9 && c[0] == 0 && len(b) == 3 && len(a) == 2
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

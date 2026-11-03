@@ -154,6 +154,9 @@ func mapfn(name string, t *types.Type, isfat bool) ir.Node {
 	if !t.IsMap() {
 		base.Fatalf("mapfn %v", t)
 	}
+	if sgoMaps() {
+		return typecheck.LookupRuntime("sgo"+name, t.Key(), t.Elem(), t.Key(), t.Elem())
+	}
 	if mapfast(t) == mapslow || isfat {
 		return typecheck.LookupRuntime(name, t.Key(), t.Elem(), t.Key(), t.Elem())
 	}
@@ -163,6 +166,9 @@ func mapfn(name string, t *types.Type, isfat bool) ir.Node {
 func mapfndel(name string, t *types.Type) ir.Node {
 	if !t.IsMap() {
 		base.Fatalf("mapfn %v", t)
+	}
+	if sgoMaps() {
+		return typecheck.LookupRuntime("sgo"+name, t.Key(), t.Elem(), t.Key())
 	}
 	if mapfast(t) == mapslow {
 		return typecheck.LookupRuntime(name, t.Key(), t.Elem(), t.Key())
@@ -192,6 +198,9 @@ var mapassign = mkmapnames("mapassign", "ptr")
 var mapdelete = mkmapnames("mapdelete", "")
 
 func mapfast(t *types.Type) int {
+	if sgoMaps() {
+		return mapslow // S-Go maps have only the generic entry points (sgo_map.go)
+	}
 	if t.Elem().Size() > abi.MapMaxElemBytes {
 		return mapslow
 	}

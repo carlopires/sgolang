@@ -3,10 +3,10 @@
 Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §5 and decision D01.
 
 ### SGO-MEM-001 — Variables are task-local
-- **version:** 1
+- **version:** 2
 - **status:** frozen
 - **reference_closure:** SGO-BIND-003, SGO-TYPE-001; D01, D06, D07.
-- **grammar_and_types:** The only variables are function parameters, results, and local variables. There are no package-level variables (SGO-BIND-003), pointers, or address-of operator (SGO-TYPE-001).
+- **grammar_and_types:** The only variables are function parameters, results, and local variables. There are no package-level variables (SGO-BIND-003), and from spec 0.9.0 pointers name variables and heap objects (SGO-COMP-007): a write through a pointer changes the variable or object it points to.
 - **preconditions:** n/a — structural rule.
 - **evaluation_and_value_semantics:** Assignment replaces a variable's value. Reading a variable yields the last value assigned to it by the same task.
 - **ownership_and_lifecycle:** A variable belongs to the function activation (and therefore the task) that declared it; a captured variable lives as long as the function values that capture it (SGO-MEM-002).
@@ -18,17 +18,17 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §5 and decision D01.
 - **compile_link_checks:** Enforced by SGO-BIND-003 and SGO-TYPE-001 denials.
 - **runtime_guards:** n/a — structural rule.
 - **tcb_assumptions:** The garbage collector keeps captured variables alive while reachable and never moves them observably (SGO-TCB-001).
-- **positive_tests:** S16; fixture:mem-locals.
-- **negative_tests:** S16; fixture:bind-package-var, fixture:type-pointer.
+- **positive_tests:** S16; fixture:mem-locals, fixture:type-pointer.
+- **negative_tests:** S16; fixture:bind-package-var.
 - **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo_flow.go`, `src/cmd/compile/internal/types2/sgo.go`.
 - **executed_evidence:** conformance fixtures bind-package-var, mem-locals, type-pointer (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-MEM-002 — Captured variables are effectively final
-- **version:** 3
+- **version:** 4
 - **status:** frozen
 - **reference_closure:** SGO-MEM-001, SGO-TYPE-003, SGO-TYPE-004, SGO-COMP-002; D01.
-- **grammar_and_types:** A local variable (including a parameter or named result) that is referenced inside any function literal is *captured*. A captured variable must be effectively final: after its declaration, nothing assigns to it anywhere, neither in the declaring function nor in any function literal. The assignments are: `=`, `op=`, `++`, `--`, a `:=` that re-assigns it, a `select` receive arm with `=` (`case v = <-ch`), and a `return` with operands in a function whose named results include it (the operands are assigned to the named results). A bare `return` assigns nothing. Each of these forms applied to a field or element of the variable (`x.F = v`, `x[i] op= v`, `x.F[i]++`, and their combinations, SGO-COMP-002) assigns the variable. (`range` with `=` is denied in S-Go, so it cannot assign.) The rule applies to every function literal, not only to `Spawn` callbacks, because a function value can reach another task.
+- **grammar_and_types:** A local variable (including a parameter or named result) that is referenced inside any function literal is *captured*. A captured variable must be effectively final: after its declaration, nothing assigns to it anywhere, neither in the declaring function nor in any function literal. The assignments are: `=`, `op=`, `++`, `--`, a `:=` that re-assigns it, a `select` receive arm with `=` (`case v = <-ch`), and a `return` with operands in a function whose named results include it (the operands are assigned to the named results). A bare `return` assigns nothing. Each of these forms applied to a field or element of the variable (`x.F = v`, `x[i] op= v`, `x.F[i]++`, and their combinations, SGO-COMP-002) assigns the variable. From spec 0.9.0, `&x` of a captured variable or of a field or element of it, and a call of a pointer-receiver method on it (which takes `&x`), assign it; a write through a pointer, slice, or map held by the variable (`p.F = v`, `s[i] = v`, `m[k] = v`) changes the referenced object, not the variable (SGO-COMP-004, SGO-COMP-007). (`range` with `=` is denied in S-Go, so it cannot assign.) The rule applies to every function literal, not only to `Spawn` callbacks, because a function value can reach another task.
 - **preconditions:** n/a — static rule.
 - **evaluation_and_value_semantics:** A function literal observes the single value its captured variables were initialized with.
 - **ownership_and_lifecycle:** Captured variables live as long as the longest-lived function value capturing them.
@@ -40,8 +40,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §5 and decision D01.
 - **compile_link_checks:** `SGO_E_CAPTURE_NOT_FINAL`, reported at the assignment (for a `return`, at the `return` statement) and naming the capturing literal.
 - **runtime_guards:** n/a — static rule.
 - **tcb_assumptions:** n/a — compiler only.
-- **positive_tests:** X11, S16; fixture:mem-capture-final, fixture:mem-capture-named-result-bare-return.
-- **negative_tests:** X11, S16; fixture:mem-capture-mutated, fixture:mem-capture-loop-var, fixture:mem-capture-assigned-in-literal, fixture:mem-capture-named-result-return, fixture:mem-capture-named-result-return-literal (W12 R5).
+- **positive_tests:** X11, S16; fixture:mem-capture-final, fixture:mem-capture-named-result-bare-return, fixture:comp-local-closure-call.
+- **negative_tests:** X11, S16; fixture:mem-capture-mutated, fixture:mem-capture-loop-var, fixture:mem-capture-assigned-in-literal, fixture:mem-capture-named-result-return, fixture:mem-capture-named-result-return-literal (W12 R5), fixture:comp-pointer-captured-address, fixture:comp-pointer-captured-method.
 - **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo_flow.go`, `src/cmd/compile/internal/types2/sgo.go`.
 - **executed_evidence:** conformance fixtures mem-capture-assigned-in-literal, mem-capture-final, mem-capture-loop-var, mem-capture-mutated (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

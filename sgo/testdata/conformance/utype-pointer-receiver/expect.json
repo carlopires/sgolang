@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-UTYPE-001",
+  "SGO-COMP-007"
+ ],
+ "exit": 0,
+ "stdout": "ok\n",
+ "note": "Pointer receivers are admitted from 0.9.0 (SGO-COMP-007); c.Inc() takes &c."
+}

@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+type Cfg struct {
+	N    int
+	Name string
+}
+
+func main(root *sgo.Context) error {
+	p := new(Cfg)
+	q := new(int)
+	*q = 3
+	p.N = *q
+	ok := p.N == 3 && p.Name == ""
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

@@ -1,0 +1,30 @@
+package main
+
+import "sgo"
+
+type Stack struct {
+	items []int
+}
+
+func (s *Stack) Push(v int) { s.items = append(s.items, v) }
+
+func (s *Stack) Pop() int {
+	v := s.items[len(s.items)-1]
+	s.items = s.items[:len(s.items)-1]
+	return v
+}
+
+func (s Stack) Len() int { return len(s.items) }
+
+func main(root *sgo.Context) error {
+	st := Stack{}
+	st.Push(1) // (&st).Push
+	st.Push(2)
+	p := &st
+	top := p.Pop()
+	ok := top == 2 && st.Len() == 1 && p.Len() == 1
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

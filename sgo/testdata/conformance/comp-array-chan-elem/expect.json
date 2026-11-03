@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-COMP-002",
+  "SGO-CHAN-002"
+ ],
+ "exit": 0,
+ "stdout": "ok\n",
+ "note": "D95: channel fields and elements are admitted (shareable) from 0.9.0."
+}

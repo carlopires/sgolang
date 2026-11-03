@@ -80,7 +80,7 @@ func sgoCoded(code Code, msg string) string {
 		return msg
 	}
 	c, ok := sgoCodes[code]
-	if code == InvalidIndex && (strings.Contains(msg, "out of bounds") || strings.Contains(msg, "must not be negative")) {
+	if code == SwappedSliceIndices || code == InvalidIndex && (strings.Contains(msg, "out of bounds") || strings.Contains(msg, "must not be negative")) {
 		c, ok = "SGO_E_CONST_RANGE", true // a constant index outside the array (SGO-COMP-003)
 	}
 	if !ok {
@@ -133,6 +133,8 @@ func (check *Checker) sgoNilOK(x *operand, T Type) bool {
 	case isChanType(T):
 		check.errorf(x, IncompatibleAssign, "SGO_E_TYPE_MISMATCH: nil is not a value of channel type %s; make(chan T) is the only constructor (SGO-CHAN-002)", T)
 		return false
+	case sgoNilable(T):
+		return true // pointers, slices, and maps (SGO-COMP-008)
 	case !Identical(T, universeError):
 		check.errorf(x, IncompatibleAssign, "SGO_E_TYPE_MISMATCH: nil is only a value of type error, not %s (SGO-TYPE-002)", T)
 		return false
@@ -158,6 +160,9 @@ func (check *Checker) sgoComparisonOK(x, y *operand) bool {
 		case isFuncType(o.typ()):
 			check.errorf(x, MismatchedTypes, "SGO_E_UNADMITTED: comparison of function values is not admitted in S-Go subset 0 (SGO-TYPE-003)")
 			return false
+		case sgoHasChan(o.typ()):
+			check.errorf(x, MismatchedTypes, "SGO_E_UNADMITTED: comparison of values holding channels is not admitted (D95, SGO-CHAN-002)")
+			return false
 		}
 	}
 	if x.mode() != nilvalue && y.mode() != nilvalue && Identical(x.typ(), universeError) && Identical(y.typ(), universeError) {
@@ -165,4 +170,16 @@ func (check *Checker) sgoComparisonOK(x, y *operand) bool {
 		return false
 	}
 	return true
+}
+
+// sgoNilable reports whether nil is a value of T: pointers (not handles), slices, and maps
+// (SGO-COMP-008, D96).
+func sgoNilable(T Type) bool {
+	switch T.Underlying().(type) {
+	case *Pointer:
+		return !isSgoHandle(T)
+	case *Slice, *Map:
+		return true
+	}
+	return false
 }

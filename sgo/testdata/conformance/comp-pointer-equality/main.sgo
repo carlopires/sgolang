@@ -1,0 +1,13 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	a, b := 1, 1
+	p, q, r := &a, &b, &a
+	ok := p != q && p == r && p != nil
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

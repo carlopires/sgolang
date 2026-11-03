@@ -102,6 +102,17 @@ func sgoBoundsViolation(pos string, i, n int) {
 	panic(error(&sgoFailure{"BoundsViolation", "index " + sgoIntString(i) + " out of range for length " + sgoIntString(n), pos}))
 }
 
+// sgoSliceBoundsViolation is a slice or string bound outside its range in S-Go code
+// (SGO-COMP-005): bound i against limit n (the length, capacity, or the next bound).
+func sgoSliceBoundsViolation(pos string, i, n int) {
+	panic(error(&sgoFailure{"BoundsViolation", "slice bound " + sgoIntString(i) + " out of range for " + sgoIntString(n), pos}))
+}
+
+// sgoNilDereference is a dereference of a nil pointer in S-Go code (SGO-COMP-007).
+func sgoNilDereference(pos string) {
+	panic(error(&sgoFailure{"NilDereference", "dereference of a nil pointer", pos}))
+}
+
 // sgoIntString formats v in decimal.
 func sgoIntString(v int) string {
 	var buf [24]byte

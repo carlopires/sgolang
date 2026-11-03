@@ -1,0 +1,16 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	m := map[string]int{"z": 1, "a": 2, "m": 3}
+	m["b"] = 4
+	m["z"] = 5 // an overwrite keeps the position
+	out := root.Stdout()
+	for k := range m {
+		if err := out.WriteString(k + " "); err != nil {
+			return err
+		}
+	}
+	return out.WriteString("\n")
+}

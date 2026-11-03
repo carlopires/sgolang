@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-VAL-001",
+  "SGO-UTYPE-002",
+  "SGO-DEF-003"
+ ],
+ "exit": 2,
+ "stdout": "before\n",
+ "stderr_kind": "IntegerOverflow"
+}

@@ -1,3 +1,3 @@
 module example.com/comp-struct-compare
 
-sgo 0.8.0
+sgo 0.9.0

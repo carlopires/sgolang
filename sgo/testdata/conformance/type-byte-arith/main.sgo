@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	var a byte = 200
+	var b byte = 55
+	c := a + b
+	d := c / 5
+	e := c >> 4
+	var three byte = 3
+	f := three << 6
+	ok := c == 255 && d == 51 && e == 15 && f == 192 && a&b == 0 && a|b == 255 && a^a == 0
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

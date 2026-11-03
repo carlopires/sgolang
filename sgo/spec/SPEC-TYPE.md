@@ -3,10 +3,10 @@
 Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 
 ### SGO-TYPE-001 — Admitted types
-- **version:** 5
+- **version:** 6
 - **status:** frozen
 - **reference_closure:** SGO-TYPE-003, SGO-TYPE-005, SGO-TYPE-006, SGO-PERMIT-002, SGO-READY-002, SGO-AUTH-003, SGO-FILE-002, SGO-FILE-003, SGO-NET-002; D04, D05, D06, D28, D29.
-- **grammar_and_types:** The admitted types are exactly: `bool`; `int`, a 64-bit two's-complement signed integer on every target; `string`, an immutable sequence of bytes; function types `func(P1, …, Pn) R` or `func(P1, …, Pn) (R1, …, Rm)` whose parameter and result types are admitted (SGO-TYPE-003); `error` (SGO-TYPE-006); and the pointer types of the capability types of SGO-TYPE-005 (`*sgo.Context`, `*sgo.Nursery`, `*sgo.Writer`, `*sgo.Ready`, `*sgo.Clock`, `*sgo.WallClock`, `*sgo.Random`, `*sgo.Entropy`, `*sgo.SimStore`, and `*sgo.Channel[T]`, `*sgo.SendPermit[T]` for the element types of SGO-PERMIT-002; spec 0.3.0 adds `*sgo.Event`, `*sgo.CapacityLimiter`, `*sgo.Token` of SGO-SYNC-002; spec 0.5.0 adds `*sgo.Dir`, `*sgo.Listing`, and `*sgo.File` of SGO-FILE-002 and SGO-FILE-003 and `*sgo.Conn` and `*sgo.Listener` of SGO-NET-002; spec 0.6.0 adds `*sgo.T` of SGO-TEST-002); and the channel types `chan T`, `<-chan T`, `chan<- T` of SGO-CHAN-002. Any other type name, type literal (array, slice, map, struct, pointer, interface; channel types other than those of SGO-CHAN-002), type parameter, or type declaration is denied. Other integer widths, floating-point, complex, `byte`, `rune`, `uintptr`, and `any` are denied.
+- **grammar_and_types:** The admitted types are exactly: `bool`; `byte` (SGO-TYPE-007, spec 0.9.0); pointer, slice, and map types (SGO-COMP-005, SGO-COMP-006, SGO-COMP-007, spec 0.9.0); `int`, a 64-bit two's-complement signed integer on every target; `string`, an immutable sequence of bytes; function types `func(P1, …, Pn) R` or `func(P1, …, Pn) (R1, …, Rm)` whose parameter and result types are admitted (SGO-TYPE-003); `error` (SGO-TYPE-006); and the pointer types of the capability types of SGO-TYPE-005 (`*sgo.Context`, `*sgo.Nursery`, `*sgo.Writer`, `*sgo.Ready`, `*sgo.Clock`, `*sgo.WallClock`, `*sgo.Random`, `*sgo.Entropy`, `*sgo.SimStore`, and `*sgo.Channel[T]`, `*sgo.SendPermit[T]` for the element types of SGO-PERMIT-002; spec 0.3.0 adds `*sgo.Event`, `*sgo.CapacityLimiter`, `*sgo.Token` of SGO-SYNC-002; spec 0.5.0 adds `*sgo.Dir`, `*sgo.Listing`, and `*sgo.File` of SGO-FILE-002 and SGO-FILE-003 and `*sgo.Conn` and `*sgo.Listener` of SGO-NET-002; spec 0.6.0 adds `*sgo.T` of SGO-TEST-002); and the channel types `chan T`, `<-chan T`, `chan<- T` of SGO-CHAN-002. Any other type name, type literal (array, slice, map, struct, pointer, interface; channel types other than those of SGO-CHAN-002), type parameter, or type declaration is denied. Other integer widths, floating-point, complex, `byte`, `rune`, `uintptr`, and `any` are denied.
 - **preconditions:** n/a — static rule.
 - **evaluation_and_value_semantics:** `int` arithmetic is defined by SGO-VAL-001, strings by SGO-VAL-002, booleans by SGO-VAL-003.
 - **ownership_and_lifecycle:** Values of all admitted types are copied by assignment; `string` and function values may share immutable backing storage, which is never observable.
@@ -18,17 +18,17 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 - **compile_link_checks:** `SGO_E_UNADMITTED` naming the denied type or type form.
 - **runtime_guards:** n/a — static rule.
 - **tcb_assumptions:** The runtime represents `int` as 64 bits on every admitted target.
-- **positive_tests:** S16; fixture:type-admitted.
-- **negative_tests:** S16, S17; fixture:type-float, fixture:type-slice, fixture:type-struct, fixture:type-interface, fixture:type-generic.
+- **positive_tests:** S16; fixture:type-admitted, fixture:type-slice, fixture:type-pointer.
+- **negative_tests:** S16, S17; fixture:type-float, fixture:type-struct, fixture:type-interface, fixture:type-generic.
 - **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`.
 - **executed_evidence:** conformance fixtures type-admitted, type-float, type-generic, type-interface, type-slice, type-struct (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-TYPE-002 — Identity and assignability
-- **version:** 2
+- **version:** 3
 - **status:** frozen
 - **reference_closure:** SGO-TYPE-001, SGO-VAL-004, SGO-COMP-002, SGO-UTYPE-002.
-- **grammar_and_types:** Two types are identical if they are the same predeclared or opaque type; the same named type (SGO-UTYPE-002), which is identical only to itself; array types with the same length and identical element types; struct type literals with the same sequence of fields, pairwise with the same names and identical types (two such types with an unexported field are identical only within one package); or function types with the same number of parameters and results and pairwise identical parameter and result types (parameter names do not matter). A value `v` is assignable to a variable of type `T` only if (a) `v`'s type is identical to `T`; or (b) `v` is an untyped constant representable as a value of `T`, where untyped integer constants are representable as `int` within its range, untyped string constants as `string`, untyped boolean constants as `bool`; or (c) `v` is the predeclared `nil` and `T` is `error`. These rules apply to assignment, initialization, argument passing, results, and comparison operands. There are no implicit conversions; the only explicit conversion expressions are those of SGO-UTYPE-002 (between types with identical underlying types).
+- **grammar_and_types:** Pointer, slice, and map types are identical when their element (and key) types are identical; `nil` is assignable to pointer, slice, and map types (SGO-COMP-008, spec 0.9.0); pointers compare by identity, and slices and maps compare only with `nil`. Two types are identical if they are the same predeclared or opaque type; the same named type (SGO-UTYPE-002), which is identical only to itself; array types with the same length and identical element types; struct type literals with the same sequence of fields, pairwise with the same names and identical types (two such types with an unexported field are identical only within one package); or function types with the same number of parameters and results and pairwise identical parameter and result types (parameter names do not matter). A value `v` is assignable to a variable of type `T` only if (a) `v`'s type is identical to `T`; or (b) `v` is an untyped constant representable as a value of `T`, where untyped integer constants are representable as `int` within its range, untyped string constants as `string`, untyped boolean constants as `bool`; or (c) `v` is the predeclared `nil` and `T` is `error`. These rules apply to assignment, initialization, argument passing, results, and comparison operands. There are no implicit conversions; the only explicit conversion expressions are those of SGO-UTYPE-002 (between types with identical underlying types).
 - **preconditions:** n/a — static rule.
 - **evaluation_and_value_semantics:** An untyped constant takes the target type at the point of assignment. An untyped constant used where no type is given defaults to `int`, `string`, or `bool`.
 - **ownership_and_lifecycle:** n/a — static rule.
@@ -40,8 +40,8 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 - **compile_link_checks:** `SGO_E_TYPE_MISMATCH`, `SGO_E_CONST_OVERFLOW`, `SGO_E_UNADMITTED` (conversion syntax).
 - **runtime_guards:** n/a — static rule.
 - **tcb_assumptions:** n/a — compiler only.
-- **positive_tests:** S16; fixture:type-assign.
-- **negative_tests:** S16; fixture:type-mismatch, fixture:type-nil-func, fixture:type-conversion.
+- **positive_tests:** S16; fixture:type-assign, fixture:comp-pointer-equality, fixture:comp-nil-slice-empty.
+- **negative_tests:** S16; fixture:type-mismatch, fixture:type-nil-func, fixture:type-conversion, fixture:comp-slice-compare-denied, fixture:comp-map-compare-denied.
 - **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`.
 - **executed_evidence:** conformance fixtures type-assign, type-conversion, type-mismatch, type-nil-func (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
@@ -133,3 +133,25 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 - **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`.
 - **executed_evidence:** conformance fixtures type-error-compare, type-errors, type-nil-error-call (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
+
+### SGO-TYPE-007 — The byte type
+- **version:** 1
+- **status:** frozen
+- **reference_closure:** SGO-TYPE-001, SGO-TYPE-002, SGO-VAL-001, SGO-COMP-005; D93.
+- **grammar_and_types:** `byte` is admitted: an integer type with values 0..255. Byte operands combine with byte operands under the operators of SGO-VAL-001 (shifts with an int count); untyped constants representable in 0..255 are assignable to byte. `int(b)` converts a byte to int; `byte(i)` converts an int to byte. Byte constants are written as integer literals (rune literals stay denied, SGO-LEX-004). `uint8` and the other sized integer types stay denied (SGO-TYPE-001).
+- **preconditions:** For `byte(i)`: `0 ≤ i ≤ 255`.
+- **evaluation_and_value_semantics:** Byte arithmetic is exact: the mathematical result of `+`, `-`, `*`, `/`, `%`, `<<` on bytes is the result if it lies in 0..255. `&`, `|`, `^`, `&^`, and `>>` cannot leave the range.
+- **ownership_and_lifecycle:** n/a — a value type.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a — a value type.
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** A result outside 0..255, and `byte(i)` with i outside 0..255, is `IntegerOverflow` (SGO-VAL-001); division by zero is `DivideByZero`; a shift count outside 0..63 is `ShiftRange`.
+- **cancellation_and_cleanup:** n/a — byte operations are not cancellation points.
+- **compile_link_checks:** `SGO_E_CONST_OVERFLOW` for constants outside 0..255; `SGO_E_TYPE_MISMATCH` for mixing byte and int without a conversion.
+- **runtime_guards:** `IntegerOverflow`, `DivideByZero`, `ShiftRange`.
+- **tcb_assumptions:** The checked-arithmetic code generation of SGO-VAL-001, extended to 8-bit unsigned operands.
+- **positive_tests:** G12; fixture:type-byte-arith, fixture:type-byte-convert.
+- **negative_tests:** G12; fixture:type-byte-overflow, fixture:type-byte-underflow, fixture:type-byte-shift-overflow, fixture:type-byte-convert-overflow, fixture:type-byte-const-overflow.
+- **implementation_coverage:** `noder/writer.go` (`sgoChecked`: int, byte, and named types over them), `ssagen/sgo.go` (`sgoByteBinary`, `sgoConvByte`), `ssagen/ssa.go` (OCONV).
+- **executed_evidence:** W13 stage 2 conformance (sgo/evidence/w13/README.md).
+- **supported_execution_configurations:** production, lab.

@@ -1,0 +1,23 @@
+package main
+
+import "sgo"
+
+type Tree struct {
+	V    int
+	Kids []*Tree
+	Tags map[string][]int
+}
+
+func main(root *sgo.Context) error {
+	t := &Tree{V: 1, Kids: []*Tree{&Tree{V: 2}}, Tags: map[string][]int{"a": []int{1}}}
+	c := sgo.Copy(t)
+	c.V = 10
+	c.Kids[0].V = 20
+	c.Tags["a"][0] = 30
+	c.Tags["b"] = []int{}
+	ok := t.V == 1 && t.Kids[0].V == 2 && t.Tags["a"][0] == 1 && len(t.Tags) == 1 && c.Kids[0] != t.Kids[0]
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

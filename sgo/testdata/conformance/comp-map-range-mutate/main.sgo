@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	m := map[string]int{"a": 1, "b": 2, "c": 3}
+	out := root.Stdout()
+	for k, v := range m {
+		if k == "a" {
+			delete(m, "b") // not visited
+			m["d"] = 4     // visited, after c
+		}
+		if err := out.WriteString(k + string([]byte{byte(48 + v)}) + " "); err != nil {
+			return err
+		}
+	}
+	return out.WriteString("\n")
+}

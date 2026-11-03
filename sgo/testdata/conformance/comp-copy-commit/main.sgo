@@ -1,0 +1,26 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	results := sgo.NewChannel[[]string](1)
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			words := []string{"a", "b"}
+			p, err := results.Reserve(t)
+			if err != nil {
+				return err
+			}
+			return p.Commit(sgo.Copy(words))
+		})
+	}
+	w, _, err := results.Receive(root)
+	if err != nil {
+		return err
+	}
+	ok := len(w) == 2 && w[1] == "b"
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

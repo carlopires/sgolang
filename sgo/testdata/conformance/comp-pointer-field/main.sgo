@@ -1,0 +1,24 @@
+package main
+
+import "sgo"
+
+type Acc struct {
+	Bal  int
+	Hist [2]int
+}
+
+func main(root *sgo.Context) error {
+	a := Acc{}
+	p := &a
+	p.Bal = 10
+	q := &p.Hist[1]
+	*q = 7
+	s := []Acc{Acc{}}
+	r := &s[0]
+	r.Bal = 3
+	ok := a.Bal == 10 && a.Hist[1] == 7 && s[0].Bal == 3
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

@@ -268,12 +268,23 @@ var runtimeDecls = [...]struct {
 	{"sgoLabStep", funcTag, 9},
 	{"sgoEnterMain", funcTag, 164},
 	{"sgoExitMain", funcTag, 11},
-	{"sgoPanicValue", funcTag, 166},
+	{"sgomakemap", funcTag, 166},
+	{"sgomapaccess1", funcTag, 87},
+	{"sgomapaccess1_fat", funcTag, 91},
+	{"sgomapaccess2", funcTag, 92},
+	{"sgomapaccess2_fat", funcTag, 96},
+	{"sgomapassign", funcTag, 167},
+	{"sgomapdelete", funcTag, 98},
+	{"sgomapIterStart", funcTag, 98},
+	{"sgomapIterNext", funcTag, 102},
+	{"sgomapclear", funcTag, 103},
+	{"sgoInvalidMake", funcTag, 31},
+	{"sgoPanicValue", funcTag, 168},
 	{"KeepAlive", funcTag, 11},
 }
 
 func runtimeTypes() []*types.Type {
-	var typs [167]*types.Type
+	var typs [169]*types.Type
 	typs[0] = types.ByteType
 	typs[1] = types.NewPtr(typs[0])
 	typs[2] = types.Types[types.TANY]
@@ -440,7 +451,9 @@ func runtimeTypes() []*types.Type {
 	typs[163] = newSig(params(typs[7], typs[67], typs[162], typs[30], typs[13], typs[71], typs[71]), params(typs[67]))
 	typs[164] = newSig(nil, params(typs[7]))
 	typs[165] = newSig(params(typs[7]), nil)
-	typs[166] = newSig(params(typs[30], typs[30]), params(typs[10]))
+	typs[166] = newSig(params(typs[1], typs[13]), params(typs[83]))
+	typs[167] = newSig(params(typs[1], typs[83], typs[3], typs[30]), params(typs[3]))
+	typs[168] = newSig(params(typs[30], typs[30]), params(typs[10]))
 	return typs[:]
 }
 

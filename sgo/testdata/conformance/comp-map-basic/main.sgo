@@ -1,0 +1,19 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	m := make(map[string]int)
+	m["a"] = 1
+	m["a"] += 2
+	m["b"]++
+	v, found := m["c"]
+	delete(m, "zz")
+	ok := m["a"] == 3 && m["b"] == 1 && v == 0 && !found && len(m) == 2
+	clear(m)
+	ok = ok && len(m) == 0
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

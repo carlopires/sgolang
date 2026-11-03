@@ -313,6 +313,9 @@ func walkMakeChan(n *ir.MakeExpr, init *ir.Nodes) ir.Node {
 
 // walkMakeMap walks an OMAKEMAP node.
 func walkMakeMap(n *ir.MakeExpr, init *ir.Nodes) ir.Node {
+	if sgoMaps() {
+		return sgoMakeMap(n, init)
+	}
 	t := n.Type()
 	mapType := reflectdata.MapType()
 	hint := n.Len
@@ -430,6 +433,13 @@ func walkMakeSlice(n *ir.MakeExpr, init *ir.Nodes) ir.Node {
 		cap = safeExpr(cap, init)
 	} else {
 		cap = len
+	}
+	if sgoMaps() {
+		// S-Go: an invalid length or capacity is InvalidArgument with the position (SGO-COMP-005).
+		bad := ir.NewLogicalExpr(base.Pos, ir.OOROR, ir.NewBinaryExpr(base.Pos, ir.OLT, len, ir.NewInt(base.Pos, 0)), ir.NewBinaryExpr(base.Pos, ir.OLT, cap, len))
+		nif := ir.NewIfStmt(base.Pos, bad, nil, nil)
+		nif.Body = []ir.Node{mkcall("sgoInvalidMake", nil, init, sgoPosString())}
+		appendWalkStmt(init, nif)
 	}
 	t := n.Type()
 	if t.Elem().NotInHeap() {

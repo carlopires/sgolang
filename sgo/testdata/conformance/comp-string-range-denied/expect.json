@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-COMP-005",
+  "SGO-COMP-001"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNADMITTED",
+   "at": "range s"
+  }
+ ]
+}

@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+type T struct {
+	N int
+}
+
+func (t T) Get() int { return t.N }
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		n.Spawn(func(c *sgo.Context) error {
+			var p *T = nil
+			_ = p.Get()
+			return nil
+		})
+	}
+	return nil
+}

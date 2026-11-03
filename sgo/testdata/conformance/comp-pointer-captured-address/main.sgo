@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	x := 1
+	f := func() int { return x }
+	p := &x
+	*p = 2
+	_ = f()
+	return nil
+}

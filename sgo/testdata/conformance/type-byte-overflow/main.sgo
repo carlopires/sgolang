@@ -1,0 +1,11 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	var a byte = 200
+	var b byte = 100
+	_ = root.Stdout().WriteString("before\n")
+	_ = a + b
+	return nil
+}

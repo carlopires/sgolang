@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	s := make([]int, 2)
+	i := 2
+	s[i] = 1
+	return nil
+}

@@ -1,0 +1,16 @@
+package main
+
+import "sgo"
+
+func counter() func() int {
+	s := []int{0}
+	return func() int {
+		s[0]++
+		return s[0]
+	}
+}
+
+func main(root *sgo.Context) error {
+	_ = counter()
+	return nil
+}

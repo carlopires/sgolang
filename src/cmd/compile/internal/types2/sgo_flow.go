@@ -78,8 +78,12 @@ func (check *Checker) sgoFuncFlow(fd *syntax.FuncDecl) {
 	})
 	syntax.Inspect(fd, func(n syntax.Node) bool {
 		switch n := n.(type) {
-		case *syntax.ArrayType:
-			check.sgoArrayType(n)
+		case *syntax.ArrayType, *syntax.SliceType, *syntax.MapType:
+			check.sgoTypeExpr(n.(syntax.Expr))
+		case *syntax.Operation:
+			if n.Op == syntax.Mul && n.Y == nil {
+				check.sgoTypeExpr(n) // *T in type position (SGO-COMP-007)
+			}
 		case *syntax.ChanType:
 			check.sgoChanType(n)
 		case *syntax.IndexExpr:
@@ -123,7 +127,9 @@ func (check *Checker) sgoFuncFlow(fd *syntax.FuncDecl) {
 		}
 		return true
 	})
-	check.sgoAssignments(fd, check.sgoCaptured(lits), binders)
+	captured := check.sgoCaptured(lits)
+	check.sgoAssignments(fd, captured, binders)
+	check.sgoTaskLocalRules(fd, lits, captured) // sgo_local.go
 }
 
 // sgoShadow reports a declaration that hides a name of an enclosing block of the same function,
@@ -294,7 +300,7 @@ func (check *Checker) sgoAssignments(fd *syntax.FuncDecl, captured map[*Var]*syn
 			lhs = l.ElemList
 		}
 		for _, e := range lhs {
-			name := sgoAssignedRoot(e) // x, x.F, x[i]: each assigns x (SGO-MEM-002, SGO-COMP-002)
+			name := check.sgoAssignedRoot(e) // x, x.F, x[i]: each assigns x (SGO-MEM-002, SGO-COMP-002)
 			if name == nil {
 				continue
 			}
@@ -311,17 +317,19 @@ func (check *Checker) sgoAssignments(fd *syntax.FuncDecl, captured map[*Var]*syn
 	})
 }
 
-// sgoChanLen reports len of a channel: instantaneous counts are denied in 0.3.0 (SGO-CHAN-002).
+// sgoChanLen reports len or cap of a channel: instantaneous counts are denied in 0.3.0
+// (SGO-CHAN-002); len and cap of slices, arrays, and strings are admitted (SGO-COMP-005).
 func (check *Checker) sgoChanLen(call *syntax.CallExpr) {
 	name, _ := syntax.Unparen(call.Fun).(*syntax.Name)
 	if name == nil || len(call.ArgList) != 1 {
 		return
 	}
-	if b, _ := check.Uses[name].(*Builtin); b == nil || b.id != _Len {
+	b, _ := check.Uses[name].(*Builtin)
+	if b == nil || b.id != _Len && b.id != _Cap {
 		return
 	}
 	if tv, ok := check.Types[call.ArgList[0]]; ok && tv.Type != nil && isChanType(tv.Type) {
-		check.errorf(name, UnsupportedFeature, "SGO_E_UNADMITTED: len of a channel is not admitted (SGO-CHAN-002)")
+		check.errorf(name, UnsupportedFeature, "SGO_E_UNADMITTED: %s of a channel is not admitted (SGO-CHAN-002)", name.Value)
 	}
 }
 
@@ -336,8 +344,18 @@ func (check *Checker) sgoRange(s *syntax.ForStmt) {
 		if isChanType(tv.Type) {
 			return
 		}
-		if _, isArray := tv.Type.Underlying().(*Array); isArray {
-			return // range over an array (SGO-COMP-002)
+		switch u := tv.Type.Underlying().(type) {
+		case *Array, *Slice, *Map:
+			return // SGO-COMP-002, SGO-COMP-005, SGO-COMP-006
+		case *Pointer:
+			if _, ok := u.base.Underlying().(*Array); ok {
+				return
+			}
+		case *Basic:
+			if u.info&IsString != 0 {
+				check.errorf(r.Pos(), UnsupportedFeature, "SGO_E_UNADMITTED: range over a string is not admitted (it yields runes); range over []byte(s) (SGO-COMP-005)")
+				return
+			}
 		}
 	}
 	check.errorf(r.Pos(), UnsupportedFeature, "SGO_E_UNADMITTED: range clause is not admitted in S-Go subset 0 (SGO-COMP-001)")

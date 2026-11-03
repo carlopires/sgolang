@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	s := "abc"
+	b := []byte(s)
+	b[0] = 65
+	b = append(b, "de"...)
+	ok := s == "abc" && string(b) == "Abcde" && len(b) == 5
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

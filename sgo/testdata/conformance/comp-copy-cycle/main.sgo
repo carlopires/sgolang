@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+type Ring struct {
+	V    int
+	Next *Ring
+}
+
+func main(root *sgo.Context) error {
+	a := &Ring{V: 1}
+	b := &Ring{V: 2, Next: a}
+	a.Next = b
+	c := sgo.Copy(a)
+	ok := c.Next.Next == c && c.Next.V == 2 && c != a && c.Next != b
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

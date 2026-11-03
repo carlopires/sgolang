@@ -1,0 +1,19 @@
+package main
+
+import "sgo"
+
+type Pt struct {
+	X, Y int
+}
+
+func main(root *sgo.Context) error {
+	m := map[Pt][]string{}
+	m[Pt{1, 2}] = append(m[Pt{1, 2}], "a")
+	m[Pt{1, 2}] = append(m[Pt{1, 2}], "b")
+	k := map[[2]string]bool{[2]string{"x", "y"}: true}
+	ok := len(m[Pt{1, 2}]) == 2 && len(m) == 1 && k[[2]string{"x", "y"}]
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

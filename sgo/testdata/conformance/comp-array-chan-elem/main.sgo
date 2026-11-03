@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+type Box struct {
+	C [1]chan int
+}
+
+func main(root *sgo.Context) error {
+	b := Box{}
+	b.C[0] = make(chan int, 1)
+	b.C[0] <- 7
+	ok := <-b.C[0] == 7
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

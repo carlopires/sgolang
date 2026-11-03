@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+type T struct {
+	M map[string]int
+}
+
+func main(root *sgo.Context) error {
+	t := T{}
+	_ = root.Stdout().WriteString("before\n")
+	_ = t.M["a"] // a read of a nil map is empty
+	t.M["a"] = 1
+	return nil
+}

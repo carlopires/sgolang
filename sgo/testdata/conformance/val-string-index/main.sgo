@@ -4,6 +4,10 @@ import "sgo"
 
 func main(root *sgo.Context) error {
 	s := "ab"
-	_ = s[1]
-	return nil
+	b := s[1]
+	ok := b == 98
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
 }

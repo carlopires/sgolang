@@ -1,0 +1,17 @@
+package main
+
+import "sgo"
+
+func set(p *int, v int) { *p = v }
+
+func main(root *sgo.Context) error {
+	x := 1
+	p := &x
+	set(p, 5)
+	*p = *p + 1
+	ok := x == 6
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

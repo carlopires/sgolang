@@ -32,17 +32,17 @@ The published S-Go claim set (plan §10.1, D76). Every statement here is checked
 
 ### G-LANG
 
-A program compiles only if every construct it uses is in the closed S-Go subset (spec 0.8.0): .sgo sources, int/bool/string/error, value structs and arrays, named value types with value-receiver methods, function values, the admitted statements. Integer overflow, division by zero, and an out-of-range array index are checked failures with a specified record, never wraparound or undefined behavior.
+A program compiles only if every construct it uses is in the closed S-Go subset (spec 0.9.0): .sgo sources, int/byte/bool/string/error, value structs and arrays, named types with value- and pointer-receiver methods, slices, insertion-ordered maps, pointers, function values, the admitted statements. Task-local data (slices, maps, pointers) never crosses tasks except as a deep copy made by sgo.Copy (D85). Integer and byte overflow, division by zero, an out-of-range index or slice, a nil dereference, and a write to a nil map are checked failures with a specified record, never wraparound or undefined behavior; map iteration order is insertion order, the same in production and in the lab.
 
 - **Scope:** admission, runtime_enforced, tested
 - **Families:** SPEC-LEX, SPEC-BIND, SPEC-TYPE, SPEC-VALUE, SPEC-CONTROL, SPEC-COMPOSITE, SPEC-USERTYPE
-- **Clauses:** SGO-LEX-001, SGO-LEX-002, SGO-LEX-003, SGO-LEX-004, SGO-BIND-001, SGO-BIND-002, SGO-BIND-003, SGO-BIND-004, SGO-BIND-005, SGO-TYPE-001, SGO-TYPE-002, SGO-TYPE-003, SGO-TYPE-004, SGO-TYPE-005, SGO-TYPE-006, SGO-VAL-001, SGO-VAL-002, SGO-VAL-003, SGO-VAL-004, SGO-VAL-005, SGO-CTL-001, SGO-CTL-002, SGO-CTL-003, SGO-CTL-004, SGO-COMP-001, SGO-COMP-002, SGO-COMP-003, SGO-UTYPE-001, SGO-UTYPE-002
+- **Clauses:** SGO-LEX-001, SGO-LEX-002, SGO-LEX-003, SGO-LEX-004, SGO-BIND-001, SGO-BIND-002, SGO-BIND-003, SGO-BIND-004, SGO-BIND-005, SGO-TYPE-001, SGO-TYPE-002, SGO-TYPE-003, SGO-TYPE-004, SGO-TYPE-005, SGO-TYPE-006, SGO-TYPE-007, SGO-VAL-001, SGO-VAL-002, SGO-VAL-003, SGO-VAL-004, SGO-VAL-005, SGO-CTL-001, SGO-CTL-002, SGO-CTL-003, SGO-CTL-004, SGO-COMP-001, SGO-COMP-002, SGO-COMP-003, SGO-COMP-004, SGO-COMP-005, SGO-COMP-006, SGO-COMP-007, SGO-COMP-008, SGO-UTYPE-001, SGO-UTYPE-002
 - **Acceptance cases:** G02, G03, G07, S02, S03, S05, S09, S10, S16, S17, S19, X01, X02, X03, X04, X05, X06, X07, X08, X10, X11
-- **Implementation:** `src/cmd/compile/internal/syntax/`, `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/types2/sgo_flow.go`, `src/cmd/compile/internal/types2/sgo_values.go`, `src/cmd/compile/internal/sgoadmit/admit.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`, `src/cmd/compile/internal/ssagen/sgo.go`
+- **Implementation:** `src/cmd/compile/internal/syntax/`, `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/types2/sgo_flow.go`, `src/cmd/compile/internal/types2/sgo_values.go`, `src/cmd/compile/internal/types2/sgo_local.go`, `src/cmd/compile/internal/walk/sgo_map.go`, `src/runtime/sgo_map.go`, `src/runtime/sgo_copy.go`, `src/cmd/compile/internal/sgoadmit/admit.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`, `src/cmd/compile/internal/ssagen/sgo.go`
 
 ### G-DENY
 
-Floating point, slices, maps, pointers, anonymous struct types, interfaces, generics, reflection, math/rand, unsafe, cgo, assembly, go:linkname, plugins and raw system calls are rejected at compile time with SGO_E_UNADMITTED; there is no flag, build mode or environment setting that admits them. (Value structs, arrays, and named types are admitted from spec 0.8.0: G-LANG.)
+Floating point, anonymous struct types, pointers to handles, range over strings, interfaces, generics, reflection, math/rand, unsafe, cgo, assembly, go:linkname, plugins and raw system calls are rejected at compile time with SGO_E_UNADMITTED; there is no flag, build mode or environment setting that admits them. (Value structs, arrays, and named types are admitted from spec 0.8.0, and slices, maps, and pointers from 0.9.0: G-LANG.)
 
 - **Scope:** admission, tested
 - **Families:** SPEC-FLOAT, SPEC-IFACE, SPEC-GENERIC, SPEC-REFLECT, SPEC-NATIVE, SPEC-RANDOM

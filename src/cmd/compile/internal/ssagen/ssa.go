@@ -2344,7 +2344,7 @@ func (s *state) stmt(n ir.Node) {
 	case ir.OCHECKNIL:
 		n := n.(*ir.UnaryExpr)
 		p := s.expr(n.X)
-		_ = s.nilCheck(p)
+		_ = s.sgoNilCheck(p)
 		// TODO: check that throwing away the nilcheck result is ok.
 
 	case ir.OINLMARK:
@@ -3225,6 +3225,9 @@ func (s *state) exprCheckPtr(n ir.Node, checkPtrOK bool) *ssa.Value {
 	case ir.OCONV:
 		n := n.(*ir.ConvExpr)
 		x := s.expr(n.X)
+		if ft, tt := n.X.Type(), n.Type(); ft.IsInteger() && ft.IsSigned() && ft.Size() == 8 && tt.IsInteger() && !tt.IsSigned() && tt.Size() == 1 && s.sgoSource() {
+			s.sgoConvByte(x) // byte(i): IntegerOverflow outside 0..255 (SGO-TYPE-007)
+		}
 		return s.conv(n, x, n.X.Type(), n.Type())
 
 	case ir.ODOTTYPE:
@@ -5460,7 +5463,7 @@ func (s *state) exprPtr(n ir.Node, bounded bool, lineno src.XPos) *ssa.Value {
 		}
 		return p
 	}
-	p = s.nilCheck(p)
+	p = s.sgoNilCheck(p)
 	return p
 }
 
@@ -5562,9 +5565,10 @@ func (s *state) boundsCheck(idx, len *ssa.Value, kind ssa.BoundsKind, bounded bo
 	b.AddEdgeTo(bPanic)
 
 	s.startBlock(bPanic)
-	if (kind == ssa.BoundsIndex || kind == ssa.BoundsIndexU) && s.sgoSource() {
-		// S-Go code: the checked failure BoundsViolation with the source position (SGO-COMP-003).
-		s.sgoBoundsFail(idx, len)
+	if s.sgoSource() {
+		// S-Go code: the checked failure BoundsViolation with the source position (SGO-COMP-003,
+		// SGO-COMP-005).
+		s.sgoBoundsFail(kind, idx, len)
 	} else if Arch.LinkArch.Family == sys.Wasm {
 		// TODO(khr): figure out how to do "register" based calling convention for bounds checks.
 		// Should be similar to gcWriteBarrier, but I can't make it work.
@@ -5823,7 +5827,7 @@ func (s *state) slice(v, i, j, k *ssa.Value, bounded bool) (p, l, c *ssa.Value) 
 		if !t.Elem().IsArray() {
 			s.Fatalf("bad ptr to array in slice %v\n", t)
 		}
-		nv := s.nilCheck(v)
+		nv := s.sgoNilCheck(v)
 		ptr = s.newValue1(ssa.OpCopy, types.NewPtr(t.Elem().Elem()), nv)
 		len = s.constInt(types.Types[types.TINT], t.Elem().NumElem())
 		cap = len

@@ -1,0 +1,27 @@
+package main
+
+import "sgo"
+
+type Bag struct {
+	Items []string
+	Index map[string]int
+}
+
+func main(root *sgo.Context) error {
+	b := Bag{}
+	n := 0
+	for range b.Items {
+		n++
+	}
+	for range b.Index {
+		n++
+	}
+	b.Items = append(b.Items, "x")
+	var s []int = nil
+	ok := n == 0 && len(b.Items) == 1 && s == nil && len(s) == 0 && b.Index == nil && len(b.Index) == 0
+	delete(b.Index, "a")
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

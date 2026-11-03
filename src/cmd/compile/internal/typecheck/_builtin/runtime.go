@@ -331,6 +331,19 @@ func sgoLabStep()
 func sgoEnterMain() unsafe.Pointer
 func sgoExitMain(err interface{})
 
+// S-Go insertion-ordered maps (src/runtime/sgo_map.go)
+func sgomakemap(mapType *byte, hint int) (hmap map[any]any)
+func sgomapaccess1(mapType *byte, hmap map[any]any, key *any) (val *any)
+func sgomapaccess1_fat(mapType *byte, hmap map[any]any, key *any, zero *byte) (val *any)
+func sgomapaccess2(mapType *byte, hmap map[any]any, key *any) (val *any, pres bool)
+func sgomapaccess2_fat(mapType *byte, hmap map[any]any, key *any, zero *byte) (val *any, pres bool)
+func sgomapassign(mapType *byte, hmap map[any]any, key *any, pos string) (val *any)
+func sgomapdelete(mapType *byte, hmap map[any]any, key *any)
+func sgomapIterStart(mapType *byte, hmap map[any]any, hiter *any)
+func sgomapIterNext(hiter *any)
+func sgomapclear(mapType *byte, hmap map[any]any)
+func sgoInvalidMake(pos string)
+
 // S-Go failures with positions (src/runtime/sgo_api.go)
 func sgoPanicValue(msg string, pos string) interface{}
 

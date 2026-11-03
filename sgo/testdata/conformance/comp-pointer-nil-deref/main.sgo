@@ -1,0 +1,14 @@
+package main
+
+import "sgo"
+
+type T struct {
+	N int
+}
+
+func main(root *sgo.Context) error {
+	var p *T = nil
+	_ = root.Stdout().WriteString("before\n")
+	_ = p.N
+	return nil
+}

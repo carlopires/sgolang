@@ -1,0 +1,12 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-COMP-005"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_CONST_RANGE",
+   "position": "main.sgo:7:10"
+  }
+ ]
+}

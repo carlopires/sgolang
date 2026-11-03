@@ -25,10 +25,10 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §1, decisions D14/D19, and resolut
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-LEX-002 — Tokens, comments, and semicolons
-- **version:** 1
+- **version:** 2
 - **status:** frozen
 - **reference_closure:** SGO-LEX-001, SGO-LEX-003; D19.
-- **grammar_and_types:** Tokens are identifiers, keywords, operators and punctuation, and literals. Identifiers are a letter or `_` followed by letters, digits, or `_`, where letters are Unicode categories Lu, Ll, Lt, Lm, Lo and digits are category Nd. Comments are `//` to end of line and `/* … */` (not nested); a comment containing a newline acts like a newline. Admitted operators: `+ - * / % & | ^ &^ << >> && || ! == != < <= > >= = := += -= *= /= %= &= |= ^= &^= <<= >>= ++ -- ( ) { } , ; . :`. The scanner recognizes all other Go operators (e.g. `<-`, `...`, `~`, `[`, `]`) so that their use is reported by SGO-ERR-001 rather than misparsed. Automatic semicolon insertion: a semicolon is inserted after a line's final token if that token is an identifier, an integer or string literal, one of the keywords `break`, `continue`, `return`, or one of `++ -- ) }`. These rules are adapted from the Go specification at go1.27.3 (D19) and are complete as stated here.
+- **grammar_and_types:** Tokens are identifiers, keywords, operators and punctuation, and literals. Identifiers are a letter or `_` followed by letters, digits, or `_`, where letters are Unicode categories Lu, Ll, Lt, Lm, Lo and digits are category Nd. Comments are `//` to end of line and `/* … */` (not nested); a comment containing a newline acts like a newline. Admitted operators: `+ - * / % & | ^ &^ << >> && || ! == != < <= > >= = := += -= *= /= %= &= |= ^= &^= <<= >>= ++ -- ( ) { } , ; . :`, and from spec 0.9.0 `[ ]` and `...` (SGO-COMP-005). The scanner recognizes all other Go operators (e.g. `~`) so that their use is reported by SGO-ERR-001 rather than misparsed. Automatic semicolon insertion: a semicolon is inserted after a line's final token if that token is an identifier, an integer or string literal, one of the keywords `break`, `continue`, `return`, or one of `++ -- ) }`. These rules are adapted from the Go specification at go1.27.3 (D19) and are complete as stated here.
 - **preconditions:** SGO-LEX-001 holds.
 - **evaluation_and_value_semantics:** n/a — lexical rule.
 - **ownership_and_lifecycle:** n/a — no run-time objects.

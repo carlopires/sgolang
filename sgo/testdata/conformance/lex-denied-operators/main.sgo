@@ -2,8 +2,10 @@ package main
 
 import "sgo"
 
+type N interface {
+	~int
+}
+
 func main(root *sgo.Context) error {
-	s := "ab"
-	_ = s[0]
 	return nil
 }

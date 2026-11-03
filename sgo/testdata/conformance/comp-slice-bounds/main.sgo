@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	s := []int{1, 2, 3}
+	i := 2
+	j := 5
+	_ = root.Stdout().WriteString("before\n")
+	_ = s[i:j]
+	return nil
+}

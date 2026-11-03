@@ -1,0 +1,26 @@
+package main
+
+import "sgo"
+
+type Node struct {
+	V    int
+	Next *Node
+}
+
+func push(h *Node, v int) *Node { return &Node{V: v, Next: h} }
+
+func main(root *sgo.Context) error {
+	var h *Node = nil
+	for i := 1; i <= 4; i++ {
+		h = push(h, i)
+	}
+	sum := 0
+	for p := h; p != nil; p = p.Next {
+		sum = sum + p.V
+	}
+	ok := sum == 10 && h.V == 4
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

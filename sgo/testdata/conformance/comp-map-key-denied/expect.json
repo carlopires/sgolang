@@ -1,0 +1,12 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-COMP-006"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNADMITTED",
+   "at": "map[*int]bool"
+  }
+ ]
+}

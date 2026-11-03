@@ -1,0 +1,27 @@
+package main
+
+import "sgo"
+
+type Tally struct {
+	N int
+}
+
+func main(root *sgo.Context) error {
+	seen := map[int]bool{}
+	t := &Tally{}
+	add := func(v int) {
+		seen[v] = true // writes the map, not the captured variable
+		t.N++          // writes through the pointer
+	}
+	add(1)
+	add(2)
+	defer add(3)
+	f := add
+	f(4)
+	func() { t.N = t.N + 10 }()
+	ok := len(seen) == 3 && t.N == 13
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

@@ -17,8 +17,8 @@ token  _Break|_Case|_Const|_Continue|_Default|_Defer|_Else|_For|_Func|_If|_Impor
 token  _Nursery  admit  SGO-NUR-001  # S-Go keyword (W03)
 token  _Arrow|_Chan|_Select  deny  SGO-CHAN-001
 token  _Lbrack|_Rbrack|_Struct|_Range  admit  SGO-COMP-002  # arrays, value structs, range over arrays (0.8.0); [ ] also sgo.Channel[T]
-token  _Map  deny  SGO-COMP-001
-token  _DotDotDot  deny  SGO-TYPE-003
+token  _Map  admit  SGO-COMP-006  # maps with insertion order (0.9.0)
+token  _DotDotDot  admit  SGO-COMP-005  # append(s, t...) only (0.9.0); variadic parameters stay denied by SGO-TYPE-003 at admission
 token  _Fallthrough  deny  SGO-CTL-002
 token  _Go  deny  SGO-SPAWN-005
 token  _Goto  deny  SGO-CTL-001
@@ -47,7 +47,8 @@ syntax-node  EmptyStmt  deny  SGO-CTL-001
 syntax-node  BadExpr  internal  SGO-ERR-001  # parser error recovery node
 syntax-node  TypeDecl  admit  SGO-UTYPE-002  # aliases, local and generic declarations denied (SGO-UTYPE-001)
 syntax-node  CompositeLit|KeyValueExpr|IndexExpr|ArrayType|StructType|RangeClause  admit  SGO-COMP-002  # value types only; index of arrays only (SGO-COMP-003)
-syntax-node  SliceExpr|SliceType|MapType  deny  SGO-COMP-001
+syntax-node  SliceExpr|SliceType  admit  SGO-COMP-005  # slices, slicing (0.9.0)
+syntax-node  MapType  admit  SGO-COMP-006  # (0.9.0)
 syntax-node  AssertExpr|TypeSwitchGuard|InterfaceType  deny  SGO-IFACE-001
 syntax-node  DotsType  deny  SGO-TYPE-003
 syntax-node  ChanType|SendStmt|SelectStmt|CommClause  deny  SGO-CHAN-001
@@ -58,12 +59,16 @@ universe  error|nil  admit  SGO-TYPE-006
 universe  true|false  admit  SGO-VAL-003
 universe  len  admit  SGO-VAL-002
 universe  panic  admit  SGO-DEF-002
-universe  int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|uintptr|byte|rune  deny  SGO-TYPE-001
+universe  byte  admit  SGO-TYPE-007  # (0.9.0)
+universe  int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|uintptr|rune  deny  SGO-TYPE-001
 universe  float32|float64|complex64|complex128|real|imag|complex  deny  SGO-FLOAT-001
 universe  any  deny  SGO-IFACE-001
 universe  comparable  deny  SGO-GEN-001
 universe  iota  deny  SGO-VAL-004
-universe  append|cap|clear|copy|delete|make|new  deny  SGO-COMP-001
+universe  append|cap|copy|make  admit  SGO-COMP-005  # slices (0.9.0); make of a channel SGO-CHAN-002, of a map SGO-COMP-006; cap of a channel stays denied
+universe  delete  admit  SGO-COMP-006  # (0.9.0)
+universe  new  admit  SGO-COMP-007  # (0.9.0)
+universe  clear  deny  SGO-COMP-001
 universe  close  deny  SGO-CHAN-001
 universe  max|min  deny  SGO-VAL-001
 universe  print|println  deny  SGO-PROC-003
@@ -82,10 +87,13 @@ runtime-builtin  sgoNurseryEnter|sgoNurseryExit  internal  SGO-NUR-003  # nurser
 runtime-builtin  gorecover  deny  SGO-DEF-002
 runtime-builtin  panicwrap  deny  SGO-UTYPE-001
 runtime-builtin  print(bool|float64|float32|int|hex|uint|complex128|complex64|string|quoted|pointer|uintptr|iface|eface|slice|nl|sp|lock|unlock)  deny  SGO-PROC-003
-runtime-builtin  panicmakeslice(len|cap)|goPanic(Index|Slice)\w*|concatbyte[2-5]|concatbytes|slicebytetostring(tmp)?|slicerunetostring|stringtoslice(byte|rune)|slicecopy|typedslicecopy|decoderune|countrunes|panicrangestate|deferrangefunc  deny  SGO-COMP-001
+runtime-builtin  panicmakeslice(len|cap)|goPanic(Index|Slice)\w*|concatbyte[2-5]|concatbytes|slicebytetostring(tmp)?|stringtoslicebyte|slicecopy|typedslicecopy  internal  SGO-COMP-005  # slice and []byte lowering (0.9.0); index and slice panics become BoundsViolation in .sgo code
+runtime-builtin  slicerunetostring|stringtoslicerune|decoderune|countrunes|panicrangestate|deferrangefunc  deny  SGO-COMP-001
 runtime-builtin  intstring  deny  SGO-TYPE-002
-runtime-builtin  makemap(64|_small)?|mapaccess[12](_fast32|_fast64|_faststr|_fat)?|mapassign(_fast32|_fast32ptr|_fast64|_fast64ptr|_faststr)?|mapIterStart|mapIterNext|mapdelete(_fast32|_fast64|_faststr)?|mapclear  deny  SGO-COMP-001
-runtime-builtin  makeslice(64|copy)?|growslice(Buf|BufNoAlias|NoAlias)?|moveSlice(NoScan|NoCap|NoCapNoScan)?|(mem|str|f32|f64|c64|c128|inter|nilinter)hash(0|8|16|32|64|128)?  deny  SGO-COMP-001
+runtime-builtin  makemap(64|_small)?|mapaccess[12](_fast32|_fast64|_faststr|_fat)?|mapassign(_fast32|_fast32ptr|_fast64|_fast64ptr|_faststr)?|mapIterStart|mapIterNext|mapdelete(_fast32|_fast64|_faststr)?|mapclear  deny  SGO-COMP-006  # Go maps (randomized order): never used for .sgo code (walk/sgo_map.go)
+runtime-builtin  sgomakemap|sgomapaccess[12](_fat)?|sgomapassign|sgomapdelete|sgomapIterStart|sgomapIterNext|sgomapclear  internal  SGO-COMP-006  # insertion-ordered map lowering (0.9.0)
+runtime-builtin  sgoInvalidMake  internal  SGO-COMP-005  # make([]T, n) with n < 0 or too large: InvalidArgument (0.9.0)
+runtime-builtin  makeslice(64|copy)?|growslice(Buf|BufNoAlias|NoAlias)?|moveSlice(NoScan|NoCap|NoCapNoScan)?|(mem|str|f32|f64|c64|c128|inter|nilinter)hash(0|8|16|32|64|128)?  internal  SGO-COMP-005  # slice lowering (0.9.0); hashes for the ordered map index
 runtime-builtin  convT(noptr|16|32|64|string|slice)?|assertE2I2?|panicdottype[EI]|panicnildottype|typeAssert|interfaceSwitch|ifaceeq|efaceeq|interequal|nilinterequal  deny  SGO-IFACE-001
 runtime-builtin  makechan(64)?|chanrecv[12]|chansend1|closechan|chanlen|chancap|selectnbsend|selectnbrecv|selectsetpc|selectgo|block  deny  SGO-CHAN-001  # Go hchan entry points: refused for S-Go packages by typecheck.LookupRuntime (SGO-CHAN-002)
 runtime-builtin  sgomakechan|sgochanrecv[12]|sgochansend1|sgoclosechan  internal  SGO-CHAN-002  # native channel lowering (W07)
@@ -126,9 +134,14 @@ ir-op  OMIN|OMAX  deny  SGO-VAL-001
 ir-op  OREAL|OIMAG|OCOMPLEX  deny  SGO-FLOAT-001
 ir-op  OUNSAFE(ADD|SLICE|SLICEDATA|STRING|STRINGDATA)  deny  SGO-NATIVE-001
 ir-op  ODOT|OINDEX|OKEY|OSTRUCTKEY|ORANGE  admit  SGO-COMP-002  # field selection, array indexing (SGO-COMP-003), literal keys, range over channels and arrays
-ir-op  OADDR|ODEREF|ODOTPTR|OPTRLIT|ONEW|OAPPEND|OCAP|OCLEAR|OCOPY|ODELETE|OINDEXMAP|OAS2MAPR|ORUNESTR  deny  SGO-COMP-001
+ir-op  OADDR|ODEREF|ODOTPTR|OPTRLIT|ONEW  admit  SGO-COMP-007  # (0.9.0)
+ir-op  OAPPEND|OCAP|OCOPY  admit  SGO-COMP-005  # (0.9.0)
+ir-op  ODELETE|OINDEXMAP|OAS2MAPR  admit  SGO-COMP-006  # (0.9.0)
+ir-op  OCLEAR|ORUNESTR  deny  SGO-COMP-001
 ir-op  OCOMPLIT|OSTRUCTLIT|OARRAYLIT  admit  SGO-COMP-002
-ir-op  OMAPLIT|OSLICELIT|OMAKE|OMAKEMAP|OMAKESLICE|OMAKESLICECOPY|OSLICE|OSLICEARR|OSLICESTR|OSLICE3|OSLICE3ARR|OSLICEHEADER|OSTRINGHEADER  deny  SGO-COMP-001
-ir-op  OBYTES2STR|OBYTES2STRTMP|ORUNES2STR|OSTR2BYTES|OSTR2BYTESTMP|OSTR2RUNES|OSLICE2ARR|OSLICE2ARRPTR  deny  SGO-COMP-001
+ir-op  OMAPLIT|OMAKEMAP  admit  SGO-COMP-006  # (0.9.0)
+ir-op  OSLICELIT|OMAKE|OMAKESLICE|OMAKESLICECOPY|OSLICE|OSLICEARR|OSLICESTR|OSLICE3|OSLICE3ARR|OSLICEHEADER|OSTRINGHEADER  admit  SGO-COMP-001
+ir-op  OBYTES2STR|OBYTES2STRTMP|OSTR2BYTES|OSTR2BYTESTMP  admit  SGO-COMP-005  # (0.9.0)
+ir-op  ORUNES2STR|OSTR2RUNES|OSLICE2ARR|OSLICE2ARRPTR  deny  SGO-COMP-001
 ir-op  OAS2DOTTYPE|ODOTTYPE|ODOTTYPE2|OCONVIFACE|ODOTINTER|OCALLINTER|OTYPESW|OMAKEFACE|OITAB|OIDATA|OINTERFACESWITCH|ODYNAMICDOTTYPE|ODYNAMICDOTTYPE2|ODYNAMICTYPE  deny  SGO-IFACE-001
 ir-op  OAS2RECV|ORECV|OSEND|OSELRECV2|OCLOSE|OMAKECHAN|OSELECT  deny  SGO-CHAN-001

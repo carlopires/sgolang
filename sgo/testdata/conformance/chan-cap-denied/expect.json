@@ -1,8 +1,8 @@
 {
  "kind": "reject",
  "clauses": [
-  "SGO-CHAN-001",
-  "SGO-COMP-001"
+  "SGO-CHAN-002",
+  "SGO-CHAN-001"
  ],
  "diagnostics": [
   {

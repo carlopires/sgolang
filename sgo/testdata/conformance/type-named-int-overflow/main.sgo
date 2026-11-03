@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+type Count int
+
+func main(root *sgo.Context) error {
+	c := Count(9223372036854775807)
+	_ = root.Stdout().WriteString("before\n")
+	_ = c + 1
+	return nil
+}

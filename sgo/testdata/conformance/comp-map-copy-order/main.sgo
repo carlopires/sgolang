@@ -1,0 +1,21 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	m := map[string]int{"q": 1, "b": 2, "x": 3}
+	delete(m, "b")
+	m["b"] = 4
+	c := sgo.Copy(m)
+	c["q"] = 10
+	out := root.Stdout()
+	for k := range c {
+		if err := out.WriteString(k); err != nil {
+			return err
+		}
+	}
+	if m["q"] != 1 {
+		return out.WriteString(" shared\n")
+	}
+	return out.WriteString("\n")
+}

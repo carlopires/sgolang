@@ -1,0 +1,11 @@
+package main
+
+import "sgo"
+
+func apply(f func() int) int { return f() }
+
+func main(root *sgo.Context) error {
+	s := []int{1}
+	_ = apply(func() int { return s[0] })
+	return nil
+}

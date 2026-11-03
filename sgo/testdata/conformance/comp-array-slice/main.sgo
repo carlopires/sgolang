@@ -1,0 +1,14 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	a := [3]int{1, 2, 3}
+	s := a[1:]
+	s[0] = 20
+	ok := len(s) == 2 && cap(s) == 2 && a[1] == 20
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

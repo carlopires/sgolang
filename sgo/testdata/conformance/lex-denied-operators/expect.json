@@ -7,7 +7,8 @@
  "diagnostics": [
   {
    "code": "SGO_E_UNADMITTED",
-   "at": "[0]"
+   "at": "interface"
   }
- ]
+ ],
+ "note": "The ~ operator stays denied: it occurs only in interface type sets, which are denied (SGO-COMP-001); the formerly denied [ ] and ... are admitted by SGO-COMP-005 from 0.9.0."
 }

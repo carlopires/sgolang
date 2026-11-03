@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	a := []int{1}
+	b := []int{1}
+	_ = a == b
+	return nil
+}

@@ -1,0 +1,12 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-COMP-004"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_TASK_LOCAL_CAPTURE",
+   "at": "func() int { return s[0] }"
+  }
+ ]
+}

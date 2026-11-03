@@ -2,7 +2,7 @@
   "schema_version": 2,
   "plan_version": "2.0",
   "purpose": "Implementation acceptance scenarios, not existing executable tests or completed test results.",
-  "case_count": 156,
+  "case_count": 159,
   "lane_note": "Lanes are test categories, not alternate language dialects. upstream_reference and host_bootstrap are external builds, not S-Go target modes. Production/lab retain identical safety/admission rules. Shared model/typed/native cases must be instantiated per required implementation phase.",
   "cases": [
     {
@@ -2840,9 +2840,11 @@
       ],
       "scenario": "Capture a slice, map, pointer or struct containing one in a Spawn callback.",
       "expected": "SGO_E_TASK_LOCAL_CAPTURE at the capture, naming sgo.Copy and sgo.Freeze.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W13 stage 2 (spec 0.9.0): comp-spawn-capture-slice/-map/-pointer/-nested, comp-local-closure-arg, comp-local-closure-return rejected with SGO_E_TASK_LOCAL_CAPTURE; comp-local-closure-call admitted; sharing model sgo/model/sharemodel.go; sgo/evidence/w13/README.md"
+      ]
     },
     {
       "id": "G05",
@@ -2857,9 +2859,11 @@
       ],
       "scenario": "Send, commit or return to another task a value with internal references, with and without sgo.Copy; mutate both sides afterwards.",
       "expected": "Without sgo.Copy: SGO_E_UNCOPIED_SEND. With it: the copy shares no mutable memory with the original.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W13 stage 2 (spec 0.9.0): comp-uncopied-send/-commit/-select rejected with SGO_E_UNCOPIED_SEND; comp-copy-send/-commit/-deep/-sharing/-cycle run; sgo/evidence/w13/README.md"
+      ]
     },
     {
       "id": "G06",
@@ -2873,9 +2877,11 @@
       ],
       "scenario": "Iterate maps after inserts, overwrites and deletes, in production and in the lab.",
       "expected": "Insertion order (D88), identical in both, on every run.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W13 stage 2 (spec 0.9.0): comp-map-order, comp-map-delete-reinsert, comp-map-range-mutate, comp-map-copy-order, lab-map-order (same order under sgo lab); sgo/evidence/w13/README.md"
+      ]
     },
     {
       "id": "G07",
@@ -2892,7 +2898,8 @@
       "implementation_status": "implemented",
       "execution_status": "passed",
       "evidence": [
-        "W13 stage 1 (arrays): comp-array-index, comp-array-bounds-exit-2, comp-array-bounds-child (BoundsViolation, exit 2, position), comp-array-const-index (SGO_E_CONST_RANGE); slices, maps and nil are stage 2; sgo/evidence/w13/README.md"
+        "W13 stage 1 (arrays): comp-array-index, comp-array-bounds-exit-2, comp-array-bounds-child (BoundsViolation, exit 2, position), comp-array-const-index (SGO_E_CONST_RANGE); slices, maps and nil are stage 2; sgo/evidence/w13/README.md",
+        "W13 stage 2 (spec 0.9.0): comp-slice-bounds, comp-slice-index-bounds, comp-pointer-nil-deref, comp-pointer-nil-method, comp-map-nil-write, comp-slice-make-negative; sgo/evidence/w13/README.md"
       ]
     },
     {
@@ -2927,6 +2934,57 @@
       "implementation_status": "pending",
       "execution_status": "unrun",
       "evidence": []
+    },
+    {
+      "id": "G10",
+      "name": "Slices, []byte, string indexing",
+      "required_for_work_packages": [
+        "W13"
+      ],
+      "execution_lanes": [
+        "conformance"
+      ],
+      "scenario": "Make, append (aliasing), three-index slicing, copy, range, []byte/string conversion, string index and slice.",
+      "expected": "Go slice semantics; out-of-range is BoundsViolation; negative make is InvalidArgument.",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W13 stage 2: comp-slice-*, comp-bytes-string, comp-string-index-slice, comp-array-slice; sgo/evidence/w13/README.md"
+      ]
+    },
+    {
+      "id": "G11",
+      "name": "Pointers and pointer receivers",
+      "required_for_work_packages": [
+        "W13"
+      ],
+      "execution_lanes": [
+        "conformance"
+      ],
+      "scenario": "&x, new, *p, pointer fields, linked lists, pointer receivers, pointer equality.",
+      "expected": "Go pointer semantics; nil dereference is NilDereference; &x of a captured variable is refused.",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W13 stage 2: comp-pointer-*, utype-pointer-receiver, type-pointer; sgo/evidence/w13/README.md"
+      ]
+    },
+    {
+      "id": "G12",
+      "name": "The byte type",
+      "required_for_work_packages": [
+        "W13"
+      ],
+      "execution_lanes": [
+        "conformance"
+      ],
+      "scenario": "byte arithmetic, conversions, constants.",
+      "expected": "Checked arithmetic in 0..255 (IntegerOverflow); out-of-range constants are SGO_E_CONST_OVERFLOW.",
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W13 stage 2: type-byte-*; sgo/evidence/w13/README.md"
+      ]
     }
   ]
 }

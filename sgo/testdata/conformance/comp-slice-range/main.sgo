@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	s := []int{10, 20, 30}
+	idx, total := 0, 0
+	for i, v := range s {
+		if i == 0 {
+			s = append(s, 1000) // the range evaluated s once
+		}
+		idx = idx + i
+		total = total + v
+	}
+	ok := idx == 3 && total == 60
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	a := []int{1, 2, 3}
+	n := copy(a[1:], a) // overlapping: as if through a temporary
+	b := make([]byte, 3)
+	m := copy(b, "hey")
+	ok := n == 2 && a[1] == 1 && a[2] == 2 && m == 3 && string(b) == "hey"
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

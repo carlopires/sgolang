@@ -1,0 +1,14 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	s := []int{1}
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			_ = s[0]
+			return nil
+		})
+	}
+	return nil
+}

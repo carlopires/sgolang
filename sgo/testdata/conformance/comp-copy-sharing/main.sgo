@@ -1,0 +1,22 @@
+package main
+
+import "sgo"
+
+type Pair struct {
+	A, B *int
+	S, T []int
+}
+
+func main(root *sgo.Context) error {
+	x := 1
+	s := []int{1, 2}
+	p := Pair{A: &x, B: &x, S: s, T: s}
+	c := sgo.Copy(p)
+	*c.A = 5
+	c.S[0] = 9
+	ok := *c.B == 5 && c.T[0] == 9 && x == 1 && s[0] == 1 && c.A != p.A
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

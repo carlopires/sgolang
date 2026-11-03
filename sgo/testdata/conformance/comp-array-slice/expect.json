@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-COMP-005",
+  "SGO-COMP-003"
+ ],
+ "exit": 0,
+ "stdout": "ok\n",
+ "note": "Slicing an addressable array is admitted from 0.9.0; the slice shares the array."
+}

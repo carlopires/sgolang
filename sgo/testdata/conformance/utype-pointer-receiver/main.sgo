@@ -1,0 +1,22 @@
+package main
+
+import "sgo"
+
+type C struct {
+	N int
+}
+
+func (c *C) Inc() {
+	c.N++
+}
+
+func main(root *sgo.Context) error {
+	c := C{}
+	c.Inc()
+	c.Inc()
+	ok := c.N == 2
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

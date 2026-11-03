@@ -1,0 +1,16 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	a := [3]int{1, 2, 3}
+	s := a[:]
+	s[0] = 9
+	p := &a
+	p[1] = 8
+	ok := a[0] == 9 && a[1] == 8 && len(s) == 3 && len(p) == 3
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

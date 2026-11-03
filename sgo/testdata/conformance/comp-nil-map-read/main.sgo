@@ -1,0 +1,14 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	var m map[string]int = nil
+	v, found := m["k"]
+	clear(m)
+	ok := v == 0 && !found && m["x"] == 0
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+type C struct {
+	N int
+}
+
+func main(root *sgo.Context) error {
+	p := &C{}
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			_ = p.N
+			return nil
+		})
+	}
+	return nil
+}

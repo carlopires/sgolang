@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	m := map[int]string{1: "a", 2: "b", 3: "c"}
+	delete(m, 1)
+	m[1] = "A" // appended at the end
+	for i := 4; i < 40; i++ {
+		m[i] = "x"
+		delete(m, i) // churn: compaction keeps the order
+	}
+	out := root.Stdout()
+	for _, v := range m {
+		if err := out.WriteString(v); err != nil {
+			return err
+		}
+	}
+	return out.WriteString("\n")
+}

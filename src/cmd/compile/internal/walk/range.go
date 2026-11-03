@@ -251,6 +251,9 @@ func walkRange(nrange *ir.RangeStmt) ir.Node {
 		elemsym := th.Field(1).Sym // ditto
 		iterInit := "mapIterStart"
 		iterNext := "mapIterNext"
+		if sgoMaps() {
+			iterInit, iterNext = "sgomapIterStart", "sgomapIterNext" // insertion order (SGO-COMP-006)
+		}
 
 		fn := typecheck.LookupRuntime(iterInit, t.Key(), t.Elem(), th)
 		init = append(init, mkcallstmt1(fn, reflectdata.RangeMapRType(base.Pos, nrange), ha, typecheck.NodAddr(hit)))
@@ -477,7 +480,11 @@ func mapClear(m, rtyp ir.Node) ir.Node {
 	t := m.Type()
 
 	// instantiate mapclear(typ *type, hmap map[any]any)
-	fn := typecheck.LookupRuntime("mapclear", t.Key(), t.Elem())
+	name := "mapclear"
+	if sgoMaps() {
+		name = "sgomapclear"
+	}
+	fn := typecheck.LookupRuntime(name, t.Key(), t.Elem())
 	n := mkcallstmt1(fn, rtyp, m)
 	return typecheck.Stmt(n)
 }

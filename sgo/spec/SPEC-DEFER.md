@@ -47,12 +47,12 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §7, decisions D12, D13, resolution
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-DEF-003 — Checked failure kinds
-- **version:** 3
+- **version:** 4
 - **status:** frozen
 - **reference_closure:** SGO-VAL-001, SGO-SPAWN-002, SGO-WAIT-001, SGO-PROC-003, SGO-TYPE-006, SGO-NUR-004, SGO-DEF-005, SGO-COMP-003.
 - **grammar_and_types:** n/a — dynamic rule.
 - **preconditions:** n/a — dynamic rule.
-- **evaluation_and_value_semantics:** The complete set of failure kinds that unwind a task in subset 0 is: `Panic` (SGO-DEF-002), `IntegerOverflow`, `DivideByZero`, `ShiftRange` (SGO-VAL-001), `SpawnContractViolation` (SGO-SPAWN-002, SGO-CANCEL-001), `InvalidArgument` (SGO-WAIT-001), `MissingCapability` (SGO-PROC-003), `NilError` (SGO-TYPE-006), `ChildError` (SGO-NUR-004); spec 0.3.0 adds `ClosedChannel` (a send on a closed channel, SGO-CHAN-002, SGO-CHAN-004); spec 0.8.0 adds `BoundsViolation` (an array index out of range, SGO-COMP-003). Each carries a message and the source position where it arose. All unwind exactly like `panic` (SGO-DEF-005).
+- **evaluation_and_value_semantics:** The complete set of failure kinds that unwind a task in subset 0 is: `Panic` (SGO-DEF-002), `IntegerOverflow`, `DivideByZero`, `ShiftRange` (SGO-VAL-001), `SpawnContractViolation` (SGO-SPAWN-002, SGO-CANCEL-001), `InvalidArgument` (SGO-WAIT-001), `MissingCapability` (SGO-PROC-003), `NilError` (SGO-TYPE-006), `ChildError` (SGO-NUR-004); spec 0.3.0 adds `ClosedChannel` (a send on a closed channel, SGO-CHAN-002, SGO-CHAN-004); spec 0.8.0 adds `BoundsViolation` (an array index out of range, SGO-COMP-003); spec 0.9.0 adds `NilDereference` and `NilMapWrite` (SGO-COMP-008) and extends `BoundsViolation` to slices and strings and `InvalidArgument` to `make` (SGO-COMP-005). Each carries a message and the source position where it arose. All unwind exactly like `panic` (SGO-DEF-005).
 - **ownership_and_lifecycle:** n/a — dynamic rule.
 - **effect_and_capability_requirements:** n/a — dynamic rule.
 - **concurrency_and_memory_order:** n/a — per-task rule.
@@ -62,7 +62,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §7, decisions D12, D13, resolution
 - **compile_link_checks:** n/a — run-time kinds; constant cases are compile errors per their clauses.
 - **runtime_guards:** Each kind is raised only by the clause that defines it.
 - **tcb_assumptions:** An admitted program cannot reach an upstream-only failure (e.g. nil map write, index out of range), because the constructs that cause them are denied. If the runtime nevertheless raises one, that is a TCB defect: the process terminates as fail-stop with exit status 4 and kind `RuntimeDefect` (SGO-ERR-003); it is never reported as an ordinary panic.
-- **positive_tests:** S08; fixture:val-overflow-add, fixture:wait-negative-sleep, fixture:proc-child-stdout, fixture:native-send-closed.
+- **positive_tests:** S08; fixture:val-overflow-add, fixture:wait-negative-sleep, fixture:proc-child-stdout, fixture:native-send-closed, fixture:comp-pointer-nil-deref, fixture:comp-map-nil-write, fixture:comp-slice-bounds, fixture:comp-slice-make-negative.
 - **negative_tests:** n/a — a list of kinds; each kind has negative fixtures in its defining clause.
 - **implementation_coverage:** W03: `src/runtime/panic.go`, `src/runtime/sgo_nursery.go`, `src/runtime/sgo_record.go`.
 - **executed_evidence:** conformance fixtures native-send-closed, proc-child-stdout, val-overflow-add, wait-negative-sleep (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.

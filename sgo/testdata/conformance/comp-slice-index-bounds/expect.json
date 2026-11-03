@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-COMP-005",
+  "SGO-COMP-008",
+  "SGO-DEF-003"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "BoundsViolation"
+}

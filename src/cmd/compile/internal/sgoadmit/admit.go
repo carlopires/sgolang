@@ -219,8 +219,9 @@ func (a *admitter) recvOK(r *syntax.Field) bool {
 		return true
 	case *syntax.Operation:
 		if t.Op == syntax.Mul && t.Y == nil {
-			a.deny(a.tokenBefore(r.Pos(), "("), "method with a pointer receiver", "SGO-UTYPE-001")
-			return false
+			if _, ok := syntax.Unparen(t.X).(*syntax.Name); ok {
+				return true // a pointer receiver of a named type (SGO-COMP-007)
+			}
 		}
 	case *syntax.IndexExpr:
 		a.deny(a.tokenBefore(r.Pos(), "("), "method with a generic receiver", "SGO-GEN-001")

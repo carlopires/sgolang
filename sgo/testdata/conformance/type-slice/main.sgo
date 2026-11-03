@@ -4,6 +4,10 @@ import "sgo"
 
 func main(root *sgo.Context) error {
 	var xs []int = nil
-	_ = xs
-	return nil
+	xs = append(xs, 4)
+	ok := len(xs) == 1 && xs[0] == 4
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
 }

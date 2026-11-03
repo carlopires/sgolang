@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-COMP-006"
+ ],
+ "exit": 0,
+ "stdout": "bcA\n"
+}

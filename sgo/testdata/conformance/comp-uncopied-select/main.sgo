@@ -1,0 +1,13 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	ch := make(chan *int, 1)
+	x := 1
+	select {
+	case ch <- &x:
+	default:
+	}
+	return nil
+}

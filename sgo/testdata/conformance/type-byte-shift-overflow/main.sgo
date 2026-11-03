@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	var a byte = 2
+	n := 63
+	_ = a << n
+	return nil
+}

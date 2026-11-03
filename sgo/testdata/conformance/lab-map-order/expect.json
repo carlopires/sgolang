@@ -1,0 +1,10 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-COMP-006",
+  "SGO-LAB-004"
+ ],
+ "exit": 0,
+ "stdout": "bcA\n",
+ "note": "D88: map order is the same in the lab as in production."
+}

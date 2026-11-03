@@ -2,6 +2,31 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.9.0 — 2026-11-03
+
+Core data model, stage 2 (W13; D93–D97; drafts approved 2026-11-02): task-local data — slices, insertion-ordered maps, pointers and pointer receivers — with the sharing rule enforced at compile time, `sgo.Copy`, the `byte` type, and the nil and data failure kinds. Every program valid under 0.8.0 keeps its meaning; the admission digest and toolchain identity change, so objects built for 0.8.0 are refused by a 0.9.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.9.0`.
+
+New frozen clauses:
+
+- SGO-COMP-004 v1 — task-local types (pointers, slices, maps, and values holding them) and `sgo.Copy[T]`: task-local values are never captured by a function literal that may run in another task, never escape a function through a captured variable, and cross tasks only as a deep copy that preserves sharing and cycles (`SGO_E_TASK_LOCAL_CAPTURE`, `SGO_E_UNCOPIED_SEND`).
+- SGO-COMP-005 v1 — slices, `[]byte`, string indexing and slicing, `make`, `append`, `copy`, `cap`; `BoundsViolation` and `InvalidArgument`.
+- SGO-COMP-006 v1 — maps with insertion-order iteration (D88), the same in production and under `sgo lab`; value-type keys only; `NilMapWrite`.
+- SGO-COMP-007 v1 — pointers, `&x`, `new`, pointer receivers; pointers to handles denied.
+- SGO-COMP-008 v1 — nil of pointer, slice, and map types; `NilDereference`, `NilMapWrite`.
+- SGO-TYPE-007 v1 — `byte`: checked arithmetic in 0..255.
+
+Amended:
+
+- SGO-COMP-001 v4, SGO-UTYPE-001 v3 — narrowed to what stays denied.
+- SGO-COMP-002 v2 — channel, pointer, slice, and map fields and elements (D95).
+- SGO-TYPE-001 v6, SGO-TYPE-002 v3 — `byte`, pointer/slice/map types, their identity and nil.
+- SGO-UTYPE-002 v2 — methods with pointer receivers.
+- SGO-MEM-001 v2, SGO-MEM-002 v4 — pointers name variables; `&x` of a captured variable (and a pointer-receiver call on it) assigns it, writes through references do not.
+- SGO-VAL-002 v2 — string indexing, slicing, and `[]byte` conversions.
+- SGO-LEX-002 v2 — `[ ]` and `...` admitted.
+- SGO-DEF-003 v4 — `NilDereference`, `NilMapWrite`; `BoundsViolation` and `InvalidArgument` extended to slices and `make`.
+- SGO-CHAN-002 v3, SGO-PERMIT-002 v3 — shareable and task-local elements; task-local values are sent only through `sgo.Copy`.
+
 ## 0.8.0 — 2026-11-02
 
 Core data model, stage 1 (W13; D85–D92; drafts approved 2026-11-02): value structs and arrays, named value types, and value-receiver methods. Every program valid under 0.7.0 keeps its meaning; the admission digest and toolchain identity change, so objects built for 0.7.0 are refused by a 0.8.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.8.0`.

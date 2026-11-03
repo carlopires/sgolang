@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-COMP-006",
+  "SGO-COMP-004"
+ ],
+ "exit": 0,
+ "stdout": "qxb\n"
+}

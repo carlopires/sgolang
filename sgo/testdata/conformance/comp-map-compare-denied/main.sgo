@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	a := map[int]int{}
+	b := map[int]int{}
+	_ = a == b
+	return nil
+}

@@ -918,6 +918,9 @@ func walkIndexMap(n *ir.IndexExpr, init *ir.Nodes) ir.Node {
 	switch {
 	case n.Assigned:
 		mapFn = mapfn(mapassign[fast], t, false)
+		if sgoMaps() {
+			args = append(args, sgoPosString()) // NilMapWrite names the position (SGO-COMP-008)
+		}
 	case t.Elem().Size() > abi.ZeroValSize:
 		args = append(args, reflectdata.ZeroAddr(t.Elem().Size()))
 		mapFn = mapfn("mapaccess1_fat", t, true)

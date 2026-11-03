@@ -26,7 +26,7 @@ import (
 // by proving the branch dead.
 
 var sgoSyms struct {
-	overflow, divideByZero, shiftRange, bounds *obj.LSym
+	overflow, divideByZero, shiftRange, bounds, sliceBounds, nilDeref *obj.LSym
 }
 
 func sgoInitSyms() {
@@ -34,6 +34,8 @@ func sgoInitSyms() {
 	sgoSyms.divideByZero = typecheck.LookupRuntimeFunc("sgoDivideByZero")
 	sgoSyms.shiftRange = typecheck.LookupRuntimeFunc("sgoShiftRange")
 	sgoSyms.bounds = typecheck.LookupRuntimeFunc("sgoBoundsViolation")
+	sgoSyms.sliceBounds = typecheck.LookupRuntimeFunc("sgoSliceBoundsViolation")
+	sgoSyms.nilDeref = typecheck.LookupRuntimeFunc("sgoNilDereference")
 }
 
 // sgoStringMu serializes creation of position-string symbols. SSA construction runs functions
@@ -88,7 +90,7 @@ func sgoConst(v *ssa.Value) (int64, bool) {
 
 func (s *state) sgoIntType(n ir.Node) *types.Type {
 	t := n.Type()
-	if !t.IsInteger() || !t.IsSigned() || t.Size() != 8 {
+	if !t.IsInteger() || !(t.IsSigned() && t.Size() == 8 || !t.IsSigned() && t.Size() == 1) {
 		base.FatalfAt(n.Pos(), "S-Go checked arithmetic on %v", t)
 	}
 	return t
@@ -101,6 +103,12 @@ func (s *state) sgoBool(op ir.Op, t *types.Type, x, y *ssa.Value) *ssa.Value {
 // sgoBinary computes a checked + - * / % << >> on int.
 func (s *state) sgoBinary(n *ir.BinaryExpr, a, b *ssa.Value) *ssa.Value {
 	t := s.sgoIntType(n)
+	if t.Size() == 1 {
+		return s.sgoByteBinary(n, t, a, b)
+	}
+	if n.Op() == ir.OLSH || n.Op() == ir.ORSH {
+		b = s.sgoWiden(b) // a byte shift count
+	}
 	zero := s.constInt64(t, 0)
 	switch n.Op() {
 	case ir.OADD, ir.OSUB:
@@ -158,6 +166,11 @@ func (s *state) sgoBinary(n *ir.BinaryExpr, a, b *ssa.Value) *ssa.Value {
 // sgoNeg computes a checked unary - on int: -MinInt overflows.
 func (s *state) sgoNeg(n *ir.UnaryExpr, a *ssa.Value) *ssa.Value {
 	t := s.sgoIntType(n)
+	if t.Size() == 1 {
+		// -b is in 0..255 only for b == 0 (SGO-TYPE-007).
+		s.sgoCheck(s.newValue2(ssa.OpEq8, types.Types[types.TBOOL], a, s.constInt8(t, 0)), sgoSyms.overflow)
+		return a
+	}
 	s.sgoCheck(s.sgoBool(ir.ONE, t, a, s.constInt64(t, math.MinInt64)), sgoSyms.overflow)
 	return s.newValue1(s.ssaOp(ir.ONEG, t), t, a)
 }
@@ -171,11 +184,74 @@ func (s *state) sgoSource() bool {
 
 // sgoBoundsFail ends the current block with the S-Go bounds failure (SGO-COMP-003): a call of
 // runtime.sgoBoundsViolation(position, index, length) that does not return.
-func (s *state) sgoBoundsFail(idx, len *ssa.Value) {
+func (s *state) sgoBoundsFail(kind ssa.BoundsKind, idx, len *ssa.Value) {
+	fn := sgoSyms.sliceBounds
+	if kind == ssa.BoundsIndex || kind == ssa.BoundsIndexU {
+		fn = sgoSyms.bounds
+	}
+	s.rtcall(fn, false, nil, s.sgoPosValue(), idx, len)
+}
+
+// sgoPosValue is the position of the operation being compiled as a string value.
+func (s *state) sgoPosValue() *ssa.Value {
 	pos := s.sgoPos()
 	sgoStringMu.Lock()
 	staticdata.StringSym(s.peekPos(), pos)
 	sgoStringMu.Unlock()
-	str := s.entryNewValue0A(ssa.OpConstString, types.Types[types.TSTRING], ssa.StringToAux(pos))
-	s.rtcall(sgoSyms.bounds, false, nil, str, idx, len)
+	return s.entryNewValue0A(ssa.OpConstString, types.Types[types.TSTRING], ssa.StringToAux(pos))
+}
+
+// sgoNilCheck checks a pointer before it is dereferenced. In S-Go code a nil pointer is the checked
+// failure NilDereference with the source position (SGO-COMP-007); elsewhere it is Go's nil check.
+func (s *state) sgoNilCheck(p *ssa.Value) *ssa.Value {
+	if !s.sgoSource() || base.Debug.DisableNil != 0 || s.curfn.NilCheckDisabled() {
+		return s.nilCheck(p)
+	}
+	ok := s.newValue1(ssa.OpIsNonNil, types.Types[types.TBOOL], p)
+	s.sgoCheck(ok, sgoSyms.nilDeref)
+	return p
+}
+
+// sgoWiden zero-extends a byte operand to 64 bits; wider operands are returned as they are.
+func (s *state) sgoWiden(v *ssa.Value) *ssa.Value {
+	if v.Type.Size() == 1 {
+		return s.newValue1(ssa.OpZeroExt8to64, types.Types[types.TUINT64], v)
+	}
+	return v
+}
+
+// sgoByteBinary computes a checked + - * / % << >> on byte (SGO-TYPE-007): the operation is done
+// on 64-bit values, which cannot overflow for byte operands, and the result must lie in 0..255.
+func (s *state) sgoByteBinary(n *ir.BinaryExpr, t *types.Type, a, b *ssa.Value) *ssa.Value {
+	u := types.Types[types.TUINT64]
+	bl := types.Types[types.TBOOL]
+	wa, wb := s.sgoWiden(a), s.sgoWiden(b)
+	max := s.constInt64(u, 255)
+	var r *ssa.Value
+	switch n.Op() {
+	case ir.OADD, ir.OSUB, ir.OMUL:
+		r = s.newValue2(s.ssaOp(n.Op(), u), u, wa, wb)
+		s.sgoCheck(s.newValue2(ssa.OpLeq64U, bl, r, max), sgoSyms.overflow) // a negative difference wraps above 255
+	case ir.ODIV, ir.OMOD:
+		s.sgoCheck(s.newValue2(ssa.OpNeq64, bl, wb, s.constInt64(u, 0)), sgoSyms.divideByZero)
+		r = s.newValue2(s.ssaOp(n.Op(), u), u, wa, wb)
+	case ir.OLSH, ir.ORSH:
+		s.sgoCheck(s.newValue2(ssa.OpLeq64U, bl, wb, s.constInt64(u, 63)), sgoSyms.shiftRange)
+		r = s.newValue2(s.ssaShiftOp(n.Op(), u, u), u, wa, wb)
+		if n.Op() == ir.OLSH {
+			// In range iff a is 0, or the count is at most 7 and the result at most 255.
+			ok := s.newValue2(ssa.OpOrB, bl, s.newValue2(ssa.OpEq64, bl, wa, s.constInt64(u, 0)),
+				s.newValue2(ssa.OpAndB, bl, s.newValue2(ssa.OpLeq64U, bl, wb, s.constInt64(u, 7)), s.newValue2(ssa.OpLeq64U, bl, r, max)))
+			s.sgoCheck(ok, sgoSyms.overflow)
+		}
+	default:
+		base.FatalfAt(n.Pos(), "S-Go checked byte arithmetic: unexpected %v", n.Op())
+	}
+	return s.newValue1(ssa.OpTrunc64to8, t, r)
+}
+
+// sgoConvByte checks the conversion byte(i) of an int in S-Go code (SGO-TYPE-007): i must lie in
+// 0..255, as one unsigned comparison.
+func (s *state) sgoConvByte(x *ssa.Value) {
+	s.sgoCheck(s.newValue2(ssa.OpLeq64U, types.Types[types.TBOOL], x, s.constInt64(types.Types[types.TUINT64], 255)), sgoSyms.overflow)
 }

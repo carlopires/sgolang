@@ -1,0 +1,26 @@
+package main
+
+import "sgo"
+
+func sum(s []int) int {
+	t := 0
+	for _, v := range s {
+		t = t + v
+	}
+	return t
+}
+
+func main(root *sgo.Context) error {
+	s := make([]int, 3)
+	s[0] = 1
+	s = append(s, 4)
+	e := []string{}
+	e = append(e, "a", "b")
+	ok := len(s) == 4 && cap(s) >= 4 && sum(s) == 5 && len(e) == 2 && e[1] == "b"
+	clear(s)
+	ok = ok && sum(s) == 0
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
+}

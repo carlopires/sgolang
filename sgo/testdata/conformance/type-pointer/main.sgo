@@ -5,6 +5,10 @@ import "sgo"
 func main(root *sgo.Context) error {
 	x := 1
 	p := &x
-	_ = p
-	return nil
+	*p = 5
+	ok := x == 5
+	if ok {
+		return root.Stdout().WriteString("ok\n")
+	}
+	return root.Stdout().WriteString("wrong\n")
 }
