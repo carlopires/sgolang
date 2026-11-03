@@ -28,6 +28,7 @@ const (
 //	epoch <ms>        WallClock at virtual time 0, UTC milliseconds (D45)
 //	replay <p,...>    replay: the pick of every choose and select event whose set has two or
 //	                  more elements, in order (D46, replayPick)
+//	net <line>        a line of the lab network table (D146, sgoLabNetLine)
 //
 // one key per line. A lab binary started without a manifest is a usage defect (status 4).
 func sgoLabBoot() {
@@ -79,6 +80,8 @@ func sgoLabBoot() {
 				}
 				replay = append(replay, int32(sgoLabAtoi(f)))
 			}
+		case "net":
+			sgoLabNetLine(val)
 		case "":
 		default:
 			sgoDefect("lab manifest: unknown key " + key)

@@ -14,24 +14,111 @@ package runtime
 
 import "unsafe"
 
-// sgoFakeResolve answers Dialer.Resolve in a lab run from the run's resolve table (D146).
+// The lab network table (D146): what lies beyond the run's own listeners. The manifest's "net"
+// lines, which sgo lab takes from the package's lab.net, are
+//
+//	resolve HOST IP [MS]     Resolve of HOST answers IP (in line order), after MS virtual ms
+//	peer IP:PORT [MS]        a remote peer accepts after MS virtual ms; it sends "peer IP:PORT\n",
+//	                         then end of stream, and takes up to 16 written chunks
+//	blackhole IP:PORT        a connect is never answered: it waits 75 virtual seconds, then fails
+//
+// A dial to an endpoint that is neither a peer, a blackhole, nor a listener of the run is refused.
+type sgoLabNetEntry struct {
+	kind, host string
+	at         sgoNetGrant // resolve: the address; peer, blackhole: the endpoint
+	ms         int64
+}
+
+var sgoLabNet []sgoLabNetEntry
+
+// sgoLabNetLine adds one manifest "net" line to the table; a malformed one is a defect (the driver
+// validated lab.net).
+func sgoLabNetLine(val string) {
+	f := sgoFields(val, 4)
+	var e sgoLabNetEntry
+	ok := len(f) >= 2
+	if ok {
+		e.kind = f[0]
+		switch {
+		case f[0] == "resolve" && (len(f) == 3 || len(f) == 4):
+			e.host = f[1]
+			e.at, ok = sgoParseIPLit(f[2])
+			if len(f) == 4 {
+				e.ms = sgoLabAtoi(f[3])
+			}
+		case (f[0] == "peer" && (len(f) == 2 || len(f) == 3)) || (f[0] == "blackhole" && len(f) == 2):
+			ok = sgoParseAddr(f[1], &e.at)
+			if len(f) == 3 {
+				e.ms = sgoLabAtoi(f[2])
+			}
+		default:
+			ok = false
+		}
+	}
+	if !ok || e.ms < 0 {
+		sgoDefect("lab manifest: malformed net line " + val)
+	}
+	sgoLabNet = append(sgoLabNet, e)
+}
+
+// sgoFakeResolve answers Dialer.Resolve in a lab run from the table: the addresses of host's
+// resolve lines of the family, after the longest of their delays.
 func sgoFakeResolve(host string, v6 bool) ([]sgoNetGrant, *sgoIOErr) {
-	if err := sgoTaskCancellation(sgoCurrent()); err != nil {
+	t := sgoCurrent()
+	if sgoTaskCancellation(t) != nil {
 		return nil, &sgoIOErr{"Cancelled", 0}
 	}
 	var out []sgoNetGrant
-	for _, e := range sgoLabResolve {
-		if e.host == host {
-			if g, ok := sgoParseIPLit(e.ip); ok && g.v6 == v6 {
-				out = append(out, g)
-			}
+	wait := int64(0)
+	for _, e := range sgoLabNet {
+		if e.kind == "resolve" && e.host == host && e.at.v6 == v6 {
+			out = append(out, e.at)
+			wait = max(wait, e.ms)
 		}
+	}
+	if sgoSleepFor(t, wait) != nil {
+		return nil, &sgoIOErr{"Cancelled", 0}
 	}
 	return out, nil
 }
 
-// sgoLabResolve is the lab run's resolve table: host names and the addresses they resolve to.
-var sgoLabResolve []struct{ host, ip string }
+// sgoFakeRemote dials a peer or blackhole of the table at g's endpoint; ok is false if there is none.
+func sgoFakeRemote(g *sgoNetGrant) (h *sgoHandle, e *sgoIOErr, ok bool) {
+	if g.unix {
+		return nil, nil, false
+	}
+	t := sgoCurrent()
+	for _, x := range sgoLabNet {
+		if (x.kind != "peer" && x.kind != "blackhole") || x.at.ip != g.ip || x.at.v6 != g.v6 || x.at.port != g.port {
+			continue
+		}
+		if x.kind == "blackhole" {
+			if sgoSleepFor(t, 75000) != nil {
+				return nil, &sgoIOErr{"Cancelled", 0}, true
+			}
+			return nil, &sgoIOErr{"IOError", 0}, true
+		}
+		if sgoSleepFor(t, x.ms) != nil {
+			return nil, &sgoIOErr{"Cancelled", 0}, true
+		}
+		addr := sgoFormatAddr(&x.at, x.at.port)
+		in, out := sgoChanNew(sgoFakeChunks), sgoChanNew(sgoFakeChunks)
+		p, err := sgoChanReserve(in, t) // an empty buffered channel: never waits
+		if err != nil {
+			return nil, &sgoIOErr{"Cancelled", 0}, true
+		}
+		greeting := new(string)
+		*greeting = "peer " + addr + "\n"
+		if sgoChanCommit(p, unsafe.Pointer(greeting)) != nil {
+			return nil, &sgoIOErr{"ConnectionReset", 0}, true
+		}
+		sgoChanClose(in)
+		h := sgoHandleNew(sgoHConn, -1, addr)
+		h.conn = &sgoFakeConn{in: in, out: out, addr: addr}
+		return h, nil, true
+	}
+	return nil, nil, false
+}
 
 const (
 	sgoFakeChunks  = 16 // capacity of a direction, in chunks
@@ -70,6 +157,9 @@ func sgoFakeDial(g *sgoNetGrant) (*sgoHandle, *sgoIOErr) {
 		return nil, &sgoIOErr{kind: "Cancelled"}
 	}
 	var l *sgoFakeConn
+	if h, e, ok := sgoFakeRemote(g); ok {
+		return h, e
+	}
 	for _, x := range sgoFakeListeners {
 		if x.addr == g.addr {
 			l = x

@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 )
@@ -38,7 +39,12 @@ func labSetup(f *labFlags, nargs int, what string) (string, *labManifest, func()
 		cleanup()
 		return "", nil, nil, err
 	}
-	m := &labManifest{Format: labFormat, Build: id, Seed: f.seed, Policy: f.policy, K: f.k, Quota: f.quota, Epoch: f.epoch, program: exe}
+	net, err := readLabNet(f.args[nargs-1])
+	if err != nil {
+		cleanup()
+		return "", nil, nil, err
+	}
+	m := &labManifest{Format: labFormat, Build: id, Seed: f.seed, Policy: f.policy, K: f.k, Quota: f.quota, Epoch: f.epoch, Net: net, program: exe}
 	return f.args[nargs-1], m, cleanup, nil
 }
 
@@ -121,6 +127,9 @@ func cmdLabReplay(args []string) error {
 	// D46: an incompatible manifest is rejected before running.
 	if m.Build != rec.Build {
 		return labErr("SGO_E_LAB_MANIFEST", "the trace was recorded by build %q; this build is %q", rec.Build, m.Build)
+	}
+	if !slices.Equal(m.Net, rec.Net) {
+		return labErr("SGO_E_LAB_MANIFEST", "the trace was recorded with a different lab.net network table (D146)")
 	}
 	picks, err := labPicks(want)
 	if err != nil {
