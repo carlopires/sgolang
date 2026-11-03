@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+type P struct {
+	N int
+}
+
+func (p *P) Error() string {
+	return "p"
+}
+
+func main(c *sgo.Context) error {
+	p := &P{N: 1}
+	var err error = p
+	_ = err
+	return nil
+}

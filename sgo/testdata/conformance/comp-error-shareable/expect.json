@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-COMP-004",
+  "SGO-TYPE-006"
+ ],
+ "exit": 0,
+ "stdout": "ok\n",
+ "note": "A value-type error crosses tasks without sgo.Copy."
+}

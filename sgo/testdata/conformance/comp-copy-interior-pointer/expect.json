@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-COMP-004"
+ ],
+ "exit": 0,
+ "stdout": "ok\n",
+ "note": "W13 review V1: pointers of different types at one address are copied separately, each at its own size."
+}

@@ -1,0 +1,21 @@
+package main
+
+import "sgo"
+
+type E struct {
+	s []int
+}
+
+func (e E) Error() string {
+	e.s[0] = e.s[0] + 1
+	return "e"
+}
+
+func mk(s []int) error {
+	return E{s: s}
+}
+
+func main(c *sgo.Context) error {
+	_ = mk([]int{0})
+	return nil
+}

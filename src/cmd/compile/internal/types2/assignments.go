@@ -111,6 +111,10 @@ func (check *Checker) assignment(x *operand, T Type, context string) {
 			check.errorf(x, code, "cannot use %s as %s value in %s", x, T, context)
 		}
 		x.invalidate()
+		return
+	}
+	if check.conf.SGo {
+		check.sgoIfaceConversion(x, T) // sgo_local.go
 	}
 }
 

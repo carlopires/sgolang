@@ -8,13 +8,19 @@ package runtime
 // another task shares no mutable memory with the sender's.
 //
 // The walk is depth first in field, element, and insertion order. Slices, maps, and pointed-to
-// variables are copied once each: references to the same object (a pointer to the same variable,
-// a map, or slices with the same first element and capacity) refer to one copied object in the
-// result, and cycles are preserved. Strings, channels, and error values are shared: they are
-// immutable or synchronized.
+// variables are copied once each: references to the same object (pointers of the same type to the
+// same variable, a map, or slices of the same element type with the same first element and
+// capacity) refer to one copied object in the result, and cycles are preserved. References of
+// different types at one address (a struct and its first field, an array and its first element)
+// are copied separately (W13 review V1): each copy is allocated at its own type and size.
+// Strings and channels are shared: they are immutable or synchronized. An interface value (an
+// error) is shared when its dynamic type belongs to the runtime or package sgo, and otherwise its
+// dynamic value is copied (defence in depth: the compiler admits only shareable user types as
+// errors, review V2).
 
 import (
 	"internal/abi"
+	"internal/goarch"
 	"unsafe"
 )
 
@@ -24,7 +30,8 @@ type sgoCopier struct {
 
 type sgoCopyKey struct {
 	p   unsafe.Pointer
-	cap int // slices: the capacity; other objects: -1
+	t   *_type // the object's type (a slice's element type, a map's type)
+	cap int    // slices: the capacity; other objects: -1
 }
 
 // sgo_copy is sgo.Copy for the dynamic type of v.
@@ -61,7 +68,9 @@ func (c *sgoCopier) copyValue(t *_type, dst, src unsafe.Pointer) {
 		return
 	}
 	switch t.Kind() {
-	case abi.String, abi.Chan, abi.Interface, abi.Func, abi.UnsafePointer:
+	case abi.Interface:
+		c.copyIface(t, dst, src)
+	case abi.String, abi.Chan, abi.Func, abi.UnsafePointer:
 		typedmemmove(t, dst, src) // shared: immutable or synchronized (or not task-local)
 	case abi.Struct:
 		st := (*structtype)(unsafe.Pointer(t))
@@ -85,7 +94,7 @@ func (c *sgoCopier) copyValue(t *_type, dst, src unsafe.Pointer) {
 			return
 		}
 		et := (*slicetype)(unsafe.Pointer(t)).Elem
-		k := sgoCopyKey{s.array, s.cap}
+		k := sgoCopyKey{s.array, et, s.cap}
 		if q, ok := c.seen[k]; ok {
 			d.array = q
 			return
@@ -101,7 +110,7 @@ func (c *sgoCopier) copyValue(t *_type, dst, src unsafe.Pointer) {
 		if m == nil {
 			return
 		}
-		k := sgoCopyKey{unsafe.Pointer(m), -1}
+		k := sgoCopyKey{unsafe.Pointer(m), t, -1}
 		if q, ok := c.seen[k]; ok {
 			*(*unsafe.Pointer)(dst) = q
 			return
@@ -130,7 +139,7 @@ func (c *sgoCopier) copyObject(t *_type, p unsafe.Pointer) unsafe.Pointer {
 	if p == nil {
 		return nil
 	}
-	k := sgoCopyKey{p, -1}
+	k := sgoCopyKey{p, t, -1}
 	if q, ok := c.seen[k]; ok {
 		return q
 	}
@@ -138,6 +147,42 @@ func (c *sgoCopier) copyObject(t *_type, p unsafe.Pointer) unsafe.Pointer {
 	c.remember(k, q)
 	c.copyValue(t, q, p)
 	return q
+}
+
+// copyIface copies an interface value (of interface type t): the dynamic value is shared when its
+// type has no pointers or belongs to the runtime or package sgo (errors made by sgo.NewError,
+// cancellation, runtime failures), and deep-copied otherwise.
+func (c *sgoCopier) copyIface(t *_type, dst, src unsafe.Pointer) {
+	var dt *_type
+	var data unsafe.Pointer
+	if len((*interfacetype)(unsafe.Pointer(t)).Methods) == 0 {
+		e := (*eface)(src)
+		dt, data = e._type, e.data
+	} else {
+		i := (*iface)(src)
+		if i.tab != nil {
+			dt = i.tab.Type
+		}
+		data = i.data
+	}
+	if dt == nil || !dt.Pointers() {
+		typedmemmove(t, dst, src)
+		return
+	}
+	switch toRType(dt).pkgpath() {
+	case "runtime", "sgo", "errors":
+		typedmemmove(t, dst, src)
+		return
+	}
+	var out unsafe.Pointer
+	if dt.IsDirectIface() {
+		c.copyValue(dt, unsafe.Pointer(&out), unsafe.Pointer(&data))
+	} else {
+		out = mallocgc(dt.Size_, dt, true)
+		c.copyValue(dt, out, data)
+	}
+	typedmemmove(t, dst, src) // the type word (and itab)
+	*(*unsafe.Pointer)(add(dst, goarch.PtrSize)) = out
 }
 
 func (c *sgoCopier) remember(k sgoCopyKey, q unsafe.Pointer) {

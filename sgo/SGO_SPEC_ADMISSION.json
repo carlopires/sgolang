@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": "0.10.0",
+  "spec_version": "0.10.1",
   "status": "admitted_0.7.0",
   "warning": "Spec 0.7.0 admits every row marked 'admitted': its clauses are frozen, the toolchain implements and enforces them, and its acceptance cases have executed evidence (constitution §6, D83). Rows marked 'denied' stay rejected. Admission does not widen any row beyond its clauses; everything the clauses do not name is rejected.",
   "default_decision": "reject",
@@ -1320,7 +1320,7 @@
         "SGO-COMP-008",
         "SGO-COMP-009"
       ],
-      "normative_text_digest": "fc99c4c2c7e39ba8fd0d8f1c1dfb9a250204966ec9029e490ee5bde090974c71",
+      "normative_text_digest": "3b76b9fed7a2cf3b5dac97ea8fc5067db08ec9c0b0794effce7f8abab1d85985",
       "admitted_in": [
         "0.8.0"
       ],
@@ -1339,7 +1339,7 @@
         "SGO-COMP-001": "cd240585939a01201b7804e99e0b758a7971e894617e12f982199e58737dec1d",
         "SGO-COMP-002": "2f7e59d06a512a54f3e1b2b7cbfecfad412881de43b56807430d0ace484a555d",
         "SGO-COMP-003": "98bedebc77160c333f08581a2e187e0ace614d2d7ebc0673f0479752825b3447",
-        "SGO-COMP-004": "236593991f3c79052615a9e81dcf5987a7d28983d4811c7c87aa3e80511765a3",
+        "SGO-COMP-004": "3e93f88b9c1377b3aa64b3745da98eea0cc6721f5e24fa6484e70314d289eba8",
         "SGO-COMP-005": "67ba87a640e32df80025e4fae3e87bfb0d080e5a31d534cdb4bd589987ab6f13",
         "SGO-COMP-006": "bb39567d75a84983104484d7081fdc346f6ca963323d4514118f31751cd5ecbe",
         "SGO-COMP-007": "36a23a04740d9c7e98a8567e38525fff70679421b038ed62b57f645480623d6e",
@@ -1361,7 +1361,7 @@
         "SGO-COMP-001": 4,
         "SGO-COMP-002": 2,
         "SGO-COMP-003": 1,
-        "SGO-COMP-004": 2,
+        "SGO-COMP-004": 3,
         "SGO-COMP-005": 1,
         "SGO-COMP-006": 1,
         "SGO-COMP-007": 1,
@@ -1650,5 +1650,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "a18c23f4752cff8cbb29364a3d9665e42dc5a1eb10f98582cb6f968ac35fcd7b"
+  "rows_digest": "0957095cdddecc727bb6207347a60dfccdeb2ba8862fad048c825994d481a6b7"
 }

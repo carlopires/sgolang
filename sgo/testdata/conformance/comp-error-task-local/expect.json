@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-COMP-004",
+  "SGO-TYPE-006"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_TASK_LOCAL_CAPTURE",
+   "position": "main.sgo:16:18"
+  }
+ ],
+ "note": "W13 review V2: only shareable types may become error values."
+}

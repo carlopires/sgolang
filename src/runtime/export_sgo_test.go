@@ -229,3 +229,7 @@ func SGoIsProgram() bool { return sgoIsProgram() }
 
 // SGoGetenv exposes gogetenv, which an S-Go program answers with "" for every key (W12 R2).
 func SGoGetenv(key string) string { return gogetenv(key) }
+
+// SGoCopy exposes sgo_copy, sgo.Copy for the dynamic type of v (SGO-COMP-004). Values passed here
+// must not hold Go maps: S-Go maps are the runtime's ordered map (sgo_map.go).
+func SGoCopy(v any) any { return sgo_copy(v) }

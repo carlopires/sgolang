@@ -1,3 +1,3 @@
 module example.com/comp-nil-map-read
 
-sgo 0.10.0
+sgo 0.10.1

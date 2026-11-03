@@ -43,7 +43,7 @@
         "SPEC-COMPOSITE",
         "SPEC-USERTYPE"
       ],
-      "statement": "A program compiles only if every construct it uses is in the closed S-Go subset (spec 0.10.0): .sgo sources, int/byte/bool/string/error, value structs and arrays, named types with value- and pointer-receiver methods, slices, insertion-ordered maps, pointers, frozen values (sgo.Frozen[T]), function values, the admitted statements. Task-local data (slices, maps, pointers) never crosses tasks except as a deep copy made by sgo.Copy, or frozen by sgo.Freeze, which no task can write (D85, D98–D101). Integer and byte overflow, division by zero, an out-of-range index or slice, a nil dereference, and a write to a nil map are checked failures with a specified record, never wraparound or undefined behavior; map iteration order is insertion order, the same in production and in the lab.",
+      "statement": "A program compiles only if every construct it uses is in the closed S-Go subset (spec 0.10.1): .sgo sources, int/byte/bool/string/error, value structs and arrays, named types with value- and pointer-receiver methods, slices, insertion-ordered maps, pointers, frozen values (sgo.Frozen[T]), function values, the admitted statements. Task-local data (slices, maps, pointers) never crosses tasks except as a deep copy made by sgo.Copy, or frozen by sgo.Freeze, which no task can write (D85, D98–D101). Integer and byte overflow, division by zero, an out-of-range index or slice, a nil dereference, and a write to a nil map are checked failures with a specified record, never wraparound or undefined behavior; map iteration order is insertion order, the same in production and in the lab.",
       "scope": [
         "admission",
         "runtime_enforced",

@@ -1,0 +1,43 @@
+package main
+
+import "sgo"
+
+type B struct {
+	x int
+	y []int
+}
+
+type V struct {
+	px *int
+	b  *B
+}
+
+func churn(n int) []int {
+	s := []int{}
+	for i := 0; i < n; i++ {
+		s = append(s, i)
+	}
+	return s
+}
+
+func main(c *sgo.Context) error {
+	b := &B{x: 1, y: []int{7, 8, 9}}
+	ok := true
+	sum := 0
+	for i := 0; i < 20000; i++ {
+		w := sgo.Copy(V{px: &b.x, b: b}) // &b.x and b share an address with different types
+		if len(w.b.y) != 3 || w.b.y[2] != 9 || *w.px != 1 {
+			ok = false
+		}
+		*w.px = 5 // interior aliasing is not preserved: the copies are separate (SGO-COMP-004)
+		if w.b.x != 1 {
+			ok = false
+		}
+		w.b.y = churn(4)
+		sum += len(w.b.y)
+	}
+	if ok && sum == 80000 && b.x == 1 {
+		return c.Stdout().WriteString("ok\n")
+	}
+	return c.Stdout().WriteString("corrupt\n")
+}

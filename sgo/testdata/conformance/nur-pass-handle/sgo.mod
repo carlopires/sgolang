@@ -1,3 +1,3 @@
 module example.com/nur-pass-handle
 
-sgo 0.10.0
+sgo 0.10.1

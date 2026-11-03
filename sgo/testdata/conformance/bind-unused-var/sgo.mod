@@ -1,3 +1,3 @@
 module example.com/bind-unused-var
 
-sgo 0.10.0
+sgo 0.10.1

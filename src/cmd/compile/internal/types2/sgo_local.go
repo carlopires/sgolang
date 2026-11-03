@@ -283,3 +283,15 @@ func sgoIsNamedSgo(T Type, name string) bool {
 
 func sgoIsNursery(T Type) bool { return sgoIsNamedSgo(T, "Nursery") }
 func sgoIsPermit(T Type) bool  { return sgoIsNamedSgo(T, "SendPermit") }
+
+// sgoIfaceConversion reports a value of a task-local type converted to an interface type (error,
+// the only admitted one): error values are shareable (captured by Spawn callbacks, sent without
+// sgo.Copy), so only shareable types may become errors (SGO-COMP-004, W13 review V2).
+func (check *Checker) sgoIfaceConversion(x *operand, T Type) {
+	if !IsInterface(T) || x.typ() == nil || IsInterface(x.typ()) || x.isNil() {
+		return
+	}
+	if sgoTaskLocal(x.typ()) {
+		check.errorf(x, UnsupportedFeature, "SGO_E_TASK_LOCAL_CAPTURE: a value of the task-local type %s cannot become %s: error values are shared between tasks; only shareable types may implement error (SGO-COMP-004)", x.typ(), T)
+	}
+}

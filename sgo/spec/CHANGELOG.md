@@ -2,6 +2,14 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.10.1 — 2026-11-03
+
+Soundness fixes from the W13 review (V1, V2). Programs that 0.10.0 rejected stay rejected; two kinds of programs that 0.10.0 accepted are now rejected or copied differently, because 0.10.0 accepted them unsoundly.
+
+Amended:
+
+- SGO-COMP-004 v3 — (V1) `sgo.Copy` joins references only when they have the same type: a pointer to a field or element of an object and a pointer to (or slice of) the object itself are copied separately, each at its own type and size (0.10.0 could allocate one object at the size of another). (V2) rule 4: a value of a task-local type is never converted to `error`; error values are shared between tasks, so only shareable types implement `error` (0.10.0 let a task-local value cross tasks inside an error).
+
 ## 0.10.0 — 2026-11-03
 
 Core data model, stage 3 (W13; D98–D101; draft approved 2026-11-03): frozen values. Every program valid under 0.9.0 keeps its meaning; the admission digest and toolchain identity change, so objects built for 0.9.0 are refused by a 0.10.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.10.0`.

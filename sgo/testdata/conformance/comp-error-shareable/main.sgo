@@ -1,0 +1,28 @@
+package main
+
+import "sgo"
+
+type E struct {
+	Code int
+	Msg  string
+}
+
+func (e E) Error() string {
+	return e.Msg
+}
+
+func main(c *sgo.Context) error {
+	ch := make(chan error, 1)
+	var err error = E{Code: 7, Msg: "seven"}
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			ch <- err
+			return nil
+		})
+	}
+	got := <-ch
+	if got.Error() == "seven" {
+		return c.Stdout().WriteString("ok\n")
+	}
+	return nil
+}
