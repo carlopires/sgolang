@@ -802,6 +802,42 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation.** `errors.Unwrap` and `sort.Sort` with `sort.Interface` (stable); `std/io`, `fmt`, and `errors.Is`/`As` get their own drafts. (sgo/docs/w17-drafts.md)
 
+## D134 — Shape of std/io **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Go's Reader/Writer/EOF; task-local; sgo.File and sgo.Conn gain Go-shaped byte methods that io adapters wrap. (sgo/docs/stdlib-parity-plan.md)
+
+## D135 — Capability handles inside interfaces **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** sgo.Copy of an interface that may hold a handle is refused at compile time (SGO_E_CAPABILITY_MISUSE); handles cross tasks only by LendTo. Today the runtime refuses the operation late (sgoHandleUser). (sgo/docs/stdlib-parity-plan.md)
+
+## D136 — Package-level tables **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Admit package-level var of type sgo.Frozen[T] with a constant composite-literal initializer; all other package state stays denied (D109). (sgo/docs/stdlib-parity-plan.md)
+
+## D137 — Variadic parameters **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Admit func f(xs ...T), f(a, b) and f(s...); xs is a slice owned by the callee's task. (sgo/docs/stdlib-parity-plan.md)
+
+## D138 — fmt without reflection **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Format basic types, error, []byte, nil, and fmt.Stringer; other values through generated String methods; Go's verbs and flags, checked by test-std-diff. (sgo/docs/stdlib-parity-plan.md)
+
+## D139 — Generics **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** Type parameters with constraint interfaces (type-set unions only as constraints); a type parameter is task-local unless its constraint makes it shareable; model first. (sgo/docs/stdlib-parity-plan.md)
+
+## D140 — Floating point **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** float64 only, IEEE 754 with Go's rounding; checked float-to-int conversion; no float map keys; FMA contraction disabled in S-Go code. (sgo/docs/stdlib-parity-plan.md)
+
+## D141 — encoding/json **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** No reflection: sgo generate json writes marshalers from type declarations; output and errors match Go's for generated types. (sgo/docs/stdlib-parity-plan.md)
+
+## D142 — Order and scope **[NEEDS USER]** · PROPOSED
+
+**Recommendation.** W18 io/bufio, W19 frozen tables + unicode/hash/crypto/encoding, W20 variadics + fmt, W21 generics + slices/maps/containers, W22 floats, W23 json; each with drafts, freeze, review, Linux evidence. (sgo/docs/stdlib-parity-plan.md)
+
 ---
 
 ## Approval record
