@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-COMP-004"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_TASK_LOCAL_CAPTURE",
+   "position": "main.sgo:20:9"
+  }
+ ],
+ "note": "W13 review V2: elements of multi-value calls converted to error."
+}

@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+func main(c *sgo.Context) error {
+	s := []int{1, 2}
+	k := 0
+	f := func() int {
+		return k
+	}
+	for k = range s {
+	}
+	_ = f()
+	return nil
+}

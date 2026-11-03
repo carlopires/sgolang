@@ -1,0 +1,17 @@
+package main
+
+import "sgo"
+
+func main(c *sgo.Context) error {
+	arr := [3]int{1, 2, 3}
+	v := 0
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			_ = v
+			return nil
+		})
+		for _, v = range arr {
+		}
+	}
+	return nil
+}

@@ -1,0 +1,24 @@
+package main
+
+import "sgo"
+
+type E struct {
+	s []int
+}
+
+func (e E) Error() string {
+	return "e"
+}
+
+func two() (E, E) {
+	return E{s: []int{1}}, E{s: []int{2}}
+}
+
+func f() (error, error) {
+	return two()
+}
+
+func main(c *sgo.Context) error {
+	_, _ = f()
+	return nil
+}

@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-MEM-002"
+ ],
+ "exit": 0,
+ "stdout": "ok\n",
+ "note": "Iteration variables declared with := are fresh per iteration and may be captured."
+}

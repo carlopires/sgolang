@@ -317,18 +317,42 @@ func (check *Checker) sgoIfaceConversions(fd *syntax.FuncDecl) {
 					for i := range lhs {
 						check.sgoToIface(rhs[i], check.typeOf(lhs[i]))
 					}
+				} else if t := check.sgoTupleOf(rhs); t != nil && t.Len() == len(lhs) {
+					for i := range lhs {
+						check.sgoTypeToIface(rhs[0], t.At(i).Type(), check.typeOf(lhs[i]))
+					}
 				}
 			}
 		case *syntax.VarDecl:
 			if n.Type != nil {
 				T := check.typeOf(n.Type)
-				for _, v := range sgoList(n.Values) {
+				vals := sgoList(n.Values)
+				for _, v := range vals {
 					check.sgoToIface(v, T)
+				}
+				if t := check.sgoTupleOf(vals); t != nil {
+					for i := 0; i < t.Len(); i++ {
+						check.sgoTypeToIface(vals[0], t.At(i).Type(), T)
+					}
 				}
 			}
 		case *syntax.CallExpr:
 			if sig, _ := check.typeOf(n.Fun).(*Signature); sig != nil {
 				params := sig.Params()
+				if t := check.sgoTupleOf(n.ArgList); t != nil {
+					// f(g()) with a multi-value g: element i goes to parameter i (or the variadic tail).
+					for i := 0; i < t.Len(); i++ {
+						switch {
+						case sig.Variadic() && i >= params.Len()-1:
+							if s, _ := params.At(params.Len() - 1).Type().(*Slice); s != nil {
+								check.sgoTypeToIface(n.ArgList[0], t.At(i).Type(), s.elem)
+							}
+						case i < params.Len():
+							check.sgoTypeToIface(n.ArgList[0], t.At(i).Type(), params.At(i).Type())
+						}
+					}
+					break
+				}
 				for i, a := range n.ArgList {
 					switch {
 					case sig.Variadic() && i >= params.Len()-1 && !n.HasDots:
@@ -347,6 +371,10 @@ func (check *Checker) sgoIfaceConversions(fd *syntax.FuncDecl) {
 				if len(vals) == res.Len() {
 					for i, v := range vals {
 						check.sgoToIface(v, res.At(i).Type())
+					}
+				} else if t := check.sgoTupleOf(vals); t != nil && t.Len() == res.Len() {
+					for i := 0; i < t.Len(); i++ {
+						check.sgoTypeToIface(vals[0], t.At(i).Type(), res.At(i).Type())
 					}
 				}
 			}
@@ -399,16 +427,38 @@ func (check *Checker) sgoCompositeIface(n *syntax.CompositeLit) {
 
 // sgoToIface reports x, of a task-local type, used where a value of interface type T is expected.
 func (check *Checker) sgoToIface(x syntax.Expr, T Type) {
-	if x == nil || T == nil || !IsInterface(T) {
+	if x == nil {
 		return
 	}
 	tv, ok := check.Types[x]
-	if !ok || tv.Type == nil || tv.IsNil() || IsInterface(tv.Type) {
+	if !ok || tv.IsNil() {
 		return
 	}
-	if sgoTaskLocal(tv.Type) {
-		check.errorf(x, UnsupportedFeature, "SGO_E_TASK_LOCAL_CAPTURE: a value of the task-local type %s cannot become %s: error values are shared between tasks; only shareable types may implement error (SGO-COMP-004)", tv.Type, T)
+	check.sgoTypeToIface(x, tv.Type, T)
+}
+
+// sgoTypeToIface is the one test of SGO-COMP-004 rule 4: a value of type src, at at, converted to
+// the interface type dst. Every conversion site calls it (single values and the elements of
+// multi-value calls, W13 review V2).
+func (check *Checker) sgoTypeToIface(at syntax.Expr, src, dst Type) {
+	if src == nil || dst == nil || !IsInterface(dst) || IsInterface(src) {
+		return
 	}
+	if _, tuple := src.(*Tuple); tuple {
+		return
+	}
+	if sgoTaskLocal(src) {
+		check.errorf(at, UnsupportedFeature, "SGO_E_TASK_LOCAL_CAPTURE: a value of the task-local type %s cannot become %s: error values are shared between tasks; only shareable types may implement error (SGO-COMP-004)", src, dst)
+	}
+}
+
+// sgoTupleOf returns the result tuple of es when es is a single multi-value call.
+func (check *Checker) sgoTupleOf(es []syntax.Expr) *Tuple {
+	if len(es) != 1 {
+		return nil
+	}
+	t, _ := check.typeOf(es[0]).(*Tuple)
+	return t
 }
 
 // typeOf returns the recorded type of e, or nil.

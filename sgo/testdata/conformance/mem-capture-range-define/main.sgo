@@ -1,0 +1,21 @@
+package main
+
+import "sgo"
+
+func main(c *sgo.Context) error {
+	arr := [3]int{1, 2, 3}
+	sum := make(chan int, 3)
+	nursery (n) {
+		for i, v := range arr {
+			n.Spawn(func(t *sgo.Context) error {
+				sum <- i * v
+				return nil
+			})
+		}
+	}
+	total := <-sum + <-sum + <-sum
+	if total == 8 {
+		return c.Stdout().WriteString("ok\n")
+	}
+	return nil
+}

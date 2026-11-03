@@ -109,7 +109,14 @@ func (a *admitter) stmt(s syntax.Stmt) {
 		a.stmt(s.Else)
 	case *syntax.ForStmt:
 		if r, ok := s.Init.(*syntax.RangeClause); ok {
-			// Only channel range is admitted (SGO-CHAN-002); types2 denies other operands.
+			// Range over channels, arrays, slices, and maps is admitted (SGO-CHAN-002, SGO-COMP-002,
+			// SGO-COMP-005, SGO-COMP-006); types2 denies other operands. A range clause with = would
+			// assign existing variables on every iteration, outside the capture rule's assignment
+			// forms; it is denied (SGO-MEM-002, W13 review V4).
+			if r.Lhs != nil && !r.Def {
+				a.deny(r.Pos(), "range clause with = (declare the iteration variables with :=)", "SGO-MEM-002")
+				return
+			}
 			a.expr(r.Lhs)
 			a.expr(r.X)
 			a.stmt(s.Body)
