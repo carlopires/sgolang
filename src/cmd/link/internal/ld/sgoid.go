@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 
 	"cmd/internal/objabi"
@@ -110,7 +111,7 @@ func sgoSetGrants(ctxt *Link, s string) {
 
 // sgoSetIOGrants handles -sgoiogrants=lines: it sets runtime.sgoIOGrants, the file and network
 // grants (D52, D57). Only the driver's canonical form is accepted: sorted, unique lines
-// "dir NAME ro|rw PATH", "connect IP:PORT|unix:PATH", "listen IP:PORT|unix:PATH".
+// "dir NAME ro|rw PATH", "connect IP:PORT|unix:PATH|HOST:PORT", "listen IP:PORT|unix:PATH".
 func sgoSetIOGrants(ctxt *Link, s string) {
 	lines := strings.Split(s, "\n")
 	for i, l := range lines {
@@ -123,6 +124,12 @@ func sgoSetIOGrants(ctxt *Link, s string) {
 		case (f[0] == "connect" || f[0] == "listen") && len(f) == 2 && strings.HasPrefix(f[1], "unix:"):
 			p := f[1][len("unix:"):]
 			ok = p != "" && len(p) <= 103 && !strings.ContainsRune(p, 0)
+		case f[0] == "connect" && len(f) == 2 && sgoHostPort.MatchString(f[1]) && strings.ContainsAny(f[1][:strings.LastIndexByte(f[1], ':')], "abcdefghijklmnopqrstuvwxyz-"):
+			// A host name endpoint (D145), resolved through a Dialer at run time. A name has a
+			// letter or '-'; all digits and dots is an IP literal, checked below.
+			i := strings.LastIndexByte(f[1], ':')
+			port, _ := strconv.Atoi(f[1][i+1:])
+			ok = i <= 253 && port >= 1 && port <= 65535
 		case f[0] == "connect" || f[0] == "listen":
 			ap, err := netip.ParseAddrPort(f[len(f)-1])
 			ok = len(f) == 2 && err == nil && ap.String() == f[1] && ap.Port() != 0 && !ap.Addr().Is4In6() && ap.Addr().Zone() == ""
@@ -137,6 +144,10 @@ func sgoSetIOGrants(ctxt *Link, s string) {
 }
 
 var sgoGrantName = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,31}$`)
+
+// sgoHostPort matches NAME:PORT with NAME dot-separated labels of [a-z0-9-] (1 to 63 bytes, not
+// starting or ending with '-') and PORT without leading zeros; the caller checks the rest.
+var sgoHostPort = regexp.MustCompile(`^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*:[1-9][0-9]{0,4}$`)
 
 // sgoCheckIdentity verifies the S-Go identity of every linked package (SGO-IMP-002). Each package
 // compiled by the S-Go compiler defines go:sgoid.<path>: the line

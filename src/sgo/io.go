@@ -28,6 +28,7 @@ func runtime_accept(h unsafe.Pointer) (unsafe.Pointer, error)
 func runtime_peerUID(h unsafe.Pointer) (int, error)
 func runtime_dialerNew(endpoints []string) unsafe.Pointer
 func runtime_dialerDial(h unsafe.Pointer, addr string) (unsafe.Pointer, error)
+func runtime_dialerResolve(h unsafe.Pointer, host, family string) ([]string, error)
 func runtime_slotNew() unsafe.Pointer
 func runtime_slotPut(slot, conn unsafe.Pointer) error
 func runtime_slotTake(slot unsafe.Pointer) (unsafe.Pointer, bool)
@@ -242,8 +243,17 @@ func (c *Context) Dialer(endpoints []string) *Dialer {
 	return &Dialer{runtime_dialerNew(endpoints)}
 }
 
-// Dial connects to addr, one of the dialer's endpoints. The caller must own the dialer or run in
-// a nursery it is lent to. Waiting for the connection is a cancellation point.
+// Resolve looks up host, a host name one of the dialer's endpoints names (grant connect
+// NAME:PORT, D145), for family "ip4" or "ip6", and returns an IP:PORT for each address found and
+// each such endpoint's port, in answer order; none is not an error. The dialer may dial the
+// returned addresses from then on. Waiting for the answer is a cancellation point.
+func (d *Dialer) Resolve(host, family string) ([]string, error) {
+	return runtime_dialerResolve(d.h, host, family)
+}
+
+// Dial connects to addr, one of the dialer's IP or Unix endpoints or an address its Resolve
+// returned. The caller must own the dialer or run in a nursery it is lent to. Waiting for the
+// connection is a cancellation point.
 func (d *Dialer) Dial(addr string) (*Conn, error) {
 	h, err := runtime_dialerDial(d.h, addr)
 	if err != nil {

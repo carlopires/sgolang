@@ -14,6 +14,25 @@ package runtime
 
 import "unsafe"
 
+// sgoFakeResolve answers Dialer.Resolve in a lab run from the run's resolve table (D146).
+func sgoFakeResolve(host string, v6 bool) ([]sgoNetGrant, *sgoIOErr) {
+	if err := sgoTaskCancellation(sgoCurrent()); err != nil {
+		return nil, &sgoIOErr{"Cancelled", 0}
+	}
+	var out []sgoNetGrant
+	for _, e := range sgoLabResolve {
+		if e.host == host {
+			if g, ok := sgoParseIPLit(e.ip); ok && g.v6 == v6 {
+				out = append(out, g)
+			}
+		}
+	}
+	return out, nil
+}
+
+// sgoLabResolve is the lab run's resolve table: host names and the addresses they resolve to.
+var sgoLabResolve []struct{ host, ip string }
+
 const (
 	sgoFakeChunks  = 16 // capacity of a direction, in chunks
 	sgoFakeBacklog = 16 // pending connections of a listener

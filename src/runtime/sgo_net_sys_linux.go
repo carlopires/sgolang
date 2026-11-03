@@ -17,6 +17,7 @@ const (
 	sgoAF_INET6     = 10
 	sgoSO_PEERCRED  = 17
 	sgoSOCK_STREAM  = 1
+	sgoSOCK_DGRAM   = 2
 	sgoSOCK_NB_CX   = 0x800 | 0x80000 // SOCK_NONBLOCK | SOCK_CLOEXEC
 	sgoSOL_SOCKET   = 1
 	sgoSO_REUSEADDR = 2
@@ -54,7 +55,10 @@ func sgoSockaddr(b *sgoSockaddrBuf, g *sgoNetGrant) uintptr {
 	return 28
 }
 
-func sgoSocket(g *sgoNetGrant) int32 {
+func sgoSocket(g *sgoNetGrant) int32 { return sgoSocketType(g, sgoSOCK_STREAM) }
+
+// sgoSocketType opens a non-blocking, close-on-exec socket of type typ for g's address family.
+func sgoSocketType(g *sgoNetGrant, typ uintptr) int32 {
 	af := uintptr(sgoAF_INET)
 	switch {
 	case g.unix:
@@ -62,7 +66,7 @@ func sgoSocket(g *sgoNetGrant) int32 {
 	case g.v6:
 		af = sgoAF_INET6
 	}
-	return sgoSys(sgoSYS_socket, af, sgoSOCK_STREAM|sgoSOCK_NB_CX, 0, 0)
+	return sgoSys(sgoSYS_socket, af, typ|sgoSOCK_NB_CX, 0, 0)
 }
 
 func sgoConnectSys(fd int32, sa *sgoSockaddrBuf, n uintptr) int32 {

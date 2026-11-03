@@ -43,8 +43,12 @@ const (
 	sgoSOL_SOCKET, sgoSO_ERROR, sgoSO_REUSEADDR                       = 0, 0, 0
 )
 
-func sgoSockaddr(b *sgoSockaddrBuf, g *sgoNetGrant) uintptr       { return 0 }
-func sgoSocket(g *sgoNetGrant) int32                              { return -sgoENOSYS }
+func sgoSockaddr(b *sgoSockaddrBuf, g *sgoNetGrant) uintptr { return 0 }
+func sgoSocket(g *sgoNetGrant) int32                        { return -sgoENOSYS }
+func sgoSocketType(g *sgoNetGrant, typ uintptr) int32       { return -sgoENOSYS }
+
+const sgoSOCK_DGRAM = 2
+
 func sgoConnectSys(fd int32, sa *sgoSockaddrBuf, n uintptr) int32 { return -sgoENOSYS }
 func sgoBind(fd int32, sa *sgoSockaddrBuf, n uintptr) int32       { return -sgoENOSYS }
 func sgoListenSys(fd int32, backlog int32) int32                  { return -sgoENOSYS }

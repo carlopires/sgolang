@@ -69,9 +69,21 @@ func (m *module) parseIOGrant(fields []string, text, at string) (bool, error) {
 			m.ioGrants = append(m.ioGrants, line)
 			break
 		}
+		if host, port, ok := hostPort(fields[2]); ok {
+			// A host name (D145): connect only; resolved at run time through a Dialer.
+			if fields[1] != "connect" {
+				return true, usage(fmt.Sprintf("%q: a listen grant names an IP:PORT or unix:PATH, not a host name (D145)", fields[2]))
+			}
+			line := "connect " + host + ":" + port
+			if slices.Contains(m.ioGrants, line) {
+				return true, usage(fmt.Sprintf("%s is granted twice", line))
+			}
+			m.ioGrants = append(m.ioGrants, line)
+			break
+		}
 		ap, err := netip.ParseAddrPort(fields[2])
 		if err != nil || ap.Port() == 0 || ap.Addr().Zone() != "" || ap.Addr().Is4In6() {
-			return true, usage(fmt.Sprintf("%q is not an IP:PORT endpoint (an IPv4 or [IPv6] literal, not IPv4-mapped, and a port 1-65535; no host names, D57)", fields[2]))
+			return true, usage(fmt.Sprintf("%q is not an IP:PORT endpoint (an IPv4 or [IPv6] literal, not IPv4-mapped, and a port 1-65535; or for connect, a lower-case HOST:PORT, D57, D145)", fields[2]))
 		}
 		line := fields[1] + " " + ap.String()
 		if slices.Contains(m.ioGrants, line) {
@@ -93,4 +105,45 @@ func ioDigest(grants []string) string {
 	}
 	sum := sha256.Sum256([]byte(strings.Join(grants, "\n")))
 	return hex.EncodeToString(sum[:8])
+}
+
+// hostPort splits a NAME:PORT endpoint whose NAME is a canonical host name (D145): dot-separated
+// labels of [a-z0-9-] of 1 to 63 bytes not starting or ending with '-', 253 bytes in all, with at
+// least one letter or '-' (so not an IP literal), and a port 1-65535 without leading zeros. The
+// runtime applies the same rule (sgoParseHostPort).
+func hostPort(s string) (host, port string, ok bool) {
+	i := strings.LastIndexByte(s, ':')
+	if i <= 0 {
+		return "", "", false
+	}
+	host, port = s[:i], s[i+1:]
+	if len(host) > 253 || port == "" || port[0] == '0' || len(port) > 5 {
+		return "", "", false
+	}
+	n := 0
+	for _, c := range port {
+		if c < '0' || c > '9' {
+			return "", "", false
+		}
+		n = n*10 + int(c-'0')
+	}
+	if n > 65535 {
+		return "", "", false
+	}
+	letter := false
+	for _, l := range strings.Split(host, ".") {
+		if l == "" || len(l) > 63 || l[0] == '-' || l[len(l)-1] == '-' {
+			return "", "", false
+		}
+		for _, c := range l {
+			switch {
+			case c >= 'a' && c <= 'z', c == '-':
+				letter = true
+			case c >= '0' && c <= '9':
+			default:
+				return "", "", false
+			}
+		}
+	}
+	return host, port, letter
 }

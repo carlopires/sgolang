@@ -7,8 +7,8 @@
   {
    "code": "SGO_E_USAGE",
    "file": "sgo.mod",
-   "at": "grant connect"
+   "at": "grant listen"
   }
  ],
- "note": "D57: endpoint grants are IP literals; no host names, no DNS."
+ "note": "D145 (superseding D57 for connect): a connect grant may name a host resolved through a Dialer; a listen grant names an IP literal or unix:PATH, never a host name."
 }

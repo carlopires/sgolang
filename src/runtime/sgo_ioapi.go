@@ -138,6 +138,9 @@ func sgo_dial(addr string) (unsafe.Pointer, error) {
 	if g == nil {
 		panic(error(&sgoFailure{"MissingCapability", "Dial " + quoteKind(addr) + ": no connect grant for this endpoint", ""}))
 	}
+	if g.host != "" {
+		panic(error(&sgoFailure{"MissingCapability", "Dial " + quoteKind(addr) + ": a host name is dialed through a Dialer after Resolve", ""}))
+	}
 	return sgoDialGrant(g, "Dial")
 }
 

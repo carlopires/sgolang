@@ -37,6 +37,7 @@ type sgoNetGrant struct {
 	ip     [16]byte
 	v6     bool
 	port   uint16
+	host   string // a host name to resolve (D145): connect grants only; ip is unset
 }
 
 var (
@@ -214,7 +215,63 @@ func sgoParseEndpoint(a string, g *sgoNetGrant) bool {
 		g.unix, g.path = true, p
 		return true
 	}
-	return sgoParseAddr(a, g)
+	if sgoParseAddr(a, g) {
+		return true
+	}
+	*g = sgoNetGrant{listen: g.listen, addr: g.addr}
+	return sgoParseHostPort(a, g)
+}
+
+// sgoParseHostPort parses NAME:PORT with NAME a canonical host name (D145): dot-separated labels
+// of [a-z0-9-], not starting or ending with '-', of 1 to 63 bytes, 253 bytes in all, and not all
+// digits and dots (that is an IP, not a name).
+func sgoParseHostPort(a string, g *sgoNetGrant) bool {
+	i := len(a) - 1
+	for i >= 0 && a[i] != ':' {
+		i--
+	}
+	if i <= 0 || i == len(a)-1 || i > 253 {
+		return false
+	}
+	port := 0
+	for _, c := range []byte(a[i+1:]) {
+		if c < '0' || c > '9' || port > 65535 {
+			return false
+		}
+		port = port*10 + int(c-'0')
+	}
+	if port < 1 || port > 65535 || !sgoHostName(a[:i]) {
+		return false
+	}
+	g.host, g.port = a[:i], uint16(port)
+	return true
+}
+
+// sgoHostName reports whether s is a canonical host name (see sgoParseHostPort).
+func sgoHostName(s string) bool {
+	if s == "" || len(s) > 253 {
+		return false
+	}
+	letter, start := false, 0
+	for k := 0; k <= len(s); k++ {
+		if k == len(s) || s[k] == '.' {
+			n := k - start
+			if n < 1 || n > 63 || s[start] == '-' || s[k-1] == '-' {
+				return false
+			}
+			start = k + 1
+			continue
+		}
+		c := s[k]
+		switch {
+		case c >= 'a' && c <= 'z', c == '-':
+			letter = true
+		case c >= '0' && c <= '9':
+		default:
+			return false
+		}
+	}
+	return letter
 }
 
 // sgoNetGrantFor returns the grant permitting addr for listening or connecting, or nil. IP
@@ -226,7 +283,7 @@ func sgoNetGrantFor(addr string, listen bool) *sgoNetGrant {
 	}
 	for i := range sgoNetGrants {
 		ng := &sgoNetGrants[i]
-		if ng.listen == listen && ng.unix == g.unix && ng.path == g.path && ng.ip == g.ip && ng.v6 == g.v6 && ng.port == g.port {
+		if ng.listen == listen && ng.unix == g.unix && ng.path == g.path && ng.host == g.host && ng.ip == g.ip && ng.v6 == g.v6 && ng.port == g.port {
 			return ng
 		}
 	}

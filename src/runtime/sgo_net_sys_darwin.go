@@ -19,6 +19,7 @@ const (
 	sgoAF_INET      = 2
 	sgoAF_INET6     = 30
 	sgoSOCK_STREAM  = 1
+	sgoSOCK_DGRAM   = 2
 	sgoSOL_SOCKET   = 0xffff
 	sgoSO_REUSEADDR = 0x4
 	sgoSO_ERROR     = 0x1007
@@ -69,7 +70,10 @@ func sgoSockaddr(b *sgoSockaddrBuf, g *sgoNetGrant) uintptr {
 	return 28
 }
 
-func sgoSocket(g *sgoNetGrant) int32 {
+func sgoSocket(g *sgoNetGrant) int32 { return sgoSocketType(g, sgoSOCK_STREAM) }
+
+// sgoSocketType opens a non-blocking, close-on-exec socket of type typ for g's address family.
+func sgoSocketType(g *sgoNetGrant, typ uintptr) int32 {
 	af := uintptr(sgoAF_INET)
 	switch {
 	case g.unix:
@@ -77,7 +81,7 @@ func sgoSocket(g *sgoNetGrant) int32 {
 	case g.v6:
 		af = sgoAF_INET6
 	}
-	fd := sgoLibc(abi.FuncPCABI0(sgo_socket_trampoline), af, sgoSOCK_STREAM, 0)
+	fd := sgoLibc(abi.FuncPCABI0(sgo_socket_trampoline), af, typ, 0)
 	if fd >= 0 {
 		closeonexec(fd)
 		setNonblock(fd)

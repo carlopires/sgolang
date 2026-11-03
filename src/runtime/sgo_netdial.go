@@ -21,7 +21,9 @@ package runtime
 import "unsafe"
 
 type sgoDialer struct {
-	allow []*sgoNetGrant // the endpoints this dialer may connect to
+	allow    []*sgoNetGrant // the endpoints this dialer may connect to (IP, Unix, or host name)
+	mu       mutex          // guards resolved: tasks the dialer is lent to resolve concurrently
+	resolved []sgoNetGrant  // addresses Resolve returned for its host-name endpoints (D145)
 }
 
 type sgoSlot struct {
@@ -55,12 +57,70 @@ func sgo_dialerDial(p unsafe.Pointer, addr string) (unsafe.Pointer, error) {
 	g := sgoNetGrantFor(addr, false)
 	ok := false
 	for _, x := range h.dial.allow {
-		ok = ok || x == g
+		ok = ok || (x == g && g.host == "")
 	}
-	if g == nil || !ok {
-		panic(error(&sgoFailure{"MissingCapability", "Dialer.Dial " + quoteKind(addr) + ": not an endpoint of this dialer", ""}))
+	if !ok {
+		// An address a Resolve of this dialer returned: dial it under the host name's grant.
+		var a sgoNetGrant
+		d := h.dial
+		if sgoParseAddr(addr, &a) {
+			lock(&d.mu)
+			for i := range d.resolved {
+				if r := &d.resolved[i]; r.ip == a.ip && r.v6 == a.v6 && r.port == a.port {
+					g, ok = r, true
+					break
+				}
+			}
+			unlock(&d.mu)
+		}
+	}
+	if !ok {
+		panic(error(&sgoFailure{"MissingCapability", "Dialer.Dial " + quoteKind(addr) + ": not an endpoint of this dialer nor an address it resolved", ""}))
 	}
 	return sgoDialGrant(g, "Dialer.Dial")
+}
+
+// sgo_dialerResolve resolves host, a host name some endpoint of the dialer names, for family
+// "ip4" (A records) or "ip6" (AAAA): it returns IP:PORT for each address and each such endpoint's
+// port, and the dialer may dial those addresses from then on (D145).
+//
+//go:linkname sgo_dialerResolve sgo.runtime_dialerResolve
+func sgo_dialerResolve(p unsafe.Pointer, host, family string) ([]string, error) {
+	h := (*sgoHandle)(p)
+	if family != "ip4" && family != "ip6" {
+		panic(error(&sgoFailure{"InvalidArgument", "Dialer.Resolve: family " + quoteKind(family) + " is neither \"ip4\" nor \"ip6\"", ""}))
+	}
+	if e := sgoHandleBegin(h, "Dialer.Resolve"); e != nil {
+		return nil, sgoIOResult(e, "Dialer.Resolve")
+	}
+	defer sgoHandleEnd(h)
+	d := h.dial
+	var ports []*sgoNetGrant
+	for _, x := range d.allow {
+		if x.host == host {
+			ports = append(ports, x)
+		}
+	}
+	if len(ports) == 0 {
+		panic(error(&sgoFailure{"MissingCapability", "Dialer.Resolve " + quoteKind(host) + ": no endpoint of this dialer names this host", ""}))
+	}
+	ips, e := sgoResolveHost(host, family == "ip6")
+	if e != nil {
+		return nil, sgoIOResult(e, "Dialer.Resolve")
+	}
+	var out []string
+	lock(&d.mu)
+	for i := range ips {
+		for _, pg := range ports {
+			r := ips[i]
+			r.port, r.host = pg.port, ""
+			r.addr = sgoFormatAddr(&r, r.port)
+			d.resolved = append(d.resolved, r)
+			out = append(out, r.addr)
+		}
+	}
+	unlock(&d.mu)
+	return out, nil
 }
 
 //go:linkname sgo_slotNew sgo.runtime_slotNew
