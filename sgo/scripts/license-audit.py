@@ -82,7 +82,9 @@ def main():
         st, path = line.split("\t", 1)[0], line.split("\t")[-1]
         if path in ("LICENSE", "PATENTS"):
             errs.append(f"{path} changed against the upstream pin")
-        if "/vendor/" in "/" + path:
+        # Upstream's vendored third-party code must stay byte-identical. S-Go's own test fixtures
+        # under sgo/testdata hold vendor/ trees of their own (required modules, SGO-IMP-003).
+        if "/vendor/" in "/" + path and not path.startswith("sgo/testdata/"):
             errs.append(f"{path}: vendored code changed")
         full = os.path.join(ROOT, path)
         if st.startswith("D") or not os.path.isfile(full):
