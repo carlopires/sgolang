@@ -50,7 +50,16 @@ def eligible(d, e, kind="reject"):
     # Import cycles are found in the driver's module graph (SGO-IMP-001), which knows the module path.
     if any(dg.get("code") == "SGO_E_IMPORT_CYCLE" for dg in e.get("diagnostics", [])):
         return False
+    # Imports other than sgo (std/ packages, modules) are resolved by the driver (SGO-IMP-001,
+    # SGO-IMP-004); the bare compiler has no export data for them.
+    for f in os.listdir(d):
+        if f.endswith(".sgo") and any(p != "sgo" for p in IMPORT.findall(open(os.path.join(d, f), encoding="utf-8", errors="replace").read())):
+            return False
     return any(f.endswith(".sgo") for f in os.listdir(d))
+
+
+# The quoted import paths of a source file: the single form and each line of the grouped form.
+IMPORT = re.compile(r'^(?:import\s+|\s+)"([^"]+)"\s*$', re.M)
 
 
 def main():
