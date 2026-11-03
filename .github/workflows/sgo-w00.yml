@@ -116,6 +116,9 @@ jobs:
       - name: sgo test of every std package (SGO-IMP-004, D110)
         run: sgo/scripts/test-std.py
 
+      - name: std behaves as Go's packages on generated inputs (D125, SGO-STD-*)
+        run: sgo/scripts/test-std-diff.py --seed 1 && sgo/scripts/test-std-diff.py --seed 2 --strings 200
+
       - name: No flag, mode, or environment reopens stock Go (S01, S15)
         run: sgo/scripts/test-flags.py
 
