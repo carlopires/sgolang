@@ -1,0 +1,135 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package utf8
+
+import "sgo"
+
+// itoa is a local decimal formatter: std/strconv imports this package.
+func itoa(v int) string {
+	if v == 0 {
+		return "0"
+	}
+	neg := v < 0
+	if neg {
+		v = -v
+	}
+	b := []byte{}
+	for v > 0 {
+		b = append([]byte{byte(48 + v%10)}, b...)
+		v = v / 10
+	}
+	if neg {
+		return "-" + string(b)
+	}
+	return string(b)
+}
+
+// boundaryBytes are the bytes at the edges of every UTF-8 acceptance range.
+func boundaryBytes() []byte {
+	return []byte{0x00, 0x41, 0x7F, 0x80, 0x8F, 0x90, 0x9F, 0xA0, 0xBF, 0xC0, 0xC1, 0xC2, 0xDF,
+		0xE0, 0xE1, 0xEC, 0xED, 0xEE, 0xEF, 0xF0, 0xF1, 0xF3, 0xF4, 0xF5, 0xFF}
+}
+
+// TestDecodeAgreesWithRange: for every string of 1 to 4 boundary bytes, DecodeRuneInString gives
+// the first rune and width that range over the string gives (D117).
+func TestDecodeAgreesWithRange(t *sgo.T) error {
+	bs := boundaryBytes()
+	n := len(bs)
+	total := n + n*n + n*n*n + n*n*n*n
+	for k := 0; k < total; k++ {
+		s := []byte{}
+		rest := k
+		switch {
+		case rest < n:
+			s = []byte{bs[rest]}
+		case rest < n+n*n:
+			rest -= n
+			s = []byte{bs[rest/n], bs[rest%n]}
+		case rest < n+n*n+n*n*n:
+			rest -= n + n*n
+			s = []byte{bs[rest/(n*n)], bs[rest/n%n], bs[rest%n]}
+		default:
+			rest -= n + n*n + n*n*n
+			s = []byte{bs[rest/(n*n*n)], bs[rest/(n*n)%n], bs[rest/n%n], bs[rest%n]}
+		}
+		str := string(s)
+		r, size := DecodeRuneInString(str)
+		var wantR rune = 0
+		wantSize := len(str)
+		first := true
+		for i, rr := range str {
+			if first {
+				wantR = rr
+				first = false
+			} else if wantSize == len(str) {
+				wantSize = i
+			}
+		}
+		if r != wantR || size != wantSize {
+			return sgo.NewError("case " + itoa(k) + ": DecodeRuneInString = " + itoa(int(r)) + "," + itoa(size) +
+				"; range gives " + itoa(int(wantR)) + "," + itoa(wantSize))
+		}
+		br, bsize := DecodeRune(s)
+		if br != r || bsize != size {
+			return sgo.NewError("case " + itoa(k) + ": DecodeRune differs from DecodeRuneInString")
+		}
+		if RuneCountInString(str) != RuneCount(s) || ValidString(str) != Valid(s) || FullRuneInString(str) != FullRune(s) {
+			return sgo.NewError("case " + itoa(k) + ": []byte and string forms differ")
+		}
+	}
+	return nil
+}
+
+// TestEncodeRoundTrip: every rune encodes to string(r)'s bytes and decodes back; surrogates
+// encode as RuneError.
+func TestEncodeRoundTrip(t *sgo.T) error {
+	for i := 0; i <= MaxRune; i++ {
+		r := rune(i)
+		b := AppendRune(nil, r)
+		if string(b) != string(r) {
+			return sgo.NewError("AppendRune(" + itoa(i) + ") differs from string(r)")
+		}
+		dr, size := DecodeRuneInString(string(b))
+		want := r
+		if !ValidRune(r) {
+			want = RuneError
+			if RuneLen(r) != -1 {
+				return sgo.NewError("RuneLen of a surrogate")
+			}
+		} else if RuneLen(r) != len(b) {
+			return sgo.NewError("RuneLen(" + itoa(i) + ")")
+		}
+		if dr != want || size != len(b) {
+			return sgo.NewError("round trip of " + itoa(i))
+		}
+		lr, lsize := DecodeLastRuneInString("ab" + string(b))
+		if lr != want || lsize != len(b) {
+			return sgo.NewError("DecodeLastRuneInString of " + itoa(i))
+		}
+	}
+	return nil
+}
+
+func TestEdges(t *sgo.T) error {
+	if r, n := DecodeRuneInString(""); r != RuneError || n != 0 {
+		return sgo.NewError("empty")
+	}
+	if r, n := DecodeLastRuneInString("a\xff"); r != RuneError || n != 1 {
+		return sgo.NewError("last invalid")
+	}
+	if r, n := DecodeLastRuneInString("\xe2\x82"); r != RuneError || n != 1 {
+		return sgo.NewError("last truncated")
+	}
+	if FullRuneInString("\xe2\x82") || !FullRuneInString("\xe2\x82\xac") || !FullRuneInString("\xff") {
+		return sgo.NewError("FullRune")
+	}
+	if RuneCountInString("h\u00e9\xff") != 3 || !ValidString("h\u00e9") || ValidString("\xed\xa0\x80") {
+		return sgo.NewError("count/valid")
+	}
+	if RuneStart(0x80) || !RuneStart(0xC3) {
+		return sgo.NewError("RuneStart")
+	}
+	return nil
+}
