@@ -36,7 +36,7 @@ A program compiles only if every construct it uses is in the closed S-Go subset 
 
 - **Scope:** admission, runtime_enforced, tested
 - **Families:** SPEC-LEX, SPEC-BIND, SPEC-TYPE, SPEC-VALUE, SPEC-CONTROL, SPEC-COMPOSITE, SPEC-USERTYPE
-- **Clauses:** SGO-LEX-001, SGO-LEX-002, SGO-LEX-003, SGO-LEX-004, SGO-BIND-001, SGO-BIND-002, SGO-BIND-003, SGO-BIND-004, SGO-BIND-005, SGO-TYPE-001, SGO-TYPE-002, SGO-TYPE-003, SGO-TYPE-004, SGO-TYPE-005, SGO-TYPE-006, SGO-TYPE-007, SGO-VAL-001, SGO-VAL-002, SGO-VAL-003, SGO-VAL-004, SGO-VAL-005, SGO-CTL-001, SGO-CTL-002, SGO-CTL-003, SGO-CTL-004, SGO-COMP-001, SGO-COMP-002, SGO-COMP-003, SGO-COMP-004, SGO-COMP-005, SGO-COMP-006, SGO-COMP-007, SGO-COMP-008, SGO-COMP-009, SGO-UTYPE-001, SGO-UTYPE-002
+- **Clauses:** SGO-LEX-001, SGO-LEX-002, SGO-LEX-003, SGO-LEX-004, SGO-BIND-001, SGO-BIND-002, SGO-BIND-003, SGO-BIND-004, SGO-BIND-005, SGO-TYPE-001, SGO-TYPE-002, SGO-TYPE-003, SGO-TYPE-004, SGO-TYPE-005, SGO-TYPE-006, SGO-TYPE-007, SGO-TYPE-008, SGO-VAL-001, SGO-VAL-002, SGO-VAL-003, SGO-VAL-004, SGO-VAL-005, SGO-CTL-001, SGO-CTL-002, SGO-CTL-003, SGO-CTL-004, SGO-COMP-001, SGO-COMP-002, SGO-COMP-003, SGO-COMP-004, SGO-COMP-005, SGO-COMP-006, SGO-COMP-007, SGO-COMP-008, SGO-COMP-009, SGO-UTYPE-001, SGO-UTYPE-002
 - **Acceptance cases:** G02, G03, G07, S02, S03, S05, S09, S10, S16, S17, S19, X01, X02, X03, X04, X05, X06, X07, X08, X10, X11
 - **Implementation:** `src/cmd/compile/internal/syntax/`, `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/types2/sgo_flow.go`, `src/cmd/compile/internal/types2/sgo_values.go`, `src/cmd/compile/internal/types2/sgo_local.go`, `src/cmd/compile/internal/types2/sgo_frozen.go`, `src/sgo/frozen.go`, `src/cmd/compile/internal/walk/sgo_map.go`, `src/runtime/sgo_map.go`, `src/runtime/sgo_copy.go`, `src/cmd/compile/internal/sgoadmit/admit.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`, `src/cmd/compile/internal/ssagen/sgo.go`
 
@@ -144,7 +144,7 @@ Only the trusted files pinned by SHA-256 in TARGET_TCB.json may use unrestricted
 
 - **Scope:** admission, runtime_enforced, tested
 - **Families:** SPEC-IMPORT, SPEC-TCB, SPEC-STACK
-- **Clauses:** SGO-IMP-001, SGO-IMP-002, SGO-TCB-001, SGO-TCB-002, SGO-STACK-001
+- **Clauses:** SGO-IMP-001, SGO-IMP-002, SGO-IMP-003, SGO-IMP-004, SGO-TCB-001, SGO-TCB-002, SGO-STACK-001
 - **Acceptance cases:** F02, F03, F04, O07, O08, O10, S09, S10, S11, S13, S15, T01
 - **Implementation:** `src/cmd/sgo/tcb.go`, `src/cmd/sgo/tcbasm.go`, `src/cmd/sgo/tcbtable.go`, `src/cmd/compile/internal/sgoadmit/identity.go`, `src/cmd/compile/internal/sgoadmit/tcbtable.go`, `src/cmd/compile/internal/noder/sgo_identity.go`, `src/cmd/link/internal/ld/sgoid.go`
 
@@ -157,6 +157,18 @@ The release is a single-language toolchain: sgo build/run/check/test/fmt/lab plu
 - **Clauses:** SGO-TOOL-001, SGO-TOOL-002, SGO-BUILD-001, SGO-TEST-001, SGO-TEST-002, SGO-TEST-003
 - **Acceptance cases:** B04, B05, S01, S15, S18, S19, T01, T02, T03
 - **Implementation:** `src/cmd/sgo/main.go`, `src/cmd/sgo/build.go`, `src/cmd/sgo/check.go`, `src/cmd/sgo/test.go`, `src/cmd/sgo/fmt.go`, `src/cmd/sgo/toolchain.go`, `sgo/scripts/make-release.py`
+
+### G-STD
+
+The standard library (std/errors, strings, bytes, strconv, utf8, sort, math; spec 0.13.0) is S-Go source compiled under the same admission and sharing rules as user code, verified against its MANIFEST before use; it holds no package state and no capability. Each package exports exactly the declarations its SGO-STD clause lists, and each function with a Go counterpart gives that function's results on generated inputs, apart from the deviations its clause lists (no bitSize in ParseInt, ASCII-only case mapping, error inputs quoted by QuoteToASCII). Every sort is stable and the same on every platform.
+
+- **Scope:** admission, tested
+- **Families:** SPEC-STD
+- **Clauses:** SGO-STD-001, SGO-STD-002, SGO-STD-003, SGO-STD-004, SGO-STD-005, SGO-STD-006, SGO-STD-007
+- **Acceptance cases:** 
+- **Implementation:** `src/sgostd/`, `sgo/scripts/std-api-check.py`, `sgo/scripts/std-manifest.py`, `sgo/scripts/test-std-diff.py`
+- **Limitation:** Behavior equal to Go's packages is tested on seeded generated inputs (test-std-diff), not proven.
+- **Limitation:** No interfaces yet: errors are distinguished only by message (D121); a sort or search callback cannot capture task-local data (D94).
 
 ## Identity
 

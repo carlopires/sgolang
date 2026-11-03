@@ -315,6 +315,27 @@
         "src/cmd/sgo/toolchain.go",
         "sgo/scripts/make-release.py"
       ]
+    },
+    {
+      "id": "G-STD",
+      "families": [
+        "SPEC-STD"
+      ],
+      "statement": "The standard library (std/errors, strings, bytes, strconv, utf8, sort, math; spec 0.13.0) is S-Go source compiled under the same admission and sharing rules as user code, verified against its MANIFEST before use; it holds no package state and no capability. Each package exports exactly the declarations its SGO-STD clause lists, and each function with a Go counterpart gives that function's results on generated inputs, apart from the deviations its clause lists (no bitSize in ParseInt, ASCII-only case mapping, error inputs quoted by QuoteToASCII). Every sort is stable and the same on every platform.",
+      "scope": [
+        "admission",
+        "tested"
+      ],
+      "implementation": [
+        "src/sgostd/",
+        "sgo/scripts/std-api-check.py",
+        "sgo/scripts/std-manifest.py",
+        "sgo/scripts/test-std-diff.py"
+      ],
+      "limitations": [
+        "Behavior equal to Go's packages is tested on seeded generated inputs (test-std-diff), not proven.",
+        "No interfaces yet: errors are distinguished only by message (D121); a sort or search callback cannot capture task-local data (D94)."
+      ]
     }
   ],
   "known_limitations": [
