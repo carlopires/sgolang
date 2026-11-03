@@ -12,7 +12,10 @@
 
 package runtime
 
-import "unsafe"
+import (
+	"internal/runtime/atomic"
+	"unsafe"
+)
 
 // sgoProgram is set when an S-Go program's root task starts.
 var sgoProgram bool
@@ -164,10 +167,21 @@ func sgoExhausted(msg string) {
 	sgoProgramExit(4, "ResourceExhausted")
 }
 
+// sgoThrowing is set by the first runtime throw of an S-Go program (sgoThrowExit).
+var sgoThrowing atomic.Uint32
+
 // sgoThrowExit ends an S-Go program on a runtime throw (SGO-ERR-003): exhausted resources are
 // ResourceExhausted, every other throw is a violated invariant, RuntimeDefect. Status 4; deferred
 // calls do not run. It runs on the system stack and does not allocate.
 func sgoThrowExit(s string) {
+	// One record per program (SGO-ERR-002): two Ms can throw at once (checkdead runs on several
+	// paths), and the stock serialization (startpanic_m) is not reached here. The first thrower
+	// writes and exits; any other waits for the process to end.
+	if !sgoThrowing.CompareAndSwap(0, 1) {
+		for {
+			usleep(1000)
+		}
+	}
 	kind, status := "RuntimeDefect", int32(4)
 	switch s {
 	case "stack overflow", "out of memory":
