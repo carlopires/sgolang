@@ -87,6 +87,7 @@ func (m *module) parseMod(t *toolchain) error {
 	sc := bufio.NewScanner(f)
 	sawSgo := false
 	granted := map[string]bool{}
+	replaceAt := map[string]string{} // replace lines by module path: their positions
 	required := map[string]bool{}
 	for line := 1; sc.Scan(); line++ {
 		text := strings.TrimSpace(sc.Text())
@@ -131,6 +132,10 @@ func (m *module) parseMod(t *toolchain) error {
 			if _, dup := m.replaces[fields[1]]; dup {
 				return &toolErr{at, "SGO_E_USAGE", fmt.Sprintf("%s is replaced twice (SGO-IMP-003)", fields[1]), 2}
 			}
+			if stdPath(fields[1]) {
+				return &toolErr{at, "SGO_E_USAGE", fmt.Sprintf("%s cannot be replaced: std is never required, replaced, or vendored (SGO-IMP-003, SGO-IMP-004)", fields[1]), 2}
+			}
+			replaceAt[fields[1]] = at
 			if m.replaces == nil {
 				m.replaces = map[string]string{}
 			}
@@ -146,6 +151,9 @@ func (m *module) parseMod(t *toolchain) error {
 	}
 	if m.path == "" {
 		return &toolErr{"sgo.mod:1:1", "SGO_E_UNADMITTED", "sgo.mod has no module directive", 1}
+	}
+	if at, ok := replaceAt[m.path]; ok {
+		return &toolErr{at, "SGO_E_USAGE", fmt.Sprintf("%s is the main module and cannot be replaced (SGO-IMP-003)", m.path), 2}
 	}
 	if !sawSgo {
 		return &toolErr{"sgo.mod:1:1", "SGO_E_SPEC_VERSION", "sgo.mod has no sgo directive naming the spec version", 1}
