@@ -104,6 +104,9 @@ jobs:
       - name: Compiled S-Go code reaches channels only through S-Go entry points (S12, W07)
         run: sgo/scripts/test-native-lowering.py
 
+      - name: Compiled S-Go code reaches maps only through the ordered map (SGO-COMP-006, W13 V3)
+        run: sgo/scripts/test-map-lowering.py
+
       - name: Lab execution configuration end to end (W08, D41-D49)
         run: sgo/scripts/test-lab.py
 

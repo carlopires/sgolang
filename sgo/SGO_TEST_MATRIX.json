@@ -2880,7 +2880,8 @@
       "implementation_status": "implemented",
       "execution_status": "passed",
       "evidence": [
-        "W13 stage 2 (spec 0.9.0): comp-map-order, comp-map-delete-reinsert, comp-map-range-mutate, comp-map-copy-order, lab-map-order (same order under sgo lab); sgo/evidence/w13/README.md"
+        "W13 stage 2 (spec 0.9.0): comp-map-order, comp-map-delete-reinsert, comp-map-range-mutate, comp-map-copy-order, lab-map-order (same order under sgo lab); sgo/evidence/w13/README.md",
+        "W13 review V3: sgo/scripts/test-map-lowering.py disassembles the W13 programs and every comp-map-* run case and finds no call of a Go map entry point (mutant: Go maps for S-Go packages is caught); sgo/evidence/w13/README.md"
       ]
     },
     {

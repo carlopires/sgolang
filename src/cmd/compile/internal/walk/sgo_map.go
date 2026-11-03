@@ -4,15 +4,13 @@
 
 package walk
 
-// S-Go maps (SGO-COMP-006): map operations of functions compiled from .sgo files call the runtime's
-// insertion-ordered map (src/runtime/sgo_map.go) through the generic entry points, never Go's
-// maps. The decision is made per operation, by the source file of its position: S-Go code
-// inlined into a generated Go function (the main wrapper) keeps its .sgo positions, and Go code
-// inlined into an S-Go function keeps its .go positions (package sgo and the runtime use no maps).
+// S-Go maps (SGO-COMP-006): every map operation of a package compiled in S-Go mode calls the
+// runtime's insertion-ordered map (src/runtime/sgo_map.go) through the generic entry points, never
+// Go's maps. The decision is the package's mode (sgoMaps), so no operation of an S-Go package can
+// reach Go's maps, whatever its position; package sgo uses no maps at all (a compile error), so no
+// Go map is ever inlined into S-Go code (W13 review V3).
 
 import (
-	"strings"
-
 	"cmd/compile/internal/base"
 	"cmd/compile/internal/ir"
 	"cmd/compile/internal/reflectdata"
@@ -20,9 +18,19 @@ import (
 	"cmd/compile/internal/types"
 )
 
-// sgoMaps reports whether the operation being walked (at base.Pos) comes from an S-Go source file.
+// sgoMaps reports whether map operations of the package being compiled use the ordered map: every
+// map of an S-Go package is an *sgoMap, so the choice is the package's compilation mode, not the
+// position of the operation (W13 review V3: a position-less node must not fall back to Go's map).
+// S-Go packages are compiled from .sgo files only and inline nothing that uses maps: package sgo
+// uses none (refused below), and S-Go packages import no other Go package.
 func sgoMaps() bool {
-	return base.Pos.IsKnown() && strings.HasSuffix(base.Ctxt.PosTable.Pos(base.Pos).Filename(), ".sgo")
+	if base.SGo {
+		return true
+	}
+	if base.Ctxt.Pkgpath == "sgo" {
+		base.Fatalf("sgo: package sgo must not use maps (they would be Go maps; S-Go maps are the runtime's ordered map, SGO-COMP-006)")
+	}
+	return false
 }
 
 // sgoMakeMap lowers make(map[K]V, hint) for S-Go code: the map is always allocated by the runtime.
