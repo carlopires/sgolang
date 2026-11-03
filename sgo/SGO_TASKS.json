@@ -880,6 +880,28 @@
       "blockers": [],
       "commit": "c44d0975f0",
       "completion_note": "Interfaces admitted at spec 0.14.0 (D127-D133): model first (SIface), 30 conformance cases, 7 compiler/runtime mutants caught; errors.Unwrap and sort.Sort."
+    },
+    {
+      "id": "W18",
+      "title": "Happy Eyeballs (RFC 8305): delegated dialing, connection hand-up, name resolution",
+      "depends_on": [
+        "W17"
+      ],
+      "risk": "high",
+      "status": "in_progress",
+      "plan_section": "sgo/docs/happy-eyeballs-plan.md",
+      "deliverables": [
+        "sgo.Dialer (D143)",
+        "sgo.ConnSlot (D144)",
+        "Dialer.Resolve and HOST:PORT grants (D145)",
+        "lab.net for deterministic races (D146)",
+        "sgo/examples/happyeyeballs: an RFC 8305 client with tests and a lab replay"
+      ],
+      "acceptance_case_ids": [],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": null
     }
   ],
   "language_policy": "One specification-defined S-Go language; no Go compatibility path. Bare go rejected; explicit nursery capabilities; missing contracts rejected transitively. Host/reference tools are external build dependencies.",

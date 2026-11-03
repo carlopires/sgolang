@@ -836,7 +836,23 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 ## D142 — Order and scope **[NEEDS USER]** · PROPOSED
 
-**Recommendation.** W18 io/bufio, W19 frozen tables + unicode/hash/crypto/encoding, W20 variadics + fmt, W21 generics + slices/maps/containers, W22 floats, W23 json; each with drafts, freeze, review, Linux evidence. (sgo/docs/stdlib-parity-plan.md)
+**Recommendation.** W19 io/bufio, W20 frozen tables + unicode/hash/crypto/encoding, W21 variadics + fmt, W22 generics + slices/maps/containers, W23 floats, W24 json; each with drafts, freeze, review, Linux evidence. (sgo/docs/stdlib-parity-plan.md)
+
+## D143 — Delegated dialer · APPROVED 2026-11-03 (owner delegated)
+
+**Decision.** `root.Dialer(endpoints []string) (*sgo.Dialer, error)`: a capability handle limited to endpoints the main module grants (IP:PORT or HOST:PORT), created by the root task only, lendable to nurseries like any handle. A task that owns it or runs inside a nursery it is lent to may `Dial` (and `Resolve`, D145) within its endpoints; the connection belongs to the dialing task. `root.Dial` stays as it is. (Happy Eyeballs, RFC 8305; sgo/docs/happy-eyeballs-plan.md)
+
+## D144 — Handing a connection up · APPROVED 2026-11-03 (owner delegated)
+
+**Decision.** `sgo.ConnSlot`: `root.NewConnSlot()` / `ctx.NewConnSlot()` creates a slot owned by the calling task, lendable to its nurseries. `slot.Put(c)` by the connection's owner (a borrower of the slot) moves the connection into the slot; only the first Put succeeds (`AlreadySet` after it), which is the race winner. `slot.Take()` by the slot's owner returns the connection, now owned by that task. A connection left in the slot is closed with it, like any handle (HandleAbandoned). Handle lists stay touched only by their owner: Put unlinks from the putter's list, Take links into the taker's. (Happy Eyeballs, RFC 8305; sgo/docs/happy-eyeballs-plan.md)
+
+## D145 — Name resolution · APPROVED 2026-11-03 (owner delegated)
+
+**Decision.** `grant connect HOST:PORT` (host names now admitted) authorizes resolving HOST and connecting to its addresses at PORT. `d.Resolve(host string, family int) ([]string, error)` on a dialer whose endpoints include HOST:PORT returns IP literals (`sgo.IPv6` or `sgo.IPv4`), each of which that dialer may then dial at PORT. Production: /etc/hosts, then DNS over UDP to the nameservers of /etc/resolv.conf (A or AAAA, answers followed through CNAME records, no search domains), with cancellation. UDP stays denied to user code. Lab: a fixed table (D146). (Happy Eyeballs, RFC 8305; sgo/docs/happy-eyeballs-plan.md)
+
+## D146 — Lab network for the race · APPROVED 2026-11-03 (owner delegated)
+
+**Decision.** `sgo lab` runs read an optional `lab.net` file in the module: `resolve HOST IP...` entries for the fake resolver, and `blackhole IP:PORT` / `delay IP:PORT MS` entries for endpoints whose fake Dial waits until cancelled or for MS of virtual time. Happy Eyeballs then runs deterministically under replay: same seed, same winner, same trace. (Happy Eyeballs, RFC 8305; sgo/docs/happy-eyeballs-plan.md)
 
 ---
 
@@ -868,3 +884,4 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - 2026-11-03: user approved D116–D120 and the W15 drafts (sgo/docs/w15-drafts.md: SGO-LEX-004 v2, SGO-TYPE-008, SGO-TYPE-001 v8, SGO-TYPE-007 v2, SGO-VAL-002 v3, SGO-COMP-005 v2) as recommended ("looks good; approved"). W15 implementation starts; the drafts freeze at spec 0.12.0.
 - 2026-11-03: user approved D121–D126 and the W16 drafts (sgo/docs/w16-drafts.md: SGO-STD-001..007, SGO-IMP-004 v2) as recommended ("looks good; approved"). W16 implementation starts; the drafts freeze at spec 0.13.0.
 - 2026-11-03: user approved D127–D133 and the W17 drafts (sgo/docs/w17-drafts.md: SGO-IFACE-001 v2, SGO-IFACE-002..004, amendments) as recommended ("looks good; approved"). W17 starts with the share model; the drafts freeze at spec 0.14.0.
+- 2026-11-03: the owner delegated D143–D146 to the implementer ("own the decisions, handle it to deliver a working version of Happy Eyeballs algorithm (RFC 8305)"). IPv6 endpoints were already admitted (SGO-NET-002); a connect timeout is the cancellation of an attempt (a waiting Dial is a cancellation point), so no timeout API is added. D134–D142 stay proposed.
