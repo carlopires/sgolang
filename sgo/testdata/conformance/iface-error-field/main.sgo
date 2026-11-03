@@ -1,0 +1,20 @@
+package main
+
+import (
+	"sgo"
+	"std/errors"
+)
+
+type Wrap struct {
+	op    string
+	inner error
+}
+
+func (w Wrap) Error() string { return w.op + ": " + w.inner.Error() }
+func (w Wrap) Unwrap() error { return w.inner }
+
+func main(root *sgo.Context) error {
+	var e error = Wrap{op: "read", inner: errors.New("eof")}
+	u := errors.Unwrap(e)
+	return root.Stdout().WriteString(e.Error() + " / " + u.Error() + "\n")
+}

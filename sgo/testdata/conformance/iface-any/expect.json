@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-IFACE-002",
+  "SGO-IFACE-004"
+ ],
+ "exit": 0,
+ "stdout": "int 1;string two;bool true;other;\n"
+}

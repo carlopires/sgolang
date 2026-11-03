@@ -1,0 +1,27 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+type Counter interface {
+	Inc()
+	Get() int
+}
+
+type C struct {
+	n int
+}
+
+func (c *C) Inc()     { c.n = c.n + 1 }
+func (c *C) Get() int { return c.n }
+
+func main(root *sgo.Context) error {
+	c := &C{}
+	var k Counter = c
+	k.Inc()
+	k.Inc()
+	c.Inc()
+	return root.Stdout().WriteString(strconv.Itoa(k.Get()) + " " + strconv.Itoa(c.n) + "\n")
+}

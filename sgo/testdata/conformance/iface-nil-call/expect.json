@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-IFACE-003",
+  "SGO-COMP-007",
+  "SGO-DEF-003"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "NilDereference"
+}

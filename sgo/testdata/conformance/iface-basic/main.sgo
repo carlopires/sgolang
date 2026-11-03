@@ -1,0 +1,38 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+type Shape interface {
+	Area() int
+}
+
+type Rect struct {
+	w int
+	h int
+}
+
+func (r Rect) Area() int { return r.w * r.h }
+
+type Square struct {
+	s int
+}
+
+func (q Square) Area() int { return q.s * q.s }
+
+func total(ss []Shape) int {
+	t := 0
+	for _, s := range ss {
+		t = t + s.Area()
+	}
+	return t
+}
+
+func main(root *sgo.Context) error {
+	ss := []Shape{Rect{w: 2, h: 3}, Square{s: 4}}
+	var one Shape = Square{s: 1}
+	ss = append(ss, one)
+	return root.Stdout().WriteString(strconv.Itoa(total(ss)) + "\n")
+}

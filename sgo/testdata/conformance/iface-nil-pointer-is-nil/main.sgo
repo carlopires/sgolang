@@ -1,0 +1,36 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+type Shape interface {
+	Area() int
+}
+
+type Rect struct {
+	w int
+	h int
+}
+
+func (r Rect) Area() int { return r.w * r.h }
+
+func (r *Rect) Grow() { r.w = r.w + 1 }
+
+type Grower interface {
+	Grow()
+}
+
+func pick(ok bool) *Rect {
+	if ok {
+		return &Rect{w: 1, h: 1}
+	}
+	return nil
+}
+
+func main(root *sgo.Context) error {
+	var g Grower = pick(false)
+	var h Grower = pick(true)
+	return root.Stdout().WriteString(strconv.FormatBool(g == nil) + " " + strconv.FormatBool(h == nil) + "\n")
+}

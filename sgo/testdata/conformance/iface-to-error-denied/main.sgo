@@ -1,0 +1,21 @@
+package main
+
+import "sgo"
+
+type Failure interface {
+	Error() string
+	Code() int
+}
+
+type F struct {
+	c int
+}
+
+func (f F) Error() string { return "failed" }
+func (f F) Code() int     { return f.c }
+
+func main(root *sgo.Context) error {
+	var f Failure = F{c: 1}
+	var err error = f
+	return err
+}

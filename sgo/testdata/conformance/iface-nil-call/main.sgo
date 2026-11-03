@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+type Shape interface {
+	Area() int
+}
+
+type Rect struct {
+	w int
+	h int
+}
+
+func (r Rect) Area() int { return r.w * r.h }
+
+func main(root *sgo.Context) error {
+	var s Shape = nil
+	_ = s.Area()
+	return nil
+}

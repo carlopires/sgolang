@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IFACE-002",
+  "SGO-COMP-004",
+  "SGO-TYPE-006"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_TASK_LOCAL_CAPTURE",
+   "at": "f\n\treturn err"
+  }
+ ]
+}

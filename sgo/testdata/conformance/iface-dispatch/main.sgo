@@ -1,0 +1,30 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+type Op interface {
+	Apply(x int) int
+}
+
+type Add struct {
+	n int
+}
+
+type Mul struct {
+	n int
+}
+
+func (a Add) Apply(x int) int { return x + a.n }
+func (m Mul) Apply(x int) int { return x * m.n }
+
+func main(root *sgo.Context) error {
+	ops := []Op{Add{n: 2}, Mul{n: 3}, Add{n: -1}}
+	x := 1
+	for _, o := range ops {
+		x = o.Apply(x)
+	}
+	return root.Stdout().WriteString(strconv.Itoa(x) + "\n")
+}

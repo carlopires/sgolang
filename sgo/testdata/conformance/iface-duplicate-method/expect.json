@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IFACE-002",
+  "SGO-BIND-004"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_REDECLARED",
+   "at": "B\n}"
+  }
+ ]
+}

@@ -1,0 +1,21 @@
+package main
+
+import "sgo"
+
+type Grower interface {
+	Grow()
+}
+
+type G struct {
+	n int
+}
+
+func (g *G) Grow() { g.n = g.n + 1 }
+
+func main(root *sgo.Context) error {
+	var x Grower = &G{}
+	v, ok := x.(G)
+	_ = v
+	_ = ok
+	return nil
+}

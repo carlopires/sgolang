@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+type A interface {
+	M() int
+}
+
+type B interface {
+	M() string
+}
+
+type AB interface {
+	A
+	B
+}
+
+func main(root *sgo.Context) error { return nil }

@@ -219,7 +219,7 @@ func (a *admitter) interfaceType(it *syntax.InterfaceType) {
 		case *syntax.Name, *syntax.SelectorExpr:
 			a.typ(t)
 		default:
-			a.deny(m.Type.Pos(), "type set element "+syntax.String(m.Type), "SGO-IFACE-001")
+			a.deny(syntax.StartPos(m.Type), "type set element "+syntax.String(m.Type), "SGO-IFACE-001")
 		}
 	}
 }

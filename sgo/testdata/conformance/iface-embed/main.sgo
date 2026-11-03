@@ -1,0 +1,31 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+type Namer interface {
+	Name() string
+}
+
+type Shape interface {
+	Namer
+	Area() int
+}
+
+type Rect struct {
+	w int
+	h int
+}
+
+func (r Rect) Area() int     { return r.w * r.h }
+func (r Rect) Name() string  { return "rect" }
+
+func describe(n Namer) string { return n.Name() }
+
+func main(root *sgo.Context) error {
+	var s Shape = Rect{w: 2, h: 5}
+	var n Namer = s
+	return root.Stdout().WriteString(describe(n) + " " + strconv.Itoa(s.Area()) + "\n")
+}

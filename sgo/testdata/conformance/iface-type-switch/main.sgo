@@ -1,0 +1,45 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+type Shape interface {
+	Area() int
+}
+
+type Rect struct {
+	w int
+	h int
+}
+
+func (r Rect) Area() int { return r.w * r.h }
+
+type Sq struct {
+	s int
+}
+
+func (q Sq) Area() int { return q.s * q.s }
+
+type Tri struct {
+	b int
+	h int
+}
+
+func (t Tri) Area() int { return t.b * t.h / 2 }
+
+func kind(s Shape) string {
+	switch v := s.(type) {
+	case Rect:
+		return "rect" + strconv.Itoa(v.w)
+	case Sq, Tri:
+		return "other" + strconv.Itoa(v.Area())
+	default:
+		return "default"
+	}
+}
+
+func main(root *sgo.Context) error {
+	return root.Stdout().WriteString(kind(Rect{w: 4, h: 1}) + " " + kind(Sq{s: 3}) + " " + kind(Tri{b: 4, h: 3}) + " " + kind(nil) + "\n")
+}

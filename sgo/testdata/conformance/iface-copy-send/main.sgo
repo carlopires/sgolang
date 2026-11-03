@@ -1,0 +1,38 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+type Lister interface {
+	First() int
+}
+
+type L struct {
+	xs []int
+}
+
+func (l *L) First() int { return l.xs[0] }
+
+type Job struct {
+	id  int
+	src Lister
+}
+
+func main(root *sgo.Context) error {
+	jobs := make(chan Job, 1)
+	orig := &L{xs: []int{5}}
+	jobs <- sgo.Copy(Job{id: 1, src: orig})
+	orig.xs[0] = 6
+	j := <-jobs
+	c := make(chan Lister, 1)
+	l := &L{xs: []int{1, 2}}
+	var a Lister = l
+	c <- sgo.Copy(a)
+	l.xs[0] = 9
+	b := <-c
+	var none Lister = nil
+	z := sgo.Copy(none)
+	return root.Stdout().WriteString(strconv.Itoa(b.First()) + " " + strconv.Itoa(a.First()) + " " + strconv.FormatBool(z == nil) + " " + strconv.Itoa(j.src.First()) + "\n")
+}

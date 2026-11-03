@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IFACE-002",
+  "SGO-COMP-004",
+  "SGO-CHAN-002"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNCOPIED_SEND",
+   "at": "s\n\treturn"
+  }
+ ]
+}

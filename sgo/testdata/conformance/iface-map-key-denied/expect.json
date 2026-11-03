@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IFACE-001",
+  "SGO-COMP-006"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNADMITTED",
+   "at": "map[Shape]int{}"
+  }
+ ]
+}

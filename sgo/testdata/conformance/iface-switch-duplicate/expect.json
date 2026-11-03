@@ -1,0 +1,12 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-IFACE-004"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_DUPLICATE_CASE",
+   "at": "Rect:\n\t}"
+  }
+ ]
+}

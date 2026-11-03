@@ -1,0 +1,24 @@
+package main
+
+import (
+	"sgo"
+	"std/sort"
+)
+
+type byLen struct {
+	ws []string
+}
+
+func (b *byLen) Len() int           { return len(b.ws) }
+func (b *byLen) Less(i, j int) bool { return len(b.ws[i]) < len(b.ws[j]) }
+func (b *byLen) Swap(i, j int)      { b.ws[i], b.ws[j] = b.ws[j], b.ws[i] }
+
+func main(root *sgo.Context) error {
+	b := &byLen{ws: []string{"ccc", "a", "bb", "d", "eee", "ff"}}
+	sort.Sort(b)
+	s := ""
+	for _, w := range b.ws {
+		s = s + w + " "
+	}
+	return root.Stdout().WriteString(s + "\n")
+}

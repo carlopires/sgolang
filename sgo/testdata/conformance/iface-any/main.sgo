@@ -1,0 +1,27 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+func show(x any) string {
+	switch v := x.(type) {
+	case int:
+		return "int " + strconv.Itoa(v)
+	case string:
+		return "string " + v
+	case bool:
+		return "bool " + strconv.FormatBool(v)
+	}
+	return "other"
+}
+
+func main(root *sgo.Context) error {
+	xs := []any{1, "two", true, []int{3}}
+	s := ""
+	for _, x := range xs {
+		s = s + show(x) + ";"
+	}
+	return root.Stdout().WriteString(s + "\n")
+}

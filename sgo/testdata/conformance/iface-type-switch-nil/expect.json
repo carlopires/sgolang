@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-IFACE-004"
+ ],
+ "exit": 0,
+ "stdout": "nil rect\n"
+}

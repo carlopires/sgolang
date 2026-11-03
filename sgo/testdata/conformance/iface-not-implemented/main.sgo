@@ -1,0 +1,24 @@
+package main
+
+import "sgo"
+
+type Shape interface {
+	Area() int
+}
+
+type Rect struct {
+	w int
+	h int
+}
+
+func (r Rect) Area() int { return r.w * r.h }
+
+type Circle struct {
+	r int
+}
+
+func main(root *sgo.Context) error {
+	var s Shape = Circle{r: 1}
+	_ = s
+	return nil
+}

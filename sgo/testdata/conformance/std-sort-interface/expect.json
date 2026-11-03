@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-006",
+  "SGO-IFACE-002"
+ ],
+ "exit": 0,
+ "stdout": "a d bb ff ccc eee \n"
+}
