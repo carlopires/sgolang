@@ -60,7 +60,8 @@ universe  true|false  admit  SGO-VAL-003
 universe  len  admit  SGO-VAL-002
 universe  panic  admit  SGO-DEF-002
 universe  byte  admit  SGO-TYPE-007  # (0.9.0)
-universe  int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|uintptr|rune  deny  SGO-TYPE-001
+universe  rune  admit  SGO-TYPE-008  # (0.12.0)
+universe  int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|uintptr  deny  SGO-TYPE-001
 universe  float32|float64|complex64|complex128|real|imag|complex  deny  SGO-FLOAT-001
 universe  any  deny  SGO-IFACE-001
 universe  comparable  deny  SGO-GEN-001
@@ -88,8 +89,9 @@ runtime-builtin  gorecover  deny  SGO-DEF-002
 runtime-builtin  panicwrap  deny  SGO-UTYPE-001
 runtime-builtin  print(bool|float64|float32|int|hex|uint|complex128|complex64|string|quoted|pointer|uintptr|iface|eface|slice|nl|sp|lock|unlock)  deny  SGO-PROC-003
 runtime-builtin  panicmakeslice(len|cap)|goPanic(Index|Slice)\w*|concatbyte[2-5]|concatbytes|slicebytetostring(tmp)?|stringtoslicebyte|slicecopy|typedslicecopy  internal  SGO-COMP-005  # slice and []byte lowering (0.9.0); index and slice panics become BoundsViolation in .sgo code
-runtime-builtin  slicerunetostring|stringtoslicerune|decoderune|countrunes|panicrangestate|deferrangefunc  deny  SGO-COMP-001
-runtime-builtin  intstring  deny  SGO-TYPE-002
+runtime-builtin  slicerunetostring|stringtoslicerune|decoderune|countrunes  internal  SGO-COMP-005  # []rune(s), string(rs), and range over strings (0.12.0)
+runtime-builtin  panicrangestate|deferrangefunc  deny  SGO-COMP-001
+runtime-builtin  intstring  internal  SGO-VAL-002  # string(r) of a rune (0.12.0); string(i) of an int stays refused by types2 (D120)
 runtime-builtin  makemap(64|_small)?|mapaccess[12](_fast32|_fast64|_faststr|_fat)?|mapassign(_fast32|_fast32ptr|_fast64|_fast64ptr|_faststr)?|mapIterStart|mapIterNext|mapdelete(_fast32|_fast64|_faststr)?|mapclear  deny  SGO-COMP-006  # Go maps (randomized order): never used for .sgo code (walk/sgo_map.go)
 runtime-builtin  sgomakemap|sgomapaccess[12](_fat)?|sgomapassign|sgomapdelete|sgomapIterStart|sgomapIterNext|sgomapclear  internal  SGO-COMP-006  # insertion-ordered map lowering (0.9.0)
 runtime-builtin  sgoInvalidMake  internal  SGO-COMP-005  # make([]T, n) with n < 0 or too large: InvalidArgument (0.9.0)

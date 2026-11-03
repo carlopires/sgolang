@@ -3,10 +3,10 @@
 Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 
 ### SGO-TYPE-001 — Admitted types
-- **version:** 7
+- **version:** 8
 - **status:** frozen
-- **reference_closure:** SGO-TYPE-003, SGO-TYPE-005, SGO-TYPE-006, SGO-PERMIT-002, SGO-READY-002, SGO-AUTH-003, SGO-FILE-002, SGO-FILE-003, SGO-NET-002; D04, D05, D06, D28, D29.
-- **grammar_and_types:** The admitted types are exactly: `bool`; `byte` (SGO-TYPE-007, spec 0.9.0); pointer, slice, and map types (SGO-COMP-005, SGO-COMP-006, SGO-COMP-007, spec 0.9.0); `sgo.Frozen[T]` (SGO-COMP-009, spec 0.10.0); `int`, a 64-bit two's-complement signed integer on every target; `string`, an immutable sequence of bytes; function types `func(P1, …, Pn) R` or `func(P1, …, Pn) (R1, …, Rm)` whose parameter and result types are admitted (SGO-TYPE-003); `error` (SGO-TYPE-006); and the pointer types of the capability types of SGO-TYPE-005 (`*sgo.Context`, `*sgo.Nursery`, `*sgo.Writer`, `*sgo.Ready`, `*sgo.Clock`, `*sgo.WallClock`, `*sgo.Random`, `*sgo.Entropy`, `*sgo.SimStore`, and `*sgo.Channel[T]`, `*sgo.SendPermit[T]` for the element types of SGO-PERMIT-002; spec 0.3.0 adds `*sgo.Event`, `*sgo.CapacityLimiter`, `*sgo.Token` of SGO-SYNC-002; spec 0.5.0 adds `*sgo.Dir`, `*sgo.Listing`, and `*sgo.File` of SGO-FILE-002 and SGO-FILE-003 and `*sgo.Conn` and `*sgo.Listener` of SGO-NET-002; spec 0.6.0 adds `*sgo.T` of SGO-TEST-002); and the channel types `chan T`, `<-chan T`, `chan<- T` of SGO-CHAN-002. Any other type name, type literal (array, slice, map, struct, pointer, interface; channel types other than those of SGO-CHAN-002), type parameter, or type declaration is denied. Other integer widths, floating-point, complex, `byte`, `rune`, `uintptr`, and `any` are denied.
+- **reference_closure:** SGO-TYPE-003, SGO-TYPE-005, SGO-TYPE-006, SGO-PERMIT-002, SGO-READY-002, SGO-AUTH-003, SGO-FILE-002, SGO-FILE-003, SGO-NET-002, SGO-TYPE-007, SGO-TYPE-008; D04, D05, D06, D28, D29.
+- **grammar_and_types:** The admitted types are exactly: `bool`; `byte` (SGO-TYPE-007, spec 0.9.0); `rune` (SGO-TYPE-008, spec 0.12.0); pointer, slice, and map types (SGO-COMP-005, SGO-COMP-006, SGO-COMP-007, spec 0.9.0); `sgo.Frozen[T]` (SGO-COMP-009, spec 0.10.0); `int`, a 64-bit two's-complement signed integer on every target; `string`, an immutable sequence of bytes; function types `func(P1, …, Pn) R` or `func(P1, …, Pn) (R1, …, Rm)` whose parameter and result types are admitted (SGO-TYPE-003); `error` (SGO-TYPE-006); and the pointer types of the capability types of SGO-TYPE-005 (`*sgo.Context`, `*sgo.Nursery`, `*sgo.Writer`, `*sgo.Ready`, `*sgo.Clock`, `*sgo.WallClock`, `*sgo.Random`, `*sgo.Entropy`, `*sgo.SimStore`, and `*sgo.Channel[T]`, `*sgo.SendPermit[T]` for the element types of SGO-PERMIT-002; spec 0.3.0 adds `*sgo.Event`, `*sgo.CapacityLimiter`, `*sgo.Token` of SGO-SYNC-002; spec 0.5.0 adds `*sgo.Dir`, `*sgo.Listing`, and `*sgo.File` of SGO-FILE-002 and SGO-FILE-003 and `*sgo.Conn` and `*sgo.Listener` of SGO-NET-002; spec 0.6.0 adds `*sgo.T` of SGO-TEST-002); and the channel types `chan T`, `<-chan T`, `chan<- T` of SGO-CHAN-002. Any other type name, type literal (array, slice, map, struct, pointer, interface; channel types other than those of SGO-CHAN-002), type parameter, or type declaration is denied. Other integer widths (including `int32` and `uint8`), floating-point, complex, `uintptr`, and `any` are denied.
 - **preconditions:** n/a — static rule.
 - **evaluation_and_value_semantics:** `int` arithmetic is defined by SGO-VAL-001, strings by SGO-VAL-002, booleans by SGO-VAL-003.
 - **ownership_and_lifecycle:** Values of all admitted types are copied by assignment; `string` and function values may share immutable backing storage, which is never observable.
@@ -19,7 +19,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 - **runtime_guards:** n/a — static rule.
 - **tcb_assumptions:** The runtime represents `int` as 64 bits on every admitted target.
 - **positive_tests:** S16; fixture:type-admitted, fixture:type-slice, fixture:type-pointer.
-- **negative_tests:** S16, S17; fixture:type-float, fixture:type-struct, fixture:type-interface, fixture:type-generic.
+- **negative_tests:** S16, S17; fixture:type-float, fixture:type-struct, fixture:type-interface, fixture:type-generic, fixture:type-int32-denied.
 - **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`.
 - **executed_evidence:** conformance fixtures type-admitted, type-float, type-generic, type-interface, type-slice, type-struct (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
@@ -135,23 +135,45 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-TYPE-007 — The byte type
-- **version:** 1
+- **version:** 2
 - **status:** frozen
-- **reference_closure:** SGO-TYPE-001, SGO-TYPE-002, SGO-VAL-001, SGO-COMP-005; D93.
-- **grammar_and_types:** `byte` is admitted: an integer type with values 0..255. Byte operands combine with byte operands under the operators of SGO-VAL-001 (shifts with an int count); untyped constants representable in 0..255 are assignable to byte. `int(b)` converts a byte to int; `byte(i)` converts an int to byte. Byte constants are written as integer literals (rune literals stay denied, SGO-LEX-004). `uint8` and the other sized integer types stay denied (SGO-TYPE-001).
-- **preconditions:** For `byte(i)`: `0 ≤ i ≤ 255`.
+- **reference_closure:** SGO-TYPE-001, SGO-TYPE-002, SGO-TYPE-008, SGO-VAL-001, SGO-COMP-005; D93, D120.
+- **grammar_and_types:** `byte` is admitted: an integer type with values 0..255. Byte operands combine with byte operands under the operators of SGO-VAL-001 (shifts with an int count); untyped constants representable in 0..255 are assignable to byte. `int(b)` converts a byte to int; `byte(i)` converts an int to byte. Byte constants are written as integer literals or, when representable, as rune literals (`b == 'a'`, SGO-LEX-004 v2). `rune(b)` and `byte(r)` convert between byte and rune (SGO-TYPE-008). `uint8` and the other sized integer types stay denied (SGO-TYPE-001).
+- **preconditions:** For `byte(i)`: `0 ≤ i ≤ 255`. For `byte(r)`: `r ≤ 255`.
 - **evaluation_and_value_semantics:** Byte arithmetic is exact: the mathematical result of `+`, `-`, `*`, `/`, `%`, `<<` on bytes is the result if it lies in 0..255. `&`, `|`, `^`, `&^`, and `>>` cannot leave the range.
 - **ownership_and_lifecycle:** n/a — a value type.
 - **effect_and_capability_requirements:** None.
 - **concurrency_and_memory_order:** n/a — a value type.
 - **allowed_nondeterminism:** None.
-- **failure_and_partial_progress:** A result outside 0..255, and `byte(i)` with i outside 0..255, is `IntegerOverflow` (SGO-VAL-001); division by zero is `DivideByZero`; a shift count outside 0..63 is `ShiftRange`.
+- **failure_and_partial_progress:** A result outside 0..255, and `byte(i)` or `byte(r)` with an operand outside 0..255, is `IntegerOverflow` (SGO-VAL-001); division by zero is `DivideByZero`; a shift count outside 0..63 is `ShiftRange`.
 - **cancellation_and_cleanup:** n/a — byte operations are not cancellation points.
 - **compile_link_checks:** `SGO_E_CONST_OVERFLOW` for constants outside 0..255; `SGO_E_TYPE_MISMATCH` for mixing byte and int without a conversion.
 - **runtime_guards:** `IntegerOverflow`, `DivideByZero`, `ShiftRange`.
 - **tcb_assumptions:** The checked-arithmetic code generation of SGO-VAL-001, extended to 8-bit unsigned operands.
 - **positive_tests:** G12; fixture:type-byte-arith, fixture:type-byte-convert.
-- **negative_tests:** G12; fixture:type-byte-overflow, fixture:type-byte-underflow, fixture:type-byte-shift-overflow, fixture:type-byte-convert-overflow, fixture:type-byte-const-overflow.
-- **implementation_coverage:** `noder/writer.go` (`sgoChecked`: int, byte, and named types over them), `ssagen/sgo.go` (`sgoByteBinary`, `sgoConvByte`), `ssagen/ssa.go` (OCONV).
-- **executed_evidence:** W13 stage 2 conformance (sgo/evidence/w13/README.md).
+- **negative_tests:** G12; fixture:type-byte-overflow, fixture:type-byte-underflow, fixture:type-byte-shift-overflow, fixture:type-byte-convert-overflow, fixture:type-byte-const-overflow, fixture:type-rune-to-byte-overflow.
+- **implementation_coverage:** `noder/writer.go` (`sgoChecked`: int, byte, rune, and named types over them), `ssagen/sgo.go` (`sgoByteBinary`, `sgoConvCheck`), `ssagen/ssa.go` (OCONV).
+- **executed_evidence:** W13 stage 2 conformance (sgo/evidence/w13/README.md); W15 (sgo/evidence/w15/README.md).
+- **supported_execution_configurations:** production, lab.
+
+### SGO-TYPE-008 — The rune type
+- **version:** 1
+- **status:** frozen
+- **reference_closure:** SGO-TYPE-001, SGO-TYPE-002, SGO-TYPE-007, SGO-VAL-001, SGO-VAL-002, SGO-VAL-004, SGO-LEX-004, SGO-COMP-005; D106, D116, D118, D120.
+- **grammar_and_types:** `rune` is admitted: an integer type with values 0..0x10FFFF. Rune operands combine with rune operands under the operators of SGO-VAL-001 (shifts with an int count). Untyped constants (integer or rune) representable in 0..0x10FFFF are assignable to rune; a rune literal is an untyped rune constant whose default type is rune, assignable to int, byte, or rune (and named types over them) when representable (D118). Conversions (D120): `rune(i)` of an int, `int(r)`, `rune(b)` of a byte, `byte(r)`. Runes are comparable and ordered (map keys, `switch` cases). Named types over rune are admitted like named types over int. `rune` is its own admitted name: `int32` and the other sized integer types stay denied (SGO-TYPE-001).
+- **preconditions:** For `rune(i)`: `0 ≤ i ≤ 0x10FFFF`. For `byte(r)`: `r ≤ 255`.
+- **evaluation_and_value_semantics:** Rune arithmetic is exact: the mathematical result of `+`, `-`, `*`, `/`, `%`, `<<` on runes is the result if it lies in 0..0x10FFFF. `&`, `|`, `^`, `&^`, and `>>` cannot leave the range. Surrogate values (0xD800..0xDFFF) are ordinary rune values (D116); encoding one as text yields U+FFFD (SGO-VAL-002).
+- **ownership_and_lifecycle:** n/a — a value type.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** A value type: shareable and sendable (SGO-TYPE-004).
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** A result outside 0..0x10FFFF, `rune(i)` with i outside that range, and `byte(r)` with r > 255 are `IntegerOverflow` (SGO-VAL-001); division by zero is `DivideByZero`; a shift count outside 0..63 is `ShiftRange`.
+- **cancellation_and_cleanup:** n/a — rune operations are not cancellation points.
+- **compile_link_checks:** `SGO_E_CONST_OVERFLOW` for a constant of rune type outside 0..0x10FFFF; `SGO_E_TYPE_MISMATCH` for mixing rune with int or byte without a conversion; `SGO_E_UNADMITTED` for `string(i)` of an int (D120) and for `int32`.
+- **runtime_guards:** `IntegerOverflow`, `DivideByZero`, `ShiftRange`.
+- **tcb_assumptions:** The checked-arithmetic code generation of SGO-VAL-001 and SGO-TYPE-007, extended to a 32-bit operand with the upper bound 0x10FFFF.
+- **positive_tests:** fixture:type-rune-arith, fixture:type-rune-convert, fixture:type-rune-untyped-const, fixture:type-rune-map-switch, fixture:type-rune-named, fixture:lex-rune-literals.
+- **negative_tests:** fixture:type-rune-overflow, fixture:type-rune-underflow, fixture:type-rune-convert-overflow, fixture:type-rune-convert-negative, fixture:type-rune-to-byte-overflow, fixture:type-rune-shift-overflow, fixture:type-rune-const-overflow, fixture:type-rune-const-negative, fixture:type-rune-int-mismatch, fixture:type-string-of-int-denied, fixture:type-int32-denied.
+- **implementation_coverage:** `sgoadmit/admit_expr.go` (rune admitted, int32 denied by name), `types2/sgo_values.go` (`sgoTypeRec`, `sgoConversion`), `types2/sgo_flow.go` (`sgoRuneConsts`), `noder/writer.go` (`sgoChecked`), `ssagen/sgo.go` (`sgoByteBinary`, `sgoNeg`, `sgoConvCheck`).
+- **executed_evidence:** W15 conformance (sgo/evidence/w15/README.md).
 - **supported_execution_configurations:** production, lab.

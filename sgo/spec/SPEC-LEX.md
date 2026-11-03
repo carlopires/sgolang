@@ -69,23 +69,23 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §1, decisions D14/D19, and resolut
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-LEX-004 — Literals
-- **version:** 1
+- **version:** 2
 - **status:** frozen
-- **reference_closure:** SGO-VAL-004, SGO-ERR-001; D03, D04; R2.
-- **grammar_and_types:** Integer literals: decimal (`0` or a non-zero digit followed by digits), hexadecimal (`0x`/`0X`), octal (`0o`/`0O`), binary (`0b`/`0B`), with optional single `_` between digits or after the base prefix. A leading-zero form such as `012` is a compile error (no legacy octal). String literals: interpreted (`"…"`, escapes exactly `\n \t \r \\ \" \xHH`, no raw newline) and raw (backquoted, no escapes, carriage returns removed). Floating-point, imaginary, and rune literals, and the escapes `\a \b \f \v \' \u \U \NNN`, are denied.
+- **reference_closure:** SGO-VAL-004, SGO-ERR-001, SGO-TYPE-008; D03, D04, D119; R2.
+- **grammar_and_types:** Integer literals: decimal (`0` or a non-zero digit followed by digits), hexadecimal (`0x`/`0X`), octal (`0o`/`0O`), binary (`0b`/`0B`), with optional single `_` between digits or after the base prefix. A leading-zero form such as `012` is a compile error (no legacy octal). String literals: interpreted (`"…"`, escapes exactly `\n \t \r \\ \" \xHH \uHHHH \UHHHHHHHH`, no raw newline) and raw (backquoted, no escapes, carriage returns removed). Rune literals (spec 0.12.0): one character other than `'`, newline, or `\` between single quotes, or one escape `\n \t \r \\ \' \xHH \uHHHH \UHHHHHHHH`. Floating-point and imaginary literals and the escapes `\a \b \f \v \NNN` are denied; `\'` is not an escape of string literals nor `\"` of rune literals.
 - **preconditions:** SGO-LEX-001 holds.
-- **evaluation_and_value_semantics:** An integer literal denotes an untyped integer constant of unbounded size (SGO-VAL-004). A string literal denotes an untyped string constant whose bytes are the UTF-8 encoding of its characters, with each `\xHH` contributing exactly one byte.
+- **evaluation_and_value_semantics:** An integer literal denotes an untyped integer constant of unbounded size (SGO-VAL-004). A string literal denotes an untyped string constant whose bytes are the UTF-8 encoding of its characters, with each `\xHH` contributing exactly one byte and each `\u`/`\U` escape the UTF-8 encoding of its code point. A rune literal denotes an untyped rune constant (default type `rune`, SGO-TYPE-008) whose value is the code point of its character or escape; `\xHH` in a rune literal is the code point 0xHH (D119).
 - **ownership_and_lifecycle:** n/a — constants have no lifecycle.
 - **effect_and_capability_requirements:** n/a — compile-time only.
 - **concurrency_and_memory_order:** n/a — immutable constants.
 - **allowed_nondeterminism:** None.
-- **failure_and_partial_progress:** A malformed or denied literal is a compile error.
+- **failure_and_partial_progress:** A malformed or denied literal is a compile error, including a rune literal with zero or several characters and a `\u`/`\U` escape naming a surrogate (U+D800..U+DFFF) or a value above 0x10FFFF.
 - **cancellation_and_cleanup:** n/a — compile-time only.
-- **compile_link_checks:** `SGO_E_SYNTAX` for malformed literals; `SGO_E_UNADMITTED` for denied literal kinds and escapes.
+- **compile_link_checks:** `SGO_E_SYNTAX` for malformed literals (an empty or multi-character rune literal, an escape not of its literal kind); `SGO_E_UNADMITTED` for denied literal kinds and escapes; `SGO_E_CONST_RANGE` for a `\u`/`\U` escape naming a surrogate or a value above 0x10FFFF.
 - **runtime_guards:** n/a — no run-time behavior.
 - **tcb_assumptions:** n/a — compiler only.
-- **positive_tests:** S16; fixture:lex-literals.
-- **negative_tests:** S16; fixture:lex-float-literal, fixture:lex-unicode-escape, fixture:lex-legacy-octal.
-- **implementation_coverage:** W03: `src/cmd/compile/internal/syntax/scanner.go`, `src/cmd/compile/internal/syntax/parser.go`, `src/cmd/sgo/build.go`.
-- **executed_evidence:** conformance fixtures lex-float-literal, lex-legacy-octal, lex-literals, lex-unicode-escape (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
+- **positive_tests:** S16; fixture:lex-literals, fixture:lex-rune-literals, fixture:lex-unicode-escape.
+- **negative_tests:** S16; fixture:lex-float-literal, fixture:lex-legacy-octal, fixture:lex-rune-literal-empty, fixture:lex-rune-literal-multi, fixture:lex-escape-surrogate, fixture:lex-escape-above-max, fixture:lex-escape-octal, fixture:lex-escape-bell.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/syntax/scanner.go`, `src/cmd/compile/internal/syntax/parser.go`, `src/cmd/sgo/build.go`; W15: `sgoadmit/admit_expr.go` (`basicLit`, `escapes`), `noder/noder.go` (`sgoSyntaxMsg`).
+- **executed_evidence:** W03 (sgo/evidence/w03/README.md); W15 conformance (sgo/evidence/w15/README.md).
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

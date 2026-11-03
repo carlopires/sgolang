@@ -2,6 +2,23 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.12.0 — 2026-11-03
+
+Runes and text iteration (W15; D106, D116–D120; drafts approved 2026-11-03). Every program valid under 0.11.0 keeps its meaning; the admission digest and toolchain identity change, so objects built for 0.11.0 are refused by a 0.12.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.12.0`.
+
+New frozen clause:
+
+- SGO-TYPE-008 v1 — the rune type: a checked integer 0..0x10FFFF (`IntegerOverflow` outside it, including `rune(i)` and `byte(r)`); untyped rune constants default to rune and fit int, byte, or rune when representable (D118); conversions `rune(i)`, `int(r)`, `rune(b)`, `byte(r)` (D120); `int32` stays denied.
+
+Amended:
+
+- SGO-LEX-004 v2 — rune literals; `\u` and `\U` escapes in string and rune literals and `\'` in rune literals; a surrogate or a value above 0x10FFFF is `SGO_E_CONST_RANGE` (D119).
+- SGO-TYPE-001 v8 — `rune` is admitted; the stale mention of `byte` among the denied types is removed.
+- SGO-TYPE-007 v2 — `rune(b)`, `byte(r)`; byte constants may be written as rune literals.
+- SGO-VAL-002 v3 — `range` over a string by rune (byte offset, rune; invalid UTF-8 decodes to U+FFFD and advances one byte, D117); `string(r)` (a surrogate encodes as U+FFFD, D116); `string(i)` of an int stays denied (D120).
+- SGO-COMP-001 v5 — consequential: `range` over a string, `[]rune`, and rune conversions leave the list of denied composite forms; a string joins the admitted `range` operands.
+- SGO-COMP-005 v2 — `[]rune(s)` (length and capacity equal the rune count) and `string(rs)`; conversions between slice types stay denied.
+
 ## 0.11.0 — 2026-11-03
 
 Packages beyond the module (W14; D103–D105, D109–D115; drafts approved 2026-11-03): required modules with `require`/`replace`/`sgo.sum`, and the standard library `std/`. Every program valid under 0.10.1 keeps its meaning; the admission digest and toolchain identity change, so objects built for 0.10.1 are refused by a 0.11.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.11.0`.

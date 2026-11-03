@@ -1,3 +1,3 @@
 module example.com/proc-println
 
-sgo 0.11.0
+sgo 0.12.0

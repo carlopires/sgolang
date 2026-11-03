@@ -25,25 +25,25 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §4 and decisions D02–D04.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-VAL-002 — Strings
-- **version:** 2
+- **version:** 3
 - **status:** frozen
-- **reference_closure:** SGO-TYPE-001, SGO-ERR-003.
-- **grammar_and_types:** Operators on `string` operands: `+` (concatenation), comparisons `== != < <= > >=` (result `bool`), `s += e`, and the builtin `len(s) int`. From spec 0.9.0, `s[i]` (a `byte`), `s[i:j]`, and conversions between `string` and `[]byte` are admitted (SGO-COMP-005); other conversions and `range` are denied.
+- **reference_closure:** SGO-TYPE-001, SGO-TYPE-008, SGO-COMP-005, SGO-ERR-003; D116, D117, D120.
+- **grammar_and_types:** Operators on `string` operands: `+` (concatenation), comparisons `== != < <= > >=` (result `bool`), `s += e`, and the builtin `len(s) int`. From spec 0.9.0, `s[i]` (a `byte`), `s[i:j]`, and conversions between `string` and `[]byte` are admitted (SGO-COMP-005). From spec 0.12.0: `for i, r := range s`, `for i := range s`, and `for range s` (i an int, r a rune); `string(r)` of a rune; `[]rune(s)` and `string(rs)` (SGO-COMP-005). `string(i)` of an int and other conversions are denied (D120).
 - **preconditions:** For `+`: the result length must not exceed the implementation limit recorded in the build metadata (at least 2^31−1 bytes).
-- **evaluation_and_value_semantics:** Concatenation yields the bytes of the left operand followed by those of the right. Comparison is lexicographic by unsigned byte value; a proper prefix is less than the longer string. `len` is the number of bytes.
+- **evaluation_and_value_semantics:** Concatenation yields the bytes of the left operand followed by those of the right. Comparison is lexicographic by unsigned byte value; a proper prefix is less than the longer string. `len` is the number of bytes. `range` evaluates its operand once and visits its runes in order: i is the byte offset where each rune starts and r the decoded rune; an invalid or truncated sequence, an overlong form, or an encoded surrogate decodes to U+FFFD and advances one byte (D117), so a string of n bytes gives at most n iterations. `string(r)` is the UTF-8 encoding of r (1 to 4 bytes), or of U+FFFD for a surrogate (D116).
 - **ownership_and_lifecycle:** Strings are immutable values; storage is managed by the runtime.
 - **effect_and_capability_requirements:** n/a — pure operations.
 - **concurrency_and_memory_order:** Immutable, therefore sendable.
 - **allowed_nondeterminism:** None.
-- **failure_and_partial_progress:** Exceeding the length limit, or failing to allocate the result, is resource exhaustion (SGO-ERR-003).
-- **cancellation_and_cleanup:** n/a — not a cancellation point.
-- **compile_link_checks:** `SGO_E_UNADMITTED` for indexing, slicing, conversions, `range` over strings.
+- **failure_and_partial_progress:** Exceeding the length limit, or failing to allocate the result, is resource exhaustion (SGO-ERR-003). Decoding never fails: invalid input decodes to U+FFFD.
+- **cancellation_and_cleanup:** n/a — not a cancellation point (nor is `range` over a string).
+- **compile_link_checks:** `SGO_E_UNADMITTED` for `string(i)` of an int and for conversions between strings and types other than `[]byte`, `[]rune`, and rune.
 - **runtime_guards:** Length limit check before allocation.
 - **tcb_assumptions:** Runtime string allocation and concatenation primitives (SGO-TCB-001).
-- **positive_tests:** S16; fixture:val-strings, fixture:val-string-index, fixture:comp-string-index-slice.
-- **negative_tests:** S16; fixture:val-string-range.
-- **implementation_coverage:** W03: `src/cmd/compile/internal/ssagen/sgo.go`, `src/runtime/sgo_api.go`, `src/cmd/compile/internal/types2/sgo.go`.
-- **executed_evidence:** conformance fixtures val-string-index, val-string-range, val-strings (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
+- **positive_tests:** S16; fixture:val-strings, fixture:val-string-index, fixture:comp-string-index-slice, fixture:val-string-range, fixture:val-string-range-invalid-utf8, fixture:val-string-range-index-only, fixture:val-string-of-rune.
+- **negative_tests:** S16; fixture:type-string-of-int-denied, fixture:val-string-range-elem-type.
+- **implementation_coverage:** W03: `src/cmd/compile/internal/ssagen/sgo.go`, `src/runtime/sgo_api.go`, `src/cmd/compile/internal/types2/sgo.go`; W15: `types2/sgo_flow.go` (`sgoRange`), `types2/sgo_values.go` (`sgoConversion`), runtime `decoderune`, `intstring`.
+- **executed_evidence:** W03 (sgo/evidence/w03/README.md); W15 conformance (sgo/evidence/w15/README.md).
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-VAL-003 — Booleans

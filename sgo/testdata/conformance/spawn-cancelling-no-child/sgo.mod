@@ -1,3 +1,3 @@
 module example.com/spawn-cancelling-no-child
 
-sgo 0.11.0
+sgo 0.12.0
