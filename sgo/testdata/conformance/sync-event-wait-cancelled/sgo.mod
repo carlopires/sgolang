@@ -1,3 +1,3 @@
 module example.com/sync-event-wait-cancelled
 
-sgo 0.15.0
+sgo 0.15.1

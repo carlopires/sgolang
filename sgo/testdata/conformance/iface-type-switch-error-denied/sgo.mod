@@ -1,3 +1,3 @@
 module example.com/iface-type-switch-error-denied
 
-sgo 0.15.0
+sgo 0.15.1

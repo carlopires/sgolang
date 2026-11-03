@@ -1,3 +1,3 @@
 module example.com/def-panic-in-defer
 
-sgo 0.15.0
+sgo 0.15.1

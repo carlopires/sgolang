@@ -1,3 +1,3 @@
 module example.com/std-sort-interface
 
-sgo 0.15.0
+sgo 0.15.1

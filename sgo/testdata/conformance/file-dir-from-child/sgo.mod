@@ -1,4 +1,4 @@
 module example.com/file-dir-from-child
 
-sgo 0.15.0
+sgo 0.15.1
 grant dir data data rw

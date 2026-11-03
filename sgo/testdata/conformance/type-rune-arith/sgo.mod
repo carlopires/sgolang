@@ -1,3 +1,3 @@
 module example.com/type-rune-arith
 
-sgo 0.15.0
+sgo 0.15.1

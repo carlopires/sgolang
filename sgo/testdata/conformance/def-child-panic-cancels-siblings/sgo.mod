@@ -1,3 +1,3 @@
 module example.com/def-child-panic-cancels-siblings
 
-sgo 0.15.0
+sgo 0.15.1

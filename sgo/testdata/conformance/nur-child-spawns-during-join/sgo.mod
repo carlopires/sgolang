@@ -1,3 +1,3 @@
 module example.com/nur-child-spawns-during-join
 
-sgo 0.15.0
+sgo 0.15.1

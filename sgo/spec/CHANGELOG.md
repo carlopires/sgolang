@@ -2,6 +2,14 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.15.1 — 2026-11-04
+
+Review fixes (W18 review Y2–Y4). Programs valid under 0.15.0 keep their meaning; `Dialer.Resolve` returns fewer addresses in three cases that widened authority or trusted unrelated data.
+
+Amended:
+
+- SGO-NET-003 v2 — unspecified (`0.0.0.0`, `::`) and IPv4-mapped addresses are never resolution results, and lab tables may not contain them; a DNS response must echo the question, and only records of the host or its CNAME chain count; re-resolving adds no duplicate address.
+
 ## 0.15.0 — 2026-11-04
 
 Happy Eyeballs (W18; D143–D146, owner-delegated decisions). Every program valid under 0.14.1 keeps its meaning. A connect grant may now name a host, but such a grant gives `root.Dial` nothing: only a `Dialer` resolves and dials a name.

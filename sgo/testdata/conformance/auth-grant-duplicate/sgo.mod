@@ -1,5 +1,5 @@
 module example.com/auth-grant-duplicate
 
-sgo 0.15.0
+sgo 0.15.1
 grant clock
 grant clock

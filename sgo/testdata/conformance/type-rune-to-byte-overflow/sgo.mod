@@ -1,3 +1,3 @@
 module example.com/type-rune-to-byte-overflow
 
-sgo 0.15.0
+sgo 0.15.1

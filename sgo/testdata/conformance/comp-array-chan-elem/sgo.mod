@@ -1,3 +1,3 @@
 module example.com/comp-array-chan-elem-denied
 
-sgo 0.15.0
+sgo 0.15.1

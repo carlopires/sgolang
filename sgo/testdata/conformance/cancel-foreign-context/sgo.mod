@@ -1,3 +1,3 @@
 module example.com/cancel-foreign-context
 
-sgo 0.15.0
+sgo 0.15.1

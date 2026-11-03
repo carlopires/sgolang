@@ -1,4 +1,4 @@
 module example.com/file-confined-paths
 
-sgo 0.15.0
+sgo 0.15.1
 grant dir data data ro

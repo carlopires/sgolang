@@ -1,4 +1,4 @@
 module example.com/auth-clock-granted
 
-sgo 0.15.0
+sgo 0.15.1
 grant clock

@@ -1,3 +1,3 @@
 module example.com/bind-iota
 
-sgo 0.15.0
+sgo 0.15.1

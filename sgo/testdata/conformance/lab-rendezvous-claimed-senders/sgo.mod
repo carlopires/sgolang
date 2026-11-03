@@ -1,3 +1,3 @@
 module example.com/lab-rendezvous-claimed-senders
 
-sgo 0.15.0
+sgo 0.15.1

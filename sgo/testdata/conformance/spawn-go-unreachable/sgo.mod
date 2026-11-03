@@ -1,3 +1,3 @@
 module example.com/spawn-go-unreachable
 
-sgo 0.15.0
+sgo 0.15.1

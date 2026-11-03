@@ -1,3 +1,3 @@
 module example.com/frozen-whole-escape
 
-sgo 0.15.0
+sgo 0.15.1
