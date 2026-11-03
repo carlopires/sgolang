@@ -1,0 +1,44 @@
+package main
+
+import "sgo"
+
+type Table struct {
+	W    map[string]int
+	Rows []Row
+	N    int
+}
+
+type Row struct {
+	Name string
+	V    int
+}
+
+func (r Row) Twice() int {
+	return 2 * r.V
+}
+
+func (r *Row) Bump() {
+	r.V++
+}
+
+func build() Table {
+	return Table{W: map[string]int{"a": 1, "b": 2}, Rows: []Row{{"x", 3}, {"y", 4}}, N: 5}
+}
+
+func main(c *sgo.Context) error {
+	ch := make(chan sgo.Frozen[Table], 1)
+	sum := make(chan int, 1)
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			f := <-ch
+			sum <- f.Get().W["b"] + f.Get().Rows[1].V + len(f.Get().Rows)
+			return nil
+		})
+		ch <- sgo.Freeze(build())
+	}
+	ok := <-sum == 8
+	if ok {
+		return c.Stdout().WriteString("ok\n")
+	}
+	return c.Stdout().WriteString("wrong\n")
+}

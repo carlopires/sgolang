@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+func main(c *sgo.Context) error {
+	a := sgo.Freeze(1)
+	b := a
+	if a == b {
+		return nil
+	}
+	return nil
+}

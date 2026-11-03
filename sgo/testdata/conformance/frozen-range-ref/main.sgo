@@ -1,0 +1,11 @@
+package main
+
+import "sgo"
+
+func main(c *sgo.Context) error {
+	f := sgo.Freeze([][]int{{1}, {2}})
+	for _, row := range f.Get() {
+		row[0] = 0
+	}
+	return nil
+}

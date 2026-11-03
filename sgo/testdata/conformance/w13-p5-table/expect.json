@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-COMP-009",
+  "SGO-COMP-006"
+ ],
+ "exit": 0,
+ "stdout": "sum 40\n",
+ "note": "W13 acceptance program (D92), sgo/testdata/w13-programs/p5-table."
+}

@@ -1,8 +1,8 @@
 {
  "schema_version": 1,
  "clause": "SGO-TCB-002",
- "spec_version": "0.9.0",
- "allowlist_digest": "e5bee735d63ddb79b4e9113b2c5e632966121b14d87df70b16557147db0c19c4",
+ "spec_version": "0.10.0",
+ "allowlist_digest": "cd6448ba95bc1d7286296eee41fd6acbe1ebb9790d1dd44bb91e52fc340a142a",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -445,8 +445,8 @@
  ],
  "summary": {
   "packages": 31,
-  "files": 1067,
-  "files_changed_from_upstream": 52,
+  "files": 1068,
+  "files_changed_from_upstream": 53,
   "services": {
    "active": 5,
    "dormant": 5,
@@ -5752,6 +5752,11 @@
   {
    "path": "src/sgo/effects.go",
    "sha256": "e209ee4a11efd8388dd31f1b05104fd5bafd3b4afea847729d00142d837bcacf",
+   "upstream_identical": false
+  },
+  {
+   "path": "src/sgo/frozen.go",
+   "sha256": "9e395220788d5e12c08bd3093c779e65015b1bec8d6e3c7275269dd06d80d8d3",
    "upstream_identical": false
   },
   {

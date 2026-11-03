@@ -1,0 +1,48 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// p5-table: one frozen table, read by four workers without copying or locking.
+package main
+
+import "sgo"
+
+type Table struct {
+	weights map[string]int
+}
+
+func main(c *sgo.Context) error {
+	t := Table{weights: map[string]int{"a": 1, "b": 2, "c": 7}}
+	table := sgo.Freeze(t) // sgo.Frozen[Table]: read-only, shareable
+	t.weights["a"] = 100   // t is still ours; the frozen copy is unaffected
+	sums := make(chan int, 4)
+	nursery (n) {
+		for w := 0; w < 4; w++ {
+			n.Spawn(func(task *sgo.Context) error {
+				s := 0
+				for _, k := range []string{"a", "b", "c"} {
+					s += table.Get().weights[k] // writing through table is SGO_E_FROZEN_WRITE
+				}
+				sums <- s
+				return nil
+			})
+		}
+	}
+	total := 0
+	for w := 0; w < 4; w++ {
+		total += <-sums
+	}
+	return c.Stdout().WriteString("sum " + itoa(total) + "\n")
+}
+
+// itoa formats a non-negative integer (stage 2: []byte, append, string conversion).
+func itoa(v int) string {
+	if v == 0 {
+		return "0"
+	}
+	b := []byte{}
+	for ; v > 0; v /= 10 {
+		b = append([]byte{byte(48 + v%10)}, b...)
+	}
+	return string(b)
+}

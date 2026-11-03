@@ -1,0 +1,32 @@
+package main
+
+import "sgo"
+
+type Table struct {
+	W    map[string]int
+	Rows []Row
+	N    int
+}
+
+type Row struct {
+	Name string
+	V    int
+}
+
+func (r Row) Twice() int {
+	return 2 * r.V
+}
+
+func (r *Row) Bump() {
+	r.V++
+}
+
+func build() Table {
+	return Table{W: map[string]int{"a": 1, "b": 2}, Rows: []Row{{"x", 3}, {"y", 4}}, N: 5}
+}
+
+func main(c *sgo.Context) error {
+	f := sgo.Freeze(build())
+	f.Get().Rows[0].V = 9
+	return nil
+}

@@ -158,7 +158,9 @@ def main():
         other = os.path.join(tmp, "lib-other-spec.a")
         if data.count(("sgo1 " + SPEC_VERSION + " ").encode()) != 2:
             sys.exit("test-identity: expected lib's identity line in its export data and its object")
-        open(other, "wb").write(data.replace(("sgo1 " + SPEC_VERSION + " ").encode(), b"sgo1 0.9.9 "))
+        # The replacement version has the same length, so the object layout is unchanged.
+        fake = ("9" * (len(SPEC_VERSION) - 4)) + ".9.9"
+        open(other, "wb").write(data.replace(("sgo1 " + SPEC_VERSION + " ").encode(), ("sgo1 " + fake + " ").encode()))
         r = compile_main(other, os.path.join(tmp, "main3.a"), expect_ok=False)
         if r.returncode == 0 or "SGO_E_SPEC_MISMATCH" not in r.stdout + r.stderr:
             sys.exit(f"test-identity: compiler accepted another spec version:\n{r.stdout}{r.stderr}")

@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-COMP-009",
+  "SGO-BIND-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNINITIALIZED",
+   "position": "main.sgo:5:12"
+  }
+ ]
+}

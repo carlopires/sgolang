@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+func mk() (f sgo.Frozen[int]) {
+	return sgo.Freeze(1)
+}
+
+func main(c *sgo.Context) error {
+	_ = mk()
+	return nil
+}

@@ -2915,9 +2915,11 @@
       ],
       "scenario": "Freeze a nested value, share it with several tasks, mutate the original; write through the frozen value.",
       "expected": "Readers see the frozen contents; writes through Frozen are SGO_E_FROZEN_WRITE.",
-      "implementation_status": "pending",
-      "execution_status": "unrun",
-      "evidence": []
+      "implementation_status": "implemented",
+      "execution_status": "passed",
+      "evidence": [
+        "W13 stage 3 (spec 0.10.0): w13-p5-table (one frozen table read by four tasks, sum 40), frozen-over-channel, frozen-range-map, frozen-nested, frozen-caller-mutates; writes and escapes refused with SGO_E_FROZEN_WRITE (frozen-write-*, frozen-escape-*, frozen-append, frozen-addr, frozen-ptr-method, frozen-range-ref); sharing model scenarios p5-frozen-table, reject-frozen-write; sgo/evidence/w13/README.md"
+      ]
     },
     {
       "id": "G09",

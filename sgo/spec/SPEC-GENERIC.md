@@ -3,10 +3,10 @@
 Wholly denied in subset 0 (`SGO_SPEC_ADMISSION.json` row `SPEC-GENERIC`: `subset0` = `denied`).
 
 ### SGO-GEN-001 — User generics are denied
-- **version:** 2
+- **version:** 3
 - **status:** frozen
 - **reference_closure:** SGO-ERR-001, SGO-PERMIT-002; D05, D28.
-- **grammar_and_types:** Denied: type parameters, constraints, generic functions or types declared in user code, and instantiation of anything except the parameterized members of package `sgo` admitted by SGO-PERMIT-002 (`sgo.Channel[T]`, `sgo.SendPermit[T]`, `sgo.NewChannel[T]`, with the type arguments that clause admits). No other form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
+- **grammar_and_types:** Denied: type parameters, constraints, generic functions or types declared in user code, and instantiation of anything except the parameterized members of package `sgo` admitted by SGO-PERMIT-002 (`sgo.Channel[T]`, `sgo.SendPermit[T]`, `sgo.NewChannel[T]`, with the type arguments that clause admits), `sgo.Copy[T]` (SGO-COMP-004), and `sgo.Frozen[T]` and `sgo.Freeze[T]` (SGO-COMP-009, spec 0.10.0). No other form of these constructs, packages, or APIs is admitted in any package compiled for the target, including dependencies and unreachable code.
 - **preconditions:** n/a — denial clause; there is nothing to use.
 - **evaluation_and_value_semantics:** n/a — denied constructs never execute.
 - **ownership_and_lifecycle:** n/a — denied constructs never execute.

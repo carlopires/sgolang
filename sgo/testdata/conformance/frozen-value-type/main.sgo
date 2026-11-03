@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+type P struct {
+	X, Y int
+}
+
+func main(c *sgo.Context) error {
+	f := sgo.Freeze(P{1, 2})
+	p := f.Get()
+	p.X = 9
+	ok := f.Get().X == 1 && p.X == 9
+	if ok {
+		return c.Stdout().WriteString("ok\n")
+	}
+	return c.Stdout().WriteString("wrong\n")
+}

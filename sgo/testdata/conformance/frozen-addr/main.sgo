@@ -1,0 +1,14 @@
+package main
+
+import "sgo"
+
+type P struct {
+	X int
+}
+
+func main(c *sgo.Context) error {
+	f := sgo.Freeze([]P{{1}})
+	p := &f.Get()[0].X
+	*p = 2
+	return nil
+}

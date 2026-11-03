@@ -1,3 +1,3 @@
 module example.com/ready-signal-other-task
 
-sgo 0.9.0
+sgo 0.10.0

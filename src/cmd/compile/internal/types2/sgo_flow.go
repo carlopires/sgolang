@@ -114,6 +114,7 @@ func (check *Checker) sgoFuncFlow(fd *syntax.FuncDecl) {
 			check.sgoPanicArg(n)
 			check.sgoChanLen(n)
 			check.sgoConversion(n)
+			check.sgoFreezeCall(n)
 		case *syntax.ForStmt:
 			check.sgoRange(n)
 		case *syntax.FuncType:
@@ -127,6 +128,7 @@ func (check *Checker) sgoFuncFlow(fd *syntax.FuncDecl) {
 		}
 		return true
 	})
+	check.sgoFrozenPaths(fd) // sgo_frozen.go
 	captured := check.sgoCaptured(lits)
 	check.sgoAssignments(fd, captured, binders)
 	check.sgoTaskLocalRules(fd, lits, captured) // sgo_local.go
@@ -381,6 +383,11 @@ func (check *Checker) sgoChanResults(t *syntax.FuncType) {
 		}
 		if tv, ok := check.Types[f.Type]; ok && tv.Type != nil && isChanType(tv.Type) {
 			check.errorf(f.Name, UnsupportedFeature, "SGO_E_UNINITIALIZED: a named result of channel type would start as a nil channel (SGO-CHAN-002)")
+		}
+		if tv, ok := check.Types[f.Type]; ok && tv.Type != nil {
+			if _, frozen := sgoFrozenElem(tv.Type); frozen {
+				check.errorf(f.Name, UnsupportedFeature, "SGO_E_UNINITIALIZED: a named result of type %s would start with no frozen value; sgo.Frozen has no zero value (SGO-COMP-009)", tv.Type)
+			}
 		}
 	}
 }

@@ -2,6 +2,20 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.10.0 — 2026-11-03
+
+Core data model, stage 3 (W13; D98–D101; draft approved 2026-11-03): frozen values. Every program valid under 0.9.0 keeps its meaning; the admission digest and toolchain identity change, so objects built for 0.9.0 are refused by a 0.10.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.10.0`.
+
+New frozen clause:
+
+- SGO-COMP-009 v1 — `sgo.Frozen[T]`, `sgo.Freeze(x)` (one deep copy, D98), and `f.Get()`, readable only through access paths (selection, indexing, `len`, `range` binding values); any use that could write a frozen object or keep a reference into it is `SGO_E_FROZEN_WRITE` (D99). T holds no handle and no channel (D100); `Frozen` has no zero value, no `nil`, no `==`, and is shareable (D101).
+
+Amended:
+
+- SGO-COMP-004 v2 — `sgo.Frozen[T]` is a shareable type: captured by `Spawn` callbacks and sent or committed without `sgo.Copy`.
+- SGO-GEN-001 v3 — the admitted instantiations include `sgo.Copy[T]`, `sgo.Frozen[T]`, `sgo.Freeze[T]`.
+- SGO-TYPE-001 v7 — `sgo.Frozen[T]`.
+
 ## 0.9.0 — 2026-11-03
 
 Core data model, stage 2 (W13; D93–D97; drafts approved 2026-11-02): task-local data — slices, insertion-ordered maps, pointers and pointer receivers — with the sharing rule enforced at compile time, `sgo.Copy`, the `byte` type, and the nil and data failure kinds. Every program valid under 0.8.0 keeps its meaning; the admission digest and toolchain identity change, so objects built for 0.8.0 are refused by a 0.9.0 toolchain (SGO-IMP-002), and every module declares `sgo 0.9.0`.

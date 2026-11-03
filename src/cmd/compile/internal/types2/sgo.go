@@ -161,7 +161,7 @@ func (check *Checker) sgoComparisonOK(x, y *operand) bool {
 			check.errorf(x, MismatchedTypes, "SGO_E_UNADMITTED: comparison of function values is not admitted in S-Go subset 0 (SGO-TYPE-003)")
 			return false
 		case sgoHasChan(o.typ()):
-			check.errorf(x, MismatchedTypes, "SGO_E_UNADMITTED: comparison of values holding channels is not admitted (D95, SGO-CHAN-002)")
+			check.errorf(x, MismatchedTypes, "SGO_E_UNADMITTED: comparison of values holding channels or frozen values is not admitted (D95, D101)")
 			return false
 		}
 	}

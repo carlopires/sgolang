@@ -1,0 +1,13 @@
+package main
+
+import "sgo"
+
+type H struct {
+	C chan int
+}
+
+func main(c *sgo.Context) error {
+	f := sgo.Freeze(H{C: make(chan int)})
+	_ = f
+	return nil
+}

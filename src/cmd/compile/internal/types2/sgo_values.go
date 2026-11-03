@@ -39,6 +39,12 @@ func sgoTypeRec(T Type, seen map[Type]bool, refs bool) (bool, string) {
 		return true, "" // a recursive type: its parts are checked where they are first reached
 	}
 	seen[T] = true
+	if _, ok := sgoFrozenElem(T); ok {
+		if refs {
+			return true, "" // shareable (SGO-COMP-009); its element is checked where it is formed
+		}
+		return false, "type " + TypeString(T, nil) + " (frozen values have no ==)"
+	}
 	if n, ok := T.(*Named); ok && n.obj != nil && n.obj.pkg != nil && n.obj.pkg.path == "sgo" {
 		return false, "type " + n.obj.name + " of package sgo"
 	}
@@ -111,6 +117,9 @@ func sgoTaskLocalRec(T Type, seen map[Type]bool) bool {
 	if isSgoHandle(T) {
 		return false
 	}
+	if _, ok := sgoFrozenElem(T); ok {
+		return false // shareable: nobody writes it (SGO-COMP-009)
+	}
 	switch u := T.Underlying().(type) {
 	case *Slice, *Map, *Pointer:
 		return true
@@ -128,6 +137,9 @@ func sgoTaskLocalRec(T Type, seen map[Type]bool) bool {
 
 // sgoHasChan reports whether a value of T holds a channel (such values have no ==, D95).
 func sgoHasChan(T Type) bool {
+	if _, ok := sgoFrozenElem(T); ok {
+		return true // frozen values have no == either (D101)
+	}
 	switch u := T.Underlying().(type) {
 	case *Chan:
 		return true
@@ -233,6 +245,12 @@ func (check *Checker) sgoInstanceElem(e *syntax.IndexExpr) {
 	sel, _ := syntax.Unparen(e.X).(*syntax.SelectorExpr)
 	if sel != nil && sel.Sel.Value == "Copy" {
 		return // sgo.Copy[T]: T is checked where the value's type is
+	}
+	if sel != nil && (sel.Sel.Value == "Frozen" || sel.Sel.Value == "Freeze") {
+		if tv, ok := check.Types[e.Index]; ok && tv.IsType() {
+			check.sgoFrozenElemOK(e.Index, tv.Type)
+		}
+		return
 	}
 	if tv, ok := check.Types[e.Index]; ok && tv.IsType() {
 		check.sgoChanElemOK(e.Index, tv.Type, false)
