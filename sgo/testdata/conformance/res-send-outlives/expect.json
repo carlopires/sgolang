@@ -6,8 +6,8 @@
  "diagnostics": [
   {
    "code": "SGO_E_RESOURCE_ESCAPES",
-   "position": "main.sgo:19:8"
+   "position": "main.sgo:21:9"
   }
  ],
- "note": "A value holding a resource sent on a channel."
+ "note": "A resource sent on a channel that outlives the resource's scope."
 }

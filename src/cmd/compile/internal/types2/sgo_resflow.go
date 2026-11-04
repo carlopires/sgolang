@@ -22,7 +22,7 @@ func sgoResKind(T Type) bool {
 		return false
 	}
 	switch Unalias(Unalias(T).(*Pointer).base).(*Named).obj.name {
-	case "File", "Conn", "Listener", "Dialer", "ConnSlot":
+	case "File", "Conn", "Listener", "Dialer":
 		return true
 	}
 	return false
@@ -44,7 +44,21 @@ func sgoResTypeRec(T Type, seen map[Type]bool) bool {
 	if sgoResKind(T) || sgoHasRelease(T) {
 		return true
 	}
+	if isSgoHandle(T) {
+		// *sgo.Channel[E] and *sgo.SendPermit[E] holding resources (D158).
+		n := Unalias(Unalias(T).(*Pointer).base).(*Named)
+		if n.obj.name == "Channel" || n.obj.name == "SendPermit" {
+			for _, a := range n.TypeArgs().list() {
+				if sgoResTypeRec(a, seen) {
+					return true
+				}
+			}
+		}
+		return false
+	}
 	switch u := T.Underlying().(type) {
+	case *Chan:
+		return sgoResTypeRec(u.elem, seen)
 	case *Struct:
 		for _, f := range u.fields {
 			if sgoResTypeRec(f.typ, seen) {
@@ -75,6 +89,10 @@ func sgoHasRelease(T Type) bool {
 	return false
 }
 
+// sgoParamExt is the extent a resource parameter is tied to: some scope of the caller, enclosing
+// the function, but not comparable with another parameter's.
+type sgoParamExt struct{ syntax.Node }
+
 type sgoResFlow struct {
 	check  *Checker
 	parent map[syntax.Node]syntax.Node // extent -> enclosing extent
@@ -82,10 +100,31 @@ type sgoResFlow struct {
 	scope  map[Object]syntax.Node      // scope name (nursery binder, parameter) -> its extent
 	moved  map[Object]syntax.Node      // variable -> extent of its last MoveTo target
 	ext    []syntax.Node               // current extent chain
+	// Fixpoint state, kept across passes: a variable's value tie (the narrowest tie of what is
+	// stored in it: how long its contents surely live) and its destination tie (the widest tie
+	// of a channel or permit stored in it: how long it may live as a send destination).
+	val, dst map[Object]syntax.Node
+	pseudo   map[Object]*sgoParamExt // each resource parameter's extent, stable across passes
+	top      syntax.Node             // the tie of a value holding no resource: it may flow anywhere
+	unknown  syntax.Node             // a destination of unknown lifetime: nothing holding a resource is sent on it
+	changed  bool
+	report   bool
 }
 
 // within reports whether extent a lies within (or is) extent b.
 func (f *sgoResFlow) within(a, b syntax.Node) bool {
+	if b == f.top {
+		return true
+	}
+	if a == f.top {
+		return false
+	}
+	if _, pa := a.(*sgoParamExt); pa {
+		return a == b
+	}
+	if _, pb := b.(*sgoParamExt); pb {
+		return f.within(a, f.ext[0])
+	}
 	for ; a != nil; a = f.parent[a] {
 		if a == b {
 			return true
@@ -94,14 +133,95 @@ func (f *sgoResFlow) within(a, b syntax.Node) bool {
 	return false
 }
 
+// join returns the widest of two extents, or unknown if they are incomparable.
+func (f *sgoResFlow) join(a, b syntax.Node) syntax.Node {
+	switch {
+	case a == f.unknown || b == f.unknown:
+		return f.unknown
+	case f.within(a, b):
+		return b
+	case f.within(b, a):
+		return a
+	}
+	return f.unknown
+}
+
+func (f *sgoResFlow) setVal(obj Object, t syntax.Node) {
+	if old, ok := f.val[obj]; ok {
+		t = f.inner(old, t)
+		if t == old {
+			return
+		}
+	}
+	f.val[obj], f.changed = t, true
+}
+
+func (f *sgoResFlow) setDst(obj Object, t syntax.Node) {
+	if old, ok := f.dst[obj]; ok {
+		t = f.join(old, t)
+		if t == old {
+			return
+		}
+	}
+	f.dst[obj], f.changed = t, true
+}
+
+// dest returns an upper bound on how long the channel or permit e lives.
+func (f *sgoResFlow) dest(e syntax.Expr) syntax.Node {
+	switch e := syntax.Unparen(e).(type) {
+	case *syntax.CheckExpr:
+		return f.dest(e.X)
+	case *syntax.Name:
+		if obj := f.check.Uses[e]; obj != nil {
+			if d, ok := f.dst[obj]; ok {
+				return d
+			}
+			if h, param := f.home[obj].(*sgoParamExt); param {
+				return h
+			}
+		}
+	case *syntax.CallExpr:
+		fun := syntax.Unparen(e.Fun)
+		if ix, _ := fun.(*syntax.IndexExpr); ix != nil {
+			fun = ix.X // sgo.NewChannel[T]
+		}
+		var id *syntax.Name
+		switch x := fun.(type) {
+		case *syntax.Name:
+			id = x
+		case *syntax.SelectorExpr:
+			id = x.Sel
+			if fn, _ := f.check.Uses[id].(*Func); fn != nil && fn.pkg != nil && fn.pkg.path == "sgo" && fn.name == "Reserve" {
+				return f.dest(x.X) // a permit lives as long as its channel
+			}
+		}
+		if id != nil {
+			switch obj := f.check.Uses[id].(type) {
+			case *Builtin:
+				if obj.id == _Make {
+					return f.cur()
+				}
+			case *Func:
+				if obj.pkg != nil && obj.pkg.path == "sgo" && obj.name == "NewChannel" {
+					return f.cur()
+				}
+			}
+		}
+	}
+	return f.unknown
+}
+
 func (f *sgoResFlow) cur() syntax.Node { return f.ext[len(f.ext)-1] }
 
 // inner returns the innermost of two extents on one chain.
 func (f *sgoResFlow) inner(a, b syntax.Node) syntax.Node {
-	if f.within(a, b) {
+	switch {
+	case f.within(a, b):
 		return a
+	case f.within(b, a):
+		return b
 	}
-	return b
+	return f.ext[0] // two parameters' scopes: the function lies within both
 }
 
 // scopeExtent returns the extent a scope expression names, or nil.
@@ -135,9 +255,14 @@ func (f *sgoResFlow) isScopeType(T Type) bool {
 // tie returns the extent the value of e is tied to.
 func (f *sgoResFlow) tie(e syntax.Expr) syntax.Node {
 	switch e := syntax.Unparen(e).(type) {
+	case *syntax.CheckExpr:
+		return f.tie(e.X)
 	case *syntax.Name:
 		if obj := f.check.Uses[e]; obj != nil {
 			if x := f.moved[obj]; x != nil {
+				return x
+			}
+			if x, ok := f.val[obj]; ok {
 				return x
 			}
 			if x := f.home[obj]; x != nil {
@@ -163,7 +288,7 @@ func (f *sgoResFlow) tie(e syntax.Expr) syntax.Node {
 			return f.tie(e.X)
 		}
 	case *syntax.CompositeLit:
-		t := f.ext[0]
+		t := f.top // no resource element: the value holds none
 		for _, el := range e.ElemList {
 			if kv, _ := el.(*syntax.KeyValueExpr); kv != nil {
 				el = kv.Value
@@ -176,11 +301,18 @@ func (f *sgoResFlow) tie(e syntax.Expr) syntax.Node {
 	case *syntax.CallExpr:
 		// An acquisition is tied to its scope argument or receiver; another call's resource
 		// results are tied to the caller's scope, as narrowly as the extent of the call.
-		var args []syntax.Expr
-		if sel, _ := syntax.Unparen(e.Fun).(*syntax.SelectorExpr); sel != nil {
-			args = append(args, sel.X)
+		sel, _ := syntax.Unparen(e.Fun).(*syntax.SelectorExpr)
+		if sel == nil {
+			break
 		}
-		for _, a := range append(args, e.ArgList...) {
+		fn, _ := f.check.Uses[sel.Sel].(*Func)
+		if fn == nil || fn.pkg == nil || fn.pkg.path != "sgo" {
+			break
+		}
+		if fn.name == "Receive" || fn.name == "Reserve" {
+			return f.tie(sel.X) // a received value or a permit: tied as the channel is
+		}
+		for _, a := range append([]syntax.Expr{sel.X}, e.ArgList...) {
 			if x := f.scopeExtent(a); x != nil {
 				return x
 			}
@@ -195,6 +327,9 @@ func (f *sgoResFlow) isRes(e syntax.Expr) bool {
 }
 
 func (f *sgoResFlow) errorf(at syntax.Node, format string, args ...any) {
+	if !f.report {
+		return
+	}
 	f.check.errorf(at, UnsupportedFeature, "SGO_E_RESOURCE_ESCAPES: "+format+" (SGO-RES-003)", args...)
 }
 
@@ -203,8 +338,25 @@ func (check *Checker) sgoResourceFlow(fd *syntax.FuncDecl) {
 	if fd.Body == nil {
 		return
 	}
-	f := &sgoResFlow{check: check, parent: map[syntax.Node]syntax.Node{}, home: map[Object]syntax.Node{},
-		scope: map[Object]syntax.Node{}, moved: map[Object]syntax.Node{}}
+	f := &sgoResFlow{check: check, val: map[Object]syntax.Node{}, dst: map[Object]syntax.Node{},
+		unknown: &sgoParamExt{}, top: &sgoParamExt{}, pseudo: map[Object]*sgoParamExt{}}
+	// Ties only narrow and destinations only widen, along finite chains: iterate to the fixpoint,
+	// then report in one last pass.
+	for i := 0; i < 20; i++ {
+		f.changed = false
+		f.pass(fd)
+		if !f.changed {
+			break
+		}
+	}
+	f.report = true
+	f.pass(fd)
+}
+
+func (f *sgoResFlow) pass(fd *syntax.FuncDecl) {
+	check := f.check
+	f.parent, f.home = map[syntax.Node]syntax.Node{}, map[Object]syntax.Node{}
+	f.scope, f.moved = map[Object]syntax.Node{}, map[Object]syntax.Node{}
 	f.ext = []syntax.Node{fd}
 	f.params(fd.Type, fd)
 	var stack []syntax.Node
@@ -246,9 +398,7 @@ func (check *Checker) sgoResourceFlow(fd *syntax.FuncDecl) {
 				}
 			}
 		case *syntax.SendStmt:
-			if f.isRes(n.Value) {
-				f.errorf(n.Value, "%s holds a resource and cannot be sent on a channel; resources are shared by scope, not by message", syntax.String(n.Value))
-			}
+			f.send(n.Chan, n.Value)
 		case *syntax.CallExpr:
 			f.call(n)
 		}
@@ -266,6 +416,11 @@ func (f *sgoResFlow) params(t *syntax.FuncType, ext syntax.Node) {
 			f.home[obj] = ext
 			if f.isScopeType(obj.Type()) {
 				f.scope[obj] = ext
+			} else if _, decl := ext.(*syntax.FuncDecl); decl && sgoResType(obj.Type()) {
+				if f.pseudo[obj] == nil {
+					f.pseudo[obj] = &sgoParamExt{p.Name}
+				}
+				f.home[obj] = f.pseudo[obj]
 			}
 		}
 	}
@@ -341,6 +496,10 @@ func (f *sgoResFlow) assign(a *syntax.AssignStmt) {
 		if !f.within(home, f.tie(r)) {
 			f.errorf(r, "%s is tied to a scope that ends before %s does; acquire it into the outer scope, or MoveTo that scope first", syntax.String(r), syntax.String(l))
 		}
+		if _, param := f.home[obj].(*sgoParamExt); !param {
+			f.setVal(obj, f.tie(r))
+			f.setDst(obj, f.dest(r))
+		}
 		delete(f.moved, obj)
 	}
 }
@@ -360,14 +519,38 @@ func (f *sgoResFlow) call(c *syntax.CallExpr) {
 				}
 			}
 		case fn.name == "MoveTo" && len(c.ArgList) == 1:
-			if n, _ := syntax.Unparen(sel.X).(*syntax.Name); n != nil {
-				if obj := f.check.Uses[n]; obj != nil {
-					if x := f.scopeExtent(c.ArgList[0]); x != nil && f.within(f.cur(), x) {
-						f.moved[obj] = x
-					}
-				}
+			f.move(sel.X, c.ArgList[0])
+		case fn.name == "Commit" && len(c.ArgList) == 1:
+			f.send(sel.X, c.ArgList[0])
+		}
+	}
+	// sgo.MoveTo(r, s): a user resource (or any resource) moves to s (D158).
+	if name, _ := syntax.Unparen(c.Fun).(*syntax.SelectorExpr); name != nil && len(c.ArgList) == 2 {
+		if fn, _ := f.check.Uses[name.Sel].(*Func); fn != nil && fn.pkg != nil && fn.pkg.path == "sgo" && fn.name == "MoveTo" && fn.Signature().recv == nil {
+			f.move(c.ArgList[0], c.ArgList[1])
+		}
+	}
+}
+
+// move records r.MoveTo(s) of a variable r: it is tied to s from here on.
+func (f *sgoResFlow) move(r, s syntax.Expr) {
+	if n, _ := syntax.Unparen(r).(*syntax.Name); n != nil {
+		if obj := f.check.Uses[n]; obj != nil {
+			if x := f.scopeExtent(s); x != nil && f.within(f.cur(), x) {
+				f.moved[obj] = x
 			}
 		}
+	}
+}
+
+// send checks that a value holding a resource is sent only on a channel that cannot outlive the
+// value's scope (D158): the channel's tie lies within the value's.
+func (f *sgoResFlow) send(ch, v syntax.Expr) {
+	if !f.isRes(v) {
+		return
+	}
+	if !f.within(f.dest(ch), f.tie(v)) {
+		f.errorf(v, "%s is tied to a scope that may end before channel %s does; make the channel in that scope, or acquire the resource into the channel's scope", syntax.String(v), syntax.String(ch))
 	}
 }
 

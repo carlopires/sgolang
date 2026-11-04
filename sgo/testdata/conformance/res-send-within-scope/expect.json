@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-003"
+ ],
+ "exit": 0,
+ "stdout": "first connection kept\n",
+ "note": "Channels carry resources within their scope; the deciding scope owns the candidates (D158)."
+}

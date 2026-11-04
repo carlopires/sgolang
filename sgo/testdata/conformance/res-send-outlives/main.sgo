@@ -1,0 +1,24 @@
+package main
+
+import "sgo"
+
+type holder struct {
+	c *sgo.Conn
+}
+
+// A connection of an inner nursery is sent on a channel made in the root's body, which outlives
+// that nursery (D158).
+func main(root *sgo.Context) error {
+	if _, err := root.Listen("127.0.0.1:47922"); err != nil {
+		return err
+	}
+	ch := make(chan holder, 1)
+	nursery (n) {
+		c, derr := n.Dial("127.0.0.1:47922")
+		if derr != nil {
+			return derr
+		}
+		ch <- holder{c: c}
+	}
+	return nil
+}

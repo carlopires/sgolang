@@ -2,34 +2,49 @@ package main
 
 import "sgo"
 
-// Two attempts race through a dialer; the first connection put into the slot wins and moves into
-// the root's body (D157). A losing connection stays a resource of its attempt's task and is
-// released when that task ends: nothing is closed by hand (SGO-RES-001).
-func attempt(t *sgo.Context, d *sgo.Dialer, slot *sgo.ConnSlot, addr string) error {
-	c, err := d.Dial(t, addr)
-	if err != nil {
-		return nil // a failed attempt is not an error of the race
-	}
-	_ = slot.Put(c) // AlreadySet for the loser
-	return nil
+// Two attempts race through a dialer, dialing into the race nursery n and reporting on a channel
+// made in n. The body keeps the first connection, moves it to the root, and cancels the race; n
+// releases the losing connection when it ends. Nothing is closed by hand (D158, SGO-RES-001).
+type outcome struct {
+	ok bool
+	c  *sgo.Conn
 }
 
 func main(root *sgo.Context) error {
 	l := check root.Listen("127.0.0.1:47950")
 	d := root.Dialer([]string{"[::1]:47950", "127.0.0.1:47950"})
-	slot := root.NewConnSlot()
+	won := outcome{}
 	nursery (n) {
+		results := sgo.NewChannel[outcome](2)
 		for _, addr := range []string{"[::1]:47950", "127.0.0.1:47950"} {
 			a := addr
-			n.Spawn(func(t *sgo.Context) error { return attempt(t, d, slot, a) })
+			n.Spawn(func(t *sgo.Context) error {
+				p := check results.Reserve(t)
+				c, err := d.Dial(n, a)
+				if err != nil {
+					return p.Commit(outcome{}) // a failed attempt is not an error of the race
+				}
+				return p.Commit(outcome{ok: true, c: c})
+			})
 		}
+		for i := 0; i < 2 && !won.ok; i++ {
+			r, more, rerr := results.Receive(root)
+			if rerr != nil {
+				return rerr
+			}
+			if more && r.ok {
+				c := r.c
+				check c.MoveTo(root)
+				won.ok, won.c = true, c
+			}
+		}
+		n.Cancel()
 	}
-	c, ok := slot.Take()
-	if !ok {
+	if !won.ok {
 		return sgo.NewError("no connection")
 	}
 	s := check l.Accept(root)
-	check c.Write("ping")
+	check won.c.Write("ping")
 	msg := check s.Read(16)
 	check root.Stdout().WriteString("server got " + msg + "\n")
 	return nil

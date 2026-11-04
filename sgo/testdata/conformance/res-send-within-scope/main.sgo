@@ -1,0 +1,50 @@
+package main
+
+import "sgo"
+
+type event struct {
+	addr string
+	c    *sgo.Conn
+}
+
+// Children of nursery n dial into n and report their connections on a channel made in n; the body
+// picks the first, moves it to the root, and n releases the other one when it ends (D158).
+func main(root *sgo.Context) error {
+	if _, err := root.Listen("127.0.0.1:47927"); err != nil {
+		return err
+	}
+	d := root.Dialer([]string{"127.0.0.1:47927"})
+	won := event{}
+	nursery (n) {
+		events := sgo.NewChannel[event](2)
+		for i := 0; i < 2; i++ {
+			n.Spawn(func(t *sgo.Context) error {
+				c, derr := d.Dial(n, "127.0.0.1:47927")
+				if derr != nil {
+					return derr
+				}
+				p, rerr := events.Reserve(t)
+				if rerr != nil {
+					return rerr
+				}
+				return p.Commit(event{addr: "127.0.0.1:47927", c: c})
+			})
+		}
+		ev, ok, rerr := events.Receive(root)
+		if rerr != nil {
+			return rerr
+		}
+		if !ok {
+			return sgo.NewError("no connection")
+		}
+		c := ev.c
+		if merr := c.MoveTo(root); merr != nil {
+			return merr
+		}
+		won.c = c
+	}
+	if _, werr := won.c.Write("x"); werr != nil {
+		return werr
+	}
+	return root.Stdout().WriteString("first connection kept\n")
+}

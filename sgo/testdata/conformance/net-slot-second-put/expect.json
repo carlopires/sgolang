@@ -1,8 +1,0 @@
-{
- "kind": "run",
- "clauses": [
-  "SGO-NET-004"
- ],
- "exit": 0,
- "stdout": "first=yes second=no b-usable=yes took=yes\n"
-}

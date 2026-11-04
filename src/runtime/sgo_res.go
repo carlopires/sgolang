@@ -149,11 +149,41 @@ func sgo_resMove(h, task, nurs unsafe.Pointer) error {
 // sgo_resOwn makes a user resource of scope (task, nurs): release runs when the scope ends (D152).
 //
 //go:linkname sgo_resOwn sgo.runtime_resOwn
-func sgo_resOwn(task, nurs unsafe.Pointer, release func(bool) error) {
+func sgo_resOwn(task, nurs, key unsafe.Pointer, release func(bool) error) {
 	n, b := sgoScopeOf(task, nurs)
 	l := sgoResTarget(n, b, "Own")
-	h := &sgoHandle{kind: sgoHUser, fd: -1, name: "user resource", release: release, nurs: n, body: b}
+	h := &sgoHandle{kind: sgoHUser, fd: -1, name: "user resource", release: release, key: key, nurs: n, body: b}
 	l.push(h)
+}
+
+// sgo_resMoveUser moves the user resource registered for value key to the enclosing scope (task,
+// nurs) (D158): it is looked up among the resources of the scopes the current task runs inside.
+//
+//go:linkname sgo_resMoveUser sgo.runtime_resMoveUser
+func sgo_resMoveUser(key, task, nurs unsafe.Pointer) error {
+	t := sgoCurrent()
+	var h *sgoHandle
+	find := func(l *sgoResList) {
+		lock(&l.lock)
+		for x := l.first; x != nil && h == nil; x = x.next {
+			if x.kind == sgoHUser && x.key == key {
+				h = x
+			}
+		}
+		unlock(&l.lock)
+	}
+	find(&t.res)
+	for c := t.currentScope(); c != nil && h == nil; c = c.parent {
+		find(&c.res)
+		if h == nil && c.owner != nil {
+			find(&c.owner.res)
+		}
+	}
+	if h == nil {
+		panic(error(&sgoFailure{"MissingCapability", "MoveTo: the value is not a resource of a scope the task runs inside", ""}))
+	}
+	n, b := sgoScopeOf(task, nurs)
+	return sgoIOResult(sgoResMove(h, n, b), "MoveTo")
 }
 
 // sgoScopeOf decodes the scope argument of the sgo API: a *sgo.Context's task or a *sgo.Nursery's
@@ -175,9 +205,11 @@ func sgoResMove(h *sgoHandle, nurs *sgoScope, body *sgoTask) *sgoIOErr {
 	if !sgoEncloses(nurs, body, h.nurs, h.body) {
 		panic(error(&sgoFailure{"MissingCapability", "MoveTo: the target scope does not enclose the resource's scope", ""}))
 	}
-	l := &nurs.res
+	var l *sgoResList
 	if body != nil {
-		l = &body.res
+		l = &body.res // a task body: nurs is nil
+	} else {
+		l = &nurs.res
 	}
 	sgoResUnlink(h)
 	h.nurs, h.body = nurs, body

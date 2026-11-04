@@ -22,11 +22,9 @@ func runtime_ioWrite(h unsafe.Pointer, s string) (int, error)
 func runtime_fileSize(h unsafe.Pointer) (int, error)
 func runtime_close(h unsafe.Pointer, op string) error
 func runtime_resMove(h, task, nurs unsafe.Pointer) error
-func runtime_resOwn(task, nurs unsafe.Pointer, release func(bool) error)
+func runtime_resOwn(task, nurs, key unsafe.Pointer, release func(bool) error)
+func runtime_resMoveUser(key, task, nurs unsafe.Pointer) error
 func runtime_currentIsRoot() bool
-func runtime_slotNew(task, nurs unsafe.Pointer) unsafe.Pointer
-func runtime_slotPut(slot, conn unsafe.Pointer) error
-func runtime_slotTake(slot unsafe.Pointer) (unsafe.Pointer, bool)
 func runtime_dial(task, nurs unsafe.Pointer, addr string) (unsafe.Pointer, error)
 func runtime_listen(task, nurs unsafe.Pointer, addr string) (unsafe.Pointer, error)
 func runtime_accept(h, task, nurs unsafe.Pointer) (unsafe.Pointer, error)
@@ -288,38 +286,6 @@ func (d *Dialer) Close() error { return runtime_close(d.h, "Dialer.Close") }
 // MoveTo makes d a resource of s, a scope enclosing d's scope (SGO-RES-003).
 func (d *Dialer) MoveTo(s Scope) error { return moveTo(d.h, s) }
 
-// ConnSlot hands one connection, by value, to the tasks of an enclosing scope (D144, D157): the
-// slot is a resource of the scope that creates it; the first Put moves its connection into that
-// scope (which must enclose the connection's) and wins a race, later ones return AlreadySet and
-// leave theirs where they are; Take returns the connection to a task inside the slot's scope.
-type ConnSlot struct{ h unsafe.Pointer }
-
-// NewConnSlot returns an empty slot, a resource of the task body of c.
-func (c *Context) NewConnSlot() *ConnSlot {
-	c.own()
-	return &ConnSlot{runtime_slotNew(c.t, nil)}
-}
-
-// NewConnSlot returns an empty slot, a resource of nursery n.
-func (n *Nursery) NewConnSlot() *ConnSlot { return &ConnSlot{runtime_slotNew(nil, n.s)} }
-
-// Put moves conn into the slot's scope and makes it the slot's connection, unless a connection was
-// put before (AlreadySet, conn unchanged).
-func (s *ConnSlot) Put(conn *Conn) error { return runtime_slotPut(s.h, conn.h) }
-
-// Take returns the connection put into the slot and true, or nil and false if there is none (not
-// yet put, or already taken).
-func (s *ConnSlot) Take() (*Conn, bool) {
-	h, ok := runtime_slotTake(s.h)
-	if !ok {
-		return nil, false
-	}
-	return &Conn{h}, true
-}
-
-// Close releases the slot early; a connection already put stays a resource of the slot's scope.
-func (s *ConnSlot) Close() error { return runtime_close(s.h, "ConnSlot.Close") }
-
 // Listener accepts TCP connections on a granted endpoint.
 type Listener struct{ h unsafe.Pointer }
 
@@ -380,10 +346,21 @@ type Releaser interface {
 }
 
 // Own makes r a resource of the task body of c (SGO-RES-004).
-func (c *Context) Own(r Releaser) { runtime_resOwn(c.t, nil, r.Release) }
+func (c *Context) Own(r Releaser) { runtime_resOwn(c.t, nil, ownKey(r), r.Release) }
 
 // Own makes r a resource of nursery n (SGO-RES-004).
-func (n *Nursery) Own(r Releaser) { runtime_resOwn(nil, n.s, r.Release) }
+func (n *Nursery) Own(r Releaser) { runtime_resOwn(nil, n.s, ownKey(r), r.Release) }
+
+// MoveTo moves user resource r, registered with Own, to the enclosing scope s (D158), as the
+// built-in handles' MoveTo methods do: the caller runs inside r's scope and s encloses it, else
+// MissingCapability with no effect. r is found by identity, so a user resource is a pointer.
+func MoveTo(r Releaser, s Scope) error {
+	task, nurs := s.sgoScope()
+	return runtime_resMoveUser(ownKey(r), task, nurs)
+}
+
+// ownKey is the identity of a registered user resource: the interface's data word.
+func ownKey(r Releaser) unsafe.Pointer { return (*[2]unsafe.Pointer)(unsafe.Pointer(&r))[1] }
 
 func quote(s string) string {
 	if len(s) > 64 {

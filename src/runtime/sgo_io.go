@@ -28,7 +28,7 @@ const (
 	sgoHConn
 	sgoHListener
 	sgoHDialer // a delegated dialer (sgo_netdial.go, D143)
-	sgoHSlot   // a connection slot (sgo_netdial.go, D144, D157)
+	_          // formerly the connection slot (withdrawn, D158)
 
 	sgoIOChunk = 1 << 20
 )
@@ -40,7 +40,6 @@ type sgoHandle struct {
 	fake     *sgoFakeFile // lab: a fake file (sgo_iofake.go)
 	conn     *sgoFakeConn // lab: a fake connection or listener (sgo_netfake.go)
 	dial     *sgoDialer   // a dialer: its endpoints (sgo_netdial.go)
-	slot     *sgoSlot     // a connection slot (sgo_netdial.go)
 	unix     bool         // a Unix domain socket (D60)
 	sockPath *byte        // a Unix listener: its socket file, removed at close (sgo_net.go)
 	sockID   sgoFileID
@@ -52,6 +51,7 @@ type sgoHandle struct {
 	body    *sgoTask
 	list    *sgoResList
 	release func(ok bool) error // a user resource (sgoHUser): its Release method (D152)
+	key     unsafe.Pointer      // a user resource: the registered value, found by sgo.MoveTo (D158)
 	closed  bool
 	ops     atomic.Int32 // operations in progress
 	// Sockets: whether a task is waiting in the poller to read (Read, Accept) or to write. The
