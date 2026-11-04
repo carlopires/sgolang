@@ -76,7 +76,7 @@ import (
 	"example.com/x10/lib"
 )
 
-func check(w *sgo.Writer) error {
+func verify(w *sgo.Writer) error {
 	defer func() { _ = w.WriteString("deferred after the failed nursery\\n") }()
 	lib.Check(2, 3, 5)
 	if lib.Nested(w) != 7 {
@@ -90,7 +90,7 @@ func check(w *sgo.Writer) error {
 }
 
 func main(root *sgo.Context) error {
-	return check(root.Stdout())
+	return verify(root.Stdout())
 }
 '''
 
