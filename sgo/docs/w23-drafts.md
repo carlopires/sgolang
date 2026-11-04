@@ -15,6 +15,12 @@ as D172 in W22), D167.
   lab-call-withdraw, call-request-escape, call-resource-denied. Deferred: acceptance through a
   `select` arm.
 
+- **SGO-SPAWN-009** (D175): pools with leases. `sgo.NewPool[T](n)`, `Put`, `Acquire(s)`,
+  `Lease.Value`/`Return`/`Drop`; a lease is a resource of `s`, which lies inside the pool's
+  nursery; `Put` is checked as a send. Cases: pool-leases, pool-resource-items, pool-lease-outlives,
+  pool-put-outlives, pool-value-escape, pool-lease-after-return, pool-acquire-outside; model
+  `poolmodel.go` (1 422 states, four mutants).
+
 ## Amendments owed at 0.18.0 (frozen clauses; a new version each)
 
 - **SGO-SPAWN-006 v2** (W22 review G2, H1): each `h.Result()` call returns its own channel, which

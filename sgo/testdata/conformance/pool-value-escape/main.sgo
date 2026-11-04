@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+// A leased item is tied as its lease: it cannot be kept after the lease's scope ends (D175).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		p := sgo.NewPool[*sgo.Timer](n)
+		p.Put(n.NewTimer(1000))
+		keep := n.NewTimer(1)
+		nursery (use) {
+			l := p.Acquire(use)
+			keep = l.Value()
+		}
+		keep.Stop()
+	}
+	return nil
+}

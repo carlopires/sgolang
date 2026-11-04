@@ -177,3 +177,25 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 - **implementation_coverage:** W23: runtime `src/runtime/sgo_call.go`; API `src/sgo/call.go`; compiler `sgoadmit/admit_expr.go`, `types2/sgo_check.go`, `sgo.go`, `sgo_values.go`, `sgo_resflow.go`.
 - **executed_evidence:** pending (W23).
 - **supported_execution_configurations:** production; lab.
+
+### SGO-SPAWN-009 — Pools with leases (subset 3)
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-SPAWN-006, SGO-NATIVE-001, SGO-RES-001, SGO-RES-002, SGO-RES-003, SGO-CANCEL-002; D158, D175.
+- **grammar_and_types:** `sgo.NewPool[T](n *sgo.Nursery) *sgo.Pool[T]`; `(*sgo.Pool[T]).Put(v T)`; `(*sgo.Pool[T]).Acquire(s sgo.Scope) *sgo.Lease[T]`; `(*sgo.Lease[T]).Value() T`; `(*sgo.Lease[T]).Return()`; `(*sgo.Lease[T]).Drop()`. `*sgo.Pool[T]` is a shareable handle (as `*sgo.Task[T]`), tied to `n` when `T` holds resources; `*sgo.Lease[T]` is a resource handle (SGO-RES-001). `T` follows the rule of `sgo.Go` results (SGO-SPAWN-006): no task-local types; it may hold resources.
+- **preconditions:** `Put` and `Acquire` run in a task inside `n`; else `MissingCapability` (a runtime check). `Acquire`'s scope `s` is `n` or lies inside it; for a pool whose `T` holds resources this is a compile-time check, otherwise a runtime `MissingCapability`. `n` is not nil.
+- **evaluation_and_value_semantics:** `Put(v)` adds `v` as an idle item, or hands it to the oldest waiting `Acquire`; it never waits. `Acquire` takes an idle item, or waits for one; it returns a lease whose `Value` is that item. Waiters are served oldest first. `Return` puts the item back at once; `Drop` keeps it out of the pool for good. The lease's release (when `s` ends, after its tasks) puts the item back unless the lease was returned or dropped. A lease is spent exactly once: by `Return`, `Drop`, or its release.
+- **ownership_and_lifecycle:** A lease is a resource of `s` (SGO-RES-001): tasks inside `s` may use it (SGO-RES-002) and it may not outlive `s` (SGO-RES-003). The item a lease gives is tied as the lease. An item `Put` into a pool is tied at least as long as the pool (`Put` is checked as a send, D158). The items are owned by their own scopes, not by the pool: a dropped item is still released by its owner.
+- **effect_and_capability_requirements:** The pool handle; no ambient authority.
+- **concurrency_and_memory_order:** A lease's release, `Return`, or `Put` happens before the `Acquire` that takes that item returns.
+- **allowed_nondeterminism:** Which idle item an `Acquire` takes, and the order of tasks racing to wait.
+- **failure_and_partial_progress:** `Value`, `Return`, or `Drop` on a spent lease is a `SpawnContractViolation`. A transaction over a leased item is the transaction's own resource: it sees `Release(false)` when its scope unwinds or an error exit crosses it (D159); the item still goes back.
+- **cancellation_and_cleanup:** `Acquire` is a native channel wait (SGO-NATIVE): a waiting task in a cancelled scope unwinds without taking an item, and an item is never lost to a cancelled waiter (it is handed over or stays idle).
+- **compile_link_checks:** `SGO_E_UNADMITTED` for a task-local `T`; `SGO_E_RESOURCE_ESCAPES` for an item that may be released before its pool (`Put`), a lease scope that may outlive the pool (`Acquire`), and a lease or leased item that may outlive the lease's scope.
+- **runtime_guards:** The scope checks of `Put` and `Acquire`; the spent flag of a lease (one atomic decision among `Return`, `Drop`, and the release).
+- **tcb_assumptions:** `src/runtime/sgo_pool.go`, `sgo_group.go`; `src/sgo/pool.go`.
+- **positive_tests:** fixture:pool-leases, fixture:pool-resource-items; the model `sgo/model/poolmodel.go` (PoolExplore).
+- **negative_tests:** fixture:pool-lease-outlives, fixture:pool-put-outlives, fixture:pool-value-escape, fixture:pool-lease-after-return, fixture:pool-acquire-outside; the model's seeded bugs (a returned item put back twice, a dropped item put back, a cancelled waiter taking an item, a put-back that wakes no waiter).
+- **implementation_coverage:** W23: runtime `src/runtime/sgo_pool.go`; API `src/sgo/pool.go`; compiler `sgoadmit/admit_expr.go`, `types2/sgo_check.go`, `sgo.go`, `sgo_values.go`, `sgo_resflow.go`.
+- **executed_evidence:** pending (W23).
+- **supported_execution_configurations:** production; lab.

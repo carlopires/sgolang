@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+// A lease's scope must lie inside the pool's nursery; for a pool of plain values the runtime
+// checks it (MissingCapability) (D175).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		p := sgo.NewPool[int](n)
+		p.Put(1)
+		l := p.Acquire(root)
+		_ = l.Value()
+	}
+	return nil
+}

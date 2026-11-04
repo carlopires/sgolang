@@ -132,7 +132,7 @@ func sgoSharedGeneric(T Type) bool {
 	if !ok || n.obj == nil || n.obj.pkg == nil || n.obj.pkg.path != "sgo" {
 		return false
 	}
-	return n.obj.name == "Task" || n.obj.name == "Group" || n.obj.name == "Call"
+	return n.obj.name == "Task" || n.obj.name == "Group" || n.obj.name == "Call" || n.obj.name == "Pool"
 }
 
 func sgoTaskLocalRec(T Type, seen map[Type]bool) bool {

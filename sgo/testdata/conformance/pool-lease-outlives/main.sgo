@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+// A lease on a pool of resources may not live in a scope wider than the pool's nursery: the item
+// would be used after its owner released it (D175).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		p := sgo.NewPool[*sgo.Timer](n)
+		p.Put(n.NewTimer(1000))
+		l := p.Acquire(root)
+		l.Value().Stop()
+	}
+	return nil
+}

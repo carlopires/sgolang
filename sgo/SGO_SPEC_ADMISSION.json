@@ -472,9 +472,10 @@
         "SGO-SPAWN-005",
         "SGO-SPAWN-006",
         "SGO-SPAWN-007",
-        "SGO-SPAWN-008"
+        "SGO-SPAWN-008",
+        "SGO-SPAWN-009"
       ],
-      "normative_text_digest": "a5de9964c07497838c5681a9cd347dbbf745b1451c5ac45f79d4359e2aba8246",
+      "normative_text_digest": "efe582340fcc16d030a7255d29b83991bc770157847588b4275ad24cc323a941",
       "admitted_in": [
         "0.7.0"
       ],
@@ -501,7 +502,8 @@
         "SGO-SPAWN-005": "f26e200b1285c109101a9cc06bd3cccc5a6795936733142147f4948c17c2eeeb",
         "SGO-SPAWN-006": "3afad84922ca9a93d825c582fbdd6bf345877f88002c78b8457f6d40bba5516b",
         "SGO-SPAWN-007": "a97fb09bcb9a2582e661e1a85e6e8fcdcd3675c0874e96165bdd0b70c34af270",
-        "SGO-SPAWN-008": "974640be3d2e081e45756f43733475bb6618ca669ef3dd920ba93756769b65fd"
+        "SGO-SPAWN-008": "974640be3d2e081e45756f43733475bb6618ca669ef3dd920ba93756769b65fd",
+        "SGO-SPAWN-009": "d2dffba8f9b6e16a9a3d933a7c5380d0b34e47135e1c84374196403b3fa4aceb"
       },
       "clause_status": {
         "SGO-SPAWN-001": "frozen",
@@ -511,7 +513,8 @@
         "SGO-SPAWN-005": "frozen",
         "SGO-SPAWN-006": "frozen",
         "SGO-SPAWN-007": "frozen",
-        "SGO-SPAWN-008": "draft"
+        "SGO-SPAWN-008": "draft",
+        "SGO-SPAWN-009": "draft"
       },
       "clause_versions": {
         "SGO-SPAWN-001": 1,
@@ -521,7 +524,8 @@
         "SGO-SPAWN-005": 1,
         "SGO-SPAWN-006": 1,
         "SGO-SPAWN-007": 1,
-        "SGO-SPAWN-008": 1
+        "SGO-SPAWN-008": 1,
+        "SGO-SPAWN-009": 1
       }
     },
     {
@@ -1815,5 +1819,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "6853aefe3c717d1210284be7def88080274627ad8b4c746e1acd3209ac49795e"
+  "rows_digest": "1d3895665c9238a7bdd3cdf811f05998693dd8b58842bd7ba55a5d28a9b399ac"
 }

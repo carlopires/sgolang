@@ -22,7 +22,7 @@ func sgoResKind(T Type) bool {
 		return false
 	}
 	switch Unalias(Unalias(T).(*Pointer).base).(*Named).obj.name {
-	case "File", "Conn", "Listener", "Dialer", "Timer", "Request":
+	case "File", "Conn", "Listener", "Dialer", "Timer", "Request", "Lease":
 		return true
 	}
 	return false
@@ -223,6 +223,12 @@ func (f *sgoResFlow) dest(e syntax.Expr) syntax.Node {
 				}
 			case *Func:
 				if obj.pkg != nil && obj.pkg.path == "sgo" && obj.name == "NewChannel" {
+					return f.cur()
+				}
+				if obj.pkg != nil && obj.pkg.path == "sgo" && obj.name == "NewPool" && len(e.ArgList) == 1 {
+					if x := f.scopeExtent(e.ArgList[0]); x != nil {
+						return x // a pool lives in the nursery it names (D175)
+					}
 					return f.cur()
 				}
 			}
@@ -595,6 +601,10 @@ func (f *sgoResFlow) tie(e syntax.Expr) syntax.Node {
 			if sig, _ := fn.typ.(*Signature); sig != nil && sig.recv != nil && sgoSharedGeneric(sig.recv.typ) {
 				return f.tie(sel.X) // a task's or group's result: tied as the handle is
 			}
+		case "Value":
+			if sgoRecvNamed(fn, "Lease") {
+				return f.tie(sel.X) // a leased item: tied as the lease is (D175)
+			}
 		}
 		for _, a := range append([]syntax.Expr{sel.X}, e.ArgList...) {
 			if x := f.scopeExtent(a); x != nil {
@@ -892,6 +902,14 @@ func (f *sgoResFlow) call(c *syntax.CallExpr) {
 			f.move(c.ArgList[0], sel.X) // a registered user resource is tied to its scope (D152)
 		case fn.name == "Commit" && len(c.ArgList) == 1:
 			f.send(sel.X, c.ArgList[0])
+		case fn.name == "Put" && len(c.ArgList) == 1 && sgoRecvNamed(fn, "Pool"):
+			f.send(sel.X, c.ArgList[0]) // an item must be tied at least as long as its pool (D175)
+		case fn.name == "Acquire" && len(c.ArgList) == 1 && sgoRecvNamed(fn, "Pool") && f.isRes(sel.X):
+			// A lease, and the item read from it, live in the lease's scope: it must lie within the
+			// pool's extent, where its resource items are (D175).
+			if x := f.scopeExtent(c.ArgList[0]); x != nil && !f.within(x, f.tie(sel.X)) {
+				f.errorf(c.ArgList[0], "the lease's scope %s may outlive pool %s, whose items it would hold; acquire into the pool's nursery or a scope inside it", syntax.String(c.ArgList[0]), syntax.String(sel.X))
+			}
 		}
 	}
 	// sgo.MoveTo(r, s): a user resource (or any resource) moves to s (D158).
@@ -1029,4 +1047,18 @@ func (f *sgoResFlow) origin(e syntax.Expr) syntax.Node {
 		}
 	}
 	return f.ptr(e, false)
+}
+
+// sgoRecvNamed reports whether fn is a method of *sgo.<name>[...].
+func sgoRecvNamed(fn *Func, name string) bool {
+	sig, _ := fn.typ.(*Signature)
+	if sig == nil || sig.recv == nil {
+		return false
+	}
+	p, _ := Unalias(sig.recv.typ).(*Pointer)
+	if p == nil {
+		return false
+	}
+	n, _ := Unalias(p.base).(*Named)
+	return n != nil && n.obj != nil && n.obj.name == name
 }

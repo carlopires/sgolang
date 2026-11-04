@@ -186,7 +186,7 @@ func (check *Checker) sgoGoCalls(fd *syntax.FuncDecl) {
 			return true
 		}
 		fn, _ := check.Uses[sel.Sel].(*Func)
-		if fn == nil || fn.pkg == nil || fn.pkg.path != "sgo" || (fn.name != "Go" && fn.name != "NewGroup" && fn.name != "NewCall") {
+		if fn == nil || fn.pkg == nil || fn.pkg.path != "sgo" || (fn.name != "Go" && fn.name != "NewGroup" && fn.name != "NewCall" && fn.name != "NewPool") {
 			return true
 		}
 		tv, ok := check.Types[c]

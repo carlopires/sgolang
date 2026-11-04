@@ -45,12 +45,13 @@ def builtin_list(src):
 
 def registered(srcs):
     """Types whose values package sgo registers with runtime_resOwn under their own pointer: the
-    function returning *T that calls runtime_resOwn with unsafe.Pointer(r)."""
+    function returning *T that registers the value it returns, runtime_resOwn(..., unsafe.Pointer(v))."""
     out = set()
     for src in srcs:
         for fn in re.finditer(r'\nfunc \([^)]*\) \w+\([^)]*\) \*(\w+)(?:\[[^\]]*\])? \{(.*?)\n\}', src, re.S):
-            if re.search(r'runtime_resOwn\([^,]+, [^,]+, unsafe\.Pointer\(r\)', fn.group(2)):
-                out.add(fn.group(1))
+            for v in re.findall(r'runtime_resOwn\([^,]+, [^,]+, unsafe\.Pointer\((\w+)\)', fn.group(2)):
+                if re.search(r'\n\treturn ' + v + r'\n', fn.group(2) + '\n'):  # the value returned is the one registered
+                    out.add(fn.group(1))
     return out
 
 

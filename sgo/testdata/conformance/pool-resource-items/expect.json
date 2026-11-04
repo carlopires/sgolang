@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": ["SGO-SPAWN-009", "SGO-RES-003"],
+ "exit": 0,
+ "stdout": "three leases fired\n",
+ "timeout_ms": 20000,
+ "note": "D175: a pool of timers owned by its nursery, used exclusively through leases by the nursery's tasks."
+}

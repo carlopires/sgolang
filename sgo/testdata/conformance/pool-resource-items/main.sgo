@@ -1,0 +1,30 @@
+package main
+
+import "sgo"
+
+// A pool of resources: timers owned by the pool's nursery, used exclusively through leases by
+// tasks inside it, and released when the nursery ends (D175).
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	fired := make(chan int, 8)
+	nursery (n) {
+		p := sgo.NewPool[*sgo.Timer](n)
+		p.Put(n.NewTimer(0))
+		p.Put(n.NewTimer(0))
+		for w := 0; w < 3; w++ {
+			n.Spawn(func(t *sgo.Context) error {
+				nursery (use) {
+					l := p.Acquire(use)
+					tm := l.Value()
+					tm.Reset(1)
+					fired <- <-tm.C()
+				}
+				return nil
+			})
+		}
+	}
+	for i := 0; i < 3; i++ {
+		<-fired
+	}
+	return out.WriteString("three leases fired\n")
+}

@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": ["SGO-SPAWN-009"],
+ "exit": 0,
+ "stdout": "leases: 12\ndropped item gone; waiter cancelled\n",
+ "timeout_ms": 20000,
+ "note": "D175: three workers share two items through leases; Return puts an item back early, Drop keeps it out for good, and a waiter for a dropped pool's item stays waiting until cancelled."
+}

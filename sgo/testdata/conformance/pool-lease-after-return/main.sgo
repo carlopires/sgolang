@@ -1,0 +1,17 @@
+package main
+
+import "sgo"
+
+// A spent lease cannot be used: Value after Return is a SpawnContractViolation (D175).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		p := sgo.NewPool[int](n)
+		p.Put(1)
+		nursery (use) {
+			l := p.Acquire(use)
+			l.Return()
+			_ = l.Value()
+		}
+	}
+	return nil
+}

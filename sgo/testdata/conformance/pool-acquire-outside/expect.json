@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-009"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "note": "D175: for a pool of plain values the runtime checks that the lease's scope lies inside the pool's nursery.",
+ "stderr_kind": "MissingCapability",
+ "timeout_ms": 20000
+}

@@ -1,0 +1,14 @@
+package main
+
+import "sgo"
+
+// An item that holds a resource must be tied at least as long as its pool: Put is a send (D175).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		p := sgo.NewPool[*sgo.Timer](n)
+		nursery (inner) {
+			p.Put(inner.NewTimer(1000))
+		}
+	}
+	return nil
+}

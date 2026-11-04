@@ -116,7 +116,8 @@ func isSgoHandle(T Type) bool {
 	case "Context", "Nursery", "Writer", "Channel", "SendPermit", "Ready",
 		"Clock", "WallClock", "Random", "Entropy", "SimStore", "Event", "CapacityLimiter", "Token",
 		"Dir", "File", "Conn", "Listener", "Listing", "T", "Dialer", "Timer",
-		"Request": // an accepted request of a call point (D174)
+		"Request", // an accepted request of a call point (D174)
+		"Lease":   // a lease on an item of a pool (D175)
 		return true
 	}
 	return false

@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-009"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "note": "D175: a spent lease cannot be used.",
+ "stderr_kind": "SpawnContractViolation",
+ "timeout_ms": 20000
+}
