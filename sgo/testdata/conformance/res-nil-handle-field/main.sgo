@@ -1,0 +1,14 @@
+package main
+
+import "sgo"
+
+type box struct {
+	f *sgo.File
+}
+
+// A struct field of handle type is nil in the zero value; a method call on it fails with
+// NilDereference at the call (SGO-COMP-007, W21 review Z4).
+func main(root *sgo.Context) error {
+	b := box{}
+	return b.f.Close()
+}

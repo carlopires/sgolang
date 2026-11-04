@@ -60,10 +60,15 @@ clause version, and all of them freeze together as 0.16.1.
   for now. Its withdrawal (D169, planned for 0.17.0) needs SPEC-AUTH to say whether effect
   handles are tied like resources or are shareable authority tokens gated by ceilings.
 
+## SGO-COMP-007 v2: nil handles (Z4.2)
+
+- **runtime_guards:** add: "A method call on a handle of package `sgo` checks its receiver: the
+  zero value of a struct field of handle type is nil, and the call fails with `NilDereference`
+  at the call (not as a nil error inside package `sgo`)." The check is inserted when the call is
+  read, before inlining.
+- **negative_tests:** add fixture:res-nil-handle-field.
+
 ## Not in this erratum
 
-- Z4.2: a method call on a nil built-in handle, possible only through the zero value of a struct
-  field of handle type, is still reported as `NilError`. A receiver nil check at S-Go call sites
-  (`NilDereference` with the position) comes in a follow-up.
 - `res-defer-nursery-close` (`defer c.Close()` inside a nursery) is covered by the same rule as
   `res-defer-nursery-capture`; a file-based case is a follow-up.

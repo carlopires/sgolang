@@ -2677,7 +2677,8 @@ func (r *reader) expr() (res ir.Node) {
 	case exprCall:
 		var fun ir.Node
 		var args ir.Nodes
-		if r.Bool() { // method call
+		var sgoInit ir.Nodes // the nil check of an sgo handle receiver (W21 review Z4)
+		if r.Bool() {        // method call
 			recv := r.expr()
 			_, method, dictPtr := r.methodExpr()
 
@@ -2703,6 +2704,9 @@ func (r *reader) expr() (res ir.Node) {
 				}
 
 				fun = method
+				if base.SGo && r.sgoHandleRecv(recv) {
+					recv = r.sgoCheckedRecv(recv, &sgoInit)
+				}
 				args.Append(recv)
 			}
 			if dictPtr != nil {
@@ -2720,6 +2724,9 @@ func (r *reader) expr() (res ir.Node) {
 		args.Append(r.multiExpr()...)
 		dots := r.Bool()
 		n := typecheck.Call(pos, fun, args, dots)
+		if len(sgoInit) > 0 {
+			return ir.InitExpr(sgoInit, n)
+		}
 		switch n.Op() {
 		case ir.OAPPEND:
 			n := n.(*ir.CallExpr)
@@ -4629,4 +4636,31 @@ func (r *reader) sgoNilResourceGuard(ret *ir.ReturnStmt) ir.Node {
 	b := ir.NewBlockStmt(pos, stmts)
 	sgoGuards[b] = true
 	return b
+}
+
+// sgoHandleRecv reports whether recv, a method receiver in S-Go code, is a pointer to a type of
+// package sgo: a handle, which is never nil (SGO-TYPE-005), except as the zero value of a struct
+// field of handle type.
+func (r *reader) sgoHandleRecv(recv ir.Node) bool {
+	t := recv.Type()
+	if t == nil || !t.IsPtr() {
+		return false
+	}
+	s := t.Elem().Sym()
+	return s != nil && s.Pkg != nil && s.Pkg.Path == "sgo"
+}
+
+// sgoCheckedRecv holds recv in a temporary checked not to be nil before the call, so a nil handle
+// fails with NilDereference at the call in S-Go code (SGO-COMP-007), not inside package sgo, where
+// the method may be inlined (W21 review Z4).
+func (r *reader) sgoCheckedRecv(recv ir.Node, init *ir.Nodes) ir.Node {
+	pos := recv.Pos()
+	tmp := r.temp(pos, recv.Type())
+	as := ir.NewAssignStmt(pos, tmp, recv)
+	as.Def = true
+	as.PtrInit().Append(ir.NewDecl(pos, ir.ODCL, tmp))
+	tmp.Defn = as
+	init.Append(typecheck.Stmt(as))
+	init.Append(ir.NewUnaryExpr(pos, ir.OCHECKNIL, tmp))
+	return tmp
 }
