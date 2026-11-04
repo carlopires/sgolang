@@ -854,6 +854,46 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Decision.** `sgo lab` runs read an optional `lab.net` file in the module: `resolve HOST IP...` entries for the fake resolver, and `blackhole IP:PORT` / `delay IP:PORT MS` entries for endpoints whose fake Dial waits until cancelled or for MS of virtual time. Happy Eyeballs then runs deterministically under replay: same seed, same winner, same trace. (Happy Eyeballs, RFC 8305; sgo/docs/happy-eyeballs-plan.md)
 
+## D147 — `check`: checked propagation · APPROVED 2026-11-04
+
+**Decision.** `check` becomes a reserved word. Two forms: the statement `check f(…)` and the whole right side of an assignment or short declaration, `x₁, …, xₙ := check f(…)`, where the call's last result is `error` and the left side binds the other results. It is defined by its desugaring: if the error is not nil, the enclosing function returns exactly as a written `return` with that error would (crossing nurseries and running deferred calls as any return does); otherwise the targets are assigned, and only then. Not admitted: `check` inside a larger expression, a condition, an argument list, a `return` operand list, or an `if`/`for`/`switch` init statement. The enclosing function must have a trailing `error` result. `check` counts as a use of the error (SGO-CTL-001); `_ = f()` stays the only explicit discard. No annotation or wrapping is added to the error. (sgo/docs/structured-resources-plan.md)
+
+## D148 — Structured resources: a scope owns its resources · APPROVED 2026-11-04
+
+**Decision.** Every resource is acquired into a scope, the way every task is spawned into a nursery. A scope is a nursery (`n`) or a task body (its context: `root`, or a child's `t`). The scope releases its resources when it ends, so no resource outlives its scope and a forgotten `Close` is not a bug. A nursery ends by (1) joining its children, (2) releasing its resources in reverse order of acquisition, (3) computing its outcome; a task body releases its resources before its outcome is published. `Close` stays as an optional early release that returns its error to the caller. Built-in resources: files, listeners, connections, dialers (and every later handle kind). A method on a scope (`*sgo.Context`, `*sgo.Nursery`) acquires into that scope; every other acquiring call takes the scope as its first argument (`l.Accept(t)`, `d.Dial(t, addr)`, `dir.Open(n, path)`).
+
+## D149 — Where a release error goes · APPROVED 2026-11-04
+
+**Decision.** A failed release is never dropped. In a nursery it is a new step of the outcome order (SGO-NUR-004): if the body and every child succeeded, the nursery unwinds with kind `ReleaseError` carrying the first failed release (in release order); otherwise each failed release is appended to the chain of the primary outcome. In a task body: a task returning nil ends `Errored` with the first failed release; otherwise the failed releases join its chain. For `main` this is exit status 1 (`MainError`).
+
+## D150 — Sharing within a scope replaces lending · APPROVED 2026-11-04
+
+**Decision.** A resource is usable by every task running inside its scope: the acquiring task and every task spawned, at any depth, into a nursery nested in that scope, since they all end before the scope releases it. `LendTo` is removed. Explicit `Close` is permitted to any task inside the scope while no other task is waiting in an operation on it (otherwise `ResourceBusy`, no effect). Concurrent use is per kind: sockets keep one waiting reader and one waiting writer at a time (others wait their turn); files serialize operations.
+
+## D151 — A resource never outlives the name of its scope · APPROVED 2026-11-04
+
+**Decision.** Static rule (`SGO_E_RESOURCE_ESCAPES`): a value whose type holds a resource (a resource handle type, or a struct, array, or slice holding one, or a function literal capturing one) is tied to the scope expression it was acquired into, and may not flow beyond the lexical extent of that scope's name: no assignment to a variable declared outside it, no return from inside it, no send on a channel, no capture by a closure that escapes it. Structs may now hold resources (copies are harmless: ownership is the scope's). The one explicit way out is `r.MoveTo(s)`, where `s` is a scope enclosing r's current scope and the caller runs inside r's scope; it re-ties r to `s` statically and moves it at run time.
+
+## D152 — User resources: `s.Own(r)` and `Release(ok bool) error` · APPROVED 2026-11-04
+
+**Decision.** `sgo.Scope` is the interface `*sgo.Context` and `*sgo.Nursery` implement. A user type becomes a resource by being registered with `s.Own(r)`, which requires `r` to have a method `Release(ok bool) error`; the type's values are then subject to D151 (a type with a `Release(bool) error` method is a resource type). At the scope's end `Release(true)` runs if the scope is ending normally and `Release(false)` if it is unwinding (failure or cancellation): commit or roll back. Release order is strict reverse acquisition across built-in and user resources: a user resource owned after the handles it holds were acquired is released before them, so its `Release` can still use them. Release errors follow D149. A panic in `Release` is a failure (SGO-DEF-004).
+
+## D153 — Superseded: abandonment, lending, the connection slot · APPROVED 2026-11-04
+
+**Decision.** D54's `HandleAbandoned` entry is removed (scope release is the normal path). D144's `sgo.ConnSlot` is superseded by `MoveTo` (D151); the slot is removed with `LendTo` (D150). Their clauses (SGO-FILE-003, SGO-NET-002..004) are rewritten in the 0.16.0 freeze.
+
+## D154 — No scope finalizers, no `defer` of fallible calls · APPROVED 2026-11-04
+
+**Decision.** `n.Defer` stays denied for good: cleanup is attached to the resource it releases (D148, D152), not registered separately with a scope. `defer` of a call returning `error` stays denied (SGO-DEF-001). `defer` of non-error calls is unchanged.
+
+## D155 — Release during cancellation · APPROVED 2026-11-04
+
+**Decision.** Releases run while a scope unwinds from cancellation or failure, like deferred calls. A release that waits (a socket close that flushes, a user `Release` that blocks) is not a cancellation point; it is bounded by the drain budget (SPEC-DRAIN): past the budget the process ends `DrainBudgetExceeded` as for any non-cooperative drain.
+
+## D156 — Non-goals of W21 · APPROVED 2026-11-04
+
+**Decision.** Unchanged: comma-ok results (`v, ok := …`), errors as data (inspected with `IsCancelled`, `Error()`, comparison), error values (sealed, no wrapping at `check`, no position recorded). Not added: a `handle` hook, `try`-style operators, exceptions, result types. Channels, events, limiters, and tokens are not resources in this sense (tokens keep their D39 rules) unless a later decision says so.
+
 ---
 
 ## Approval record
@@ -885,3 +925,4 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - 2026-11-03: user approved D121–D126 and the W16 drafts (sgo/docs/w16-drafts.md: SGO-STD-001..007, SGO-IMP-004 v2) as recommended ("looks good; approved"). W16 implementation starts; the drafts freeze at spec 0.13.0.
 - 2026-11-03: user approved D127–D133 and the W17 drafts (sgo/docs/w17-drafts.md: SGO-IFACE-001 v2, SGO-IFACE-002..004, amendments) as recommended ("looks good; approved"). W17 starts with the share model; the drafts freeze at spec 0.14.0.
 - 2026-11-03: the owner delegated D143–D146 to the implementer ("own the decisions, handle it to deliver a working version of Happy Eyeballs algorithm (RFC 8305)"). IPv6 endpoints were already admitted (SGO-NET-002); a connect timeout is the cancellation of an attempt (a waiting Dial is a cancellation point), so no timeout API is added. D134–D142 stay proposed.
+- 2026-11-04: user approved structured resources and `check` (D147–D156) after a design discussion ("this looks great! approved!"): resources are owned by scopes (nurseries and task bodies) and released when the scope ends; the earlier `defer check` draft (kept in a scratch file, not in the repo) was dropped. W21 starts with the scope–resource model.

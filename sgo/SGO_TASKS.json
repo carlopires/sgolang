@@ -914,6 +914,30 @@
       "blockers": [],
       "commit": "1c4f7c93e8",
       "completion_note": "Spec 0.15.1 (SGO-NET-002 v2, SGO-NET-003 v2, SGO-NET-004 v1). Review (note2, linux/amd64): no blocker; Y1-Y4 fixed in eb84bca69d/1c4f7c93e8 and verified: conformance 572/572, test-examples, runtime lane, 30s fuzz."
+    },
+    {
+      "id": "W21",
+      "title": "Structured resources (scopes own resources) and check",
+      "depends_on": [
+        "W18"
+      ],
+      "risk": "high",
+      "status": "in_progress",
+      "plan_section": "sgo/docs/structured-resources-plan.md",
+      "deliverables": [
+        "scope-resource model (sgo/model/scoperes.go)",
+        "check (D147)",
+        "scope-owned resources, release after join (D148, D149)",
+        "sharing within a scope; LendTo removed (D150)",
+        "escape rule and MoveTo (D151)",
+        "Own/Release user resources (D152)",
+        "examples rewritten; spec 0.16.0"
+      ],
+      "acceptance_case_ids": [],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": null
     }
   ],
   "language_policy": "One specification-defined S-Go language; no Go compatibility path. Bare go rejected; explicit nursery capabilities; missing contracts rejected transitively. Host/reference tools are external build dependencies.",
