@@ -888,7 +888,7 @@
         "W17"
       ],
       "risk": "high",
-      "status": "in_progress",
+      "status": "passed",
       "plan_section": "sgo/docs/happy-eyeballs-plan.md",
       "deliverables": [
         "sgo.Dialer (D143)",
@@ -897,11 +897,23 @@
         "lab.net for deterministic races (D146)",
         "sgo/examples/happyeyeballs: an RFC 8305 client with tests and a lab replay"
       ],
-      "acceptance_case_ids": [],
-      "evidence": [],
+      "acceptance_case_ids": [
+        "net-dialer-race",
+        "net-dialer-child-create",
+        "net-dialer-other-endpoint",
+        "net-dialer-not-lent",
+        "net-slot-second-put",
+        "net-slot-close-closes",
+        "net-slot-take-not-owner",
+        "net-slot-put-not-owner",
+        "net-grant-hostname"
+      ],
+      "evidence": [
+        "sgo/evidence/w18/README.md"
+      ],
       "blockers": [],
-      "commit": null,
-      "completion_note": null
+      "commit": "1c4f7c93e8",
+      "completion_note": "Spec 0.15.1 (SGO-NET-002 v2, SGO-NET-003 v2, SGO-NET-004 v1). Review (note2, linux/amd64): no blocker; Y1-Y4 fixed in eb84bca69d/1c4f7c93e8 and verified: conformance 572/572, test-examples, runtime lane, 30s fuzz."
     }
   ],
   "language_policy": "One specification-defined S-Go language; no Go compatibility path. Bare go rejected; explicit nursery capabilities; missing contracts rejected transitively. Host/reference tools are external build dependencies.",

@@ -31,6 +31,17 @@ SGO-NET-004 v1 (connection slots).
 - test-examples, test-lab, test-identity, test-tcb, test-flags, spec, guarantee, std-api,
   adoption checks: pass. linux/amd64 and linux/arm64: `go vet runtime sgo` clean on the lane.
 
+## Review (note2, linux/amd64)
+
+No blocker; four minor findings fixed in `eb84bca69d` and spec 0.15.1 (`1c4f7c93e8`), verified on
+linux/amd64 (conformance 572/572, test-examples on a host without `::1 localhost`, runtime lane,
+`FuzzSGoDNSAnswer` 30 s):
+
+- Y1: the real-run check asserts only host-independent lines; the lab pins the attempt order.
+- Y2: re-resolving adds no duplicate (address, port) to a dialer (`TestSGoResolveNoGrowth`).
+- Y3: unspecified and IPv4-mapped addresses are never results, from hosts, DNS, or lab tables.
+- Y4: DNS responses must echo the question; only the name's records and its CNAME chain count.
+
 ## Not done (documented limits)
 
 No TCP retry of truncated DNS answers, no search domains, no RFC 6724 address sorting.

@@ -49,6 +49,8 @@ def main():
             sys.exit(f"usage: test-examples.py [--sgo PATH] [--examples DIR]")
     problems = []
     env = {"PATH": "/usr/bin:/bin", "HOME": os.environ.get("HOME", "/tmp")}
+    if os.environ.get("TMPDIR"):  # lets a shared or CI host isolate the driver's temporary files
+        env["TMPDIR"] = os.environ["TMPDIR"]
     with tempfile.TemporaryDirectory() as tmp:
         for name, (mains, seeds) in EXAMPLES.items():
             d = os.path.join(tmp, name)

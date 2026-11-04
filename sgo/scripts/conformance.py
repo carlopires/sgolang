@@ -203,6 +203,8 @@ GUARD = os.path.join(os.environ.get("SGO_CACHE", os.path.expanduser("~/.cache/sg
 
 def env_for(extra):
     env = {"HOME": os.environ.get("HOME", "/tmp"), "PATH": f"{GUARD}:/usr/bin:/bin", "LANG": "C", "LC_ALL": "C"}
+    if os.environ.get("TMPDIR"):  # lets a shared or CI host isolate the driver's temporary files
+        env["TMPDIR"] = os.environ["TMPDIR"]
     env.update(extra or {})
     return env
 
