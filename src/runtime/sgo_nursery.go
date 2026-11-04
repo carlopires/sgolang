@@ -51,7 +51,7 @@ func sgoNurseryExit(p unsafe.Pointer) {
 	// The nursery's resources are released after the join, before its outcome (SGO-RES-001).
 	t := getg().sgo
 	// ok: the nursery ends normally, neither failing nor cancelled (D152: a cancelled scope rolls back).
-	failed := sgoResRelease(&s.res, r.Outcome == sgoSucceeded && sgoCancelledFrom(s) == nil)
+	failed := sgoNurseryRelease(t, s, r.Outcome == sgoSucceeded && sgoCancelledFrom(s) == nil)
 	if r.Outcome == sgoSucceeded {
 		if f := sgoReleaseOutcome(t, failed, false); f != nil {
 			panic(f) // a failed release: ReleaseError (D149), or a Release that panicked
@@ -96,7 +96,7 @@ func sgoUnwindNurseries(off uintptr, all bool) {
 			throw("sgo: unwinding join failed") // the innermost scope is the caller's own: a defect
 		}
 		// Released after the join, with ok false: the scope is unwinding (D152, D155).
-		sgoReleaseOutcome(t, sgoResRelease(&s.res, false), true)
+		sgoReleaseOutcome(t, sgoNurseryRelease(t, s, false), true)
 		// A cancellation unwind (D33) is not a failure: the owner behaves as if the nursery body had
 		// returned, so a failed or errored child becomes the primary failure (Rules 2 and 3).
 		if u := sgoUnwindingCancel(); u != nil && u.fail == nil && r.Outcome != sgoSucceeded && r.Outcome != sgoCancelled {

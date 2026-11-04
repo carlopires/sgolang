@@ -79,6 +79,16 @@ func (l *sgoResList) popLast() *sgoHandle {
 	return h
 }
 
+// sgoNurseryRelease releases nursery s's resources in task t, which joined it: while it does, t
+// still counts as inside s, so a Release can use the resources acquired before it (SGO-RES-004).
+func sgoNurseryRelease(t *sgoTask, s *sgoScope, ok bool) []sgoReleased {
+	saved := t.releasing
+	t.releasing = s
+	failed := sgoResRelease(&s.res, ok)
+	t.releasing = saved
+	return failed
+}
+
 // sgoInside reports whether task t runs inside the scope (nurs, or the body of task body): the
 // scope itself, a nursery nested in it, or a task spawned into one of those, transitively.
 func sgoInside(t *sgoTask, nurs *sgoScope, body *sgoTask) bool {
@@ -86,6 +96,9 @@ func sgoInside(t *sgoTask, nurs *sgoScope, body *sgoTask) bool {
 		return false
 	}
 	if body != nil && t == body {
+		return true
+	}
+	if nurs != nil && t.releasing == nurs {
 		return true
 	}
 	for c := t.currentScope(); c != nil; c = c.parent {

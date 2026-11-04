@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-001"
+ ],
+ "exit": 1,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"ChildError\",\"message\":\"child failed\",\"position\":null,\"task_id\":1,\"scope_id\":1,\"chain\":[{\"kind\":\"ReleaseError\",\"message\":\"n release failed\",\"position\":null}]}\n"
+}

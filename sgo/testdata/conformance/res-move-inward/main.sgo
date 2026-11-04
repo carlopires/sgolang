@@ -1,0 +1,17 @@
+package main
+
+import "sgo"
+
+// MoveTo refuses a scope that does not enclose the resource's: here an inner nursery.
+func main(root *sgo.Context) error {
+	if _, err := root.Listen("127.0.0.1:47944"); err != nil {
+		return err
+	}
+	nursery (outer) {
+		c := check outer.Dial("127.0.0.1:47944")
+		nursery (inner) {
+			check c.MoveTo(inner)
+		}
+	}
+	return nil
+}

@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-001"
+ ],
+ "exit": 0,
+ "stdout": "body done\nn released\nafter nursery\n"
+}

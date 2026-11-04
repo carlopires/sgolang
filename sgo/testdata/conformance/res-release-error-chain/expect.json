@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-001"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"ReleaseError\",\"message\":\"b release failed\",\"position\":null,\"task_id\":0,\"scope_id\":null,\"chain\":[{\"kind\":\"ReleaseError\",\"message\":\"a release failed\",\"position\":null}]}\n"
+}

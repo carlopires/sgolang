@@ -111,6 +111,9 @@ type sgoTask struct {
 	permits *sgoPermit
 	tokens  *sgoToken  // limiter tokens the task holds (sgo_sync.go)
 	res     sgoResList // resources of the task body, released when it ends (sgo_res.go, D148)
+	// releasing is the nursery whose resources the task is releasing after its join: Release
+	// methods may still use that nursery's other resources (SGO-RES-004), though it left t.nest.
+	releasing *sgoScope
 	// Lab state (sgo_lab.go): the lab task ID, ready and waiting flags, and the step count since
 	// the task's last decision. Touched under sgoLab.lock or by the baton holder.
 	labID                                 int32

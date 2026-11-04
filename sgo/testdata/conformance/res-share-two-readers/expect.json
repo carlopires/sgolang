@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-002"
+ ],
+ "exit": 0,
+ "stdout_any_of": [
+  "xy\n",
+  "yx\n"
+ ]
+}

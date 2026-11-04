@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+// Close releases a resource early; its scope does not release it again, and later uses fail.
+func main(root *sgo.Context) error {
+	d := root.Dir("data")
+	nursery (n) {
+		f := check d.Open(n, "a.txt")
+		check f.Close()
+		_, rerr := f.Read(4)
+		check root.Stdout().WriteString("after close: " + rerr.Error() + "\n")
+	}
+	return root.Stdout().WriteString("nursery ended\n")
+}

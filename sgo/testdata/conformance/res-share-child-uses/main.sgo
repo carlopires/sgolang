@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+// A child of the root's nursery uses a file of the root's body (SGO-RES-002).
+func main(root *sgo.Context) error {
+	d := root.Dir("data")
+	f := check d.Open(root, "a.txt")
+	got := make(chan string, 1)
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			s := check f.Read(16)
+			got <- s
+			return nil
+		})
+	}
+	return root.Stdout().WriteString("child read " + <-got + "\n")
+}

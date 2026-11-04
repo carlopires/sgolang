@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-004"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "Panic",
+ "stderr_message": "release exploded"
+}

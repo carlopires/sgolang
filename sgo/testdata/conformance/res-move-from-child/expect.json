@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-003"
+ ],
+ "exit": 0,
+ "stdout": "server got hi\n"
+}

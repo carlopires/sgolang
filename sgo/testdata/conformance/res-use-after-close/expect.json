@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-002"
+ ],
+ "exit": 0,
+ "stdout": "HandleClosed: File.Size\n"
+}

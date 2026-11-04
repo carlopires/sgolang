@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-001"
+ ],
+ "exit": 0,
+ "stdout": "after close: HandleClosed: File.Read\nnursery ended\n"
+}

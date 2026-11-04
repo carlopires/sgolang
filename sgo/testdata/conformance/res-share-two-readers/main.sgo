@@ -1,0 +1,22 @@
+package main
+
+import "sgo"
+
+// Two children read the same file; its operations are serialized, so each gets one whole byte.
+func main(root *sgo.Context) error {
+	d := root.Dir("data")
+	f := check d.Open(root, "a.txt")
+	got := make(chan string, 2)
+	nursery (n) {
+		for i := 0; i < 2; i++ {
+			n.Spawn(func(t *sgo.Context) error {
+				s := check f.Read(1)
+				got <- s
+				return nil
+			})
+		}
+	}
+	a := <-got
+	b := <-got
+	return root.Stdout().WriteString(a + b + "\n")
+}

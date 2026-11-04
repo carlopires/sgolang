@@ -1,0 +1,17 @@
+package main
+
+import "sgo"
+
+// A panic in Release is a failure (SGO-DEF-004).
+type bomb struct{}
+
+func (b *bomb) Release(ok bool) error {
+	panic("release exploded")
+}
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		n.Own(&bomb{})
+	}
+	return nil
+}

@@ -1,0 +1,13 @@
+package main
+
+import "sgo"
+
+// Own needs a value with a method Release(ok bool) error.
+type plain struct{}
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		n.Own(&plain{})
+	}
+	return nil
+}

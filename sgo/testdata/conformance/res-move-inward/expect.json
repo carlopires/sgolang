@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-003"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "MissingCapability",
+ "stderr_message": "MoveTo: the target scope does not enclose the resource's scope"
+}

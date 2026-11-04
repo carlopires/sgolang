@@ -1,0 +1,29 @@
+package main
+
+import "sgo"
+
+// A child acquires into its own body, moves the connection to the enclosing nursery, and reports
+// it on a channel made there; the body uses it after the child has ended (SGO-RES-003).
+type found struct {
+	c *sgo.Conn
+}
+
+func main(root *sgo.Context) error {
+	l := check root.Listen("127.0.0.1:47943")
+	d := root.Dialer([]string{"127.0.0.1:47943"})
+	nursery (n) {
+		got := sgo.NewChannel[found](1)
+		n.Spawn(func(t *sgo.Context) error {
+			c := check d.Dial(t, "127.0.0.1:47943")
+			check c.MoveTo(n)
+			p := check got.Reserve(t)
+			return p.Commit(found{c: c})
+		})
+		r, _ := check got.Receive(root)
+		check r.c.Write("hi")
+		s := check l.Accept(root)
+		msg := check s.Read(8)
+		check root.Stdout().WriteString("server got " + msg + "\n")
+	}
+	return nil
+}

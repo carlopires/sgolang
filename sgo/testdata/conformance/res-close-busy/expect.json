@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-002"
+ ],
+ "exit": 0,
+ "stdout": "close while waiting: ResourceBusy: Conn.Close\n"
+}

@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-001"
+ ],
+ "exit": 0,
+ "stdout": "task body done\ntask released\nafter nursery\n"
+}

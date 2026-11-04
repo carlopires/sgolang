@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-001"
+ ],
+ "exit": 1,
+ "stdout": "",
+ "stderr_kind": "ChildError",
+ "stderr_message": "ReleaseError: task release failed"
+}

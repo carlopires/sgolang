@@ -1,0 +1,22 @@
+package main
+
+import "sgo"
+
+// Close while another task waits on the resource fails with ResourceBusy and has no effect.
+func main(root *sgo.Context) error {
+	l := check root.Listen("127.0.0.1:47941")
+	c := check root.Dial("127.0.0.1:47941")
+	s := check l.Accept(root)
+	_ = c
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			_, err := s.Read(10) // nothing is sent: waits until the cancellation
+			return err
+		})
+		check root.Sleep(50)
+		cerr := s.Close()
+		check root.Stdout().WriteString("close while waiting: " + cerr.Error() + "\n")
+		n.Cancel()
+	}
+	return nil
+}

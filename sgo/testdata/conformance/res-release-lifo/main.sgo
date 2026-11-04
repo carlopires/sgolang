@@ -1,0 +1,42 @@
+package main
+
+import "sgo"
+
+// note is a user resource whose Release reports on a buffered channel, so the root can print the
+// order of releases after the fact.
+type note struct {
+	name string
+	ch   chan string
+	fail bool
+}
+
+func (x *note) Release(ok bool) error {
+	if !ok {
+		x.ch <- x.name + " rolled back"
+	} else {
+		x.ch <- x.name + " released"
+	}
+	if x.fail {
+		return sgo.NewError(x.name + " release failed")
+	}
+	return nil
+}
+
+func drain(root *sgo.Context, ch chan string, k int) error {
+	for i := 0; i < k; i++ {
+		s := <-ch
+		check root.Stdout().WriteString(s + "\n")
+	}
+	return nil
+}
+
+// Resources are released in the reverse order of their acquisition.
+func main(root *sgo.Context) error {
+	ch := make(chan string, 4)
+	nursery (n) {
+		n.Own(&note{name: "a", ch: ch})
+		n.Own(&note{name: "b", ch: ch})
+		n.Own(&note{name: "c", ch: ch})
+	}
+	return drain(root, ch, 3)
+}
