@@ -1,3 +1,3 @@
 module example.com/chan-compare-denied
 
-sgo 0.16.2
+sgo 0.17.0

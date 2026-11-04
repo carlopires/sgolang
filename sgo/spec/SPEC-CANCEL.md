@@ -92,7 +92,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §10, resolution R1, plan §6.1, in
 
 ### SGO-CANCEL-005 — Scope deadlines
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-CANCEL-001, SGO-CANCEL-002, SGO-CANCEL-003, SGO-CANCEL-004, SGO-TIMER-001; D162, D165, D170.
 - **grammar_and_types:** `n.CancelAfter(ms int)` where `n` has type `*sgo.Nursery`; `t.Deadline() (int, bool)` where `t` has type `*sgo.Context`; `sgo.IsDeadline(err error) bool`.
 - **preconditions:** For `CancelAfter`: the caller's current scope is `n` (as `n.Cancel`, SGO-CANCEL-001: `n`'s owner in its body, or a task spawned into `n`); `ms ≥ 0`. For `Deadline`: `t` is the caller's own context.

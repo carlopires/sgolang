@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": "0.16.2",
+  "spec_version": "0.17.0",
   "status": "admitted_0.7.0",
   "warning": "Spec 0.7.0 admits every row marked 'admitted': its clauses are frozen, the toolchain implements and enforces them, and its acceptance cases have executed evidence (constitution §6, D83). Rows marked 'denied' stay rejected. Admission does not widen any row beyond its clauses; everything the clauses do not name is rejected.",
   "default_decision": "reject",
@@ -507,8 +507,8 @@
         "SGO-SPAWN-003": "frozen",
         "SGO-SPAWN-004": "frozen",
         "SGO-SPAWN-005": "frozen",
-        "SGO-SPAWN-006": "draft",
-        "SGO-SPAWN-007": "draft"
+        "SGO-SPAWN-006": "frozen",
+        "SGO-SPAWN-007": "frozen"
       },
       "clause_versions": {
         "SGO-SPAWN-001": 1,
@@ -561,7 +561,7 @@
         "SGO-CANCEL-002": "frozen",
         "SGO-CANCEL-003": "frozen",
         "SGO-CANCEL-004": "frozen",
-        "SGO-CANCEL-005": "draft"
+        "SGO-CANCEL-005": "frozen"
       },
       "clause_versions": {
         "SGO-CANCEL-001": 1,
@@ -647,8 +647,8 @@
       "clause_status": {
         "SGO-WAIT-001": "frozen",
         "SGO-WAIT-002": "frozen",
-        "SGO-WAIT-003": "draft",
-        "SGO-WAIT-004": "draft"
+        "SGO-WAIT-003": "frozen",
+        "SGO-WAIT-004": "frozen"
       },
       "clause_versions": {
         "SGO-WAIT-001": 1,
@@ -799,7 +799,7 @@
         "SGO-AUTH-002",
         "SGO-AUTH-003"
       ],
-      "normative_text_digest": "54b32d04472fe40647d1eb8963662ce5a6efe10dd1b01c3431d5e44398e4dffa",
+      "normative_text_digest": "4c9a4e7c78e04a46551d77740b1d8344d062977ab709b1bae226de06e9632a9f",
       "admitted_in": [
         "0.7.0"
       ],
@@ -821,8 +821,8 @@
       "subset0": "denied",
       "clause_digests": {
         "SGO-AUTH-001": "d672d6e298826ed13c783ed0487106f8262f42bace3410719fec1373b53e5c4b",
-        "SGO-AUTH-002": "2de548c4041b62044cb3f7e28fa0fda826e5e296cc4f56c54369ddd6dfb7045f",
-        "SGO-AUTH-003": "6301abe9220d9304e623c41b91787d661f05b25a3132cb3b3001502e3df36de5"
+        "SGO-AUTH-002": "4ab87a4769b5322ee5bd98ca7d64beec21ab95fa38e4874a3f71a5fd1163c2e1",
+        "SGO-AUTH-003": "6abb2cc455e70097167f0f23f1a3ea15098eef5bba2b46135a7efde4767d4257"
       },
       "clause_status": {
         "SGO-AUTH-001": "frozen",
@@ -831,8 +831,8 @@
       },
       "clause_versions": {
         "SGO-AUTH-001": 1,
-        "SGO-AUTH-002": 3,
-        "SGO-AUTH-003": 2
+        "SGO-AUTH-002": 4,
+        "SGO-AUTH-003": 3
       }
     },
     {
@@ -1118,7 +1118,7 @@
         "SGO-RES-004",
         "SGO-RES-005"
       ],
-      "normative_text_digest": "4037a9916a4e35a0227471ada10698c87f21c9fcdd96f9fc6cb4d86458bca367",
+      "normative_text_digest": "e683eed9cef13b2b053d021351d7b1e95720dcdf94d1b61007b8040b703d7c57",
       "admitted_in": [
         "0.16.0"
       ],
@@ -1130,9 +1130,9 @@
       "subset0": "denied",
       "clause_digests": {
         "SGO-RES-001": "174536cd18127d089211a6a40471a97d879a0991c241316cf7b1edb16c69754b",
-        "SGO-RES-002": "5657f70c4d04d5fcf2434ea944b80650418536e2961ced9e45910f17877e2015",
-        "SGO-RES-003": "8b1bfa9d0f21dafbdf369c4bfc4bdb5cc711e6cb2fd83147d4adbba371542f28",
-        "SGO-RES-004": "d1a6b0fccdaaf022314d86622bd99b0f754c1ef61c5d03cc7855a9ff8f8a091c",
+        "SGO-RES-002": "57b541653622be24186045263e9038d3188a729e8962d5fd926468f32a1c0b7e",
+        "SGO-RES-003": "d1ddf9057d29151afa4533cc5506d3d1896a3d8f3a1883d01f13a9d4fc0bfaca",
+        "SGO-RES-004": "e00548986ea4167d6aed55a5896a001ec776dec82bc9194ba2bf2d10b84f14fe",
         "SGO-RES-005": "cfee81d4f351ae84987d25c09433c6d0d7958a1e18abc350faef0009f71164d8"
       },
       "clause_status": {
@@ -1144,9 +1144,9 @@
       },
       "clause_versions": {
         "SGO-RES-001": 2,
-        "SGO-RES-002": 2,
-        "SGO-RES-003": 3,
-        "SGO-RES-004": 3,
+        "SGO-RES-002": 3,
+        "SGO-RES-003": 4,
+        "SGO-RES-004": 4,
         "SGO-RES-005": 1
       }
     },
@@ -1807,5 +1807,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "85ac6be924f1efd8ce480a0ea12725e5052908f467e85674b48fa184405abcac"
+  "rows_digest": "91bb0914dff141026a1bf5fd71e6a193606f5e0a3caf69f9d1e15c4bcf4c90d9"
 }

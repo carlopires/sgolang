@@ -48,7 +48,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §12, resolution R8, plan §6.2, in
 
 ### SGO-WAIT-003 — Timers as select arms
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-WAIT-001, SGO-CHAN-002, SGO-CANCEL-002, SGO-LAB-004, SGO-DEF-003; D160.
 - **grammar_and_types:** `task.After(ms int) <-chan int` where `task` has type `*sgo.Context`, admitted only as the operand of a select receive arm: `case <-task.After(ms):` or `case v := <-task.After(ms):`. A single-arm select is admitted.
 - **preconditions:** `task` is the calling task's own context (as SGO-CANCEL-002); `ms ≥ 0`.
@@ -70,7 +70,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §12, resolution R8, plan §6.2, in
 
 ### SGO-WAIT-004 — Scope timers
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-WAIT-003, SGO-CHAN-002, SGO-RES-001, SGO-RES-002, SGO-RES-003, SGO-CANCEL-002, SGO-LAB-004, SGO-DEF-003; D171.
 - **grammar_and_types:** `s.NewTimer(ms int) *sgo.Timer` where `s` has type `*sgo.Context` or `*sgo.Nursery`; methods `tm.C() <-chan int`, `tm.Reset(ms int)`, `tm.Stop()`, `tm.MoveTo(s Scope) error`. `*sgo.Timer` is a resource handle type (SGO-RES-001). `tm.C()` may be used wherever a receive-only channel of `int` is admitted, in any number of selects and receives.
 - **preconditions:** For a context, `s` is the calling task's own context (as SGO-CANCEL-002). The calling task runs inside the scope `s` names, and a nursery has not ended. `ms ≥ 0`. `C`, `Reset`, and `Stop` are called by a task running inside the timer's scope (D150).

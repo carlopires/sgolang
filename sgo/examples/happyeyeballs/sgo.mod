@@ -1,6 +1,6 @@
 module example.com/happyeyeballs
 
-sgo 0.16.2
+sgo 0.17.0
 
 grant connect localhost:47970
 grant connect example.test:443

@@ -114,7 +114,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 
 ### SGO-SPAWN-006 — Value-returning tasks
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-SPAWN-003, SGO-SPAWN-004, SGO-CHAN-002, SGO-COMP-004, SGO-RES-003, SGO-WAIT-003; D161, D168.
 - **grammar_and_types:** `sgo.Go(n *sgo.Nursery, f func(*sgo.Context) (T, error)) *sgo.Task[T]`, with `T` inferred or written; `h.Wait(t *sgo.Context) (T, error)`; `h.Result() <-chan sgo.Result[T]`, where `sgo.Result[T]` has fields `Value T` and `Err error`. `T` must be a channel element type (SGO-CHAN-002, SGO-COMP-004) that is not task-local (SGO-COMP-004): the result passes from the child to its readers with no send site to copy at, so a slice, map, or pointer result is returned as `sgo.Frozen[T]` (SGO-COMP-009) or copied into a value type (D172). Resource handles are not task-local and are moved into `n` (D158).
 - **preconditions:** As `n.Spawn` (SGO-SPAWN-003): the caller can spawn into `n`; `f` is not nil.
@@ -136,7 +136,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 
 ### SGO-SPAWN-007 — Groups
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-SPAWN-006, SGO-SPAWN-001, SGO-NUR-004, SGO-CHAN-002, SGO-COMP-004, SGO-COMP-009, SGO-CANCEL-002, SGO-LAB-004, SGO-DEF-003; D172.
 - **grammar_and_types:** `sgo.NewGroup[T](n *sgo.Nursery, limit int) *sgo.Group[T]`; `g.Go(t *sgo.Context, f func(*sgo.Context) (T, error))`; `g.Next() <-chan sgo.Result[T]`. `T` is restricted as in SGO-SPAWN-006: a channel element type that is not task-local. A slice result is returned as `sgo.Frozen[[]E]`.
 - **preconditions:** `n` is non-nil and `limit ≥ 0` (0: no limit). For `g.Go`, `t` is the calling task's own context (as SGO-CANCEL-002), the calling task runs inside `n` (as `n.Spawn`, SGO-SPAWN-001), and `f` is non-nil.

@@ -1,3 +1,3 @@
 module example.com/tool-go-file-input
 
-sgo 0.16.2
+sgo 0.17.0

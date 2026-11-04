@@ -1,5 +1,5 @@
 module example.com/mod-version-conflict
 
-sgo 0.16.2
+sgo 0.17.0
 require example.com/lib v1.0.0
 require example.com/other v1.0.0

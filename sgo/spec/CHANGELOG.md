@@ -2,6 +2,26 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.17.0 — 2026-11-05
+
+The language core for structured concurrency (W22; D159–D172). Not every 0.16.2 program keeps its meaning: `LendTo` is removed from effect handles (D169); `sgo.Go` refuses a task-local result type (a slice, map, or pointer result is returned as `sgo.Frozen`); a task or group handle delivering a resource may not leave the nursery the child started in.
+
+New clauses:
+
+- SGO-WAIT-003 — timers as `select` arms: `case <-t.After(ms):` (D160).
+- SGO-WAIT-004 — scope timers: `n.NewTimer`, `t.NewTimer`, a resource of its scope, usable in any number of selects, with `Reset` and `Stop` (D171).
+- SGO-SPAWN-006 — value-returning tasks: `sgo.Go(n, f)`, `h.Wait(t)`, `case r := <-h.Result():`; the child's error is data; task handles are shared by the nursery's tasks (D161, D168).
+- SGO-SPAWN-007 — groups: `sgo.NewGroup[T](n, limit)`, `g.Go(t, f)`, results in completion order through `g.Next()`, queued without bound (D172).
+- SGO-CANCEL-005 — nursery deadlines: `n.CancelAfter(ms)`, `t.Deadline()`, `sgo.IsDeadline`; also on virtual time in the lab (D162, D165, D170).
+
+Amended clauses:
+
+- SGO-RES-002 v3 — effect handles have no `LendTo` either (D169).
+- SGO-RES-003 v4 — rule (3) admits the callbacks of `sgo.Go` and `g.Go` inside the extent; fixture:res-defer-nursery-close added.
+- SGO-RES-004 v4 — `ok` is false on any cancellation, an ancestor's or a deadline's (SGO-CANCEL-005) included.
+- SGO-AUTH-002 v4 — children use the file and network handles the root passes to them (no lending).
+- SGO-AUTH-003 v3 — effect handles are shareable authority tokens, never revoked; `LendTo` and revocation are removed (D169). Acceptance case A03 (lend and revoke) is no longer referenced.
+
 ## 0.16.2 — 2026-11-05
 
 Text errata from the review of 0.16.1 (F1, F2); no behaviour changes. Two amended clauses named features that 0.16.1 does not have.
