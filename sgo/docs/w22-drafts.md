@@ -51,3 +51,27 @@ Drafted in `sgo/spec/SPEC-WAIT.md` (status draft); freezes at 0.17.0.
 ## SGO-SPAWN-007 (D172) and SGO-SPAWN-006 amendment
 
 Drafted in `sgo/spec/SPEC-SPAWN.md` (status draft); freeze at 0.17.0. SGO-SPAWN-006 now refuses a task-local result type (a slice result is returned as `sgo.Frozen`).
+
+## Open before 0.17.0: deadlines in the lab (D170 follow-up)
+
+`n.CancelAfter` ends a lab run with `UnsupportedLabEffect`. The obstacle: lab timers fire inside
+`decide()`, run by the task holding the baton, and that task may be parking in a `select` with
+the arms' channel locks held (`sgoLabBlock` is called before the park releases them), while
+`sgoCancel` wakes waiters and takes those same locks. Options, to be settled with a model first
+(D30):
+
+1. **A lab driver goroutine.** When the next decision is an advance whose due timers include a
+   deadline, `decide()` hands the baton to a runtime goroutine that is not a task. It holds no
+   S-Go locks, runs `sgoCancel` for each due deadline (waking through `wakeLocked` as usual), then
+   decides again and hands the baton to the chosen task. The trace records a `fire` per deadline,
+   as for timers. Needs: a baton holder that is not an `sgoTask`, and the handoff in
+   `sgoLabBlock`/`sgoLabPoint`/`sgoLabEndTask` to route through it.
+2. **Deferred cancellation run by the next task.** The fire records the deadline as pending; the
+   chosen task runs pending cancellations when it resumes, before its wait returns. Fails when no
+   task is ready after the advance (everything is blocked on the deadline itself), unless a task
+   is woken spuriously, which every wait protocol would have to tolerate.
+3. **Park order.** Call `sgoLabBlock` after the wait's locks are released, so `decide()` never
+   runs with channel locks held. Simplest code change, but it reopens the lost-wakeup window the
+   current order closes, so it needs the model to show it safe.
+
+Option 1 is the likely choice: it keeps every wait protocol unchanged.
