@@ -58,6 +58,7 @@ type Result struct {
 // error.
 func Connect(task *sgo.Context, d *sgo.Dialer, host string, log Logger) (Result, error) {
 	res := Result{}
+	var failure error = nil // an error that ends the race early (a failed log, receive, or move)
 	nursery (n) {
 		events := sgo.NewChannel[event](64)
 		n.Spawn(func(t *sgo.Context) error { return resolve(t, d, host, true, events) })
@@ -92,7 +93,9 @@ func Connect(task *sgo.Context, d *sgo.Dialer, host string, log Logger) (Result,
 				started++
 				inflight++
 				mayStart = false
-				check say(log, "attempt "+next)
+				if failure = say(log, "attempt "+next); failure != nil {
+					break race
+				}
 				addr, seq := next, started
 				// The attempt dials into the race nursery: its connection is a candidate the body
 				// may keep, and the nursery releases it otherwise.
@@ -119,7 +122,8 @@ func Connect(task *sgo.Context, d *sgo.Dialer, host string, log Logger) (Result,
 			}
 			ev, ok, rerr := events.Receive(task)
 			if rerr != nil {
-				return res, rerr
+				failure = rerr
+				break race
 			}
 			if !ok {
 				break race
@@ -137,33 +141,49 @@ func Connect(task *sgo.Context, d *sgo.Dialer, host string, log Logger) (Result,
 				} else {
 					done4 = true
 				}
-				check say(log, family(ev.v6)+" answer in")
+				failure = say(log, family(ev.v6)+" answer in")
 			case evWaited:
 				waited = true
 				if !done6 {
-					check say(log, "resolution delay passed without an AAAA answer")
+					failure = say(log, "resolution delay passed without an AAAA answer")
 				}
 			case evConnected:
-				check say(log, "connected "+ev.addr)
+				if failure = say(log, "connected "+ev.addr); failure != nil {
+					break race
+				}
 				// The winner leaves the race for the caller's scope; the race keeps the rest.
 				c := ev.conn
-				check c.MoveTo(task)
+				if failure = c.MoveTo(task); failure != nil {
+					break race
+				}
 				res = Result{Addr: ev.addr, Conn: c}
 				break race
 			case evFailed:
 				inflight--
-				mayStart = true
-				check say(log, "failed "+ev.addr)
+				if ev.seq == started {
+					mayStart = true // the latest attempt failed: fall back at once (see README on RFC 8305 §5)
+				}
+				failure = say(log, "failed "+ev.addr)
 			case evTick:
 				// The attempt is still running after AttemptDelay: start the next one beside it.
-				if ev.seq == started && !mayStart && len(v6)+len(v4) > 0 {
+				// The latest attempt is still running after AttemptDelay: the next one may start beside
+				// it, now or as soon as an address arrives (permission is kept until it is used).
+				if ev.seq == started && !mayStart {
 					mayStart = true
-					check say(log, "no answer from "+ev.addr+" after "+itoa(AttemptDelay)+"ms")
+					failure = say(log, "no answer from "+ev.addr+" after "+itoa(AttemptDelay)+"ms")
 				}
 			}
+			if failure != nil {
+				break race
+			}
 		}
-		n.Cancel() // the race is decided: end every query, timer, and attempt still running
+		// Every exit from the race comes here: the race is decided or abandoned, so end every
+		// query, timer, and attempt still running before the nursery joins them.
+		n.Cancel()
 	} // the nursery joins its children, then releases every connection that lost
+	if failure != nil {
+		return Result{}, failure
+	}
 	if res.Addr == "" {
 		return res, sgo.NewError("happy eyeballs: no address of " + host + " accepted a connection")
 	}

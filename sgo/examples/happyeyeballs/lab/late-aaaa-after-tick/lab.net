@@ -1,0 +1,5 @@
+# IPv4 resolves at once and is a blackhole; the AAAA answer arrives at 400ms, after IPv4's attempt delay.
+resolve example.test 2001:db8::1 400
+resolve example.test 192.0.2.1
+blackhole 192.0.2.1:443
+peer [2001:db8::1]:443

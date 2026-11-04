@@ -1,0 +1,5 @@
+# IPv6 resolves at once and is a blackhole; the A answer arrives at 300ms, after IPv6's attempt delay.
+resolve example.test 2001:db8::1
+resolve example.test 192.0.2.1 300
+blackhole [2001:db8::1]:443
+peer 192.0.2.1:443

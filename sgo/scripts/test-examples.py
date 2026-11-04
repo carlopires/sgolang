@@ -32,7 +32,8 @@ EXAMPLES = {
 
 # Happy Eyeballs lab scenarios (W18, D146): each main checks its own winner and RFC 8305 step, so
 # the sweep needs no -expect (the order in which the two DNS answers arrive varies by schedule).
-HE_SCENARIOS = ["silent-v6", "slow-aaaa", "prefer-v6", "slow-v6", "all-refused"]
+HE_SCENARIOS = ["silent-v6", "slow-aaaa", "prefer-v6", "slow-v6", "all-refused", "late-a-after-tick",
+                "late-aaaa-after-tick", "log-fails-pending"]
 
 
 def main():

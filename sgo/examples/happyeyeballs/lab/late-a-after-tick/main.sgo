@@ -1,0 +1,13 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Command late-a-after-tick is a Happy Eyeballs lab scenario: IPv6 resolves at once and answers nothing; the A answer comes at 300ms, after IPv6's 250ms attempt delay. IPv4 must start as soon as its address arrives, not when the blackholed IPv6 attempt finally fails (review HE-01).
+package main
+
+import (
+	"example.com/happyeyeballs/demo"
+	"sgo"
+)
+
+func main(root *sgo.Context) error { return demo.RunWithout(root, "192.0.2.1:443", "no answer from [2001:db8::1]:443 after 250ms", "failed [2001:db8::1]:443") }

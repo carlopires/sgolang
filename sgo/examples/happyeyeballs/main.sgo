@@ -8,6 +8,7 @@
 package main
 
 import (
+	"example.com/happyeyeballs/demo"
 	"example.com/happyeyeballs/he"
 	"sgo"
 )
@@ -29,21 +30,29 @@ func main(root *sgo.Context) error {
 			check s.Write("hello over the winning family\n")
 			return nil // the accepted connection is a resource of this task: released here
 		})
-		steps := &trace{}
-		r, cerr := he.Connect(root, d, "localhost", steps)
-		// The attempts, not the answers: which of the two answers comes first varies run to run.
-		for _, line := range steps.lines {
-			if !isAnswer(line) {
-				check root.Stdout().WriteString("he: " + line + "\n")
-			}
+		if err := client(root, d); err != nil {
+			n.Cancel() // the server may still wait in Accept: stop it before the nursery joins
+			return err
 		}
-		if cerr != nil {
-			return cerr
-		}
-		msg := check r.Conn.Read(64)
-		check root.Stdout().WriteString("reached " + r.Addr + ": " + msg)
 	}
 	return nil // root's body ends: the connection, the dialer, and the listener are released
+}
+
+// client races to localhost, prints the attempts, and prints what the winning peer says.
+func client(root *sgo.Context, d *sgo.Dialer) error {
+	steps := &trace{}
+	r, cerr := he.Connect(root, d, "localhost", steps)
+	// The attempts, not the answers: which of the two answers comes first varies run to run.
+	for _, line := range steps.lines {
+		if !isAnswer(line) {
+			check root.Stdout().WriteString("he: " + line + "\n")
+		}
+	}
+	if cerr != nil {
+		return cerr
+	}
+	msg := check demo.ReadGreeting(r.Conn)
+	return root.Stdout().WriteString("reached " + r.Addr + ": " + msg)
 }
 
 func isAnswer(line string) bool { return line == "A answer in" || line == "AAAA answer in" }

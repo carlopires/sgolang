@@ -23,7 +23,11 @@ func (t *trace) Log(line string) error {
 // Run races to example.test and prints the steps, then what the winning peer says. want is the
 // address the race must reach ("" if every address must fail); step, if not "", is a step the
 // race must take (the RFC 8305 rule the scenario is about).
-func Run(root *sgo.Context, want, step string) error {
+func Run(root *sgo.Context, want, step string) error { return RunWithout(root, want, step, "") }
+
+// RunWithout is Run, and it also fails if the race logged the step forbid (when forbid is not ""):
+// the late-answer scenarios forbid the pending attempt's failure, which the race must not wait for.
+func RunWithout(root *sgo.Context, want, step, forbid string) error {
 	d := root.Dialer([]string{"example.test:443"})
 	steps := &trace{}
 	r, cerr := he.Connect(root, d, "example.test", steps)
@@ -31,6 +35,9 @@ func Run(root *sgo.Context, want, step string) error {
 	for _, line := range steps.lines {
 		check root.Stdout().WriteString(line + "\n")
 		seen = seen || line == step
+		if forbid != "" && line == forbid {
+			return sgo.NewError("the race took the step " + forbid + ": it waited for the pending attempt to fail")
+		}
 	}
 	if !seen {
 		return sgo.NewError("the race did not take the step " + step)
@@ -44,6 +51,50 @@ func Run(root *sgo.Context, want, step string) error {
 	if r.Addr != want {
 		return sgo.NewError("the race reached " + r.Addr + ", not " + want)
 	}
-	msg := check r.Conn.Read(64)
+	msg := check ReadGreeting(r.Conn)
 	return root.Stdout().WriteString("read: " + msg)
+}
+
+// ReadGreeting reads what the peer sends until it closes the connection, up to 256 bytes. A Read
+// returns at least one byte but may return fewer than were sent (SGO-FILE-003), so one Read is
+// not a whole message.
+func ReadGreeting(c *sgo.Conn) (string, error) {
+	got := ""
+	for len(got) < 256 {
+		s, err := c.Read(256 - len(got))
+		if err != nil {
+			if sgo.IsEOF(err) {
+				return got, nil
+			}
+			return got, err
+		}
+		got = got + s
+	}
+	return got, nil
+}
+
+// failingLog fails at one step, as a Logger may (its Log returns an error).
+type failingLog struct{ at string }
+
+func (f *failingLog) Log(line string) error {
+	if line == f.at {
+		return sgo.NewError("log failed at " + line)
+	}
+	return nil
+}
+
+// RunLogFails races to example.test with a logger that fails at the step at, while attempts are
+// still pending, and checks that Connect returns that error within maxMS virtual milliseconds:
+// the race must cancel its pending work rather than wait for it (review HE-02).
+func RunLogFails(root *sgo.Context, at string, maxMS int) error {
+	d := root.Dialer([]string{"example.test:443"})
+	clock := root.Clock()
+	_, cerr := he.Connect(root, d, "example.test", &failingLog{at: at})
+	if cerr == nil || cerr.Error() != "log failed at "+at {
+		return sgo.NewError("Connect did not return the logger's error")
+	}
+	if ms := clock.Since(); ms > maxMS {
+		return sgo.NewError("Connect returned after a pending attempt ended, not by cancelling it")
+	}
+	return root.Stdout().WriteString("connect stopped at the failed log: " + cerr.Error() + "\n")
 }

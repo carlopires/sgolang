@@ -1,0 +1,13 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Command late-aaaa-after-tick is a Happy Eyeballs lab scenario: IPv4 resolves at once and answers nothing; the AAAA answer comes at 400ms, after IPv4's attempt delay (started at 50ms, expired at 300ms). IPv6 must start as soon as its address arrives (review HE-01, the other direction).
+package main
+
+import (
+	"example.com/happyeyeballs/demo"
+	"sgo"
+)
+
+func main(root *sgo.Context) error { return demo.RunWithout(root, "[2001:db8::1]:443", "no answer from 192.0.2.1:443 after 250ms", "failed 192.0.2.1:443") }

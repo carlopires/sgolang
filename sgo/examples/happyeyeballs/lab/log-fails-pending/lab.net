@@ -1,0 +1,5 @@
+# Both families resolve at once and both addresses are blackholes: attempts stay pending.
+resolve example.test 2001:db8::1
+resolve example.test 192.0.2.1
+blackhole [2001:db8::1]:443
+blackhole 192.0.2.1:443
