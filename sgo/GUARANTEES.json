@@ -109,7 +109,7 @@
         "SPEC-SPAWN",
         "SPEC-WAIT"
       ],
-      "statement": "Every task is started in a nursery through its explicit *sgo.Nursery handle and is owned by exactly one nursery; a nursery statement does not complete until all its children have finished (no orphan on any exit, including return, break, panic and cancellation). There is no bare go statement.",
+      "statement": "Every task is started in a nursery through its explicit *sgo.Nursery handle and is owned by exactly one nursery; a nursery statement does not complete until all its children have finished (no orphan on any exit, including return, break, panic and cancellation). There is no bare go statement. A value-returning child (sgo.Go, a Group of sgo.NewGroup(n, limit)) is such a child too; its handle always resolves: to the value and error it returns, to its cancellation or failure, or, when it was started into a cancelling nursery and never admitted, to that cancellation at once (SGO17-01). A group's limit bounds its running children, not its queued results.",
       "scope": [
         "admission",
         "runtime_enforced",
@@ -122,7 +122,11 @@
         "src/runtime/sgo_record.go",
         "src/runtime/sgo_api.go",
         "src/cmd/compile/internal/types2/sgo.go",
-        "src/cmd/compile/internal/noder/sgo_main.go"
+        "src/cmd/compile/internal/noder/sgo_main.go",
+        "src/sgo/task.go",
+        "src/sgo/group.go",
+        "src/runtime/sgo_taskres.go",
+        "src/runtime/sgo_group.go"
       ],
       "model_bounds": "sgo/model (model.go, explore.go): all interleavings of the 18 W01 scenarios (sgo/evidence/w01/README.md)"
     },
@@ -133,7 +137,7 @@
         "SPEC-ERRORS",
         "SPEC-PROC"
       ],
-      "statement": "A child failure cancels its siblings and is reported to the owner; the primary error of a nursery is chosen deterministically (lowest creation id), other errors are chained. A panic unwinds defers and nested nurseries to the task boundary. The process exit status is specified (0 success; 1 an error or child error out of main; 2 any other failure kind such as a panic or checked failure; 3 drain budget exceeded; 4 resource exhaustion or runtime defect), and statuses 1-4 write exactly one diagnostic record.",
+      "statement": "A child failure cancels its siblings and is reported to the owner; the primary error of a nursery is chosen deterministically (lowest creation id), other errors are chained. A panic unwinds defers and nested nurseries to the task boundary. The process exit status is specified (0 success; 1 an error or child error out of main; 2 any other failure kind such as a panic or checked failure; 3 drain budget exceeded; 4 resource exhaustion or runtime defect), and statuses 1-4 write exactly one diagnostic record. An error a child returns through sgo.Go or Group.Go is data, the result's error: it fails neither the nursery nor a sibling. A failure of such a child (a panic, a checked failure) is a child failure as above.",
       "scope": [
         "runtime_enforced",
         "model_explored",
@@ -154,7 +158,7 @@
         "SPEC-DRAIN",
         "SPEC-TIMER"
       ],
-      "statement": "Cancellation is sticky and propagates from a nursery to its descendants; it is observed at the specified checkpoints (blocking operations, sleep, join, Checkpoint). A task that does not cooperate within the drain budget makes the process fail-stop with a diagnostic (exit 3) instead of resuming with the task hidden. Non-cooperative code between checkpoints is not interrupted.",
+      "statement": "Cancellation is sticky and propagates from a nursery to its descendants; it is observed at the specified checkpoints (blocking operations, sleep, join, Checkpoint). A task that does not cooperate within the drain budget makes the process fail-stop with a diagnostic (exit 3) instead of resuming with the task hidden. Non-cooperative code between checkpoints is not interrupted. An error exit (a failing check, or a return with a non-nil error) cancels every nursery it crosses before joining it (D159). A deadline set on a nursery is inherited by its descendants and cannot be extended by them.",
       "scope": [
         "runtime_enforced",
         "model_explored",
@@ -163,7 +167,9 @@
       "implementation": [
         "src/runtime/sgo_cancel.go",
         "src/runtime/sgo_nursery.go",
-        "src/runtime/sgo_scope.go"
+        "src/runtime/sgo_scope.go",
+        "src/runtime/sgo_deadline.go",
+        "src/runtime/sgo_timer.go"
       ],
       "model_bounds": "sgo/model (model.go, explore.go): all interleavings of the 18 W01 scenarios (sgo/evidence/w01/README.md)",
       "limitations": [
@@ -252,7 +258,7 @@
       "families": [
         "SPEC-RES"
       ],
-      "statement": "Every file, connection, listener, dialer, and registered user resource belongs to exactly one scope (a nursery or a task body) and is released exactly once: at an explicit Close, or when its scope ends, after all of the scope's tasks have ended, in reverse order of acquisition. A failed release is never dropped. A program in which a resource could outlive its scope, by assignment, return, capture, send on a longer-lived channel, or copy, does not compile; a resource leaves a nested scope only by an explicit move to an enclosing one.",
+      "statement": "Every file, connection, listener, dialer, and registered user resource belongs to exactly one scope (a nursery or a task body) and is released exactly once: at an explicit Close, or when its scope ends, after all of the scope's tasks have ended, in reverse order of acquisition. A failed release is never dropped. A program in which a resource could outlive its scope, by assignment, return, capture, send on a longer-lived channel, or copy, does not compile; a resource leaves a nested scope only by an explicit move to an enclosing one. The one implicit move is a value-returning child's successful result: every resource of the child's body that the result holds, directly or in struct fields and array elements, moves into the child's nursery once, in acquisition order (SGO17-02).",
       "scope": [
         "admission",
         "runtime_enforced",
@@ -264,7 +270,8 @@
         "src/runtime/sgo_res.go",
         "src/runtime/sgo_nursery.go",
         "src/runtime/sgo_scope.go",
-        "src/sgo/io.go"
+        "src/sgo/io.go",
+        "src/sgo/task.go"
       ],
       "model_bounds": "sgo/model scoperes: 416 programs, 77,736 states, 9 seeded protocol bugs each caught (sgo/evidence/w21/README.md)",
       "limitations": [

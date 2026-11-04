@@ -175,7 +175,9 @@ QUESTIONS = [
 ]
 
 
-def render():
+def rendered():
+    """The text of sgo/docs/GUARANTEES.md, from the JSON and the registry (one renderer for write
+    and check)."""
     g = load("GUARANTEES.json")
     reg = {r["id"]: r for r in load("SGO_SPEC_ADMISSION.json")["rows"]}
     byid = {x["id"]: x for x in g["guarantees"]}
@@ -208,16 +210,51 @@ def render():
     out += [f"- **stack implementation:** {s['kind']} ({s['clause']}; W11 {s['w11_outcome']}, {s['evidence']})",
             f"- **targets:** {', '.join(g['targets'])}", "", "## Known limitations", ""]
     out += [f"- **{x['id']}** ({x['case']}): {x['text']}" for x in g["known_limitations"]]
-    with open(os.path.join(SGO, "docs", "GUARANTEES.md"), "w") as f:
-        f.write("\n".join(out) + "\n")
+    return "\n".join(out) + "\n"
+
+
+GUARANTEES_MD = os.path.join(SGO, "docs", "GUARANTEES.md")
+
+
+def render():
+    with open(GUARANTEES_MD, "w") as f:
+        f.write(rendered())
+
+
+def drift(committed, current):
+    """Problems if the committed rendering is not the renderer's current output (SGO17-07)."""
+    if committed == current:
+        return []
+    a, b = committed.splitlines(), current.splitlines()
+    i = next((k for k in range(min(len(a), len(b))) if a[k] != b[k]), min(len(a), len(b)))
+    return [f"sgo/docs/GUARANTEES.md is stale (first difference at line {i + 1}); "
+            "run sgo/scripts/guarantee-check.py render"]
+
+
+def selftest():
+    """The drift check fails on stale content: a line changed, a line dropped, a line added."""
+    cur = rendered()
+    lines = cur.splitlines(keepends=True)
+    stale = [cur.replace("### ", "### X", 1), "".join(lines[:-1]), cur + "extra\n"]
+    bad = [k for k, s in enumerate(stale) if not drift(s, cur)]
+    if drift(cur, cur) or bad:
+        print(f"guarantee-check: selftest FAIL (missed {bad})", file=sys.stderr)
+        return 1
+    print("guarantee-check: selftest ok: stale renderings are rejected")
+    return 0
 
 
 def main():
-    sgoargs.check(flags={"--release": "bool"}, positional={"render"}, max_positional=1)  # strict command line (W12 R14)
+    sgoargs.check(flags={"--release": "bool", "--selftest": "bool"}, positional={"render"},
+                  max_positional=1)  # strict command line (W12 R14)
     if sys.argv[1:] == ["render"]:
         render()
         return 0
+    if "--selftest" in sys.argv[1:]:
+        return selftest()
     errs = check("--release" in sys.argv[1:])
+    with open(GUARANTEES_MD) as f:
+        errs += drift(f.read(), rendered())
     for e in errs:
         print("guarantee-check:", e, file=sys.stderr)
     if errs:

@@ -62,18 +62,18 @@ Variables are task-local; a closure passed to another task may capture only effe
 
 ### G-OWN
 
-Every task is started in a nursery through its explicit *sgo.Nursery handle and is owned by exactly one nursery; a nursery statement does not complete until all its children have finished (no orphan on any exit, including return, break, panic and cancellation). There is no bare go statement.
+Every task is started in a nursery through its explicit *sgo.Nursery handle and is owned by exactly one nursery; a nursery statement does not complete until all its children have finished (no orphan on any exit, including return, break, panic and cancellation). There is no bare go statement. A value-returning child (sgo.Go, a Group of sgo.NewGroup(n, limit)) is such a child too; its handle always resolves: to the value and error it returns, to its cancellation or failure, or, when it was started into a cancelling nursery and never admitted, to that cancellation at once (SGO17-01). A group's limit bounds its running children, not its queued results.
 
 - **Scope:** admission, runtime_enforced, model_explored, tested
 - **Model bounds:** sgo/model (model.go, explore.go): all interleavings of the 18 W01 scenarios (sgo/evidence/w01/README.md)
 - **Families:** SPEC-NURSERY, SPEC-SPAWN, SPEC-WAIT
-- **Clauses:** SGO-NUR-001, SGO-NUR-002, SGO-NUR-003, SGO-NUR-004, SGO-NUR-005, SGO-SPAWN-001, SGO-SPAWN-002, SGO-SPAWN-003, SGO-SPAWN-004, SGO-SPAWN-005, SGO-WAIT-001, SGO-WAIT-002
+- **Clauses:** SGO-NUR-001, SGO-NUR-002, SGO-NUR-003, SGO-NUR-004, SGO-NUR-005, SGO-SPAWN-001, SGO-SPAWN-002, SGO-SPAWN-003, SGO-SPAWN-004, SGO-SPAWN-005, SGO-SPAWN-006, SGO-SPAWN-007, SGO-SPAWN-008, SGO-WAIT-001, SGO-WAIT-002, SGO-WAIT-003, SGO-WAIT-004
 - **Acceptance cases:** C02, C03, C04, O01, O02, O03, O04, O05, S05, S06, S07, S08, X04
-- **Implementation:** `src/runtime/sgo_nursery.go`, `src/runtime/sgo_scope.go`, `src/runtime/sgo_record.go`, `src/runtime/sgo_api.go`, `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/noder/sgo_main.go`
+- **Implementation:** `src/runtime/sgo_nursery.go`, `src/runtime/sgo_scope.go`, `src/runtime/sgo_record.go`, `src/runtime/sgo_api.go`, `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/noder/sgo_main.go`, `src/sgo/task.go`, `src/sgo/group.go`, `src/runtime/sgo_taskres.go`, `src/runtime/sgo_group.go`
 
 ### G-FAIL
 
-A child failure cancels its siblings and is reported to the owner; the primary error of a nursery is chosen deterministically (lowest creation id), other errors are chained. A panic unwinds defers and nested nurseries to the task boundary. The process exit status is specified (0 success; 1 an error or child error out of main; 2 any other failure kind such as a panic or checked failure; 3 drain budget exceeded; 4 resource exhaustion or runtime defect), and statuses 1-4 write exactly one diagnostic record.
+A child failure cancels its siblings and is reported to the owner; the primary error of a nursery is chosen deterministically (lowest creation id), other errors are chained. A panic unwinds defers and nested nurseries to the task boundary. The process exit status is specified (0 success; 1 an error or child error out of main; 2 any other failure kind such as a panic or checked failure; 3 drain budget exceeded; 4 resource exhaustion or runtime defect), and statuses 1-4 write exactly one diagnostic record. An error a child returns through sgo.Go or Group.Go is data, the result's error: it fails neither the nursery nor a sibling. A failure of such a child (a panic, a checked failure) is a child failure as above.
 
 - **Scope:** runtime_enforced, model_explored, tested
 - **Model bounds:** sgo/model (model.go, explore.go): all interleavings of the 18 W01 scenarios (sgo/evidence/w01/README.md)
@@ -84,14 +84,14 @@ A child failure cancels its siblings and is reported to the owner; the primary e
 
 ### G-CANCEL
 
-Cancellation is sticky and propagates from a nursery to its descendants; it is observed at the specified checkpoints (blocking operations, sleep, join, Checkpoint). A task that does not cooperate within the drain budget makes the process fail-stop with a diagnostic (exit 3) instead of resuming with the task hidden. Non-cooperative code between checkpoints is not interrupted.
+Cancellation is sticky and propagates from a nursery to its descendants; it is observed at the specified checkpoints (blocking operations, sleep, join, Checkpoint). A task that does not cooperate within the drain budget makes the process fail-stop with a diagnostic (exit 3) instead of resuming with the task hidden. Non-cooperative code between checkpoints is not interrupted. An error exit (a failing check, or a return with a non-nil error) cancels every nursery it crosses before joining it (D159). A deadline set on a nursery is inherited by its descendants and cannot be extended by them.
 
 - **Scope:** runtime_enforced, model_explored, tested
 - **Model bounds:** sgo/model (model.go, explore.go): all interleavings of the 18 W01 scenarios (sgo/evidence/w01/README.md)
 - **Families:** SPEC-CANCEL, SPEC-DRAIN, SPEC-TIMER
-- **Clauses:** SGO-CANCEL-001, SGO-CANCEL-002, SGO-CANCEL-003, SGO-CANCEL-004, SGO-DRAIN-001, SGO-DRAIN-002, SGO-DRAIN-003, SGO-TIMER-001
+- **Clauses:** SGO-CANCEL-001, SGO-CANCEL-002, SGO-CANCEL-003, SGO-CANCEL-004, SGO-CANCEL-005, SGO-DRAIN-001, SGO-DRAIN-002, SGO-DRAIN-003, SGO-TIMER-001
 - **Acceptance cases:** C01, C02, C03, C04, C07, C09, D06, P07, S17
-- **Implementation:** `src/runtime/sgo_cancel.go`, `src/runtime/sgo_nursery.go`, `src/runtime/sgo_scope.go`
+- **Implementation:** `src/runtime/sgo_cancel.go`, `src/runtime/sgo_nursery.go`, `src/runtime/sgo_scope.go`, `src/runtime/sgo_deadline.go`, `src/runtime/sgo_timer.go`
 - **Limitation:** A task in a loop without checkpoints is detected only by the drain budget, not interrupted (SGO-DRAIN-002).
 
 ### G-CHAN
@@ -122,21 +122,21 @@ File access is confined beneath declared directory grants (no '..', absolute-pat
 - **Scope:** admission, runtime_enforced, model_explored, tested
 - **Model bounds:** sgo/model iopath/iohandle: path resolution with renames (14 scenarios) and handle generations (sgo/evidence/w09/README.md)
 - **Families:** SPEC-FILE, SPEC-NET
-- **Clauses:** SGO-FILE-001, SGO-FILE-002, SGO-FILE-003, SGO-NET-001, SGO-NET-002, SGO-NET-003, SGO-NET-004
+- **Clauses:** SGO-FILE-001, SGO-FILE-002, SGO-FILE-003, SGO-FILE-004, SGO-NET-001, SGO-NET-002, SGO-NET-003, SGO-NET-004
 - **Acceptance cases:** I01, I02, I03, I04, I05
 - **Implementation:** `src/runtime/sgo_io.go`, `src/runtime/sgo_iodir.go`, `src/runtime/sgo_fs.go`, `src/runtime/sgo_iogrant.go`, `src/runtime/sgo_ioapi.go`, `src/runtime/sgo_net.go`, `src/cmd/sgo/iogrant.go`, `src/sgo/io.go`
 - **Limitation:** Confinement re-verifies the resolved chain; it is not atomic against another process renaming directories concurrently (openat2 RESOLVE_BENEATH is not used).
 
 ### G-RES
 
-Every file, connection, listener, dialer, and registered user resource belongs to exactly one scope (a nursery or a task body) and is released exactly once: at an explicit Close, or when its scope ends, after all of the scope's tasks have ended, in reverse order of acquisition. A failed release is never dropped. A program in which a resource could outlive its scope, by assignment, return, capture, send on a longer-lived channel, or copy, does not compile; a resource leaves a nested scope only by an explicit move to an enclosing one.
+Every file, connection, listener, dialer, and registered user resource belongs to exactly one scope (a nursery or a task body) and is released exactly once: at an explicit Close, or when its scope ends, after all of the scope's tasks have ended, in reverse order of acquisition. A failed release is never dropped. A program in which a resource could outlive its scope, by assignment, return, capture, send on a longer-lived channel, or copy, does not compile; a resource leaves a nested scope only by an explicit move to an enclosing one. The one implicit move is a value-returning child's successful result: every resource of the child's body that the result holds, directly or in struct fields and array elements, moves into the child's nursery once, in acquisition order (SGO17-02).
 
 - **Scope:** admission, runtime_enforced, model_explored, tested
 - **Model bounds:** sgo/model scoperes: 416 programs, 77,736 states, 9 seeded protocol bugs each caught (sgo/evidence/w21/README.md)
 - **Families:** SPEC-RES
 - **Clauses:** SGO-RES-001, SGO-RES-002, SGO-RES-003, SGO-RES-004, SGO-RES-005
 - **Acceptance cases:** 
-- **Implementation:** `src/cmd/compile/internal/types2/sgo_resflow.go`, `src/runtime/sgo_res.go`, `src/runtime/sgo_nursery.go`, `src/runtime/sgo_scope.go`, `src/sgo/io.go`
+- **Implementation:** `src/cmd/compile/internal/types2/sgo_resflow.go`, `src/runtime/sgo_res.go`, `src/runtime/sgo_nursery.go`, `src/runtime/sgo_scope.go`, `src/sgo/io.go`, `src/sgo/task.go`
 - **Limitation:** The escape analysis is conservative and intraprocedural: it refuses some safe programs (a resource sent through a helper whose channel and value are separate parameters).
 - **Limitation:** A user resource is identified by its pointer. Tasks sharing a scope share its user resources; the type serializes its own methods (D158), and the runtime adds no lock.
 
