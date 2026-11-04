@@ -1,0 +1,13 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-006",
+  "SGO-CTL-004",
+  "SGO-ERR-004",
+  "SGO-RES-004"
+ ],
+ "exit": 0,
+ "stdout": "a: boom\nb: ok\nsibling: not failed\na tx rollback\na body commit\nb tx commit\nb body commit\n",
+ "timeout_ms": 20000,
+ "note": "SGO17-03/04: a failing check crossing a nursery cancels it (D159), so its user resource sees Release(false) and the error is returned unchanged; the Go child's error is data, so its body ends normally (Release(true)) and no sibling is failed."
+}

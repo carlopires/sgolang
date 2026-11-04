@@ -1,0 +1,63 @@
+package main
+
+import "sgo"
+
+// tx is a user resource (D152) that reports its outcome on a channel.
+type tx struct {
+	name string
+	log  chan string
+}
+
+func (x *tx) Release(ok bool) error {
+	if ok {
+		x.log <- x.name + " commit"
+	} else {
+		x.log <- x.name + " rollback"
+	}
+	return nil
+}
+
+func boom() error { return sgo.NewError("boom") }
+
+// work owns a body resource and, in an inner nursery, a transaction. A failing check crosses the
+// inner nursery: it cancels it (D159), so the transaction rolls back, and the error returns
+// unchanged. The body itself ends normally, so its resource commits.
+func work(t *sgo.Context, log chan string, name string, fail bool) (int, error) {
+	t.Own(&tx{name: name + " body", log: log})
+	nursery (inner) {
+		inner.Own(&tx{name: name + " tx", log: log})
+		if fail {
+			check boom()
+		}
+	}
+	return 1, nil
+}
+
+// The error of a Go child is data (SGO-SPAWN-006): it fails neither the nursery nor a sibling, and
+// rollback on that error comes from owning the transaction in an inner nursery (SGO17-04).
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	log := make(chan string, 16)
+	nursery (n) {
+		sib := sgo.Go(n, func(t *sgo.Context) (int, error) {
+			check t.Sleep(20)
+			return 7, nil
+		})
+		bad := sgo.Go(n, func(t *sgo.Context) (int, error) { return work(t, log, "a", true) })
+		_, err := bad.Wait(root)
+		check out.WriteString("a: " + err.Error() + "\n")
+		good := sgo.Go(n, func(t *sgo.Context) (int, error) { return work(t, log, "b", false) })
+		v, err2 := good.Wait(root)
+		if err2 == nil && v == 1 {
+			check out.WriteString("b: ok\n")
+		}
+		s := check sib.Wait(root)
+		if s == 7 {
+			check out.WriteString("sibling: not failed\n")
+		}
+	}
+	for i := 0; i < 4; i++ {
+		check out.WriteString(<-log + "\n")
+	}
+	return nil
+}

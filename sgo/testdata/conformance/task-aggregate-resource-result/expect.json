@@ -1,0 +1,12 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-006",
+  "SGO-SPAWN-007",
+  "SGO-RES-003"
+ ],
+ "exit": 0,
+ "stdout": "nested struct and array: usable\nrepeated reference: usable\nalready in the nursery: usable\ngroup results: usable\nnursery ended\n",
+ "timeout_ms": 20000,
+ "note": "SGO17-02: before 0.17.1 only a result that was itself a resource moved into the nursery; a timer inside a struct stayed in the child's body and the reader's Reset failed with MissingCapability."
+}

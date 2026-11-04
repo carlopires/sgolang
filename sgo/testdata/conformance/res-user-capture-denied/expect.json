@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-COMP-004",
+  "SGO-RES-004"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_TASK_LOCAL_CAPTURE",
+   "position": "main.sgo:18:11"
+  }
+ ],
+ "note": "SGO17-06: a Release method and Own registration give a user resource a lifetime, not cross-task sharing; the pointer stays task-local."
+}

@@ -11,6 +11,7 @@ import "unsafe"
 // Implemented in the runtime (sgo_taskres.go).
 func runtime_taskResNew(elem unsafe.Pointer) unsafe.Pointer
 func runtime_taskResSet(r, v unsafe.Pointer) bool
+func runtime_resPromote(v any, builtin *[5]any, nurs unsafe.Pointer) error
 func runtime_spawnResult(scope unsafe.Pointer, fn func(task unsafe.Pointer) error) (notAdmitted, err error)
 func runtime_taskResChan(r unsafe.Pointer) unsafe.Pointer
 func runtime_nativeRecv(c, dst unsafe.Pointer)
@@ -27,11 +28,15 @@ type Result[T any] struct {
 // task of the nursery, with Wait or as a select arm on Result().
 type Task[T any] struct{ r unsafe.Pointer }
 
-type sgoMover interface{ MoveTo(Scope) error }
+// builtinHandles are the built-in resource types, each a pointer to a struct whose first word is
+// its runtime handle: runtime_resPromote recognizes them by type (SGO17-02).
+var builtinHandles = [5]any{(*File)(nil), (*Conn)(nil), (*Dialer)(nil), (*Listener)(nil), (*Timer)(nil)}
 
 // Go starts f as a child of n, like n.Spawn, and returns a handle to its result (D161). If f
 // returns a resource with a nil error, the resource is moved into n (D158): it is released when n
-// ends unless a task of n moves it on. If the child ends without returning (it is cancelled or
+// ends unless a task of n moves it on. So is each resource of the child's body that a struct or
+// array result holds, at any depth of fields and elements, once and in acquisition order; a
+// resource already in n or in an enclosing scope stays where it is (SGO17-02). If the child ends without returning (it is cancelled or
 // fails), its result's error is the cancellation or failure.
 func Go[T any](n *Nursery, f func(*Context) (T, error)) *Task[T] {
 	if n == nil {
@@ -68,11 +73,7 @@ func start[T any](n *Nursery, f func(*Context) (T, error), publish func(*Result[
 		}()
 		v, err := f(&Context{t: t})
 		if err == nil {
-			if m, ok := any(v).(sgoMover); ok {
-				err = m.MoveTo(n)
-			} else if u, ok := any(v).(Releaser); ok {
-				err = MoveTo(u, n)
-			}
+			err = runtime_resPromote(v, &builtinHandles, n.s)
 		}
 		res := Result[T]{Value: v, Err: err}
 		publish(&res)

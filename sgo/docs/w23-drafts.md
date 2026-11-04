@@ -40,3 +40,54 @@ as D172 in W22), D167.
   read-turn check fails it).
 - **SGO-FILE-003** concurrency text: reads of one handle now run one at a time (the read turn of
   SGO-FILE-004); writes keep the per-call serialization.
+
+## Amendments owed at 0.18.0 from the 0.17.0 review (`.work/sgo-017-issues.md`)
+
+- **SGO-SPAWN-006 v2 / SGO-SPAWN-007 v2, not admitted** (SGO17-01, fixed at `663cccb977`): a
+  value-returning start (`sgo.Go`, `Group.Go`) into a nursery that is CANCELLING, itself or through
+  an ancestor, admits no child and never runs `f`; its handle resolves at once, and exactly once, to
+  the scope's cancellation error (`IsCancelled`; `IsDeadline` when the cause is a deadline, local or
+  inherited). The admission decision and the outcome are one step under the scope lock, so a
+  start racing a `Cancel` either runs `f` or resolves to the cancellation, never neither. A group's
+  slot is released by that publication, so later submissions do not wait. 0.17.0 published nothing:
+  `Wait` deadlocked and the slot leaked. Case: spawn-go-not-admitted.
+- **SGO-SPAWN-006 v2, aggregate results** (SGO17-02, fixed with this slice): on a nil error, every
+  resource of the child's body that the result holds is moved into `n`: the result itself, or the
+  fields and elements of a struct or array result, at any depth. The walk follows the result's type
+  and stays inside the value: a pointer is recognized (a built-in handle by its type, a user
+  resource by its registration) and never followed, so channels, task and group handles and other
+  references are not traversed. Each resource moves once (a handle held twice moves once), in
+  acquisition order, so the nursery's reverse-acquisition release order holds. A resource that is
+  not in the child's body (already in `n`, in an enclosing scope, or released) stays where it is:
+  ownership never moves inward. A handle-typed field cannot be nil (SGO-TYPE-005), so there is no
+  nil case. A move cannot fail at that point (the child runs inside its body, `n` encloses it and is
+  not releasing while the child is live); were it to fail, its error would be the result's and the
+  resources already moved stay in `n`. Case: task-aggregate-resource-result.
+- **SGO-SPAWN-006 v2, `Release(ok)` of a `Go` child's body** (SGO17-04, contract kept): an error
+  returned through `Go` is data. The child's body ends normally, so its own resources are released
+  with `Release(true)`. A body that needs rollback on its error owns the resource in an inner
+  nursery: the failing `check` crosses that nursery, cancels it (D159), and its resources see
+  `Release(false)`, while the caller still receives the error as the result. Case to add:
+  task-error-rollback-inner-nursery.
+- **SGO-CTL-004 v2** (SGO17-03): v1 says "A normal exit joins; it never cancels" and "Exits do
+  not cancel", which contradicts D159 as implemented since W22. v2: a `return` whose error result
+  is not nil, and a failing `check` (through SGO-ERR-004), cancel every nursery they cross before
+  joining it; the cancellation is consumed at each crossed nursery's boundary (SGO-CANCEL-004), the
+  held return values are returned unchanged, and resources of a crossed nursery see
+  `Release(false)`. A normal exit (end of body, `return` with a nil error, `break`, `continue`)
+  joins without cancelling. Cases: exit-check-cancels, exit-return-error-cancels,
+  exit-bare-return-cancels, exit-nil-return-joins; to add: exit-check-rollback (a crossed nursery's
+  user resource sees `Release(false)` and the error propagates unchanged).
+- **SGO-ERR-004 v3** (SGO17-03): "crossing nursery statements (SGO-CTL-004)" names the v2 error
+  exit: a failing `check` cancels each nursery it crosses.
+- **SGO-RES-004 v5** (SGO17-06): "Tasks sharing a scope share its user resources" overstates the
+  admitted model: a pointer to a user resource is task-local (SGO-COMP-004), so only the task that
+  holds it, and the scope's release, use it. Registration with `Own` gives lifetime, not sharing or
+  synchronization; implementing `Release` grants no exception to the capture rules. Case to
+  keep/add: res-user-capture-denied.
+- **Documentation** (SGO17-05, SGO17-07): API comments and the user guide on `Spawn` versus `Go`
+  errors; a child's cancellation result versus cancellation of its reader; `Result()` (one channel
+  per call; store it for a select loop) versus `Next()` (one consuming queue); `After` versus a
+  scope timer; a group's limit bounds running children, not queued results; deadlines are
+  inherited and cannot be extended. `GUARANTEES.md` and the roadmap regenerated, with a
+  non-mutating drift check.

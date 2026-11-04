@@ -17,7 +17,10 @@
 
 package runtime
 
-import "unsafe"
+import (
+	"internal/abi"
+	"unsafe"
+)
 
 // sgoResList is a scope's resources in acquisition order (doubly linked through sgoHandle.prev
 // and next).
@@ -305,4 +308,105 @@ func sgoReleaseOutcome(t *sgoTask, failed []sgoReleased, primary bool) any {
 		t.entries = append(t.entries, sgoEntry{t.seq, r.info})
 	}
 	return first
+}
+
+// sgo_resPromote moves into nursery nurs the resources of the current task's body that the
+// successful result *v of a value-returning child refers to (D158, SGO17-02): the result itself,
+// or the fields and elements of a struct or array result, recursively. The walk is directed by
+// the result's type and stays inside the value: a pointer is only recognized, never followed (a
+// built-in handle by its type, one of builtin; a user resource by its registration), so
+// channels, task and group handles and other references are not traversed. Each resource moves
+// once, in acquisition order. A resource that is not in the child's body list (already in nurs,
+// in an enclosing scope, or released) is left where it is: ownership never moves inward.
+//
+//go:linkname sgo_resPromote sgo.runtime_resPromote
+func sgo_resPromote(v any, builtin *[5]any, nurs unsafe.Pointer) error {
+	t := sgoCurrent()
+	e := efaceOf(&v)
+	if e._type == nil || !e._type.Pointers() {
+		return nil
+	}
+	var kinds [5]*_type
+	for i := range builtin {
+		kinds[i] = efaceOf(&builtin[i])._type
+	}
+	var found []*sgoHandle
+	p := e.data
+	if e._type.IsDirectIface() {
+		p = unsafe.Pointer(&e.data)
+	}
+	sgoResCollect(t, e._type, p, &kinds, &found)
+	if len(found) == 0 {
+		return nil
+	}
+	// Acquisition order: the order of the child's body list.
+	ordered := make([]*sgoHandle, len(found)) // allocated before the lock
+	k := 0
+	lock(&t.res.lock)
+	for x := t.res.first; x != nil && k < len(ordered); x = x.next {
+		for _, h := range found {
+			if h == x {
+				ordered[k] = x
+				k++
+				break
+			}
+		}
+	}
+	unlock(&t.res.lock)
+	for _, h := range ordered[:k] {
+		if err := sgoResMove(h, (*sgoScope)(nurs), nil); err != nil {
+			return sgoIOResult(err, "Go")
+		}
+	}
+	return nil
+}
+
+// sgoResCollect adds to found the resources of t's body that the value of type typ at p refers to.
+func sgoResCollect(t *sgoTask, typ *_type, p unsafe.Pointer, kinds *[5]*_type, found *[]*sgoHandle) {
+	if !typ.Pointers() {
+		return
+	}
+	switch typ.Kind() {
+	case abi.Struct:
+		st := (*structtype)(unsafe.Pointer(typ))
+		for i := range st.Fields {
+			f := &st.Fields[i]
+			sgoResCollect(t, f.Typ, add(p, f.Offset), kinds, found)
+		}
+	case abi.Array:
+		at := (*arraytype)(unsafe.Pointer(typ))
+		for i := uintptr(0); i < at.Len; i++ {
+			sgoResCollect(t, at.Elem, add(p, i*at.Elem.Size_), kinds, found)
+		}
+	case abi.Pointer:
+		q := *(*unsafe.Pointer)(p)
+		if q == nil {
+			return
+		}
+		var h *sgoHandle
+		builtin := false
+		for _, k := range kinds {
+			if k == typ {
+				builtin = true
+				break
+			}
+		}
+		lock(&t.res.lock)
+		for x := t.res.first; x != nil; x = x.next {
+			if (builtin && unsafe.Pointer(x) == *(*unsafe.Pointer)(q)) || (!builtin && x.kind == sgoHUser && x.key == q) {
+				h = x
+				break
+			}
+		}
+		unlock(&t.res.lock)
+		if h == nil {
+			return
+		}
+		for _, x := range *found {
+			if x == h {
+				return
+			}
+		}
+		*found = append(*found, h)
+	}
 }

@@ -1,0 +1,24 @@
+package main
+
+import "sgo"
+
+type counter struct {
+	n int
+}
+
+func (c *counter) Release(ok bool) error { return nil }
+
+// A user resource of a nursery is still an ordinary pointer: implementing Release and registering
+// with Own give it a lifetime, not sharing. A child of the nursery cannot capture it (SGO17-06,
+// SGO-COMP-004, SGO-RES-004).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		c := &counter{}
+		n.Own(c)
+		n.Spawn(func(t *sgo.Context) error {
+			c.n++
+			return nil
+		})
+	}
+	return nil
+}
