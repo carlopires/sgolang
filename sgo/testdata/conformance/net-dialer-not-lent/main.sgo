@@ -7,7 +7,7 @@ func main(root *sgo.Context) error {
 	d := root.Dialer([]string{"127.0.0.1:47954"})
 	nursery (n) {
 		n.Spawn(func(t *sgo.Context) error {
-			_, err := d.Dial("127.0.0.1:47954")
+			_, err := d.Dial(t, "127.0.0.1:47954")
 			return err
 		})
 	}

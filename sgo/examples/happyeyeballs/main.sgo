@@ -27,9 +27,9 @@ func main(root *sgo.Context) error {
 	}
 	d := root.Dialer([]string{"localhost:47970"})
 	nursery (n) {
-		ll := l.LendTo(n)
+		ll := l
 		n.Spawn(func(t *sgo.Context) error {
-			s, aerr := ll.Accept()
+			s, aerr := ll.Accept(t)
 			if aerr != nil {
 				return aerr
 			}

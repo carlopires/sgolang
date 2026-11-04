@@ -18,10 +18,10 @@ func main(root *sgo.Context) error {
 	}
 	big := doubled("x", 23) // 8 MiB: more than the socket buffers hold
 	nursery (n) {
-		ll := l.LendTo(n)
-		cc := c.LendTo(n)
+		ll := l
+		cc := c
 		n.Spawn(func(task *sgo.Context) error {
-			s, aerr := ll.Accept()
+			s, aerr := ll.Accept(task)
 			if aerr != nil {
 				return aerr
 			}

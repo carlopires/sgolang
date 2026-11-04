@@ -21,7 +21,7 @@ func Run(root *sgo.Context, addr string, workers, clients int) error {
 	}
 	replies := sgo.NewChannel[string](clients)
 	nursery (n) {
-		ll := l.LendTo(n)
+		ll := l
 		// Start returns once the service signals readiness: after its workers are accepting.
 		if serr := n.Start(func(task *sgo.Context, ready *sgo.Ready) error {
 			return serve(task, ll, workers, ready)
@@ -64,7 +64,7 @@ func runClients(root *sgo.Context, addr string, i, count int, replies *sgo.Chann
 		return derr
 	}
 	nursery (cn) {
-		cc := c.LendTo(cn)
+		cc := c
 		req := "hello " + Itoa(i)
 		cn.Spawn(func(task *sgo.Context) error {
 			return client(task, cc, req, "hi, "+req, replies)
@@ -84,7 +84,7 @@ func serve(task *sgo.Context, ll *sgo.Listener, workers int, ready *sgo.Ready) e
 		for k := 0; k < workers; k++ {
 			m.Spawn(func(w *sgo.Context) error {
 				for {
-					c, aerr := ll.Accept()
+					c, aerr := ll.Accept(w)
 					if aerr != nil {
 						return aerr
 					}

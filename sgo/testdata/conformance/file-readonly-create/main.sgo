@@ -5,7 +5,7 @@ import "sgo"
 // Creating a file through a read-only grant fails the task before any effect.
 func main(root *sgo.Context) error {
 	d := root.Dir("data")
-	f, err := d.Create("new.txt")
+	f, err := d.Create(root, "new.txt")
 	if err != nil {
 		return err
 	}

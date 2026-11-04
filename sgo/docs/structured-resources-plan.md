@@ -107,3 +107,10 @@ and no slot.
   - `Own(r)` returns nothing, and there is no double-Own guard: each Own registers one release.
   - A failed release on a nursery that otherwise completed normally unwinds as a failure
     (exit 2 at the root), not an error.
+- Fixture migration (local commit): `/tmp/migrate.py`-style rewrite of 20 fixtures and examples
+  (`x.LendTo(n)` → `x`; Accept/Open/Create/Dialer.Dial take the enclosing task's context).
+  28 of the 36 net/file/lab/auth cases pass. Still to do with the spec rewrite:
+  - delete `net-slot-*` (4) and `net-dialer-not-lent` (lending is gone; SGO-NET-004 superseded);
+  - replace `file-handle-lent` with `res-close-busy`;
+  - rewrite `net-dialer-race` with MoveTo;
+  - update the examples' expectations (happyeyeballs he.sgo still uses ConnSlot).

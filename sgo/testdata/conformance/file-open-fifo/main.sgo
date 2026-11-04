@@ -7,11 +7,11 @@ import "sgo"
 func main(root *sgo.Context) error {
 	out := root.Stdout()
 	d := root.Dir("data")
-	_, oerr := d.Open("fifo")
+	_, oerr := d.Open(root, "fifo")
 	if oerr == nil {
 		return sgo.NewError("Open of a FIFO succeeded")
 	}
-	_, cerr := d.Create("fifo")
+	_, cerr := d.Create(root, "fifo")
 	if cerr == nil {
 		return sgo.NewError("Create of a FIFO succeeded")
 	}

@@ -7,13 +7,13 @@ import "sgo"
 func main(root *sgo.Context) error {
 	out := root.Stdout()
 	d := root.Dir("data")
-	f, err := d.Open("seed.txt")
+	f, err := d.Open(root, "seed.txt")
 	if err != nil {
 		return err
 	}
 	msg := ""
 	nursery (n) {
-		ff := f.LendTo(n)
+		ff := f
 		n.Spawn(func(task *sgo.Context) error {
 			s, rerr := ff.Read(4)
 			if rerr != nil {

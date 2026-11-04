@@ -54,7 +54,7 @@ func Connect(task *sgo.Context, d *sgo.Dialer, slot *sgo.ConnSlot, host string, 
 	events := sgo.NewChannel[event](64)
 	winner := ""
 	nursery (n) {
-		ld, ls := d.LendTo(n), slot.LendTo(n)
+		ld, ls := d, slot
 		n.Spawn(func(t *sgo.Context) error { return resolve(t, ld, host, true, events) })
 		n.Spawn(func(t *sgo.Context) error { return resolve(t, ld, host, false, events) })
 		won, rerr := race(task, n, ld, ls, events, log)
@@ -167,7 +167,7 @@ func race(task *sgo.Context, n *sgo.Nursery, d *sgo.Dialer, slot *sgo.ConnSlot, 
 // attempt starts attempt seq to addr and its AttemptDelay timer, both in n.
 func attempt(n *sgo.Nursery, d *sgo.Dialer, slot *sgo.ConnSlot, events *sgo.Channel[event], addr string, seq int) {
 	n.Spawn(func(t *sgo.Context) error {
-		conn, derr := d.Dial(addr)
+		conn, derr := d.Dial(t, addr)
 		if derr != nil {
 			if sgo.IsCancelled(derr) {
 				return derr

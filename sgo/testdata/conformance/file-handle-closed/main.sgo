@@ -7,14 +7,14 @@ import "sgo"
 func main(root *sgo.Context) error {
 	out := root.Stdout()
 	d := root.Dir("data")
-	f, err := d.Open("seed.txt")
+	f, err := d.Open(root, "seed.txt")
 	if err != nil {
 		return err
 	}
 	if cerr := f.Close(); cerr != nil {
 		return cerr
 	}
-	g, gerr := d.Open("seed.txt")
+	g, gerr := d.Open(root, "seed.txt")
 	if gerr != nil {
 		return gerr
 	}

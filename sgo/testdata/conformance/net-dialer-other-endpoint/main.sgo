@@ -5,6 +5,6 @@ import "sgo"
 // A dialer reaches only its own endpoints, even when the module grants others.
 func main(root *sgo.Context) error {
 	d := root.Dialer([]string{"127.0.0.1:47952"})
-	_, err := d.Dial("127.0.0.1:47953")
+	_, err := d.Dial(root, "127.0.0.1:47953")
 	return err
 }

@@ -44,7 +44,7 @@ func main(root *sgo.Context) error {
 	if rerr != nil {
 		return rerr
 	}
-	f, ferr := sub.Open("b.txt")
+	f, ferr := sub.Open(root, "b.txt")
 	if ferr != nil {
 		return ferr
 	}

@@ -6,6 +6,6 @@ import (
 )
 
 func main(root *sgo.Context) error {
-	_, err := plugin.Open("x.so")
+	_, err := plugin.Open(root, "x.so")
 	return err
 }

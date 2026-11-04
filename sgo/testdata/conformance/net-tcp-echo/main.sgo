@@ -10,9 +10,9 @@ func main(root *sgo.Context) error {
 		return err
 	}
 	nursery (n) {
-		ll := l.LendTo(n)
+		ll := l
 		n.Spawn(func(task *sgo.Context) error {
-			c, aerr := ll.Accept()
+			c, aerr := ll.Accept(task)
 			if aerr != nil {
 				return aerr
 			}

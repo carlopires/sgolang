@@ -3,7 +3,7 @@ package main
 import "sgo"
 
 func attempt(d *sgo.Dialer, slot *sgo.ConnSlot, addr string) error {
-	c, err := d.Dial(addr)
+	c, err := d.Dial(root, addr)
 	if err != nil {
 		return nil // a failed attempt is not an error of the race
 	}
@@ -21,8 +21,8 @@ func main(root *sgo.Context) error {
 	d := root.Dialer([]string{"[::1]:47950", "127.0.0.1:47950"})
 	slot := root.NewConnSlot()
 	nursery (n) {
-		d.LendTo(n)
-		slot.LendTo(n)
+		d
+		slot
 		for _, addr := range []string{"[::1]:47950", "127.0.0.1:47950"} {
 			a := addr
 			n.Spawn(func(t *sgo.Context) error { return attempt(d, slot, a) })
@@ -32,7 +32,7 @@ func main(root *sgo.Context) error {
 	if !ok {
 		return sgo.NewError("no connection")
 	}
-	s, aerr := l.Accept()
+	s, aerr := l.Accept(root)
 	if aerr != nil {
 		return aerr
 	}
