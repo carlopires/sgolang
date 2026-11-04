@@ -1,3 +1,3 @@
 module example.com/comp-map-compare-denied
 
-sgo 0.16.0
+sgo 0.16.1

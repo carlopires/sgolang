@@ -135,7 +135,7 @@ Value structs and arrays are admitted from spec 0.8.0 (SGO-COMP-002, SGO-COMP-00
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-COMP-007 — Pointers and pointer receivers
-- **version:** 1
+- **version:** 2
 - **status:** frozen
 - **reference_closure:** SGO-COMP-002, SGO-COMP-004, SGO-COMP-008, SGO-UTYPE-002, SGO-MEM-002; D87, D91, D96.
 - **grammar_and_types:** Pointer types `*T` for any admitted T other than a handle type (handles are already pointers, SGO-TYPE-005). `&x` of an addressable operand (a local variable, a field or element of one, an element of a slice, a dereferenced pointer), `&T{...}` of a composite literal, and `new(T)`. `*p` and `*p = v`, field selection and element indexing through pointers (`p.F`, `p[i]` for a pointer to an array), `p == q`, `p != q`, `p == nil`, `p != nil`. Methods with pointer receivers `func (r *T) M(...)` on named types of the package (amending SGO-UTYPE-002); a method of `*T` is called on an addressable T value (`x.M()` means `(&x).M()`) and on a `*T`; a method of T is called on a `*T` (`p.M()` means `(*p).M()`). Method values and expressions stay denied. Pointer arithmetic, `unsafe`, and conversions between pointer types are denied (SGO-NATIVE-001).
@@ -148,10 +148,10 @@ Value structs and arrays are admitted from spec 0.8.0 (SGO-COMP-002, SGO-COMP-00
 - **failure_and_partial_progress:** A dereference of nil (also implicit, in `p.F`, `p[i]`, or a call through p) is `NilDereference` (SGO-COMP-008), before anything is read or written.
 - **cancellation_and_cleanup:** No cancellation points.
 - **compile_link_checks:** `SGO_E_UNADMITTED` for pointers to handle types and for pointer conversions; `SGO_E_CAPTURE_NOT_FINAL` for `&x` of a captured variable (SGO-MEM-002).
-- **runtime_guards:** `NilDereference`.
+- **runtime_guards:** `NilDereference`. A method call on a handle of package `sgo` checks its receiver at the call: the zero value of a struct field of handle type is nil, and the call fails with `NilDereference` at the call, not as a nil error inside package `sgo` (W21 review Z4).
 - **tcb_assumptions:** The compiler's nil checks for S-Go code are never removed unless proven redundant (as for bounds checks, SGO-COMP-003).
 - **positive_tests:** G03, G11; fixture:comp-pointer-basic, fixture:comp-pointer-field, fixture:comp-pointer-receiver, fixture:comp-pointer-list, fixture:comp-pointer-new, fixture:comp-pointer-equality.
-- **negative_tests:** G11, G07; fixture:comp-pointer-nil-deref, fixture:comp-pointer-nil-method, fixture:comp-pointer-handle-denied, fixture:comp-pointer-captured-address, fixture:comp-pointer-captured-method.
+- **negative_tests:** G11, G07; fixture:comp-pointer-nil-deref, fixture:comp-pointer-nil-method, fixture:comp-pointer-handle-denied, fixture:comp-pointer-captured-address, fixture:comp-pointer-captured-method. Also fixture:res-nil-handle-field.
 - **implementation_coverage:** admission `sgoadmit/admit.go` (`recvOK`), `admit_expr.go`; `types2/sgo_local.go` (rule 3); nil checks `ssagen/sgo.go` (`sgoNilCheck` → `runtime.sgoNilDereference`).
 - **executed_evidence:** W13 stage 2 conformance (sgo/evidence/w13/README.md).
 - **supported_execution_configurations:** production, lab.

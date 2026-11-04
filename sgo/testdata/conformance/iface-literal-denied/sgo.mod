@@ -1,3 +1,3 @@
 module example.com/iface-literal-denied
 
-sgo 0.16.0
+sgo 0.16.1

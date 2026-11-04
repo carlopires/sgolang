@@ -1,3 +1,3 @@
 module example.com/type-named-int-overflow
 
-sgo 0.16.0
+sgo 0.16.1

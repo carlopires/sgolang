@@ -1,3 +1,3 @@
 module example.com/comp-spawn-capture-nested
 
-sgo 0.16.0
+sgo 0.16.1

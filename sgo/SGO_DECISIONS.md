@@ -954,6 +954,14 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 
 **Decision.** D162's `t.CancelAfter(ms)` on a task context is not provided: a task body is not a cancellable scope (cancellation lives on nurseries and a task's linked scopes), and making it one would change every wait's wake path. A timeout for a task's work is written by opening a nursery around it: `nursery (n) { n.CancelAfter(ms); … }`. `n.CancelAfter`, `sgo.IsDeadline`, and `t.Deadline()` are as D162 and D165 decided; `CancelAfter` follows `Cancel`'s caller rule. In the lab, `CancelAfter` ends the run with `UnsupportedLabEffect` for now: a virtual fire happens while the blocked task may hold channel and scope locks, so lab deadlines need their own design (a later step), not a cancellation run inside the scheduler.
 
+## D171 — Scope-owned timers · APPROVED 2026-11-05
+
+**Decision.** `tm := n.NewTimer(ms)` (or `t.NewTimer(ms)` for a task body) returns a `*sgo.Timer` owned by that scope: `case <-tm.C():` is a select arm usable in any number of selects, `tm.Reset(ms)` re-arms it from now, and `tm.Stop()` disarms it. A timer is a resource of its scope (it has `Release`), so the flow rule keeps it inside the scope and the scope stops it when it ends. It complements D160's one-select `t.After`: an RFC 8305 attempt delay is measured from the attempt's start, not from each select. No clock grant, as D160. Virtual time in the lab.
+
+## D172 — Groups: the shape of D161's NewGroup and D166 · APPROVED 2026-11-05
+
+**Decision.** `g := sgo.NewGroup[T](n, limit)` (`limit` 0: unbounded) groups value-returning children of `n`: `g.Go(t, f)` starts `f` as `sgo.Go` does, waiting while `limit` children of the group are running (a cancellation point); `case r := <-g.Next():` receives the results in completion order, each once. Results are queued without bound, so a child never blocks on publishing its result and an owner that stops reading cannot deadlock the nursery's join. Slice results are passed as `sgo.Frozen[[]T]` (user decision, 2026-11-05).
+
 **Plan.** W22 (language core): D159, D160, D161, D162, D165, with a model of timers, task handles, and deadline inheritance first; acceptance is Happy Eyeballs rewritten on them. W23 (concurrency library): D164, D166, D167, `Reader`/`Writer` interfaces, a `Pool[T]` helper; acceptance is an HTTP/1.1 server example. Later: D163, TLS, JSON, HTTP/2. Plan: `sgo/docs/w22-w23-plan.md`.
 
 ---
@@ -993,3 +1001,4 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 - 2026-11-05: user approved D159–D167 ("approved, do it") after a design discussion derived from the Happy Eyeballs review: error exits cancel crossed nurseries, timers as select arms, value-returning tasks and groups, scope and inherited deadlines, whole-message reads, bounded groups, request/reply calls; tagged unions later. Work packages W22 (language core) and W23 (concurrency library).
 - 2026-11-05: implementer recorded D168 (spelling of D161, forced by the Go type system) under the delegated authority; semantics unchanged.
 - 2026-11-05: implementer recorded D170 (deadlines on nurseries only; lab deadlines deferred) under the delegated authority.
+- 2026-11-05: user approved D171 (scope-owned timers) and groups before the Happy Eyeballs rewrite, with frozen slice results ("yes, go ahead"; "slice results => frozen is better"); recorded with the group shape as D172.
