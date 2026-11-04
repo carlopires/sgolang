@@ -1,3 +1,3 @@
 module example.com/res-release-error-chain
 
-sgo 0.16.1
+sgo 0.16.2

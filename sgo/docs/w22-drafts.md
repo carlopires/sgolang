@@ -31,3 +31,13 @@ Implemented in `711ea7b88c`. Fixtures: `exit-check-cancels`, `exit-return-error-
 - **cancellation_and_cleanup:** add: "A failed `check` inside nurseries cancels the nurseries it
   crosses before joining them (SGO-CTL-004 v2)."
 - **positive_tests:** add fixture:exit-check-cancels.
+
+## Amendments owed at 0.17.0 (from the 0.16.2 erratum)
+
+0.16.2 removed two mentions of W22 features from frozen clauses (review F1, F2). The 0.17.0
+freeze re-adds them as clause versions:
+
+- SGO-RES-003 v4: rule (3) — "…or the callback of `Spawn`, `SpawnWithout`, `Start`, `sgo.Go`, or
+  `g.Go` inside the extent" (the escape pass already treats `sgo.Go` callbacks so, D161).
+- SGO-RES-004 v4: `ok` is false on any cancellation, "an ancestor's or a deadline's (SGO-CANCEL-005)
+  included".

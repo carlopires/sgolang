@@ -1,3 +1,3 @@
 module example.com/deadline-inherited
 
-sgo 0.16.1
+sgo 0.16.2

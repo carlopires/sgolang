@@ -1,3 +1,3 @@
 module example.com/comp-error-task-local-arg
 
-sgo 0.16.1
+sgo 0.16.2

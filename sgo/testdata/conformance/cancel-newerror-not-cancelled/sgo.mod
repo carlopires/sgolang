@@ -1,3 +1,3 @@
 module example.com/cancel-newerror-not-cancelled
 
-sgo 0.16.1
+sgo 0.16.2

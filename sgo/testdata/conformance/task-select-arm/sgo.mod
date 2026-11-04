@@ -1,3 +1,3 @@
 module example.com/task-select-arm
 
-sgo 0.16.1
+sgo 0.16.2

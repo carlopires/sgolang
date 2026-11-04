@@ -1,3 +1,3 @@
 module example.com/res-release-at-task-end
 
-sgo 0.16.1
+sgo 0.16.2

@@ -1,4 +1,4 @@
 module example.com/mod-wrong-path
 
-sgo 0.16.1
+sgo 0.16.2
 require example.com/lib v1.0.0

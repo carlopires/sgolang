@@ -1,3 +1,3 @@
 module example.com/err-check-in-condition
 
-sgo 0.16.1
+sgo 0.16.2

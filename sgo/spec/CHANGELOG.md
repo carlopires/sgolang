@@ -2,6 +2,15 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.16.2 — 2026-11-05
+
+Text errata from the review of 0.16.1 (F1, F2); no behaviour changes. Two amended clauses named features that 0.16.1 does not have.
+
+Amended clauses:
+
+- SGO-RES-003 v3 — rule (3) no longer names `sgo.Go`, which 0.16.1 does not define.
+- SGO-RES-004 v3 — `ok` is false on any cancellation, an ancestor's included; the mention of deadlines, which 0.16.1 does not define, is removed.
+
 ## 0.16.1 — 2026-11-05
 
 Errata from the W21 review (Z1–Z4): the resource flow rule could be evaded through pointers, interfaces, parameter and receiver stores, call results, `Own` of outer values, and `defer` inside nursery bodies; a nil resource result with a nil error, and a call on a nil handle, were misreported. Programs that relied on those holes no longer compile; every other 0.16.0 program keeps its meaning.
