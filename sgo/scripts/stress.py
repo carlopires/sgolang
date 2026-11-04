@@ -19,6 +19,7 @@ detector with a fifth of the count.
 Reduced counts on a noisy host are allowed and recorded (plan §12.2); no scenario is dropped. The
 JSON summary is written to --out (default $SGO_OUT/evidence/w12/stress-<os>-<arch>.json).
 """
+import importlib.util
 import json
 import sgoargs
 import os
@@ -103,15 +104,21 @@ def lab_lane(seeds, env, results):
             bad += [(x, k) for x, _, _, k in outs if k != e["stderr_kind"]]
         if bad:
             problems.append(f"{name}: outcomes outside the admitted set: {bad[:3]}")
-    for ex in sorted(os.listdir(EXAMPLES)):
-        d0 = os.path.join(EXAMPLES, ex)
-        mains = [m for m in (".", "./fixed") if os.path.exists(os.path.join(d0, m, "main.sgo"))]
-        for m in mains:
-            r = subprocess.run([SGO, "lab", "sweep", "-seeds", f"0..{seeds - 1}", "-expect", "expected.txt", m],
-                               cwd=d0, env=env, capture_output=True, text=True, timeout=3600)
-            results["lab"][f"example {ex} {m}"] = {"seeds": seeds, "ok": r.returncode == 0}
-            if r.returncode != 0 or " 0 failed" not in r.stdout + r.stderr:
-                problems.append(f"example {ex} {m}: sweep failed: {(r.stdout + r.stderr)[-300:]!r}")
+    # The examples: the sweeps test-examples.py runs (W12 review G3), in a temporary copy, so a
+    # failing trace a sweep saves never lands in the source tree.
+    spec = importlib.util.spec_from_file_location("test_examples", os.path.join(ROOT, "sgo", "scripts", "test-examples.py"))
+    te = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(te)
+    for ex in sorted(te.EXAMPLES):
+        with tempfile.TemporaryDirectory() as tmp:
+            d0 = os.path.join(tmp, ex)
+            shutil.copytree(os.path.join(EXAMPLES, ex), d0, symlinks=True)
+            for pkg, expect in te.lab_sweeps(ex):
+                args = [SGO, "lab", "sweep", "-seeds", f"0..{seeds - 1}"] + (["-expect", "expected.txt"] if expect else []) + [pkg]
+                r = subprocess.run(args, cwd=d0, env=env, capture_output=True, text=True, timeout=3600)
+                results["lab"][f"example {ex} {pkg}"] = {"seeds": seeds, "ok": r.returncode == 0}
+                if r.returncode != 0 or " 0 failed" not in r.stdout + r.stderr:
+                    problems.append(f"example {ex} {pkg}: sweep failed: {(r.stdout + r.stderr)[-300:]!r}")
     return problems
 
 
