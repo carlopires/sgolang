@@ -305,3 +305,231 @@ func DriverCheck() error {
 	}
 	return nil
 }
+
+// --- deadline inheritance and cancelling error exits ---
+//
+// The root body opens nested nurseries 1..N (at most cnMax); nursery i has one child that sleeps
+// until a scope it is linked to (nursery i or an enclosing one) is cancelled. Any open nursery may
+// have a deadline. The body ends by returning normally from the innermost nursery (which must wait
+// for its child) or by an error exit that crosses every open nursery (D159): each crossed nursery
+// is cancelled, innermost first, then joined. Properties: (C1) a woken child observes the cause of
+// the enclosing scope cancelled first (SGO-CANCEL-002), so a deadline inherited from an ancestor
+// reports as a deadline (D165, sgo.IsDeadline); (C2) a nursery is cancelled only by its own
+// deadline or an error exit crossing it, and a child wakes only if a scope it is linked to is
+// cancelled; (C3) every run ends with every nursery closed (an error exit never waits on a
+// sleeping child); (C4) a deadline never cancels a closed nursery.
+
+const cnMax = 3
+
+var (
+	cnOwnCauseOnly    bool // a child reports only its own nursery's cause (no inheritance)
+	cnCancelOnlySelf  bool // a cancellation is not seen by children of nested nurseries
+	cnExitNoCancel    bool // an error exit joins the crossed nurseries without cancelling them
+	cnFireAfterClose  bool // a nursery's deadline survives its close
+	cnCancelParentToo bool // cancelling a nursery also cancels its parent
+)
+
+type cnState struct {
+	n        int8 // nurseries opened so far
+	depth    int8 // innermost open nursery (0: the root body only)
+	open     [cnMax + 1]bool
+	closed   [cnMax + 1]bool
+	deadline [cnMax + 1]bool // a deadline is set and not yet fired
+	seq      [cnMax + 1]int8 // cancellation sequence (0: not cancelled)
+	cause    [cnMax + 1]int8 // 1 explicit, 2 deadline
+	child    [cnMax + 1]int8 // 0 none, 1 sleeping, 2 woke (done)
+	seen     [cnMax + 1]int8 // the cause the child observed
+	req      [cnMax + 1]bool // a cancellation was requested: its deadline fired or an exit crossed it
+	exiting  bool            // an error exit is crossing the open nurseries
+	next     int8            // next cancellation sequence number
+}
+
+func (s cnState) key() string { return fmt.Sprint(s) }
+
+func (s *cnState) cancel(i int8, cause int8) error {
+	if s.closed[i] {
+		return fmt.Errorf("C4: nursery %d cancelled after it closed", i)
+	}
+	s.req[i] = true
+	if s.seq[i] == 0 {
+		s.next++
+		s.seq[i], s.cause[i] = s.next, cause
+	}
+	if cnCancelParentToo && i > 1 && s.seq[i-1] == 0 {
+		s.next++
+		s.seq[i-1], s.cause[i-1] = s.next, cause
+	}
+	return nil
+}
+
+// observed is the cause child i sees: the enclosing nursery (1..i) cancelled first, or 0.
+func (s *cnState) observed(i int8) int8 {
+	if cnOwnCauseOnly {
+		if s.seq[i] != 0 {
+			return s.cause[i]
+		}
+		if cnCancelOnlySelf {
+			return 0
+		}
+		for j := i - 1; j >= 1; j-- {
+			if s.seq[j] != 0 {
+				return 1 // seen, but reported as a plain cancellation
+			}
+		}
+		return 0
+	}
+	if cnCancelOnlySelf {
+		if s.seq[i] != 0 {
+			return s.cause[i]
+		}
+		return 0
+	}
+	best, cause := int8(0), int8(0)
+	for j := int8(1); j <= i; j++ {
+		if s.seq[j] != 0 && (best == 0 || s.seq[j] < best) {
+			best, cause = s.seq[j], s.cause[j]
+		}
+	}
+	return cause
+}
+
+func cnSteps(s cnState) ([]cnState, error) {
+	var out []cnState
+	try := func(n cnState, err error) error {
+		if err != nil {
+			return err
+		}
+		out = append(out, n)
+		return nil
+	}
+	// The body.
+	switch {
+	case s.exiting && s.depth > 0:
+		d := s.depth
+		n := s
+		if s.child[d] == 1 && !cnExitNoCancel {
+			if err := try(n, n.cancel(d, 1)); err != nil { // cancel, then wait for the child
+				return nil, err
+			}
+			out = out[:len(out)-1]
+		}
+		if n.child[d] == 2 || n.child[d] == 0 { // joined: close
+			n.open[d], n.closed[d] = false, true
+			if !cnFireAfterClose {
+				n.deadline[d] = false
+			}
+			n.depth--
+			out = append(out, n)
+		} else if s.seq[d] == 0 && !cnExitNoCancel {
+			out = append(out, n) // the cancellation step itself
+		}
+	case !s.exiting:
+		if s.n < cnMax {
+			for _, dl := range []bool{false, true} {
+				n := s
+				n.n++
+				d := n.n
+				n.depth, n.open[d], n.child[d], n.deadline[d] = d, true, 1, dl
+				out = append(out, n)
+			}
+		}
+		if s.depth > 0 {
+			n := s
+			n.exiting = true // an error exit (D159)
+			out = append(out, n)
+			if s.child[s.depth] == 2 { // a normal end of the innermost nursery
+				m := s
+				d := m.depth
+				m.open[d], m.closed[d] = false, true
+				if !cnFireAfterClose {
+					m.deadline[d] = false
+				}
+				m.depth--
+				out = append(out, m)
+			}
+		}
+	}
+	// Deadlines.
+	for i := int8(1); i <= s.n; i++ {
+		if s.deadline[i] {
+			n := s
+			n.deadline[i] = false
+			if err := try(n, n.cancel(i, 2)); err != nil {
+				return nil, err
+			}
+		}
+	}
+	// Children.
+	for i := int8(1); i <= s.n; i++ {
+		if s.child[i] != 1 {
+			continue
+		}
+		linked := false
+		for j := int8(1); j <= i; j++ {
+			linked = linked || s.seq[j] != 0
+		}
+		c := s.observed(i)
+		if c == 0 {
+			continue
+		}
+		if !linked {
+			return nil, fmt.Errorf("C2: child %d woke with no linked nursery cancelled", i)
+		}
+		n := s
+		n.child[i], n.seen[i] = 2, c
+		out = append(out, n)
+	}
+	for j := int8(1); j <= s.n; j++ {
+		if s.seq[j] != 0 && !s.req[j] {
+			return nil, fmt.Errorf("C2: nursery %d cancelled without its deadline or an exit crossing it", j)
+		}
+	}
+	// C1: compare every woken child with the rule.
+	for i := int8(1); i <= s.n; i++ {
+		if s.child[i] != 2 {
+			continue
+		}
+		best, want := int8(0), int8(0)
+		for j := int8(1); j <= i; j++ {
+			if s.seq[j] != 0 && (best == 0 || s.seq[j] < best) {
+				best, want = s.seq[j], s.cause[j]
+			}
+		}
+		if s.seen[i] != want && want != 0 {
+			// the child observed at wake time: a later, earlier-sequenced cancellation is impossible,
+			// so a mismatch is a wrong cause
+			return nil, fmt.Errorf("C1: child %d observed cause %d, the first cancelled enclosing nursery has %d", i, s.seen[i], want)
+		}
+	}
+	if len(out) == 0 {
+		for i := int8(1); i <= s.n; i++ {
+			if s.open[i] {
+				return nil, fmt.Errorf("C3: no step possible with nursery %d open: %+v", i, s)
+			}
+		}
+	}
+	return out, nil
+}
+
+// CancelTreeExplore explores every run of the nested-nursery scenario; it returns the number of
+// states.
+func CancelTreeExplore() (int, error) {
+	s0 := cnState{}
+	seen := map[string]bool{s0.key(): true}
+	work := []cnState{s0}
+	for len(work) > 0 {
+		s := work[len(work)-1]
+		work = work[:len(work)-1]
+		next, err := cnSteps(s)
+		if err != nil {
+			return len(seen), err
+		}
+		for _, n := range next {
+			if k := n.key(); !seen[k] {
+				seen[k] = true
+				work = append(work, n)
+			}
+		}
+	}
+	return len(seen), nil
+}

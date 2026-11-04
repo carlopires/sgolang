@@ -41,6 +41,14 @@ func TestTimerRearm(t *testing.T) {
 	t.Logf("timer: %d runs", n)
 }
 
+func TestCancelTree(t *testing.T) {
+	n, err := CancelTreeExplore()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("cancel tree: %d states", n)
+}
+
 func TestDeadlineDriver(t *testing.T) {
 	if err := DriverCheck(); err != nil {
 		t.Fatal(err)
@@ -59,6 +67,7 @@ func TestW22Mutations(t *testing.T) {
 		})
 		return first
 	}
+	ct := func() error { _, err := CancelTreeExplore(); return err }
 	cases := []struct {
 		name string
 		flag *bool
@@ -71,6 +80,11 @@ func TestW22Mutations(t *testing.T) {
 		{"refill from the newest", &grRefillLast, groupFails, "G2"},
 		{"stale timer fire", &tmNoStaleCheck, func() error { _, err := TimerExplore(); return err }, "T"},
 		{"inline cancel", &dlInlineCancel, DriverCheck, "D1"},
+		{"no deadline inheritance", &cnOwnCauseOnly, ct, "C1"},
+		{"cancel not seen inside", &cnCancelOnlySelf, ct, "C1"},
+		{"error exit without cancel", &cnExitNoCancel, ct, "C3"},
+		{"deadline after close", &cnFireAfterClose, ct, "C4"},
+		{"cancel the parent too", &cnCancelParentToo, ct, "C2"},
 	}
 	for _, c := range cases {
 		*c.flag = true
