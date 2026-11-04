@@ -1,3 +1,3 @@
 module example.com/lex-rune-literal-empty
 
-sgo 0.16.1
+sgo 0.16.2

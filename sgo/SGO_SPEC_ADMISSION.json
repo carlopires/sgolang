@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": "0.16.1",
+  "spec_version": "0.16.2",
   "status": "admitted_0.7.0",
   "warning": "Spec 0.7.0 admits every row marked 'admitted': its clauses are frozen, the toolchain implements and enforces them, and its acceptance cases have executed evidence (constitution §6, D83). Rows marked 'denied' stay rejected. Admission does not widen any row beyond its clauses; everything the clauses do not name is rejected.",
   "default_decision": "reject",
@@ -1098,7 +1098,7 @@
         "SGO-RES-004",
         "SGO-RES-005"
       ],
-      "normative_text_digest": "6306eb8d4931d71264f8cfe199f3f4fcf23a996df5af03e8e0597abc933d1622",
+      "normative_text_digest": "4037a9916a4e35a0227471ada10698c87f21c9fcdd96f9fc6cb4d86458bca367",
       "admitted_in": [
         "0.16.0"
       ],
@@ -1111,8 +1111,8 @@
       "clause_digests": {
         "SGO-RES-001": "174536cd18127d089211a6a40471a97d879a0991c241316cf7b1edb16c69754b",
         "SGO-RES-002": "5657f70c4d04d5fcf2434ea944b80650418536e2961ced9e45910f17877e2015",
-        "SGO-RES-003": "5e5dabbe796ca4f143b808264362540d5503c1cee6f9e9b60dc509beb06bed4e",
-        "SGO-RES-004": "5b5ea5de14d123760b5d5532708fa8e76d723bdb729973e4ed4d38e958cac332",
+        "SGO-RES-003": "8b1bfa9d0f21dafbdf369c4bfc4bdb5cc711e6cb2fd83147d4adbba371542f28",
+        "SGO-RES-004": "d1a6b0fccdaaf022314d86622bd99b0f754c1ef61c5d03cc7855a9ff8f8a091c",
         "SGO-RES-005": "cfee81d4f351ae84987d25c09433c6d0d7958a1e18abc350faef0009f71164d8"
       },
       "clause_status": {
@@ -1125,8 +1125,8 @@
       "clause_versions": {
         "SGO-RES-001": 2,
         "SGO-RES-002": 2,
-        "SGO-RES-003": 2,
-        "SGO-RES-004": 2,
+        "SGO-RES-003": 3,
+        "SGO-RES-004": 3,
         "SGO-RES-005": 1
       }
     },
@@ -1787,5 +1787,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "941c9f244c88d6f4bc4595cb93aa16c1cb74a81573c028cd556d9a8ac68bf876"
+  "rows_digest": "d0642dfe054eb61f86301ab20061b00bf7d0e38310c2d685b8cc4b78f6bf71a0"
 }

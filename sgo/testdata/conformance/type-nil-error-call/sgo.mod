@@ -1,3 +1,3 @@
 module example.com/type-nil-error-call
 
-sgo 0.16.1
+sgo 0.16.2

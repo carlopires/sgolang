@@ -1,3 +1,3 @@
 module example.com/val-string-range-index-only
 
-sgo 0.16.1
+sgo 0.16.2

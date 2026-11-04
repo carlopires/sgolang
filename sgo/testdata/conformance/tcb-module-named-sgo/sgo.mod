@@ -1,3 +1,3 @@
 module sgo
 
-sgo 0.16.1
+sgo 0.16.2

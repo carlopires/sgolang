@@ -1,4 +1,4 @@
 module example.com/mod-require-vendor
 
-sgo 0.16.1
+sgo 0.16.2
 require example.com/lib v1.2.3

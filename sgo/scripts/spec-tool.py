@@ -176,7 +176,33 @@ def validate(required, families, cases, clauses):
             for fx in FIXTURE_REF.findall(v):
                 if c["fields"].get("status") == "frozen" and not os.path.isdir(os.path.join(CONFORMANCE, fx)):
                     errors.append(f"{where}: {fld}: fixture {fx} does not exist under sgo/testdata/conformance")
+    # A frozen clause names only what exists: every `sgo.X` it mentions is an exported declaration
+    # of package sgo (0.16.1 review F1). One-letter names are placeholders (`sgo.K`).
+    sgo_decls = sgo_exports()
+    for c in clauses:
+        if c["fields"].get("status") != "frozen":
+            continue
+        text = " ".join(c["fields"].values())
+        for name in sorted(set(SGO_NAME.findall(text))):
+            if len(name) > 1 and name not in sgo_decls:
+                errors.append(f"{c['file']}:{c['line']} {c['id']}: names sgo.{name}, which package sgo does not declare")
     return errors
+
+
+SGO_NAME = re.compile(r"`[^`]*?\bsgo\.([A-Z]\w*)")
+
+
+def sgo_exports():
+    """The exported top-level names of package sgo (src/sgo, tests excluded)."""
+    names = set()
+    src = os.path.join(ROOT, "src", "sgo")
+    for fn in os.listdir(src):
+        if not fn.endswith(".go") or fn.endswith("_test.go"):
+            continue
+        text = open(os.path.join(src, fn)).read()
+        names.update(re.findall(r"^(?:func(?: \([^)]*\))?|type|var|const)\s+([A-Z]\w*)", text, re.M))
+        names.update(re.findall(r"^\t([A-Z]\w*)\s", text, re.M))  # const and var blocks
+    return names
 
 
 def computed_registry(registry, families, clauses, spec_version):

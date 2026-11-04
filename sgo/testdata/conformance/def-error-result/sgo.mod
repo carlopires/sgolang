@@ -1,3 +1,3 @@
 module example.com/def-error-result
 
-sgo 0.16.1
+sgo 0.16.2
