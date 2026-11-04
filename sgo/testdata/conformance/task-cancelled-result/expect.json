@@ -9,5 +9,5 @@
  "timeout_ms": 20000,
  "stderr_kind": "MainError",
  "stderr_message": "cancelled: Cancel by task 0",
- "note": "The owner's Wait after cancelling its own nursery is a receive inside a cancelled scope: it unwinds the owner (SGO-NATIVE). The child's published cancellation result serves readers outside that scope."
+ "note": "The owner's Wait inside a nursery it cancelled is a receive in a cancelled scope: it unwinds the owner (SGO-NATIVE). The task is in the outer nursery, so its result is never ready first (the earlier form raced with the child publishing its cancellation result: linux/arm64 run 41880232544). The ready-result path is task-result-reader-cancelled."
 }
