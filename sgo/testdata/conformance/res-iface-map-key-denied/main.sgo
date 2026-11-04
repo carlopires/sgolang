@@ -1,0 +1,16 @@
+package main
+
+import (
+	"sgo"
+
+	"example.com/res-iface-map-key-denied/w"
+)
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		m := map[w.Waker]int{}
+		_ = m
+		n.NewTimer(1).Stop()
+	}
+	return nil
+}

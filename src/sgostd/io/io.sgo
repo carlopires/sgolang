@@ -1,0 +1,53 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package io defines the resource interfaces of byte streams (D176, SGO-STD-008). Each embeds
+// sgo.Resource, as any user interface may, so a file or a connection converts to it and the value
+// stays tied to the scope that owns the handle (SGO-RES-006). A plain value with the methods (an
+// in-memory reader in a test) converts to the same interfaces, untied.
+package io
+
+import "sgo"
+
+// Reader reads at most max bytes: at least one, or an error (IsEOF at the end of the stream).
+type Reader interface {
+	sgo.Resource
+	Read(max int) (string, error)
+}
+
+// LineReader reads one line of at most max bytes, without its newline.
+type LineReader interface {
+	sgo.Resource
+	ReadLine(max int) (string, error)
+}
+
+// Writer writes s and returns the number of bytes written.
+type Writer interface {
+	sgo.Resource
+	Write(s string) (int, error)
+}
+
+// ReadWriter is a Reader and a Writer.
+type ReadWriter interface {
+	Reader
+	Writer
+}
+
+// LineReadWriter is a LineReader and a Writer.
+type LineReadWriter interface {
+	LineReader
+	Writer
+}
+
+// WriteString writes all of s to w; a short write without an error is an error.
+func WriteString(w Writer, s string) error {
+	n, err := w.Write(s)
+	if err != nil {
+		return err
+	}
+	if n != len(s) {
+		return sgo.NewError("io.WriteString: short write")
+	}
+	return nil
+}

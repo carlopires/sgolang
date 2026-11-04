@@ -1,0 +1,20 @@
+package main
+
+import (
+	"sgo"
+
+	"example.com/res-iface-freeze-denied/w"
+)
+
+type box struct {
+	k w.Waker
+}
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		b := []box{{k: n.NewTimer(1)}}
+		f := sgo.Freeze(b)
+		_ = f
+	}
+	return nil
+}

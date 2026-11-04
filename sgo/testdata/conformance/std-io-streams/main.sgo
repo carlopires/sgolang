@@ -1,0 +1,40 @@
+package main
+
+import (
+	"sgo"
+	"std/io"
+)
+
+// lines is an in-memory LineReader: a plain value, untied.
+type lines struct {
+	rest []string
+}
+
+func (l *lines) ReadLine(max int) (string, error) {
+	if len(l.rest) == 0 {
+		return "", sgo.NewError("eof")
+	}
+	s := l.rest[0]
+	l.rest = l.rest[1:]
+	return s, nil
+}
+
+// copyLines copies two lines from r to w, written once against the interfaces.
+func copyLines(r io.LineReader, w io.Writer) error {
+	for i := 0; i < 2; i++ {
+		s := check r.ReadLine(64)
+		check io.WriteString(w, "> "+s+"\n")
+	}
+	return nil
+}
+
+// std/io (D176, SGO-STD-008): a file and an in-memory value through the same LineReader, and
+// standard output through Writer.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		f := check root.Dir("data").Open(n, "in.txt")
+		check copyLines(f, out)
+	}
+	return copyLines(&lines{rest: []string{"one", "two"}}, out)
+}

@@ -1,0 +1,40 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package io
+
+import "sgo"
+
+// buffer is an in-memory Writer; short makes it write one byte less than asked.
+type buffer struct {
+	data  string
+	short bool
+}
+
+func (b *buffer) Write(s string) (int, error) {
+	if b.short && len(s) > 0 {
+		s = s[:len(s)-1]
+	}
+	b.data += s
+	return len(s), nil
+}
+
+func TestWriteString(t *sgo.T) error {
+	b := &buffer{}
+	check WriteString(b, "hello")
+	check WriteString(b, " world")
+	if b.data != "hello world" {
+		return sgo.NewError("WriteString wrote " + b.data)
+	}
+	return nil
+}
+
+func TestWriteStringShort(t *sgo.T) error {
+	b := &buffer{short: true}
+	err := WriteString(b, "abc")
+	if err == nil || err.Error() != "io.WriteString: short write" {
+		return sgo.NewError("a short write is not reported")
+	}
+	return nil
+}

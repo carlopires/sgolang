@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": ["SGO-STD-008", "SGO-RES-006"],
+ "exit": 0,
+ "stdout": "> alpha\n> beta\n> one\n> two\n",
+ "timeout_ms": 20000,
+ "note": "D176: one function written against std/io serves a file, an in-memory value, and standard output."
+}

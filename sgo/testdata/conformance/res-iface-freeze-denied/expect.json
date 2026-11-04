@@ -1,0 +1,6 @@
+{
+ "kind": "reject",
+ "clauses": ["SGO-RES-006", "SGO-COMP-009"],
+ "diagnostics": [{"code": "SGO_E_UNADMITTED", "position": "main.sgo:16:8"}],
+ "note": "D176 (review condition 5): a frozen value holds no resource interface value."
+}

@@ -109,6 +109,17 @@ func (w *Writer) WriteString(s string) error {
 	return nil
 }
 
+// Write writes all of s to standard output, as WriteString does, and returns len(s), or the
+// number of bytes written and an error. With it, standard output converts to io.Writer, as an
+// untied value: it holds no scope resource (D176).
+func (w *Writer) Write(s string) (int, error) {
+	n, ok := runtime_write(s)
+	if !ok {
+		return n, NewError("stdout write failed after " + itoa(n) + " bytes")
+	}
+	return n, nil
+}
+
 func (c *Context) own() {
 	if c == nil || !runtime_isCurrent(c.t) {
 		runtime_violation("context used by a task it does not belong to")

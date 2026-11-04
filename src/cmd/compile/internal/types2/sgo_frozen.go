@@ -43,6 +43,9 @@ func sgoFrozenRefusal(T Type, seen map[Type]bool) string {
 	if isSgoHandle(T) {
 		return "handle"
 	}
+	if sgoResIface(T) || sgoHasRelease(T) {
+		return "resource" // a resource interface or a user resource: tied to a scope (D176, SGO-RES-006)
+	}
 	if _, ok := sgoFrozenElem(T); ok {
 		return "" // its element was checked where that Frozen type was formed
 	}

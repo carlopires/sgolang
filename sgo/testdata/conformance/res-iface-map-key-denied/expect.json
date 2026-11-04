@@ -1,0 +1,6 @@
+{
+ "kind": "reject",
+ "clauses": ["SGO-RES-006", "SGO-COMP-002"],
+ "diagnostics": [{"code": "SGO_E_UNADMITTED", "position": "main.sgo:11:8"}],
+ "note": "D176 (review condition 5): a resource interface is not a map key."
+}

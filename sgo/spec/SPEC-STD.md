@@ -155,3 +155,26 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **implementation_coverage:** `src/sgostd/math/`.
 - **executed_evidence:** W16: its `sgo test` suite (`sgo/scripts/test-std.py`), `sgo/scripts/test-std-diff.py`, `sgo/scripts/std-api-check.py`, conformance (sgo/evidence/w16/README.md).
 - **supported_execution_configurations:** production, lab.
+
+### SGO-STD-008 — `std/io`: Stream interfaces
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-RES-006, SGO-FILE-001, SGO-NET-001, SGO-PROC-003; D134, D176.
+- **grammar_and_types:** The package `std/io` exports exactly: `func WriteString(w Writer, s string) error`; `type LineReadWriter`; `type LineReader`; `type ReadWriter`; `type Reader`; `type Writer`. `Reader` is `sgo.Resource` with `Read(max int) (string, error)`; `LineReader` is `sgo.Resource` with `ReadLine(max int) (string, error)`; `Writer` is `sgo.Resource` with `Write(s string) (int, error)`; `ReadWriter` embeds `Reader` and `Writer`; `LineReadWriter` embeds `LineReader` and `Writer`. All are resource interfaces (SGO-RES-006), declared in S-Go source by embedding `sgo.Resource` exactly as user code may.
+- **preconditions:** As the methods of the dynamic value.
+- **evaluation_and_value_semantics:** `*sgo.File` and `*sgo.Conn` have the methods of `ReadWriter` and `LineReadWriter`; standard output (`*sgo.Writer`) has `Write` and converts to `Writer` as an untied value. `WriteString(w, s)` calls `w.Write(s)` once and returns its error, or an error `io.WriteString: short write` if fewer than `len(s)` bytes were written without an error.
+- **ownership_and_lifecycle:** As SGO-RES-006: a value is tied as what it holds.
+- **effect_and_capability_requirements:** None of its own: the package holds no capability and has no package-level state (D109).
+- **concurrency_and_memory_order:** n/a: values are task-local (SGO-RES-006).
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** As the dynamic value's methods.
+- **cancellation_and_cleanup:** As the dynamic value's methods.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export; the checks of SGO-RES-006.
+- **runtime_guards:** As SGO-RES-006.
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code: the package is S-Go source compiled under the same admission and sharing rules as user code (SGO-IMP-004), not part of the TCB.
+- **positive_tests:** fixture:std-io-streams.
+- **negative_tests:** fixture:std-io-escape.
+- **implementation_coverage:** `src/sgostd/io/`.
+- **executed_evidence:** pending (W23).
+- **supported_execution_configurations:** production, lab.
+

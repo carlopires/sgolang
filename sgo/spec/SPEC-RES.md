@@ -127,11 +127,11 @@ API at 0.16.0: a method on a scope acquires into that scope (`root.Listen`, `n.D
 - **allowed_nondeterminism:** None.
 - **failure_and_partial_progress:** As the dynamic value's methods.
 - **cancellation_and_cleanup:** As the dynamic value's methods.
-- **compile_link_checks:** `SGO_E_RESOURCE_ESCAPES` (a resource or resource interface value becoming another interface; an assertion to one; a resource interface value outliving its tie; `sgo.Copy`); `SGO_E_TASK_LOCAL_CAPTURE` (capture by a child); `SGO_E_UNADMITTED` (`==`).
+- **compile_link_checks:** `SGO_E_RESOURCE_ESCAPES` (a resource or resource interface value becoming another interface; an assertion to one; a resource interface value outliving its tie; `sgo.Copy`); `SGO_E_UNADMITTED` (in a frozen value, or as a map key); `SGO_E_TASK_LOCAL_CAPTURE` (capture by a child); `SGO_E_UNADMITTED` (`==`).
 - **runtime_guards:** `NilDereference` for a method call on a nil value.
 - **tcb_assumptions:** `src/cmd/compile/internal/types2/sgo_resflow.go` (`sgoResIface`, `callTie`), `sgo_local.go` (conversions and assertions).
-- **positive_tests:** fixture:res-iface-basic, fixture:res-iface-wrapper-outlives-inner, fixture:res-iface-narrow-assert, fixture:res-iface-nil-call.
-- **negative_tests:** fixture:res-iface-escape, fixture:res-iface-to-any-denied, fixture:res-iface-assert-to-error-denied, fixture:res-iface-copy-denied, fixture:res-iface-capture-denied, fixture:res-iface-closure-callee, fixture:res-iface-wrapper-escape, fixture:res-iface-compare-denied.
+- **positive_tests:** fixture:std-io-streams, fixture:res-iface-basic, fixture:res-iface-wrapper-outlives-inner, fixture:res-iface-narrow-assert, fixture:res-iface-nil-call.
+- **negative_tests:** fixture:res-iface-escape, fixture:res-iface-to-any-denied, fixture:res-iface-assert-to-error-denied, fixture:res-iface-copy-denied, fixture:res-iface-capture-denied, fixture:res-iface-closure-callee, fixture:res-iface-wrapper-escape, fixture:res-iface-compare-denied, fixture:res-iface-freeze-denied, fixture:res-iface-map-key-denied, fixture:std-io-escape.
 - **implementation_coverage:** W23: `src/sgo/io.go` (`Resource`); compiler `sgoadmit/admit_expr.go`, `types2/sgo_resflow.go`, `types2/sgo_local.go`.
 - **executed_evidence:** pending (W23).
 - **supported_execution_configurations:** production; lab.

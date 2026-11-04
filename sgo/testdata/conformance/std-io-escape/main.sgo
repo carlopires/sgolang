@@ -1,0 +1,16 @@
+package main
+
+import (
+	"sgo"
+	"std/io"
+)
+
+// A std/io value is tied as the file it holds: it cannot outlive the nursery that owns the file.
+func main(root *sgo.Context) error {
+	var keep io.Reader = nil
+	nursery (n) {
+		keep = check root.Dir("data").Open(n, "in.txt")
+	}
+	_, err := keep.Read(1)
+	return err
+}
