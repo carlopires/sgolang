@@ -142,3 +142,13 @@ func sgoDialerPublish(d *sgoDialer, add []sgoNetGrant) {
 		unlock(&d.mu)
 	}
 }
+
+// sgoGrantIn reports whether list holds an entry with g's address, family, and port.
+func sgoGrantIn(list []sgoNetGrant, g *sgoNetGrant) bool {
+	for i := range list {
+		if list[i].ip == g.ip && list[i].v6 == g.v6 && list[i].port == g.port {
+			return true
+		}
+	}
+	return false
+}

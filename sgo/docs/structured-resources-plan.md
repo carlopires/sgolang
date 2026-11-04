@@ -82,3 +82,28 @@ and no slot.
 - **Static escape check versus user resource types.** A type is a resource type if it has a
   `Release(bool) error` method, or holds a resource-type field, element, or capture. That makes
   it decidable from the type alone.
+
+## Status (2026-11-04)
+
+- S0 model: done (`277cd689d0`).
+- S1 drafts: approved; SGO-ERR-004 moved into `sgo/spec/SPEC-ERRORS.md` as a draft.
+- `check`: done and pushed (`2f62a3a6e6`). 13 conformance cases; full conformance 585/585;
+  test-fmt clean.
+- S2 runtime + API (local commits, not pushed: fixtures, examples, and runtime tests still use
+  the 0.15 API). `src/runtime/sgo_res.go` holds the per-scope lists, the inside/encloses checks,
+  release after the join in reverse order, release-error routing (ReleaseError, chain), MoveTo,
+  and Own. The `sgo` API gained `Scope`, `Releaser`, scope-taking `Open`/`Create`/`Accept`/
+  `Dialer.Dial`, `n.Listen`/`n.Dial`/`n.Dialer`, `MoveTo`, and `Own`; `LendTo`, `ConnSlot`, and
+  `HandleAbandoned` are removed. Smoke-tested: child `Accept(t)`, `n.Dial`, LIFO release after
+  the join with ok=true, ChildError primary with the release error in its chain, and a clean
+  nursery whose Release fails unwinding with ReleaseError.
+- Next, in order:
+  1. Migrate the runtime tests (`export_sgo_io_test.go`, `sgo_io_test.go`, `sgo_net_test.go`,
+     …), the ~30 conformance fixtures, and the examples to the new API; linux vet; push.
+  2. Compiler, the rest of D151: structs may hold resources; the escape rule
+     (`SGO_E_RESOURCE_ESCAPES`) in `sgo_flow.go`; error-only returns for resource results.
+  3. Move SGO-RES-001..004 and the amendments into `sgo/spec/`, fixtures, freeze 0.16.0, review.
+- Spec adjustments found while implementing:
+  - `Own(r)` returns nothing, and there is no double-Own guard: each Own registers one release.
+  - A failed release on a nursery that otherwise completed normally unwinds as a failure
+    (exit 2 at the root), not an error.

@@ -164,7 +164,7 @@ func sgoDirOpenGrant(g int, path string, write bool) (*sgoHandle, *sgoIOErr) {
 	if write && sgoDirGrants[g].ro {
 		return nil, &sgoIOErr{kind: "ReadOnly"}
 	}
-	d := &sgoHandle{kind: sgoHDir, fd: root, owner: sgoCurrent(), readOnly: sgoDirGrants[g].ro}
+	d := &sgoHandle{kind: sgoHDir, fd: root, body: sgoCurrent(), readOnly: sgoDirGrants[g].ro} // a transient handle, in no list
 	return sgoDirOpenFile(d, path, write)
 }
 
