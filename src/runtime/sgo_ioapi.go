@@ -13,6 +13,7 @@ import "unsafe"
 type sgoIOError struct {
 	kind, op, msg string
 	progress      int
+	deadline      bool // a Cancelled operation ended by a deadline (D162)
 }
 
 func (e *sgoIOError) Error() string {
@@ -35,6 +36,7 @@ func sgoIOResult(e *sgoIOErr, op string) error {
 	if e.kind == "Cancelled" {
 		if c := sgoTaskCancellation(sgoCurrent()); c != nil {
 			r.msg = c.Error()
+			r.deadline = sgoIsDeadline(c)
 		}
 	}
 	return r

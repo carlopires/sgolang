@@ -1,0 +1,22 @@
+package main
+
+import "sgo"
+
+// n.CancelAfter cancels n when the deadline passes; the cancellation is a deadline's
+// (IsDeadline) and still a cancellation (IsCancelled). A later, longer CancelAfter does not
+// extend it (D162, D165).
+func main(root *sgo.Context) error {
+	var err error = nil
+	nursery (n) {
+		n.CancelAfter(30)
+		n.CancelAfter(3600000)
+		e := root.Sleep(3600000)
+		if e != nil {
+			err = e
+		}
+	}
+	if !sgo.IsDeadline(err) || !sgo.IsCancelled(err) {
+		return sgo.NewError("expected a deadline cancellation")
+	}
+	return root.Stdout().WriteString(err.Error() + "\n")
+}

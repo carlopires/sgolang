@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+func wait(n *sgo.Nursery, ms int) {
+	n.CancelAfter(ms)
+}
+
+// CancelAfter with a negative duration fails with InvalidArgument.
+func main(root *sgo.Context) error {
+	nursery (n) {
+		wait(n, -1)
+	}
+	return nil
+}

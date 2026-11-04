@@ -950,6 +950,10 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 
 **Decision.** D161's semantics stand; its surface changes because the trusted `sgo` package is Go code: Go has no generic methods (`n.Go` cannot infer `T`), and a two-value receive is `(value, ok bool)`, never `(value, error)`. The spelling is `h := sgo.Go(n, func(t *sgo.Context) (T, error) {...})` returning `*sgo.Task[T]`; `v, err := h.Wait(t)` waits for the result; and the select arm is `case r := <-h.Result():`, where `Result()` returns a receive-only native channel of `sgo.Result[T]` (fields `Value T`, `Err error`) that the runtime fills once when the child ends. The child's error is data: it does not fail the nursery. `sgo.NewGroup[T](n)` follows the same shape. No compiler special case is needed beyond the admission rules D161 already requires.
 
+## D170 — Deadlines attach to nurseries · APPROVED 2026-11-05 (implementer, delegated)
+
+**Decision.** D162's `t.CancelAfter(ms)` on a task context is not provided: a task body is not a cancellable scope (cancellation lives on nurseries and a task's linked scopes), and making it one would change every wait's wake path. A timeout for a task's work is written by opening a nursery around it: `nursery (n) { n.CancelAfter(ms); … }`. `n.CancelAfter`, `sgo.IsDeadline`, and `t.Deadline()` are as D162 and D165 decided; `CancelAfter` follows `Cancel`'s caller rule. In the lab, `CancelAfter` ends the run with `UnsupportedLabEffect` for now: a virtual fire happens while the blocked task may hold channel and scope locks, so lab deadlines need their own design (a later step), not a cancellation run inside the scheduler.
+
 **Plan.** W22 (language core): D159, D160, D161, D162, D165, with a model of timers, task handles, and deadline inheritance first; acceptance is Happy Eyeballs rewritten on them. W23 (concurrency library): D164, D166, D167, `Reader`/`Writer` interfaces, a `Pool[T]` helper; acceptance is an HTTP/1.1 server example. Later: D163, TLS, JSON, HTTP/2. Plan: `sgo/docs/w22-w23-plan.md`.
 
 ---
@@ -988,3 +992,4 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 - 2026-11-05: user approved D158 after a design discussion ("approved; go ahead"): no slot construct; the deciding scope owns candidates, channels carry resources within their scope, `MoveTo` works for user resources, user resources serialize themselves. D157 (connection slot in scope terms) is withdrawn.
 - 2026-11-05: user approved D159–D167 ("approved, do it") after a design discussion derived from the Happy Eyeballs review: error exits cancel crossed nurseries, timers as select arms, value-returning tasks and groups, scope and inherited deadlines, whole-message reads, bounded groups, request/reply calls; tagged unions later. Work packages W22 (language core) and W23 (concurrency library).
 - 2026-11-05: implementer recorded D168 (spelling of D161, forced by the Go type system) under the delegated authority; semantics unchanged.
+- 2026-11-05: implementer recorded D170 (deadlines on nurseries only; lab deadlines deferred) under the delegated authority.

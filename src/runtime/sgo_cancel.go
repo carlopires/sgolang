@@ -41,6 +41,7 @@ const (
 	sgoCauseChildFailed              // child id ended Errored or Failed
 	sgoCauseUnwind                   // the owner's body unwound through the nursery
 	sgoCauseErrorExit                // the owner left the nursery with an error (D159) by task id
+	sgoCauseDeadline                 // the scope's deadline passed (D162, n.CancelAfter)
 )
 
 type sgoCause struct {
@@ -116,11 +117,19 @@ func sgoTaskCancellation(t *sgoTask) error {
 	if raceenabled {
 		raceacquire(unsafe.Pointer(&from.cancelSeq))
 	}
-	return sgoCancelError(sgoCause{}, from.id)
+	err := sgoCancelError(sgoCause{}, from.id)
+	if from.cause.kind == sgoCauseDeadline { // an inherited deadline (D165)
+		e := err.(*sgoCancelErr)
+		e.msg, e.deadline = "cancelled: deadline of scope "+sgoItoa(from.id)+" exceeded", true
+	}
+	return err
 }
 
 // sgoCancelErr is a cancellation error (SGO-CANCEL-003); only Checkpoint and Sleep create one.
-type sgoCancelErr struct{ msg string }
+type sgoCancelErr struct {
+	msg      string
+	deadline bool // the cancellation is a deadline's (D162; sgo.IsDeadline)
+}
 
 func (e *sgoCancelErr) Error() string { return e.msg }
 
@@ -136,10 +145,13 @@ func sgoCancelError(c sgoCause, anc uint64) error {
 		msg = "cancelled: child " + sgoItoa(c.id) + " failed"
 	case c.kind == sgoCauseErrorExit:
 		msg = "cancelled: error exit by task " + sgoItoa(c.id)
+	case c.kind == sgoCauseDeadline:
+		msg = "cancelled: deadline exceeded"
+
 	default:
 		msg = "cancelled: unwind"
 	}
-	return &sgoCancelErr{msg}
+	return &sgoCancelErr{msg: msg, deadline: c.kind == sgoCauseDeadline}
 }
 
 func sgoItoa(v uint64) string {
@@ -397,6 +409,8 @@ func sgoDrainFire(arg any, _ uintptr, _ int64) {
 	case sgoCauseErrorExit:
 		b = append(b, "error exit by task "...)
 		b = sgoAppendUint(b, s.cause.id)
+	case sgoCauseDeadline:
+		b = append(b, "deadline exceeded"...)
 	default:
 		b = append(b, "unwind"...)
 	}

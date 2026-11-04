@@ -80,6 +80,9 @@ type sgoScope struct {
 	cause     sgoCause
 	cancelSeq atomic.Uint64
 	drain     *timer
+	// Deadline (sgo_deadline.go, D162): absolute monotonic time (0: none) and its timer.
+	deadline int64
+	dtimer   *timer
 }
 
 // sgoTask is the record of an S-Go task: the root task or a child admitted by sgoSpawn.
@@ -439,6 +442,8 @@ func sgoNurseryJoin(s *sgoScope) (sgoScopeResult, []*sgoTask, error) {
 	s.state = sgoFinalizing
 	drain := s.drain // stopped below, outside the lock
 	s.drain = nil
+	dtimer := s.dtimer // the deadline no longer applies (D162)
+	s.dtimer = nil
 	r := sgoScopeResult{Outcome: sgoSucceeded, Children: s.nchild}
 	for c := s.first; c != nil; c = c.sibling {
 		switch c.outcome {
@@ -467,6 +472,9 @@ func sgoNurseryJoin(s *sgoScope) (sgoScopeResult, []*sgoTask, error) {
 	unlock(&s.lock)
 	if drain != nil {
 		drain.stop()
+	}
+	if dtimer != nil {
+		dtimer.stop()
 	}
 	t.nest[len(t.nest)-1] = nil
 	t.nest = t.nest[:len(t.nest)-1]

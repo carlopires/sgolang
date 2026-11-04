@@ -35,6 +35,9 @@ func runtime_checkpoint(task unsafe.Pointer) error
 func runtime_sleep(task unsafe.Pointer, ms int) error
 func runtime_after(task unsafe.Pointer, ms int) <-chan int // sgo_after.go
 func runtime_isCancelled(err error) bool
+func runtime_cancelAfter(scope unsafe.Pointer, ms int) // sgo_deadline.go
+func runtime_deadline(task unsafe.Pointer) (int, bool)
+func runtime_isDeadline(err error) bool
 
 // Spawn admits f as a child of n (SGO-SPAWN-001..004). A refused admission is a
 // SpawnContractViolation that unwinds the caller (SGO-SPAWN-002).
@@ -120,6 +123,31 @@ func (e *errorString) Error() string { return e.s }
 // IsCancelled reports whether err is a cancellation error produced by Checkpoint or Sleep
 // (SGO-CANCEL-003).
 func IsCancelled(err error) bool { return runtime_isCancelled(err) }
+
+// IsDeadline reports whether err is a cancellation by a deadline (D162): one set with CancelAfter
+// on the scope or on an enclosing one. Such an error is also a cancellation (IsCancelled).
+func IsDeadline(err error) bool { return runtime_isDeadline(err) }
+
+// CancelAfter sets a deadline on n (D162, D170): ms milliseconds from now, n is cancelled with a
+// cancellation that IsDeadline recognizes. Every nested scope, task, and I/O wait under n observes
+// it (D165). A later call may only shorten the deadline. The caller's current scope must be n,
+// as for Cancel.
+func (n *Nursery) CancelAfter(ms int) {
+	if n == nil {
+		runtime_violation("CancelAfter with a nil nursery handle")
+	}
+	if ms < 0 {
+		runtime_fail("InvalidArgument", "CancelAfter with a negative duration")
+	}
+	runtime_cancelAfter(n.s, ms)
+}
+
+// Deadline returns the milliseconds left before the earliest deadline that applies to the calling
+// task (D165), never negative, and whether there is one, so code can pass it on.
+func (c *Context) Deadline() (int, bool) {
+	c.own()
+	return runtime_deadline(c.t)
+}
 
 func itoa(n int) string {
 	if n == 0 {

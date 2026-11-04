@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CANCEL-005",
+  "SGO-CANCEL-004"
+ ],
+ "exit": 0,
+ "stdout": "inherited deadline\n",
+ "timeout_ms": 20000
+}

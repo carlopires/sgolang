@@ -1,0 +1,29 @@
+package main
+
+import "sgo"
+
+// A deadline applies to every scope and task nested under it (D165): a child of an inner nursery
+// sees the outer nursery's deadline, inherited.
+func main(root *sgo.Context) error {
+	ch := make(chan string, 1)
+	nursery (outer) {
+		outer.CancelAfter(30)
+		nursery (inner) {
+			inner.Spawn(func(t *sgo.Context) error {
+				ms, ok := t.Deadline()
+				if !ok || ms > 30 {
+					ch <- "no inherited deadline"
+					return nil
+				}
+				err := t.Sleep(3600000)
+				if sgo.IsDeadline(err) {
+					ch <- "inherited deadline"
+				} else {
+					ch <- "other"
+				}
+				return nil
+			})
+		}
+	}
+	return root.Stdout().WriteString(<-ch + "\n")
+}

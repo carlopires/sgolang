@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+// Without CancelAfter there is no deadline.
+func main(root *sgo.Context) error {
+	_, ok := root.Deadline()
+	if ok {
+		return sgo.NewError("unexpected deadline")
+	}
+	return root.Stdout().WriteString("none\n")
+}

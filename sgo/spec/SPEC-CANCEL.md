@@ -89,3 +89,25 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §10, resolution R1, plan §6.1, in
 - **implementation_coverage:** W04: `src/runtime/sgo_cancel.go`, `src/runtime/sgo_scope.go`, `src/runtime/sgo_api.go`.
 - **executed_evidence:** conformance fixtures cancel-consumed-at-boundary, cancel-owner-woken-by-child-failure, nur-inner-cancel-not-outer (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w04/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
+
+### SGO-CANCEL-005 — Scope deadlines
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-CANCEL-001, SGO-CANCEL-002, SGO-CANCEL-003, SGO-CANCEL-004, SGO-TIMER-001; D162, D165, D170.
+- **grammar_and_types:** `n.CancelAfter(ms int)` where `n` has type `*sgo.Nursery`; `t.Deadline() (int, bool)` where `t` has type `*sgo.Context`; `sgo.IsDeadline(err error) bool`.
+- **preconditions:** For `CancelAfter`: the caller's current scope is `n` (as `n.Cancel`, SGO-CANCEL-001: `n`'s owner in its body, or a task spawned into `n`); `ms ≥ 0`. For `Deadline`: `t` is the caller's own context.
+- **evaluation_and_value_semantics:** `n.CancelAfter(ms)` sets `n`'s deadline to `ms` milliseconds of monotonic time from now, unless `n` already has an earlier one: a deadline is only shortened, never extended. When the deadline passes while `n` is OPEN or JOINING, `n` is cancelled with the cause `deadline exceeded`, as by `n.Cancel()` (SGO-CANCEL-001). Every task linked to `n`, every nested scope, and every I/O wait under them observes it as any cancellation (SGO-CANCEL-002, SGO-CANCEL-004). The cancellation error is a deadline's: `sgo.IsDeadline` holds for it and for an I/O error of kind `Cancelled` caused by it, also when the deadline is an enclosing scope's (the message names that scope). `sgo.IsCancelled` holds as well. `t.Deadline()` returns the milliseconds left before the earliest deadline of the scopes `t` is linked to and their ancestors, rounded down and never negative, and `true`; or `0, false` if there is none.
+- **ownership_and_lifecycle:** The deadline belongs to `n`; its timer is dropped when `n` closes.
+- **effect_and_capability_requirements:** n/a — no external effect; no clock grant is needed: a deadline reveals elapsed time only by cancelling (as `Sleep`).
+- **concurrency_and_memory_order:** As SGO-CANCEL-001: the deadline's transition is one own transition of `n`.
+- **allowed_nondeterminism:** When the deadline and another event race, either may come first.
+- **failure_and_partial_progress:** `ms < 0` fails with `InvalidArgument`; a caller whose current scope is not `n` fails with `SpawnContractViolation`.
+- **cancellation_and_cleanup:** As SGO-CANCEL-001; the owner's own deadline is consumed at the nursery's boundary (SGO-CANCEL-004).
+- **compile_link_checks:** n/a — checked at run time.
+- **runtime_guards:** Argument and ownership checks; the deadline only shortens.
+- **tcb_assumptions:** Runtime timers. In the lab, `CancelAfter` is not yet supported: it ends the run with `UnsupportedLabEffect` (D170).
+- **positive_tests:** fixture:deadline-basic, fixture:deadline-inherited, fixture:deadline-none.
+- **negative_tests:** fixture:deadline-negative, fixture:deadline-not-owner.
+- **implementation_coverage:** W22: `src/runtime/sgo_deadline.go`, `src/runtime/sgo_cancel.go`, `src/runtime/sgo_scope.go`, `src/runtime/sgo_ioapi.go`, `src/sgo/sgo.go`.
+- **executed_evidence:** conformance fixtures (darwin/arm64); Linux pending.
+- **supported_execution_configurations:** production; lab unsupported (D170).

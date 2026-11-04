@@ -1,0 +1,17 @@
+package main
+
+import "sgo"
+
+// Like n.Cancel, n.CancelAfter needs the caller's current scope to be n (SGO-CANCEL-001): a task
+// running in another nursery may not set n's deadline.
+func main(root *sgo.Context) error {
+	nursery (outer) {
+		nursery (inner) {
+			inner.Spawn(func(t *sgo.Context) error {
+				outer.CancelAfter(10)
+				return nil
+			})
+		}
+	}
+	return nil
+}
