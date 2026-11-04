@@ -80,7 +80,9 @@ func (c *Context) Sleep(ms int) error {
 // proceed once at least ms milliseconds of monotonic time (virtual time in the lab) have passed;
 // it receives ms. The compiler admits After only as the operand of a select receive arm; the timer
 // belongs to the task that made it and is dropped when that select ends. It needs no clock grant:
-// it reveals elapsed time only by the order in which arms proceed.
+// it reveals elapsed time only by the order in which arms proceed. Each evaluation of the select
+// makes a new timer, so After(ms) in a loop restarts the interval whenever another arm wins; a
+// deadline that persists across select evaluations is a scope timer (Context.NewTimer, D171).
 func (c *Context) After(ms int) <-chan int {
 	c.own()
 	if ms < 0 {

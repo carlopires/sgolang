@@ -38,6 +38,12 @@ var builtinHandles = [5]any{(*File)(nil), (*Conn)(nil), (*Dialer)(nil), (*Listen
 // array result holds, at any depth of fields and elements, once and in acquisition order; a
 // resource already in n or in an enclosing scope stays where it is (SGO17-02). If the child ends without returning (it is cancelled or
 // fails), its result's error is the cancellation or failure.
+//
+// Unlike n.Spawn, an error f returns is data: it is the result's Err and fails neither n nor a
+// sibling, and f's body ends normally (its own resources see Release(true); own a resource in an
+// inner nursery to have a failing check roll it back, D159). A failure of the child still fails n.
+// A result whose Err is a cancellation describes the child; a reader that is itself cancelled
+// while it waits unwinds instead (SGO-NATIVE).
 func Go[T any](n *Nursery, f func(*Context) (T, error)) *Task[T] {
 	if n == nil {
 		runtime_violation("Go with a nil nursery handle")
@@ -102,7 +108,10 @@ func (h *Task[T]) Wait(c *Context) (T, error) {
 // arm: case r := <-h.Result():. Each call returns its own channel, and each delivers the result
 // once (edge-triggered): a loop that keeps one channel takes the arm once, then waits on its other
 // arms. A call registers nothing; a channel that is never received from is garbage (W22 review
-// G2, H1).
+// G2, H1). A select loop that should handle the completion once keeps one channel:
+//
+//	done := h.Result()
+//	for { select { case r := <-done: …; case … } }
 func (h *Task[T]) Result() <-chan Result[T] {
 	p := runtime_taskResChan(h.r)
 	return *(*<-chan Result[T])(unsafe.Pointer(&p))

@@ -37,7 +37,9 @@ func NewGroup[T any](n *Nursery, limit int) *Group[T] {
 // Go starts f as a child of the group's nursery, as sgo.Go does, first waiting while limit
 // children of the group are running. The wait is a cancellation point of the calling task t. The
 // child's result is queued for Next when it ends; publishing never waits, so a child is never held
-// up by an owner that has stopped reading.
+// up by an owner that has stopped reading. The limit bounds running children only: results not
+// yet received from Next queue without bound. The wait for a slot is a blocking point of the
+// caller, which an owner that also serves other events must account for.
 func (g *Group[T]) Go(t *Context, f func(*Context) (T, error)) {
 	t.own()
 	if f == nil {
@@ -48,7 +50,8 @@ func (g *Group[T]) Go(t *Context, f func(*Context) (T, error)) {
 }
 
 // Next returns the group's result channel, for case r := <-g.Next(): or r := <-g.Next(). It
-// receives the results of the group's children in the order they ended, each result once.
+// receives the results of the group's children in the order they ended, each result once. Unlike
+// Task.Result, every call returns the same channel: one queue that receivers consume.
 func (g *Group[T]) Next() <-chan Result[T] {
 	p := runtime_groupChan(g.g)
 	return *(*<-chan Result[T])(unsafe.Pointer(&p))
