@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+// The function passed to sgo.Go may not capture a task-local variable (SGO-COMP-004, D161).
+func main(root *sgo.Context) error {
+	xs := []int{1, 2, 3}
+	nursery (n) {
+		h := sgo.Go(n, func(t *sgo.Context) (int, error) {
+			return xs[0], nil
+		})
+		_, err := h.Wait(root)
+		return err
+	}
+}

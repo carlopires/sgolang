@@ -111,3 +111,25 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 - **implementation_coverage:** gate level only — `sgo/scripts/sgo-target` denies every program (W00); compiler rejection is W03.
 - **executed_evidence:** W00 check `legacy Go program with bare go is denied` passed on darwin/arm64, linux/amd64, linux/arm64 (gate level).
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
+
+### SGO-SPAWN-006 — Value-returning tasks
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-SPAWN-003, SGO-SPAWN-004, SGO-CHAN-002, SGO-COMP-004, SGO-RES-003, SGO-WAIT-003; D161, D168.
+- **grammar_and_types:** `sgo.Go(n *sgo.Nursery, f func(*sgo.Context) (T, error)) *sgo.Task[T]`, with `T` inferred or written; `h.Wait(t *sgo.Context) (T, error)`; `h.Result() <-chan sgo.Result[T]`, where `sgo.Result[T]` has fields `Value T` and `Err error`. `T` must be a channel element type (SGO-CHAN-002, SGO-COMP-004).
+- **preconditions:** As `n.Spawn` (SGO-SPAWN-003): the caller can spawn into `n`; `f` is not nil.
+- **evaluation_and_value_semantics:** `sgo.Go` starts `f` as a child of `n` exactly as `n.Spawn` does and returns its handle. When `f` returns `(v, err)`, the result is published once. If `err` is nil and `v` is a resource, `v` is first moved into `n` (SGO-RES-003); a failed move becomes the result's error. `h.Wait(t)` waits for the result and returns it. Each `h.Result()` call returns a new channel that receives the result once it is published, for a select arm. Any number of reads, by any task of the nursery, see the same result.
+- **ownership_and_lifecycle:** The child is a registered child of `n`: the nursery joins it like any other. The handle may be used by any task of the nursery.
+- **effect_and_capability_requirements:** n/a — as `n.Spawn`.
+- **concurrency_and_memory_order:** Publishing the result happens-before every read that returns it.
+- **allowed_nondeterminism:** As `n.Spawn`.
+- **failure_and_partial_progress:** The child's error is data: a child that returns a non-nil error through `sgo.Go` ends normally and does not fail the nursery. A child that ends without returning (it is cancelled, or it fails) publishes a result whose error is its cancellation error (`sgo.IsCancelled` holds) or a `TaskFailed` error; a failure still fails the nursery as SGO-SPAWN-004 says.
+- **cancellation_and_cleanup:** `Wait` and a receive from `Result()` are channel receives: a cancellation of a scope linked to the reader unwinds it (SGO-NATIVE).
+- **compile_link_checks:** `SGO_E_TASK_LOCAL_CAPTURE` if `f` captures a task-local variable; `SGO_E_UNADMITTED` if `T` is not a channel element type.
+- **runtime_guards:** Spawn contract checks; the result is published once.
+- **tcb_assumptions:** As SGO-SPAWN-003; the native channel send protocol (SGO-CHAN-002).
+- **positive_tests:** fixture:task-value-wait, fixture:task-error-is-data, fixture:task-select-arm, fixture:task-cancelled-result.
+- **negative_tests:** fixture:task-local-capture-denied.
+- **implementation_coverage:** W22: `src/sgo/task.go`, `src/runtime/sgo_taskres.go`, `src/cmd/compile/internal/types2/sgo_check.go`, `src/cmd/compile/internal/types2/sgo_local.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`.
+- **executed_evidence:** conformance fixtures (darwin/arm64); Linux pending.
+- **supported_execution_configurations:** production and lab.

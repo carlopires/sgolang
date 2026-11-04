@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-SPAWN-006",
+  "SGO-COMP-004"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_TASK_LOCAL_CAPTURE",
+   "at": "func(t"
+  }
+ ]
+}

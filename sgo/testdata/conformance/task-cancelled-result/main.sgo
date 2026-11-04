@@ -1,0 +1,22 @@
+package main
+
+import "sgo"
+
+// Waiting on a task inside a nursery its owner has cancelled is a cancellation point: the owner
+// unwinds with the cancellation instead of waiting forever (D161, SGO-NATIVE).
+func main(root *sgo.Context) error {
+	never := make(chan int)
+	nursery (n) {
+		h := sgo.Go(n, func(t *sgo.Context) (int, error) {
+			<-never
+			return 1, nil
+		})
+		check root.Sleep(5)
+		n.Cancel()
+		_, err := h.Wait(root)
+		if !sgo.IsCancelled(err) {
+			return sgo.NewError("expected a cancellation error")
+		}
+	}
+	return root.Stdout().WriteString("cancelled result\n")
+}

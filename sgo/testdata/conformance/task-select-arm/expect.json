@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-006",
+  "SGO-WAIT-003"
+ ],
+ "exit": 0,
+ "stdout": "result first\n",
+ "timeout_ms": 20000
+}

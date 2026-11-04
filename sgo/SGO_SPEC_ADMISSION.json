@@ -469,9 +469,10 @@
         "SGO-SPAWN-002",
         "SGO-SPAWN-003",
         "SGO-SPAWN-004",
-        "SGO-SPAWN-005"
+        "SGO-SPAWN-005",
+        "SGO-SPAWN-006"
       ],
-      "normative_text_digest": "e1e73775ab0cc41ced9adb309ef05bc0e7d8d845b15ccc9aa72c8fdd03fbc6a4",
+      "normative_text_digest": "a7db1f4290fd4726999ab333fb9f0511b61f077eb5e6460dd61dc0972cb9c39c",
       "admitted_in": [
         "0.7.0"
       ],
@@ -495,21 +496,24 @@
         "SGO-SPAWN-002": "3b5a4c8da056da54ae22e44fa1c8612b88e98169c774da18cdf83768f35c63aa",
         "SGO-SPAWN-003": "1cf041a1bfe0fe014a4443c46a42c6112e62d8fd4917b8cc0385a400289d0d23",
         "SGO-SPAWN-004": "736b4cf7037c199e2e51358913f3cbc649a0933b4ca1b1a7432149f27b23fd96",
-        "SGO-SPAWN-005": "f26e200b1285c109101a9cc06bd3cccc5a6795936733142147f4948c17c2eeeb"
+        "SGO-SPAWN-005": "f26e200b1285c109101a9cc06bd3cccc5a6795936733142147f4948c17c2eeeb",
+        "SGO-SPAWN-006": "a0246b7b8c0237a45e22194ceeefb45fbc70225977c0a1b4789c47d3782d55da"
       },
       "clause_status": {
         "SGO-SPAWN-001": "frozen",
         "SGO-SPAWN-002": "frozen",
         "SGO-SPAWN-003": "frozen",
         "SGO-SPAWN-004": "frozen",
-        "SGO-SPAWN-005": "frozen"
+        "SGO-SPAWN-005": "frozen",
+        "SGO-SPAWN-006": "draft"
       },
       "clause_versions": {
         "SGO-SPAWN-001": 1,
         "SGO-SPAWN-002": 1,
         "SGO-SPAWN-003": 1,
         "SGO-SPAWN-004": 2,
-        "SGO-SPAWN-005": 1
+        "SGO-SPAWN-005": 1,
+        "SGO-SPAWN-006": 1
       }
     },
     {
@@ -1791,5 +1795,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "467786a78b503c69af0f709884f406638d88488f7f86820ee2d775f76c22720f"
+  "rows_digest": "1df073162b9e9fbe14674bb1b4c2b31b6a0b9cd49e58736702a63bdc364e0cc9"
 }

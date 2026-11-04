@@ -191,6 +191,10 @@ func (check *Checker) sgoLocalFuncUse(e syntax.Node, parent syntax.Node, stack [
 			return // a call
 		}
 		if sel, _ := syntax.Unparen(p.Fun).(*syntax.SelectorExpr); sel != nil {
+			if fn, _ := check.Uses[sel.Sel].(*Func); fn != nil && fn.pkg != nil && fn.pkg.path == "sgo" && fn.name == "Go" {
+				check.errorf(e, UnsupportedFeature, "SGO_E_TASK_LOCAL_CAPTURE: the function passed to sgo.Go captures the task-local variable %s; pass a copy through a channel (sgo.Copy) or capture only value types (SGO-COMP-004)", what)
+				return
+			}
 			if s := check.Selections[sel]; s != nil {
 				switch s.obj.Name() {
 				case "Spawn", "SpawnWithout", "Start":

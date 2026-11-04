@@ -1,0 +1,21 @@
+package main
+
+import "sgo"
+
+// sgo.Go starts a child whose value is read with Wait (D161, D168).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		h := sgo.Go(n, func(t *sgo.Context) (int, error) {
+			check t.Sleep(5)
+			return 42, nil
+		})
+		v, err := h.Wait(root)
+		if err != nil {
+			return err
+		}
+		if v != 42 {
+			return sgo.NewError("wrong value")
+		}
+	}
+	return root.Stdout().WriteString("42\n")
+}

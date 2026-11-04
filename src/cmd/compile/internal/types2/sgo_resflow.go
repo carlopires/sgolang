@@ -587,7 +587,7 @@ func (f *sgoResFlow) ends(call *syntax.CallExpr, lit *syntax.FuncLit) bool {
 		return false
 	}
 	switch fn.name {
-	case "Spawn", "SpawnWithout", "Start": // the nursery's children (SGO-SPAWN, SGO-AUTH, SGO-READY)
+	case "Spawn", "SpawnWithout", "Start", "Go": // the nursery's children (SGO-SPAWN, SGO-AUTH, SGO-READY, D161)
 		return true
 	}
 	return false

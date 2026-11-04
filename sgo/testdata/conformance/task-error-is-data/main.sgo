@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+// A child's error returned through sgo.Go is data: it does not fail the nursery (D161).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		h := sgo.Go(n, func(t *sgo.Context) (string, error) {
+			return "", sgo.NewError("lookup failed")
+		})
+		_, err := h.Wait(root)
+		if err == nil {
+			return sgo.NewError("expected an error")
+		}
+		check root.Stdout().WriteString("got: " + err.Error() + "\n")
+	}
+	return root.Stdout().WriteString("nursery ok\n")
+}

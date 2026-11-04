@@ -1,0 +1,22 @@
+package main
+
+import "sgo"
+
+// A task's result is a select arm, here racing a timer it beats (D161, D160).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		h := sgo.Go(n, func(t *sgo.Context) (int, error) {
+			return 7, nil
+		})
+		select {
+		case r := <-h.Result():
+			if r.Err != nil || r.Value != 7 {
+				return sgo.NewError("wrong result")
+			}
+			check root.Stdout().WriteString("result first\n")
+		case <-root.After(3600000):
+			return sgo.NewError("timer first")
+		}
+	}
+	return nil
+}

@@ -64,6 +64,7 @@ func (check *Checker) sgoFlowChecks(files []*syntax.File) {
 			if fd, _ := d.(*syntax.FuncDecl); fd != nil && fd.Body != nil {
 				check.sgoCheckPlacement(fd) // sgo_check.go
 				check.sgoAfterPlacement(fd) // sgo_check.go
+				check.sgoGoCalls(fd)        // sgo_check.go
 				check.sgoFuncFlow(fd)
 			}
 		}

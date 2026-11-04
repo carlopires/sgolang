@@ -168,3 +168,38 @@ func (check *Checker) sgoIsAfter(c *syntax.CallExpr) bool {
 	sig, _ := f.typ.(*Signature)
 	return sig != nil && sig.recv != nil
 }
+
+// sgoGoCalls checks the result type T of every sgo.Go call in fd, inferred or written: the result
+// is delivered to the nursery's tasks over a channel, so T is a channel element (D161).
+func (check *Checker) sgoGoCalls(fd *syntax.FuncDecl) {
+	syntax.Inspect(fd, func(n syntax.Node) bool {
+		c, _ := n.(*syntax.CallExpr)
+		if c == nil {
+			return true
+		}
+		fun := syntax.Unparen(c.Fun)
+		if ix, _ := fun.(*syntax.IndexExpr); ix != nil {
+			fun = ix.X
+		}
+		sel, _ := fun.(*syntax.SelectorExpr)
+		if sel == nil {
+			return true
+		}
+		fn, _ := check.Uses[sel.Sel].(*Func)
+		if fn == nil || fn.pkg == nil || fn.pkg.path != "sgo" || fn.name != "Go" {
+			return true
+		}
+		tv, ok := check.Types[c]
+		if !ok || tv.Type == nil {
+			return true
+		}
+		p, _ := tv.Type.(*Pointer)
+		if p == nil {
+			return true
+		}
+		if nt, _ := p.base.(*Named); nt != nil && nt.TypeArgs().Len() == 1 {
+			check.sgoChanElemOK(c, nt.TypeArgs().At(0), false)
+		}
+		return true
+	})
+}
