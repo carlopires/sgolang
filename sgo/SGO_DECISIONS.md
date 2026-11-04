@@ -946,6 +946,10 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 
 **Decision.** `sgo.Call[Req, Resp]`: `c.Call(t, req) (Resp, error)` sends a request and waits for its own reply; the serving side receives `req, reply := c.Accept(t)` and answers with `reply.Send(resp)`. Cancelling the caller withdraws its request; a reply to a withdrawn request is dropped. The server's scope must enclose the caller's (SGO-RES-003). For multiplexers, pool front ends, and services.
 
+## D168 — Spelling of value-returning tasks · APPROVED 2026-11-05 (implementer, delegated)
+
+**Decision.** D161's semantics stand; its surface changes because the trusted `sgo` package is Go code: Go has no generic methods (`n.Go` cannot infer `T`), and a two-value receive is `(value, ok bool)`, never `(value, error)`. The spelling is `h := sgo.Go(n, func(t *sgo.Context) (T, error) {...})` returning `*sgo.Task[T]`; `v, err := h.Wait(t)` waits for the result; and the select arm is `case r := <-h.Result():`, where `Result()` returns a receive-only native channel of `sgo.Result[T]` (fields `Value T`, `Err error`) that the runtime fills once when the child ends. The child's error is data: it does not fail the nursery. `sgo.NewGroup[T](n)` follows the same shape. No compiler special case is needed beyond the admission rules D161 already requires.
+
 **Plan.** W22 (language core): D159, D160, D161, D162, D165, with a model of timers, task handles, and deadline inheritance first; acceptance is Happy Eyeballs rewritten on them. W23 (concurrency library): D164, D166, D167, `Reader`/`Writer` interfaces, a `Pool[T]` helper; acceptance is an HTTP/1.1 server example. Later: D163, TLS, JSON, HTTP/2. Plan: `sgo/docs/w22-w23-plan.md`.
 
 ---
@@ -983,3 +987,4 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 - 2026-11-04: user approved the W21 clause drafts (sgo/docs/w21-drafts.md: SGO-ERR-004, SGO-RES-001..004, amendments) as written ("approved!"). W21 implementation starts with `check`; the drafts freeze at spec 0.16.0.
 - 2026-11-05: user approved D158 after a design discussion ("approved; go ahead"): no slot construct; the deciding scope owns candidates, channels carry resources within their scope, `MoveTo` works for user resources, user resources serialize themselves. D157 (connection slot in scope terms) is withdrawn.
 - 2026-11-05: user approved D159–D167 ("approved, do it") after a design discussion derived from the Happy Eyeballs review: error exits cancel crossed nurseries, timers as select arms, value-returning tasks and groups, scope and inherited deadlines, whole-message reads, bounded groups, request/reply calls; tagged unions later. Work packages W22 (language core) and W23 (concurrency library).
+- 2026-11-05: implementer recorded D168 (spelling of D161, forced by the Go type system) under the delegated authority; semantics unchanged.

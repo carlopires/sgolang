@@ -24,7 +24,7 @@ same shape, are short and read like their specification.
 | 4 | D161: `n.Go` and `*sgo.Task[T]`, `NewGroup`; select arm on a task; the flow pass treats `<-h` as a receive (D158); child errors as data. | fixtures: value results, error results that do not fail the nursery, resource results tied to the nursery, handle escapes refused |
 | 5 | D162, D165: `CancelAfter`, `IsDeadline`, `Deadline()`; inheritance and shortening only. | fixtures, lab scenarios on virtual time |
 | 6 | Happy Eyeballs rewrite; README; the two cases the 0.16 version could not test. | test-examples, lab sweeps |
-| 7 | Spec freeze 0.17.0; evidence; review. | |
+| 7 | Spec freeze 0.17.0; evidence; review. Merge `w22-core` into main only after the freeze: guarantee-check refuses draft clauses in guaranteed families (SGO-WAIT-003 is in SPEC-WAIT, covered by G-OWN), so every W22 draft must be frozen first. | guarantee-check, sgo-spec on the merge commit |
 
 ## W23 — concurrency library
 
