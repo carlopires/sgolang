@@ -39,6 +39,12 @@ jobs:
         run: sgo/scripts/guarantee-check.py
       - name: No allocation under an S-Go runtime lock (W12 R9)
         run: sgo/scripts/lock-alloc-check.py
+      - name: Result promotion knows every resource kind (SGO17-02, W23 review L1)
+        run: |
+          sgo/scripts/res-kind-check.py
+          sgo/scripts/res-kind-check.py --selftest
+      - name: Rendered guarantees are current (SGO17-07)
+        run: sgo/scripts/guarantee-check.py --selftest
       - name: Conformance cases (validate + runner self-test)
         run: |
           sgo/scripts/conformance.py validate
