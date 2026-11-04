@@ -21,60 +21,29 @@ func (t *trace) Log(line string) error {
 }
 
 func main(root *sgo.Context) error {
-	l, err := root.Listen("127.0.0.1:47970")
-	if err != nil {
-		return err
-	}
+	l := check root.Listen("127.0.0.1:47970")
 	d := root.Dialer([]string{"localhost:47970"})
 	nursery (n) {
-		ll := l
 		n.Spawn(func(t *sgo.Context) error {
-			s, aerr := ll.Accept(t)
-			if aerr != nil {
-				return aerr
-			}
-			if _, werr := s.Write("hello over the winning family\n"); werr != nil {
-				return werr
-			}
-			return s.Close()
+			s := check l.Accept(t)
+			check s.Write("hello over the winning family\n")
+			return nil // the accepted connection is a resource of this task: released here
 		})
-		slot := root.NewConnSlot()
 		steps := &trace{}
-		addr, cerr := he.Connect(root, d, slot, "localhost", steps)
+		r, cerr := he.Connect(root, d, "localhost", steps)
 		// The attempts, not the answers: which of the two answers comes first varies run to run.
 		for _, line := range steps.lines {
-			if isAnswer(line) {
-				continue
-			}
-			if werr := root.Stdout().WriteString("he: " + line + "\n"); werr != nil {
-				return werr
+			if !isAnswer(line) {
+				check root.Stdout().WriteString("he: " + line + "\n")
 			}
 		}
 		if cerr != nil {
 			return cerr
 		}
-		conn, ok := slot.Take()
-		if !ok {
-			return sgo.NewError("the slot is empty")
-		}
-		msg, rerr := conn.Read(64)
-		if rerr != nil {
-			return rerr
-		}
-		if werr := root.Stdout().WriteString("reached " + addr + ": " + msg); werr != nil {
-			return werr
-		}
-		if cerr2 := conn.Close(); cerr2 != nil {
-			return cerr2
-		}
-		if serr := slot.Close(); serr != nil {
-			return serr
-		}
+		msg := check r.Conn.Read(64)
+		check root.Stdout().WriteString("reached " + r.Addr + ": " + msg)
 	}
-	if derr := d.Close(); derr != nil {
-		return derr
-	}
-	return l.Close()
+	return nil // root's body ends: the connection, the dialer, and the listener are released
 }
 
 func isAnswer(line string) bool { return line == "A answer in" || line == "AAAA answer in" }

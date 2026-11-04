@@ -7,11 +7,11 @@
 //
 // One nursery holds the whole race: the AAAA and A queries (§3), the resolution delay timer, the
 // connection attempts and the timer that staggers them (§5). The nursery body is the only place
-// that decides anything; every child just does one thing and reports it on one channel. When an
-// attempt connects, it hands its connection to a slot (the first Put wins); the body cancels the
-// nursery, which ends every other query, timer and attempt, and the nursery joins them all before
-// Connect returns. So when Connect returns there is nothing left running, and every connection
-// but the winner's is closed — not by convention, but because the language has no other way.
+// that decides anything; every child does one thing and reports it on one channel, made in the
+// nursery. Attempts dial into the nursery itself, so every candidate connection is a resource of
+// the race (D158). The body moves the first connection that reports to the caller's scope, then
+// cancels the nursery: every other query, timer, and attempt ends, and when the nursery ends it
+// releases every connection that lost. Nothing is closed by hand, and nothing outlives Connect.
 package he
 
 import "sgo"
@@ -27,7 +27,7 @@ const (
 	evAddr      = 0 // an address of a family (addr, v6)
 	evDone      = 1 // a family's query finished (v6)
 	evWaited    = 2 // the resolution delay passed
-	evConnected = 3 // attempt seq connected and won the slot (addr)
+	evConnected = 3 // attempt seq connected (addr, conn)
 	evFailed    = 4 // attempt seq failed (addr)
 	evTick      = 5 // attempt seq ran AttemptDelay ms
 )
@@ -37,6 +37,7 @@ type event struct {
 	v6   bool
 	addr string
 	seq  int
+	conn *sgo.Conn // evConnected: a resource of the race nursery
 }
 
 // Logger receives one line per step of the race; Connect's callers print or collect them.
@@ -44,151 +45,129 @@ type Logger interface {
 	Log(line string) error
 }
 
+// Result is what Connect reached: the address, and the connection, a resource of the caller's
+// scope (task's body).
+type Result struct {
+	Addr string
+	Conn *sgo.Conn
+}
+
 // Connect connects to host through d, a dialer whose endpoints name host (grant connect
-// HOST:PORT), puts the connection into slot, and returns the address it reached. task must own
-// slot, and own d or run in a nursery d is lent to; log may be nil. The caller takes the
-// connection with slot.Take: a capability is never nil in S-Go, so it travels in the slot rather
-// than in a result. If no address accepts a connection, Connect returns an error and the slot
-// stays empty.
-func Connect(task *sgo.Context, d *sgo.Dialer, slot *sgo.ConnSlot, host string, log Logger) (string, error) {
-	events := sgo.NewChannel[event](64)
-	winner := ""
+// HOST:PORT), and returns the connection and the address it reached. d is a resource of a scope
+// enclosing the call; log may be nil. If no address accepts a connection, Connect returns an
+// error.
+func Connect(task *sgo.Context, d *sgo.Dialer, host string, log Logger) (Result, error) {
+	res := Result{}
 	nursery (n) {
-		ld, ls := d, slot
-		n.Spawn(func(t *sgo.Context) error { return resolve(t, ld, host, true, events) })
-		n.Spawn(func(t *sgo.Context) error { return resolve(t, ld, host, false, events) })
-		won, rerr := race(task, n, ld, ls, events, log)
-		if rerr != nil {
-			return "", rerr
-		}
-		winner = won
-		n.Cancel() // the race is decided: end every query, timer, and attempt still running
-	}
-	if winner == "" {
-		return "", sgo.NewError("happy eyeballs: no address of " + host + " accepted a connection")
-	}
-	return winner, nil
-}
-
-// race is the nursery body: it collects the addresses as they come, starts attempts in RFC 8305
-// order and pace, and returns the address of the attempt that connected ("" if none did).
-func race(task *sgo.Context, n *sgo.Nursery, d *sgo.Dialer, slot *sgo.ConnSlot, events *sgo.Channel[event], log Logger) (string, error) {
-	v6, v4 := []string{}, []string{} // addresses not yet attempted, in answer order
-	done6, done4, waited, waiting := false, false, false, false
-	started, inflight := 0, 0 // attempts started; attempts still running
-	mayStart := true          // §5: no attempt yet, the last one failed, or it ran AttemptDelay
-	lastV6 := false // the family of the last attempt started (§4: alternate)
-	for {
-		// §3: start once the AAAA answer is in, or the A answer is in and the resolution delay
-		// passed (or the AAAA query is over without addresses).
-		ready := done6 || (done4 && waited)
-		if !ready && done4 && !waiting {
-			waiting = true
-			n.Spawn(func(t *sgo.Context) error {
-				if serr := t.Sleep(ResolutionDelay); serr != nil {
-					return serr
+		events := sgo.NewChannel[event](64)
+		n.Spawn(func(t *sgo.Context) error { return resolve(t, d, host, true, events) })
+		n.Spawn(func(t *sgo.Context) error { return resolve(t, d, host, false, events) })
+		v6, v4 := []string{}, []string{} // addresses not yet attempted, in answer order
+		done6, done4, waited, waiting := false, false, false, false
+		started, inflight := 0, 0 // attempts started; attempts still running
+		mayStart := true          // §5: no attempt yet, the last one failed, or it ran AttemptDelay
+		lastV6 := false           // the family of the last attempt started (§4: alternate)
+	race:
+		for {
+			// §3: start once the AAAA answer is in, or the A answer is in and the resolution
+			// delay passed (or the AAAA query is over without addresses).
+			ready := done6 || (done4 && waited)
+			if !ready && done4 && !waiting {
+				waiting = true
+				n.Spawn(func(t *sgo.Context) error {
+					check t.Sleep(ResolutionDelay)
+					p := check events.Reserve(t)
+					return p.Commit(event{kind: evWaited})
+				})
+			}
+			// §5: start the next attempt when allowed: first, after a failure, or after a tick.
+			if ready && mayStart && len(v6)+len(v4) > 0 {
+				next := ""
+				// §4: interleave the families, IPv6 first.
+				if len(v6) > 0 && (!lastV6 || len(v4) == 0) {
+					next, v6, lastV6 = v6[0], v6[1:], true
+				} else {
+					next, v4, lastV6 = v4[0], v4[1:], false
 				}
-				return send(t, events, event{kind: evWaited})
-			})
-		}
-		// §5: start the next attempt when allowed: first, after a failure, or after a tick.
-		if ready && mayStart && len(v6)+len(v4) > 0 {
-			next := ""
-			// §4: interleave the families, IPv6 first.
-			if len(v6) > 0 && (!lastV6 || len(v4) == 0) {
-				next, v6, lastV6 = v6[0], v6[1:], true
-			} else {
-				next, v4, lastV6 = v4[0], v4[1:], false
+				started++
+				inflight++
+				mayStart = false
+				check say(log, "attempt "+next)
+				addr, seq := next, started
+				// The attempt dials into the race nursery: its connection is a candidate the body
+				// may keep, and the nursery releases it otherwise.
+				n.Spawn(func(t *sgo.Context) error {
+					conn, derr := d.Dial(n, addr)
+					if derr != nil {
+						if sgo.IsCancelled(derr) {
+							return derr
+						}
+						p := check events.Reserve(t)
+						return p.Commit(event{kind: evFailed, addr: addr, seq: seq})
+					}
+					p := check events.Reserve(t)
+					return p.Commit(event{kind: evConnected, addr: addr, seq: seq, conn: conn})
+				})
+				n.Spawn(func(t *sgo.Context) error {
+					check t.Sleep(AttemptDelay)
+					p := check events.Reserve(t)
+					return p.Commit(event{kind: evTick, addr: addr, seq: seq})
+				})
 			}
-			started++
-			inflight++
-			mayStart = false
-			if lerr := say(log, "attempt "+next); lerr != nil {
-				return "", lerr
+			if ready && inflight == 0 && done6 && done4 && len(v6)+len(v4) == 0 {
+				break race // every address failed
 			}
-			attempt(n, d, slot, events, next, started)
-		}
-		if ready && inflight == 0 && done6 && done4 && len(v6)+len(v4) == 0 {
-			return "", nil // every address failed
-		}
-		ev, ok, err := events.Receive(task)
-		if err != nil {
-			return "", err
-		}
-		if !ok {
-			return "", nil
-		}
-		switch ev.kind {
-		case evAddr:
-			if ev.v6 {
-				v6 = append(v6, ev.addr)
-			} else {
-				v4 = append(v4, ev.addr)
+			ev, ok, rerr := events.Receive(task)
+			if rerr != nil {
+				return res, rerr
 			}
-		case evDone:
-			if ev.v6 {
-				done6 = true
-			} else {
-				done4 = true
+			if !ok {
+				break race
 			}
-			if lerr := say(log, family(ev.v6)+" answer in"); lerr != nil {
-				return "", lerr
-			}
-		case evWaited:
-			waited = true
-			if !done6 {
-				if lerr := say(log, "resolution delay passed without an AAAA answer"); lerr != nil {
-					return "", lerr
+			switch ev.kind {
+			case evAddr:
+				if ev.v6 {
+					v6 = append(v6, ev.addr)
+				} else {
+					v4 = append(v4, ev.addr)
 				}
-			}
-		case evConnected:
-			if lerr := say(log, "connected "+ev.addr); lerr != nil {
-				return "", lerr
-			}
-			return ev.addr, nil
-		case evFailed:
-			inflight--
-			mayStart = true
-			if lerr := say(log, "failed "+ev.addr); lerr != nil {
-				return "", lerr
-			}
-		case evTick:
-			// The attempt is still running after AttemptDelay: start the next one beside it.
-			if ev.seq == started && !mayStart && len(v6)+len(v4) > 0 {
+			case evDone:
+				if ev.v6 {
+					done6 = true
+				} else {
+					done4 = true
+				}
+				check say(log, family(ev.v6)+" answer in")
+			case evWaited:
+				waited = true
+				if !done6 {
+					check say(log, "resolution delay passed without an AAAA answer")
+				}
+			case evConnected:
+				check say(log, "connected "+ev.addr)
+				// The winner leaves the race for the caller's scope; the race keeps the rest.
+				c := ev.conn
+				check c.MoveTo(task)
+				res = Result{Addr: ev.addr, Conn: c}
+				break race
+			case evFailed:
+				inflight--
 				mayStart = true
-				if lerr := say(log, "no answer from "+ev.addr+" after "+itoa(AttemptDelay)+"ms"); lerr != nil {
-					return "", lerr
+				check say(log, "failed "+ev.addr)
+			case evTick:
+				// The attempt is still running after AttemptDelay: start the next one beside it.
+				if ev.seq == started && !mayStart && len(v6)+len(v4) > 0 {
+					mayStart = true
+					check say(log, "no answer from "+ev.addr+" after "+itoa(AttemptDelay)+"ms")
 				}
 			}
 		}
+		n.Cancel() // the race is decided: end every query, timer, and attempt still running
+	} // the nursery joins its children, then releases every connection that lost
+	if res.Addr == "" {
+		return res, sgo.NewError("happy eyeballs: no address of " + host + " accepted a connection")
 	}
-}
-
-// attempt starts attempt seq to addr and its AttemptDelay timer, both in n.
-func attempt(n *sgo.Nursery, d *sgo.Dialer, slot *sgo.ConnSlot, events *sgo.Channel[event], addr string, seq int) {
-	n.Spawn(func(t *sgo.Context) error {
-		conn, derr := d.Dial(t, addr)
-		if derr != nil {
-			if sgo.IsCancelled(derr) {
-				return derr
-			}
-			return send(t, events, event{kind: evFailed, addr: addr, seq: seq})
-		}
-		if perr := slot.Put(conn); perr != nil {
-			// Another attempt won: this connection is ours, so we close it.
-			if cerr := conn.Close(); cerr != nil {
-				return cerr
-			}
-			return nil
-		}
-		return send(t, events, event{kind: evConnected, addr: addr, seq: seq})
-	})
-	n.Spawn(func(t *sgo.Context) error {
-		if serr := t.Sleep(AttemptDelay); serr != nil {
-			return serr
-		}
-		return send(t, events, event{kind: evTick, addr: addr, seq: seq})
-	})
+	return res, nil
 }
 
 // resolve runs one query (§3) and reports its addresses, then that it is done. A failed query
@@ -203,19 +182,11 @@ func resolve(t *sgo.Context, d *sgo.Dialer, host string, v6 bool, events *sgo.Ch
 		return rerr
 	}
 	for _, a := range addrs {
-		if serr := send(t, events, event{kind: evAddr, v6: v6, addr: a}); serr != nil {
-			return serr
-		}
+		p := check events.Reserve(t)
+		check p.Commit(event{kind: evAddr, v6: v6, addr: a})
 	}
-	return send(t, events, event{kind: evDone, v6: v6})
-}
-
-func send(t *sgo.Context, events *sgo.Channel[event], ev event) error {
-	p, err := events.Reserve(t)
-	if err != nil {
-		return err
-	}
-	return p.Commit(ev)
+	p := check events.Reserve(t)
+	return p.Commit(event{kind: evDone, v6: v6})
 }
 
 func say(log Logger, line string) error {

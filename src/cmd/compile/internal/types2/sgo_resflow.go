@@ -554,6 +554,28 @@ func (f *sgoResFlow) send(ch, v syntax.Expr) {
 	}
 }
 
+// ends reports whether function literal lit, an operand of call, surely ends inside the current
+// scope: it is called in place (also by defer), or it is the callback of a Spawn, SpawnWithout,
+// or Start, which the nursery joins before it ends.
+func (f *sgoResFlow) ends(call *syntax.CallExpr, lit *syntax.FuncLit) bool {
+	if syntax.Unparen(call.Fun) == lit {
+		return true
+	}
+	sel, _ := syntax.Unparen(call.Fun).(*syntax.SelectorExpr)
+	if sel == nil {
+		return false
+	}
+	fn, _ := f.check.Uses[sel.Sel].(*Func)
+	if fn == nil || fn.pkg == nil || fn.pkg.path != "sgo" {
+		return false
+	}
+	switch fn.name {
+	case "Spawn", "SpawnWithout", "Start": // the nursery's children (SGO-SPAWN, SGO-AUTH, SGO-READY)
+		return true
+	}
+	return false
+}
+
 // capture checks a use of resource variable obj: every function literal between the use and the
 // variable's extent must be a spawned callback (an argument of a call), so it ends inside the
 // scope that releases the resource.
@@ -568,8 +590,8 @@ func (f *sgoResFlow) capture(n *syntax.Name, obj *Var, stack []syntax.Node) {
 			continue
 		}
 		p, _ := sgoParent(stack, i)
-		if call, _ := p.(*syntax.CallExpr); call == nil || syntax.Unparen(call.Fun) == lit {
-			f.errorf(n, "the function literal captures resource %s and may outlive its scope; only a callback spawned inside the scope may capture it", n.Value)
+		if call, _ := p.(*syntax.CallExpr); call == nil || !f.ends(call, lit) {
+			f.errorf(n, "the function literal captures resource %s and may outlive its scope; only a literal called in place or spawned inside the scope may capture it", n.Value)
 			return
 		}
 	}
