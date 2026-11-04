@@ -92,6 +92,9 @@ func sgoTypeRec(T Type, seen map[Type]bool, refs bool) (bool, string) {
 		}
 		return true, ""
 	case *Pointer:
+		if sgoResKind(T) {
+			return true, "" // a resource held by a struct, array, or slice (D151)
+		}
 		if isSgoHandle(T) {
 			return false, "handle type " + TypeString(T, nil)
 		}

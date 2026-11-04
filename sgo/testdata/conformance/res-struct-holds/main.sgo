@@ -1,0 +1,25 @@
+package main
+
+import "sgo"
+
+type session struct {
+	name string
+	c    *sgo.Conn
+}
+
+// A struct holds a connection of the root's scope and is used in that scope; the scope
+// releases the connection and the listener at the end of main.
+func main(root *sgo.Context) error {
+	if _, err := root.Listen("127.0.0.1:47925"); err != nil {
+		return err
+	}
+	c, derr := root.Dial("127.0.0.1:47925")
+	if derr != nil {
+		return derr
+	}
+	s := session{name: "s1", c: c}
+	if _, werr := s.c.Write("x"); werr != nil {
+		return werr
+	}
+	return root.Stdout().WriteString(s.name + " ok\n")
+}

@@ -1,0 +1,30 @@
+package main
+
+import "sgo"
+
+// A helper returns a connection acquired into its own nursery, which ends at the return.
+type holder struct {
+	c *sgo.Conn
+}
+
+func dial(root *sgo.Context) (holder, error) {
+	nursery (n) {
+		c, err := n.Dial("127.0.0.1:47924")
+		if err != nil {
+			return holder{}, err
+		}
+		return holder{c: c}, nil
+	}
+}
+
+func main(root *sgo.Context) error {
+	if _, err := root.Listen("127.0.0.1:47924"); err != nil {
+		return err
+	}
+	h, derr := dial(root)
+	if derr != nil {
+		return derr
+	}
+	_ = h
+	return nil
+}

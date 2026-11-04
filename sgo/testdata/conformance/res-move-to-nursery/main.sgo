@@ -1,0 +1,32 @@
+package main
+
+import "sgo"
+
+type session struct {
+	c *sgo.Conn
+}
+
+// A connection acquired into an inner nursery moves to the enclosing nursery and is used there
+// after the inner one has ended.
+func main(root *sgo.Context) error {
+	if _, err := root.Listen("127.0.0.1:47926"); err != nil {
+		return err
+	}
+	nursery (outer) {
+		held := session{}
+		nursery (inner) {
+			c, derr := inner.Dial("127.0.0.1:47926")
+			if derr != nil {
+				return derr
+			}
+			if merr := c.MoveTo(outer); merr != nil {
+				return merr
+			}
+			held.c = c
+		}
+		if _, werr := held.c.Write("x"); werr != nil {
+			return werr
+		}
+	}
+	return root.Stdout().WriteString("moved\n")
+}

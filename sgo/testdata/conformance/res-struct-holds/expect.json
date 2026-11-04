@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-003",
+  "SGO-RES-001"
+ ],
+ "exit": 0,
+ "stdout": "s1 ok\n",
+ "note": "Structs may hold resources; ownership stays with the scope (D151)."
+}

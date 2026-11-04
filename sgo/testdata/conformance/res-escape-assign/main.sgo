@@ -1,0 +1,24 @@
+package main
+
+import "sgo"
+
+type holder struct {
+	c *sgo.Conn
+}
+
+// A connection acquired into nursery n is stored in a variable that outlives n.
+func main(root *sgo.Context) error {
+	if _, err := root.Listen("127.0.0.1:47921"); err != nil {
+		return err
+	}
+	outer := holder{}
+	nursery (n) {
+		c, derr := n.Dial("127.0.0.1:47921")
+		if derr != nil {
+			return derr
+		}
+		outer.c = c
+	}
+	_ = outer
+	return nil
+}

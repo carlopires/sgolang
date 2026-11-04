@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-003"
+ ],
+ "exit": 0,
+ "stdout": "moved\n",
+ "note": "MoveTo re-ties a resource to an enclosing scope, statically and at run time."
+}

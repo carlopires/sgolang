@@ -1,0 +1,16 @@
+package main
+
+import "sgo"
+
+// A function literal that is not a spawned callback captures a connection.
+func main(root *sgo.Context) error {
+	if _, err := root.Listen("127.0.0.1:47923"); err != nil {
+		return err
+	}
+	c, derr := root.Dial("127.0.0.1:47923")
+	if derr != nil {
+		return derr
+	}
+	closeIt := func() error { return c.Close() }
+	return closeIt()
+}

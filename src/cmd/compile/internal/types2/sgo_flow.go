@@ -134,6 +134,7 @@ func (check *Checker) sgoFuncFlow(fd *syntax.FuncDecl) {
 		return true
 	})
 	check.sgoFrozenPaths(fd)      // sgo_frozen.go
+	check.sgoResourceFlow(fd)     // sgo_resflow.go (SGO-RES-003)
 	check.sgoIfaceConversions(fd) // sgo_local.go
 	captured := check.sgoCaptured(lits)
 	check.sgoAssignments(fd, captured, binders)
