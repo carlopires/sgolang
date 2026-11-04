@@ -78,7 +78,7 @@ A child failure cancels its siblings and is reported to the owner; the primary e
 - **Scope:** runtime_enforced, model_explored, tested
 - **Model bounds:** sgo/model (model.go, explore.go): all interleavings of the 18 W01 scenarios (sgo/evidence/w01/README.md)
 - **Families:** SPEC-DEFER, SPEC-ERRORS, SPEC-PROC
-- **Clauses:** SGO-DEF-001, SGO-DEF-002, SGO-DEF-003, SGO-DEF-004, SGO-DEF-005, SGO-ERR-001, SGO-ERR-002, SGO-ERR-003, SGO-PROC-001, SGO-PROC-002, SGO-PROC-003, SGO-PROC-004
+- **Clauses:** SGO-DEF-001, SGO-DEF-002, SGO-DEF-003, SGO-DEF-004, SGO-DEF-005, SGO-ERR-001, SGO-ERR-002, SGO-ERR-003, SGO-ERR-004, SGO-PROC-001, SGO-PROC-002, SGO-PROC-003, SGO-PROC-004
 - **Acceptance cases:** O04, P01, P04, P05, P06, P08, S03, S06, S13, S16, S20, X09, X12
 - **Implementation:** `src/runtime/sgo_nursery.go`, `src/runtime/sgo_main.go`, `src/runtime/panic.go`, `src/runtime/sgo_record.go`
 
@@ -117,15 +117,28 @@ Effects (clock, wall clock, random, entropy, files, network, simulated store) re
 
 ### G-IO
 
-File access is confined beneath declared directory grants (no '..', absolute-path, prefix or symlink escape, re-verified against concurrent renames); network access is limited to declared TCP endpoints and Unix socket paths. Reads and writes report partial progress; cancelling a shared handle's borrower leaves the owner's handle intact; closed handles are not reused.
+File access is confined beneath declared directory grants (no '..', absolute-path, prefix or symlink escape, re-verified against concurrent renames); network access is limited to declared TCP endpoints and Unix socket paths. Reads and writes report partial progress; cancelling a task that shares a handle leaves the handle usable by the rest of its scope; closed handles are not reused.
 
 - **Scope:** admission, runtime_enforced, model_explored, tested
 - **Model bounds:** sgo/model iopath/iohandle: path resolution with renames (14 scenarios) and handle generations (sgo/evidence/w09/README.md)
 - **Families:** SPEC-FILE, SPEC-NET
-- **Clauses:** SGO-FILE-001, SGO-FILE-002, SGO-FILE-003, SGO-NET-001, SGO-NET-002
+- **Clauses:** SGO-FILE-001, SGO-FILE-002, SGO-FILE-003, SGO-NET-001, SGO-NET-002, SGO-NET-003, SGO-NET-004
 - **Acceptance cases:** I01, I02, I03, I04, I05
 - **Implementation:** `src/runtime/sgo_io.go`, `src/runtime/sgo_iodir.go`, `src/runtime/sgo_fs.go`, `src/runtime/sgo_iogrant.go`, `src/runtime/sgo_ioapi.go`, `src/runtime/sgo_net.go`, `src/cmd/sgo/iogrant.go`, `src/sgo/io.go`
 - **Limitation:** Confinement re-verifies the resolved chain; it is not atomic against another process renaming directories concurrently (openat2 RESOLVE_BENEATH is not used).
+
+### G-RES
+
+Every file, connection, listener, dialer, and registered user resource belongs to exactly one scope (a nursery or a task body) and is released exactly once: at an explicit Close, or when its scope ends, after all of the scope's tasks have ended, in reverse order of acquisition. A failed release is never dropped. A program in which a resource could outlive its scope, by assignment, return, capture, send on a longer-lived channel, or copy, does not compile; a resource leaves a nested scope only by an explicit move to an enclosing one.
+
+- **Scope:** admission, runtime_enforced, model_explored, tested
+- **Model bounds:** sgo/model scoperes: 416 programs, 77,736 states, 9 seeded protocol bugs each caught (sgo/evidence/w21/README.md)
+- **Families:** SPEC-RES
+- **Clauses:** SGO-RES-001, SGO-RES-002, SGO-RES-003, SGO-RES-004, SGO-RES-005
+- **Acceptance cases:** 
+- **Implementation:** `src/cmd/compile/internal/types2/sgo_resflow.go`, `src/runtime/sgo_res.go`, `src/runtime/sgo_nursery.go`, `src/runtime/sgo_scope.go`, `src/sgo/io.go`
+- **Limitation:** The escape analysis is conservative and intraprocedural: it refuses some safe programs (a resource sent through a helper whose channel and value are separate parameters).
+- **Limitation:** A user resource is identified by its pointer. Tasks sharing a scope share its user resources; the type serializes its own methods (D158), and the runtime adds no lock.
 
 ### G-LAB
 

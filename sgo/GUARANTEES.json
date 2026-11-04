@@ -225,7 +225,7 @@
         "SPEC-FILE",
         "SPEC-NET"
       ],
-      "statement": "File access is confined beneath declared directory grants (no '..', absolute-path, prefix or symlink escape, re-verified against concurrent renames); network access is limited to declared TCP endpoints and Unix socket paths. Reads and writes report partial progress; cancelling a shared handle's borrower leaves the owner's handle intact; closed handles are not reused.",
+      "statement": "File access is confined beneath declared directory grants (no '..', absolute-path, prefix or symlink escape, re-verified against concurrent renames); network access is limited to declared TCP endpoints and Unix socket paths. Reads and writes report partial progress; cancelling a task that shares a handle leaves the handle usable by the rest of its scope; closed handles are not reused.",
       "scope": [
         "admission",
         "runtime_enforced",
@@ -245,6 +245,31 @@
       "model_bounds": "sgo/model iopath/iohandle: path resolution with renames (14 scenarios) and handle generations (sgo/evidence/w09/README.md)",
       "limitations": [
         "Confinement re-verifies the resolved chain; it is not atomic against another process renaming directories concurrently (openat2 RESOLVE_BENEATH is not used)."
+      ]
+    },
+    {
+      "id": "G-RES",
+      "families": [
+        "SPEC-RES"
+      ],
+      "statement": "Every file, connection, listener, dialer, and registered user resource belongs to exactly one scope (a nursery or a task body) and is released exactly once: at an explicit Close, or when its scope ends, after all of the scope's tasks have ended, in reverse order of acquisition. A failed release is never dropped. A program in which a resource could outlive its scope, by assignment, return, capture, send on a longer-lived channel, or copy, does not compile; a resource leaves a nested scope only by an explicit move to an enclosing one.",
+      "scope": [
+        "admission",
+        "runtime_enforced",
+        "model_explored",
+        "tested"
+      ],
+      "implementation": [
+        "src/cmd/compile/internal/types2/sgo_resflow.go",
+        "src/runtime/sgo_res.go",
+        "src/runtime/sgo_nursery.go",
+        "src/runtime/sgo_scope.go",
+        "src/sgo/io.go"
+      ],
+      "model_bounds": "sgo/model scoperes: 416 programs, 77,736 states, 9 seeded protocol bugs each caught (sgo/evidence/w21/README.md)",
+      "limitations": [
+        "The escape analysis is conservative and intraprocedural: it refuses some safe programs (a resource sent through a helper whose channel and value are separate parameters).",
+        "A user resource is identified by its pointer. Tasks sharing a scope share its user resources; the type serializes its own methods (D158), and the runtime adds no lock."
       ]
     },
     {
