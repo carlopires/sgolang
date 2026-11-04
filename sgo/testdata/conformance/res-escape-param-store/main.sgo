@@ -1,0 +1,34 @@
+package main
+
+import "sgo"
+
+type Tx struct {
+	done bool
+	log  string
+}
+
+func (t *Tx) Release(ok bool) error {
+	t.done = true
+	t.log += "released;"
+	return nil
+}
+
+type holder struct {
+	tx *Tx
+}
+
+// Storing one parameter's resource into another parameter's memory is an escape: the two
+// parameters' scopes are not comparable (Z1).
+func stash(p *holder, t *Tx) {
+	p.tx = t
+}
+
+func main(root *sgo.Context) error {
+	p := &holder{}
+	nursery (n) {
+		tx := &Tx{}
+		n.Own(tx)
+		stash(p, tx)
+	}
+	return nil
+}

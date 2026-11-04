@@ -1,0 +1,12 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-ERR-004",
+  "SGO-RES-001"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "InvalidArgument",
+ "stderr_message": "a function returned a nil resource with a nil error",
+ "note": "W21 review Z4: a resource result is nil only with an error; the return checks it at run time."
+}

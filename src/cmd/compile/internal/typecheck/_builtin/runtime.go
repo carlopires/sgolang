@@ -313,6 +313,7 @@ func asanregisterglobals(unsafe.Pointer, uintptr)
 func sgoNurseryEnter() unsafe.Pointer
 func sgoNurseryExit(scope unsafe.Pointer)
 func sgoNurseryErrorExit(scope unsafe.Pointer)
+func sgoNilResource(pos string)
 
 // S-Go native channels and select (src/runtime/sgo_native.go, sgo_native_ops.go)
 func sgomakechan(chanType *byte, size int) (hchan chan any)

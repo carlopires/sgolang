@@ -1,0 +1,31 @@
+package main
+
+import "sgo"
+
+type Tx struct {
+	done bool
+}
+
+func (t *Tx) Release(ok bool) error {
+	t.done = true
+	return nil
+}
+
+func succeed() error {
+	return nil
+}
+
+// A resource result may be nil only with an error: return nil, err with a nil err fails at the
+// return (SGO-ERR-004, W21 review Z4).
+func open(n *sgo.Nursery) (*Tx, error) {
+	err := succeed()
+	return nil, err
+}
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		t := check open(n)
+		t.done = false
+	}
+	return nil
+}

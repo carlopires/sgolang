@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-RES-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_RESOURCE_ESCAPES",
+   "position": "main.sgo:24:9"
+  }
+ ],
+ "note": "Z2: Own of a value reachable from outer memory. (W21 review)"
+}

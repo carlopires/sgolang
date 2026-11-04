@@ -1,0 +1,28 @@
+package main
+
+import "sgo"
+
+type Tx struct {
+	done bool
+	log  string
+}
+
+func (t *Tx) Release(ok bool) error {
+	t.done = true
+	t.log += "released;"
+	return nil
+}
+
+type holder struct {
+	tx *Tx
+}
+
+// Own of a value reachable from outer memory (Z2).
+func main(root *sgo.Context) error {
+	p := &holder{tx: &Tx{}}
+	nursery (n) {
+		n.Own(p.tx)
+	}
+	_ = p
+	return nil
+}

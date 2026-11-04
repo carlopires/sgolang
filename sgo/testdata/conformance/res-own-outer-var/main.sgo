@@ -1,0 +1,28 @@
+package main
+
+import "sgo"
+
+type Tx struct {
+	done bool
+	log  string
+}
+
+func (t *Tx) Release(ok bool) error {
+	t.done = true
+	t.log += "released;"
+	return nil
+}
+
+type holder struct {
+	tx *Tx
+}
+
+// Own of a value still named outside the scope: the name outlives the release (W21 review Z2).
+func main(root *sgo.Context) error {
+	tx := &Tx{}
+	nursery (n) {
+		n.Own(tx)
+	}
+	_ = tx.done
+	return nil
+}

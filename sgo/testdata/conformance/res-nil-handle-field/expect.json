@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-COMP-007",
+  "SGO-RES-001"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "NilDereference",
+ "note": "W21 review Z4: a nil handle is reported at the call in S-Go code, not as a nil error."
+}

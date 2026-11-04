@@ -87,6 +87,7 @@ runtime-builtin  gopanic  internal  SGO-DEF-002
 runtime-builtin  sgoPanicValue  internal  SGO-DEF-002  # payload of S-Go panic(msg) with its position (SGO-ERR-002)
 runtime-builtin  sgoEnterMain|sgoExitMain  internal  SGO-PROC-002  # synthesized main.main runs main(root) as the root task (W03)
 runtime-builtin  sgoNurseryEnter|sgoNurseryExit|sgoNurseryErrorExit  internal  SGO-NUR-003  # error exits cancel crossed nurseries (D159, SGO-CTL-004); nursery statement lowering (W03); unwinding completes via the panic frame walk (SGO-DEF-005)
+runtime-builtin  sgoNilResource  internal  SGO-ERR-004  # a nil resource result returned with a nil error fails at the return (W21 review Z4)
 runtime-builtin  gorecover  deny  SGO-DEF-002
 runtime-builtin  panicwrap  deny  SGO-UTYPE-001
 runtime-builtin  print(bool|float64|float32|int|hex|uint|complex128|complex64|string|quoted|pointer|uintptr|iface|eface|slice|nl|sp|lock|unlock)  deny  SGO-PROC-003
