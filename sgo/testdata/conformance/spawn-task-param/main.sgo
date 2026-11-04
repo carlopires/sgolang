@@ -1,0 +1,38 @@
+package main
+
+import "sgo"
+
+// Task and group handles may be named in types: helpers take them as parameters, a channel
+// carries them, and a declaration names their type (D161, D172; W22 review G1).
+func waitInt(c *sgo.Context, h *sgo.Task[int]) (int, error) { return h.Wait(c) }
+
+func sum(c *sgo.Context, g *sgo.Group[int], k int) (int, error) {
+	total := 0
+	for i := 0; i < k; i++ {
+		r := <-g.Next()
+		if r.Err != nil {
+			return 0, r.Err
+		}
+		total += r.Value
+	}
+	return total, nil
+}
+
+func main(root *sgo.Context) error {
+	total := 0
+	nursery (n) {
+		var h *sgo.Task[int] = sgo.Go(n, func(t *sgo.Context) (int, error) { return 40, nil })
+		handles := make(chan *sgo.Task[int], 1)
+		handles <- h
+		a := check waitInt(root, <-handles)
+		g := sgo.NewGroup[int](n, 1)
+		g.Go(root, func(t *sgo.Context) (int, error) { return 1, nil })
+		g.Go(root, func(t *sgo.Context) (int, error) { return 1, nil })
+		b := check sum(root, g, 2)
+		total = a + b
+	}
+	if total != 42 {
+		return sgo.NewError("wrong total")
+	}
+	return root.Stdout().WriteString("42\n")
+}

@@ -95,6 +95,9 @@ func sgoTypeRec(T Type, seen map[Type]bool, refs bool) (bool, string) {
 		if sgoResKind(T) {
 			return true, "" // a resource held by a struct, array, or slice (D151)
 		}
+		if sgoSharedGeneric(T) {
+			return true, "" // *sgo.Task[T], *sgo.Group[T]: shareable handles (D169; W22 review G1)
+		}
 		if isSgoHandle(T) {
 			return false, "handle type " + TypeString(T, nil)
 		}

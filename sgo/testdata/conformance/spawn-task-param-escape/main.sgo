@@ -1,0 +1,25 @@
+package main
+
+import "sgo"
+
+type holder struct{ c *sgo.Conn }
+
+// A helper storing the result of a resource-delivering task handle into another parameter's
+// memory lets the connection outlive the nursery the handle is tied to (SGO-RES-003, W22 review G1).
+func keep(c *sgo.Context, h *sgo.Task[*sgo.Conn], p *holder) error {
+	conn := check h.Wait(c)
+	p.c = conn
+	return nil
+}
+
+func main(root *sgo.Context) error {
+	l := check root.Listen("127.0.0.1:47983")
+	d := root.Dialer([]string{"127.0.0.1:47983"})
+	p := &holder{}
+	nursery (n) {
+		h := sgo.Go(n, func(t *sgo.Context) (*sgo.Conn, error) { return d.Dial(t, "127.0.0.1:47983") })
+		check keep(root, h, p)
+	}
+	_ = l
+	return nil
+}

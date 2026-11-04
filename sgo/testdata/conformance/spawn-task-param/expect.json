@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-006",
+  "SGO-SPAWN-007"
+ ],
+ "exit": 0,
+ "stdout": "42\n",
+ "note": "W22 review G1: *sgo.Task[T] and *sgo.Group[T] as parameter, channel element, and declared variable types."
+}

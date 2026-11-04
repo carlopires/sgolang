@@ -203,6 +203,15 @@ func (a *admitter) typ(e syntax.Expr) {
 			if ix, ok := e.X.(*syntax.IndexExpr); ok && a.sgoInstance(ix, "Channel", "SendPermit") {
 				return
 			}
+			// *sgo.Task[T], *sgo.Group[T] (D161, D172; W22 review G1): handles a helper may take or a
+			// declaration may name. T is any admitted type; types2 checks it, and the flow pass ties a
+			// handle that delivers resources like any resource value.
+			if ix, ok := e.X.(*syntax.IndexExpr); ok {
+				if sel, ok := ix.X.(*syntax.SelectorExpr); ok && isSgo(sel) && (sel.Sel.Value == "Task" || sel.Sel.Value == "Group") {
+					a.typ(ix.Index)
+					return
+				}
+			}
 			a.typ(e.X) // *T (SGO-COMP-007); types2 checks T (sgoFieldType)
 			return
 		}
@@ -235,7 +244,7 @@ func (a *admitter) typ(e syntax.Expr) {
 			return
 		}
 		if sel, ok := e.X.(*syntax.SelectorExpr); ok && isSgo(sel) && sgoGeneric[sel.Sel.Value] {
-			a.deny(e.Pos(), "sgo."+sel.Sel.Value+"[T] as a non-pointer type", "SGO-TYPE-005")
+			a.deny(e.Pos(), "sgo."+sel.Sel.Value+"[T] as a non-pointer type (admitted only as *sgo."+sel.Sel.Value+"[T])", "SGO-TYPE-005")
 			return
 		}
 		a.deny(e.Pos(), "generic type instantiation", "SGO-GEN-001")
