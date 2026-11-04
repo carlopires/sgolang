@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+// A return with a non-nil error from inside a nursery cancels it before joining it (D159).
+func work(root *sgo.Context) error {
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			return t.Sleep(1000000) // ends only by cancellation
+		})
+		return sgo.NewError("gave up")
+	}
+}
+
+func main(root *sgo.Context) error {
+	err := work(root)
+	return root.Stdout().WriteString("work: " + err.Error() + "\n")
+}

@@ -256,6 +256,7 @@ var runtimeDecls = [...]struct {
 	{"asanregisterglobals", funcTag, 136},
 	{"sgoNurseryEnter", funcTag, 164},
 	{"sgoNurseryExit", funcTag, 165},
+	{"sgoNurseryErrorExit", funcTag, 165},
 	{"sgomakechan", funcTag, 106},
 	{"sgochanrecv1", funcTag, 108},
 	{"sgochanrecv2", funcTag, 109},

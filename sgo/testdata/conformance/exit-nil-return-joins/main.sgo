@@ -1,0 +1,22 @@
+package main
+
+import "sgo"
+
+// A return with a nil error still joins the nursery without cancelling it: the child finishes its
+// work first (SGO-CTL-004).
+func work(root *sgo.Context, done chan string) error {
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			check t.Sleep(30)
+			done <- "child finished"
+			return nil
+		})
+		return nil
+	}
+}
+
+func main(root *sgo.Context) error {
+	done := make(chan string, 1)
+	check work(root, done)
+	return root.Stdout().WriteString(<-done + "\n")
+}

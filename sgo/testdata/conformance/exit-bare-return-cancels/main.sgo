@@ -1,0 +1,19 @@
+package main
+
+import "sgo"
+
+// A bare return whose named error result is not nil cancels the crossed nursery (D159).
+func work(root *sgo.Context) (err error) {
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			return t.Sleep(1000000) // ends only by cancellation
+		})
+		err = sgo.NewError("named")
+		return
+	}
+}
+
+func main(root *sgo.Context) error {
+	err := work(root)
+	return root.Stdout().WriteString("work: " + err.Error() + "\n")
+}

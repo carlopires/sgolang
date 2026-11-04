@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CTL-004",
+  "SGO-ERR-004"
+ ],
+ "exit": 1,
+ "stdout": "",
+ "stderr_kind": "MainError",
+ "stderr_message": "boom"
+}

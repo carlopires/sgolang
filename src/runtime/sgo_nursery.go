@@ -40,6 +40,19 @@ func sgoNurseryEnter() unsafe.Pointer {
 	return unsafe.Pointer(s)
 }
 
+// sgoNurseryErrorExit cancels nursery s because its owner is leaving it by a return or check
+// whose error result is not nil (D159), before sgoNurseryExit joins it. The cancellation is the
+// owner's own, so it is consumed at the nursery's boundary (SGO-CANCEL-004): the nursery completes
+// normally unless a child failed, and the error propagates unchanged.
+func sgoNurseryErrorExit(p unsafe.Pointer) {
+	s := (*sgoScope)(p)
+	var id uint64
+	if t := getg().sgo; t != nil {
+		id = t.id
+	}
+	sgoCancel(s, sgoCause{kind: sgoCauseErrorExit, id: id})
+}
+
 // sgoNurseryExit completes a nursery on a normal exit (end of block, or an exit crossing it):
 // wait for its children, close it, and apply its outcome (SGO-NUR-003, SGO-NUR-004 rules 2-4).
 func sgoNurseryExit(p unsafe.Pointer) {

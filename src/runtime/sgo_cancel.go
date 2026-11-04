@@ -40,6 +40,7 @@ const (
 	sgoCauseCancel                   // n.Cancel() by task id
 	sgoCauseChildFailed              // child id ended Errored or Failed
 	sgoCauseUnwind                   // the owner's body unwound through the nursery
+	sgoCauseErrorExit                // the owner left the nursery with an error (D159) by task id
 )
 
 type sgoCause struct {
@@ -133,6 +134,8 @@ func sgoCancelError(c sgoCause, anc uint64) error {
 		msg = "cancelled: Cancel by task " + sgoItoa(c.id)
 	case c.kind == sgoCauseChildFailed:
 		msg = "cancelled: child " + sgoItoa(c.id) + " failed"
+	case c.kind == sgoCauseErrorExit:
+		msg = "cancelled: error exit by task " + sgoItoa(c.id)
 	default:
 		msg = "cancelled: unwind"
 	}
@@ -391,6 +394,9 @@ func sgoDrainFire(arg any, _ uintptr, _ int64) {
 		b = append(b, "child "...)
 		b = sgoAppendUint(b, s.cause.id)
 		b = append(b, " failed"...)
+	case sgoCauseErrorExit:
+		b = append(b, "error exit by task "...)
+		b = sgoAppendUint(b, s.cause.id)
 	default:
 		b = append(b, "unwind"...)
 	}

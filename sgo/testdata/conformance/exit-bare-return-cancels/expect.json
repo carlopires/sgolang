@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-CTL-004"
+ ],
+ "exit": 0,
+ "stdout": "work: named\n"
+}

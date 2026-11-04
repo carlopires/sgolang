@@ -2047,11 +2047,48 @@ func (r *reader) nurseryExit(k int, inner ir.Node) ir.Node {
 			ret.Results[i] = tmp
 		}
 	}
+	// D159: a return whose error result is not nil cancels every crossed nursery before it joins.
+	if ret, ok := inner.(*ir.ReturnStmt); ok {
+		if errv := r.sgoErrorResult(ret); errv != nil {
+			var cancels ir.Nodes
+			for i := len(r.sgoNest) - 1; i >= len(r.sgoNest)-k; i-- {
+				cancels.Append(typecheck.Stmt(typecheck.Call(pos, typecheck.LookupRuntime("sgoNurseryErrorExit"), []ir.Node{r.sgoNest[i]}, false)))
+			}
+			cond := typecheck.Expr(ir.NewBinaryExpr(pos, ir.ONE, errv, typecheck.NodNil()))
+			stmts.Append(typecheck.Stmt(ir.NewIfStmt(pos, cond, cancels, nil)))
+		}
+	}
 	for i := len(r.sgoNest) - 1; i >= len(r.sgoNest)-k; i-- {
 		stmts.Append(r.nurseryComplete(pos, r.sgoNest[i]))
 	}
 	stmts.Append(inner)
 	return ir.NewBlockStmt(pos, stmts)
+}
+
+// sgoErrorResult returns the value of a return statement's error result, if the current function's
+// last result has type error: the held operand, or for a bare return the named result. Else nil.
+func (r *reader) sgoErrorResult(ret *ir.ReturnStmt) ir.Node {
+	if r.curfn == nil {
+		return nil
+	}
+	sig := r.curfn.Nname.Type()
+	n := sig.NumResults()
+	if n == 0 || !types.Identical(sig.Result(n-1).Type, types.ErrorType) {
+		return nil
+	}
+	if len(ret.Results) == n {
+		return ret.Results[n-1]
+	}
+	if len(ret.Results) == 0 {
+		var last *ir.Name
+		for _, d := range r.curfn.Dcl {
+			if d.Class == ir.PPARAMOUT {
+				last = d
+			}
+		}
+		return last
+	}
+	return nil
 }
 
 func (r *reader) assignList() ([]*ir.Name, []ir.Node) {

@@ -1,0 +1,17 @@
+package main
+
+import "sgo"
+
+func fail() error { return sgo.NewError("boom") }
+
+// A failed check inside a nursery cancels the nursery before joining it (D159): the blocked child
+// ends by cancellation and main returns the error at once.
+func main(root *sgo.Context) error {
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			return t.Sleep(1000000) // ends only by cancellation
+		})
+		check fail()
+	}
+	return nil
+}
