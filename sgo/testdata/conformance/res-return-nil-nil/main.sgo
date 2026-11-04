@@ -1,0 +1,16 @@
+package main
+
+import "sgo"
+
+// A resource result may be nil only together with a non-nil error: return nil, nil is refused.
+func openLog(n *sgo.Nursery, d *sgo.Dir) (*sgo.File, error) {
+	return nil, nil
+}
+
+func main(root *sgo.Context) error {
+	d := root.Dir("data")
+	nursery (n) {
+		_ = check openLog(n, d)
+	}
+	return nil
+}

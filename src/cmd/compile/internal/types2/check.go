@@ -117,10 +117,14 @@ type Checker struct {
 	ctxt *Context // context for de-duplicating instances
 	pkg  *Package
 	*Info
-	nextID  uint64                 // unique Id for type parameters (first valid Id is 1)
-	objMap  map[Object]*declInfo   // maps package-level objects and (non-interface) methods to declaration info
-	objList []Object               // source-ordered keys of objMap
-	impMap  map[importKey]*Package // maps (import path, source directory) to (complete or fake) package
+
+	// sgoErrReturn is set while the operands of a return statement are assigned whose last result
+	// is error and whose error operand is not nil: a resource result may then be nil (SGO-ERR-004).
+	sgoErrReturn bool
+	nextID       uint64                 // unique Id for type parameters (first valid Id is 1)
+	objMap       map[Object]*declInfo   // maps package-level objects and (non-interface) methods to declaration info
+	objList      []Object               // source-ordered keys of objMap
+	impMap       map[importKey]*Package // maps (import path, source directory) to (complete or fake) package
 	// see TODO in validtype.go
 	// valids  instanceLookup      // valid *Named (incl. instantiated) types per the validType check
 

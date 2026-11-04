@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-ERR-004",
+  "SGO-TYPE-005"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_CAPABILITY_MISUSE",
+   "position": "main.sgo:7:9"
+  }
+ ],
+ "note": "nil is not a value of a capability type outside the error path."
+}

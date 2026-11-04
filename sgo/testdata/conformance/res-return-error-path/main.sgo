@@ -1,0 +1,29 @@
+package main
+
+import "sgo"
+
+// openLog opens a log file into scope n. On the error path its resource result is absent: the
+// function returns nil and the error, and a caller using check never observes the nil (SGO-ERR-004).
+func openLog(n *sgo.Nursery, d *sgo.Dir, name string) (*sgo.File, error) {
+	if name == "" {
+		return nil, sgo.NewError("no log name")
+	}
+	f, err := d.Open(n, name)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
+}
+
+func main(root *sgo.Context) error {
+	d := root.Dir("data")
+	nursery (n) {
+		f := check openLog(n, d, "a.txt")
+		s := check f.Read(16)
+		check root.Stdout().WriteString(s + "\n")
+	}
+	nursery (m) {
+		_ = check openLog(m, d, "")
+	}
+	return nil
+}

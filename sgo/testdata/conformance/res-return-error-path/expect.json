@@ -1,0 +1,12 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-ERR-004",
+  "SGO-RES-003"
+ ],
+ "exit": 1,
+ "stdout": "alpha\n",
+ "stderr_kind": "MainError",
+ "stderr_message": "no log name",
+ "note": "A function with a resource result returns nil with a non-nil error; check propagates the error."
+}

@@ -571,7 +571,10 @@ func (check *Checker) stmt(ctxt stmtContext, s syntax.Stmt) {
 			if res.Len() > 0 {
 				lhs = res.vars
 			}
+			saved := check.sgoErrReturn
+			check.sgoErrReturn = check.conf.SGo && sgoErrorPath(res, results) // sgo.go
 			check.initVars(lhs, results, s)
+			check.sgoErrReturn = saved
 		}
 
 	case *syntax.BranchStmt:

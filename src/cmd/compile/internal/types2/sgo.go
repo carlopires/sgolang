@@ -121,12 +121,28 @@ func isSgoHandle(T Type) bool {
 	return false
 }
 
+// sgoErrorPath reports whether a return statement with operands results takes the error path of a
+// function with results res: there are at least two results, the last is error, and its operand
+// is not the literal nil (SGO-ERR-004).
+func sgoErrorPath(res *Tuple, results []syntax.Expr) bool {
+	n := res.Len()
+	if n < 2 || len(results) != n || !Identical(res.vars[n-1].typ, universeError) {
+		return false
+	}
+	if name, _ := syntax.Unparen(results[n-1]).(*syntax.Name); name != nil && name.Value == "nil" {
+		return false
+	}
+	return true
+}
+
 // sgoNilOK checks an assignment of nil to T: nil is only a value of type error (SGO-TYPE-002), and
 // never a capability handle (SGO-TYPE-005).
 func (check *Checker) sgoNilOK(x *operand, T Type) bool {
 	switch {
 	case T == nil:
 		return true
+	case check.sgoErrReturn && sgoResKind(T):
+		return true // the error path of a resource result (SGO-ERR-004): never observed by check
 	case isSgoHandle(T):
 		check.errorf(x, IncompatibleAssign, "SGO_E_CAPABILITY_MISUSE: nil is not a value of capability type %s (SGO-TYPE-005)", T)
 		return false
