@@ -14,13 +14,13 @@ There is no ambient authority. A program's root grants are the `grant` lines of 
 | `entropy` | `grant entropy` | `root.Entropy()` | `*sgo.Entropy` | TCB-P14 |
 | `simstore` | `grant simstore` | `root.SimStore()` | `*sgo.SimStore` | TCB-P15 |
 
-Attenuation: `SimStore.ReadOnly`, `SimStore.Prefix`; every handle has `LendTo(n)`, revoked when `n` closes (SGO-AUTH-003).
+Attenuation: `SimStore.ReadOnly`, `SimStore.Prefix`; handles are shareable authority tokens with no revocation (SGO-AUTH-003, D169).
 
 Capability handle types (opaque, used only behind `*`, never nil, never compared; SGO-TYPE-005): `*sgo.CapacityLimiter`, `*sgo.Channel`, `*sgo.Clock`, `*sgo.Conn`, `*sgo.Context`, `*sgo.Dialer`, `*sgo.Dir`, `*sgo.Entropy`, `*sgo.Event`, `*sgo.File`, `*sgo.Listener`, `*sgo.Listing`, `*sgo.Nursery`, `*sgo.Random`, `*sgo.Ready`, `*sgo.SendPermit`, `*sgo.SimStore`, `*sgo.T`, `*sgo.Timer`, `*sgo.Token`, `*sgo.WallClock`, `*sgo.Writer` (`Channel` and `SendPermit` only instantiated, SGO-PERMIT-002).
 
 ## Trusted computing base
 
-`sgo/TARGET_TCB.json` (SGO-TCB-002): spec 0.16.2, allowlist digest `7245fad6fe030c0a`, 31 packages, 1079 files (64 changed from upstream), 19 primitives. A file is trusted only at its own import path and file name with its exact SHA-256: neither a package name nor copied content confers trust (W12 R1).
+`sgo/TARGET_TCB.json` (SGO-TCB-002): spec 0.16.2, allowlist digest `24313bbc99ef116b`, 31 packages, 1079 files (64 changed from upstream), 19 primitives. A file is trusted only at its own import path and file name with its exact SHA-256: neither a package name nor copied content confers trust (W12 R1).
 
 ## Denied escape routes
 
@@ -51,6 +51,6 @@ Capability handle types (opaque, used only behind `*`, never nil, never compared
 | effect through a dependency | SGO-AUTH-001 | `auth-dependency-effect` | MissingCapability |
 | effect of a kind that is not granted | SGO-AUTH-002 | `auth-missing-grant` | MissingCapability |
 | root handle from a non-root context | SGO-AUTH-002 | `auth-root-only` | MissingCapability |
-| lent handle after its nursery closed | SGO-AUTH-003 | `auth-lend-revoked` | MissingCapability |
+| lent handle after its nursery closed | SGO-AUTH-003 | `auth-lend-revoked` | SGO_E_UNADMITTED |
 | a user package named like a TCB package | SGO-TCB-002 | `tcb-user-package-named-runtime` | SGO_E_UNADMITTED |
 | a module named like the trusted package sgo | SGO-TCB-002 | `tcb-module-named-sgo` | SGO_E_USAGE |

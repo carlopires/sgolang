@@ -3,8 +3,8 @@
 // license that can be found in the LICENSE file.
 
 // First effects of subset 1 (W05, SGO-AUTH-003 draft, D26): the runtime primitives behind the
-// handles of package sgo (src/sgo/effects.go). Package sgo holds the handles (kind, attenuation,
-// lending); every operation calls sgo_require first, so the calling task's ceiling is checked
+// handles of package sgo (src/sgo/effects.go). Package sgo holds the handles (kind, attenuation;
+// no revocation, D169); every operation calls sgo_require first, so the calling task's ceiling is checked
 // before any effect, and the primitives below act only after that check passed.
 //
 // TCB entries: TCB-P13 monotonic and wall clock reads (nanotime, time_now); TCB-P14 OS
@@ -37,25 +37,6 @@ func sgo_rootGrant(task unsafe.Pointer, kind uint8, op string) {
 		panic(error(&sgoFailure{"MissingCapability", op + ": " + sgoKindName(kind) + " is not granted in sgo.mod (SGO-AUTH-002)", ""}))
 	}
 	sgoRequire(kind, op)
-}
-
-// sgo_scopeLive reports whether a lent handle's nursery is not CLOSED (revocation, SGO-AUTH-003).
-//
-//go:linkname sgo_scopeLive sgo.runtime_scopeLive
-func sgo_scopeLive(scope unsafe.Pointer) bool {
-	s := (*sgoScope)(scope)
-	lock(&s.lock)
-	live := s.state != sgoClosed
-	unlock(&s.lock)
-	return live
-}
-
-// sgo_canLend reports whether the calling task can spawn into scope (LendTo's precondition).
-//
-//go:linkname sgo_canLend sgo.runtime_canLend
-func sgo_canLend(scope unsafe.Pointer) bool {
-	t := sgoCurrent()
-	return t != nil && scope != nil && t.currentScope() == (*sgoScope)(scope)
 }
 
 // sgo_currentTask returns the calling task (owner of a *sgo.Random).

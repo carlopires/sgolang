@@ -7,14 +7,14 @@ package sgo
 import "unsafe"
 
 // Effect handles of subset 1 (SGO-AUTH-001, SGO-AUTH-003). A handle is obtained only from the root
-// context of a program whose sgo.mod grants its kind, or by attenuating or lending another handle.
-// Every operation checks, before any effect, that the calling task's ceiling contains the kind,
-// that the handle is not revoked, and that the handle permits the operation.
+// context of a program whose sgo.mod grants its kind, or by attenuating another handle. Handles are
+// shareable authority tokens (D169): any task may hold one, and every operation checks, before any
+// effect, that the calling task's ceiling contains the kind and that the handle permits the
+// operation. There is no revocation: authority is bounded by grants, ceilings (SpawnWithout), and
+// attenuation.
 
 func runtime_require(kind uint8, op string)
 func runtime_rootGrant(task unsafe.Pointer, kind uint8, op string)
-func runtime_scopeLive(scope unsafe.Pointer) bool
-func runtime_canLend(scope unsafe.Pointer) bool
 func runtime_currentTask() unsafe.Pointer
 func runtime_claimOwner(p *unsafe.Pointer) unsafe.Pointer
 func runtime_sinceMS() int
@@ -32,33 +32,11 @@ const (
 	kindSimStore
 )
 
-// lent is the revocation state of a handle: the nurseries it was lent to, outermost first. The
-// handle permits nothing once any of them is CLOSED.
-type lent []unsafe.Pointer
-
-func (l lent) check(op string) {
-	for _, s := range l {
-		if !runtime_scopeLive(s) {
-			runtime_fail("MissingCapability", op+": the handle was lent to a nursery that has closed")
-		}
-	}
-}
-
-func (l lent) to(n *Nursery, op string) lent {
-	if n == nil || !runtime_canLend(n.s) {
-		runtime_violation(op + " into a nursery the caller cannot spawn into")
-	}
-	return append(append(lent(nil), l...), n.s)
-}
-
-// use checks the ceiling and revocation of an operation of kind k.
-func use(k uint8, l lent, op string) {
-	runtime_require(k, op)
-	l.check(op)
-}
+// use checks the ceiling for an operation of kind k.
+func use(k uint8, op string) { runtime_require(k, op) }
 
 // Clock reads monotonic time.
-type Clock struct{ l lent }
+type Clock struct{}
 
 // Clock returns the root clock handle; clock must be granted.
 func (c *Context) Clock() *Clock {
@@ -69,15 +47,12 @@ func (c *Context) Clock() *Clock {
 
 // Since returns the milliseconds of monotonic time since the program started; it never decreases.
 func (h *Clock) Since() int {
-	use(kindClock, h.l, "Clock.Since")
+	use(kindClock, "Clock.Since")
 	return runtime_sinceMS()
 }
 
-// LendTo returns a copy of h that is revoked when n closes.
-func (h *Clock) LendTo(n *Nursery) *Clock { return &Clock{h.l.to(n, "Clock.LendTo")} }
-
 // WallClock reads UTC wall-clock time.
-type WallClock struct{ l lent }
+type WallClock struct{}
 
 // WallClock returns the root wall-clock handle; wallclock must be granted.
 func (c *Context) WallClock() *WallClock {
@@ -88,17 +63,12 @@ func (c *Context) WallClock() *WallClock {
 
 // Now returns UTC milliseconds since 1970-01-01.
 func (h *WallClock) Now() int {
-	use(kindWallClock, h.l, "WallClock.Now")
+	use(kindWallClock, "WallClock.Now")
 	return runtime_wallMS()
 }
 
-// LendTo returns a copy of h that is revoked when n closes.
-func (h *WallClock) LendTo(n *Nursery) *WallClock {
-	return &WallClock{h.l.to(n, "WallClock.LendTo")}
-}
-
 // Entropy reads the operating system's cryptographic random source.
-type Entropy struct{ l lent }
+type Entropy struct{}
 
 // Entropy returns the root entropy handle; entropy must be granted.
 func (c *Context) Entropy() *Entropy {
@@ -113,18 +83,14 @@ func (h *Entropy) Bytes(k int) string {
 	if k < 1 || k > 1024 {
 		runtime_fail("InvalidArgument", "Entropy.Bytes requires 1 <= k <= 1024")
 	}
-	use(kindEntropy, h.l, "Entropy.Bytes")
+	use(kindEntropy, "Entropy.Bytes")
 	return runtime_entropy(k)
 }
-
-// LendTo returns a copy of h that is revoked when n closes.
-func (h *Entropy) LendTo(n *Nursery) *Entropy { return &Entropy{h.l.to(n, "Entropy.LendTo")} }
 
 // Random is a deterministic generator (PCG-DXSM with 128-bit state, the algorithm of
 // math/rand/v2's PCG). It is task-affine: only its owner may use it
 // (the task that obtained it from Random, or the first task that used it after Split).
 type Random struct {
-	l      lent
 	owner  unsafe.Pointer
 	hi, lo uint64
 }
@@ -140,7 +106,7 @@ func (r *Random) own(op string) {
 	if runtime_claimOwner(&r.owner) != runtime_currentTask() {
 		runtime_violation(op + " on a generator that belongs to another task")
 	}
-	use(kindRandom, r.l, op)
+	use(kindRandom, op)
 }
 
 // Intn returns a uniform value in [0, n), n > 0, by the unbiased method of math/rand/v2.
@@ -159,14 +125,7 @@ func (r *Random) Split() *Random {
 	r.own("Random.Split")
 	hi := r.next64()
 	lo := r.next64()
-	return &Random{l: r.l, hi: hi, lo: lo}
-}
-
-// LendTo returns a copy of r's current state that is revoked when n closes. The copy belongs to
-// the calling task, like r (generators are task-affine).
-func (r *Random) LendTo(n *Nursery) *Random {
-	r.own("Random.LendTo")
-	return &Random{l: r.l.to(n, "Random.LendTo"), owner: r.owner, hi: r.hi, lo: r.lo}
+	return &Random{hi: hi, lo: lo}
 }
 
 // next64 is math/rand/v2 (*PCG).Uint64: a 128-bit LCG step followed by the DXSM output function.
@@ -227,7 +186,6 @@ func add64(x, y, carry uint64) (sum, carryOut uint64) {
 
 // SimStore is the program's simulated key-value store: one in-memory string map per program.
 type SimStore struct {
-	l        lent
 	readOnly bool
 	prefix   string
 }
@@ -240,7 +198,7 @@ func (c *Context) SimStore() *SimStore {
 }
 
 func (s *SimStore) key(op, key string) string {
-	use(kindSimStore, s.l, op)
+	use(kindSimStore, op)
 	if len(key) < len(s.prefix) || key[:len(s.prefix)] != s.prefix {
 		runtime_fail("MissingCapability", op+": key outside the handle's prefix")
 	}
@@ -265,7 +223,7 @@ func (s *SimStore) Put(key, value string) error {
 
 // ReadOnly returns a handle that permits only Get.
 func (s *SimStore) ReadOnly() *SimStore {
-	return &SimStore{l: s.l, readOnly: true, prefix: s.prefix}
+	return &SimStore{readOnly: true, prefix: s.prefix}
 }
 
 // Prefix returns a handle that permits only keys beginning with the handle's prefix followed by p.
@@ -273,10 +231,5 @@ func (s *SimStore) Prefix(p string) *SimStore {
 	if p == "" {
 		runtime_fail("InvalidArgument", "SimStore.Prefix requires a non-empty prefix")
 	}
-	return &SimStore{l: s.l, readOnly: s.readOnly, prefix: s.prefix + p}
-}
-
-// LendTo returns a copy of s that is revoked when n closes.
-func (s *SimStore) LendTo(n *Nursery) *SimStore {
-	return &SimStore{l: s.l.to(n, "SimStore.LendTo"), readOnly: s.readOnly, prefix: s.prefix}
+	return &SimStore{readOnly: s.readOnly, prefix: s.prefix + p}
 }

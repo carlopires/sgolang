@@ -155,7 +155,7 @@ def render():
         "|---|---|---|---|---|",
         *effect_rows,
         "",
-        "Attenuation: `SimStore.ReadOnly`, `SimStore.Prefix`; every handle has `LendTo(n)`, revoked when `n` closes (SGO-AUTH-003).",
+        "Attenuation: `SimStore.ReadOnly`, `SimStore.Prefix`; handles are shareable authority tokens with no revocation (SGO-AUTH-003, D169).",
         "",
         "Capability handle types (opaque, used only behind `*`, never nil, never compared; SGO-TYPE-005): " + ", ".join(f"`*sgo.{x}`" for x in h) + " (`Channel` and `SendPermit` only instantiated, SGO-PERMIT-002).",
         "",

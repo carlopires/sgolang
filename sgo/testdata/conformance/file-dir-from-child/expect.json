@@ -6,5 +6,5 @@
  "exit": 2,
  "stdout": "",
  "stderr_kind": "MissingCapability",
- "note": "task.Dir from a child task fails with MissingCapability; children use a handle lent to them."
+ "note": "task.Dir from a child task fails with MissingCapability; children use a handle the root passes to them."
 }

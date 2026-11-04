@@ -950,7 +950,7 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 
 **Decision.** D161's semantics stand; its surface changes because the trusted `sgo` package is Go code: Go has no generic methods (`n.Go` cannot infer `T`), and a two-value receive is `(value, ok bool)`, never `(value, error)`. The spelling is `h := sgo.Go(n, func(t *sgo.Context) (T, error) {...})` returning `*sgo.Task[T]`; `v, err := h.Wait(t)` waits for the result; and the select arm is `case r := <-h.Result():`, where `Result()` returns a receive-only native channel of `sgo.Result[T]` (fields `Value T`, `Err error`) that the runtime fills once when the child ends. The child's error is data: it does not fail the nursery. `sgo.NewGroup[T](n)` follows the same shape. No compiler special case is needed beyond the admission rules D161 already requires.
 
-## D169 — Effect handles and `LendTo` **[NEEDS USER]** · PROPOSED
+## D169 — Effect handles and `LendTo` · APPROVED 2026-11-05 (option a)
 
 **Question.** SGO-RES-002 v2 removed `LendTo` from resources; effect handles (`Clock`, `WallClock`, `Random`, `Entropy`, `SimStore`, SPEC-AUTH) still have it: `h.LendTo(n)` returns a copy revoked when `n` closes (A03, fixture `auth-lend-revoked`). Since W21, structure already bounds what `LendTo` was for: nothing started in `n` runs after `n` closes, and ceilings (`SpawnWithout`) and attenuation (`ReadOnly`, `Prefix`) already narrow authority. Revocation only matters when a copy leaves `n`, which needs a channel to a task outside it.
 
@@ -960,6 +960,8 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 - (c) Keep `LendTo` as it is (status quo): a run-time revocation unlike every other scoping rule in the language.
 
 **Recommendation.** (a). Revocation has no remaining use that structure doesn't cover, except handing a copy to an outside task over a channel, which (a) treats as deliberate delegation, as passing any authority is. `auth-lend-revoked` becomes a reject fixture (`LendTo` not admitted); SGO-AUTH-001/003 get new versions at 0.17.0.
+
+**Decision.** (a), approved by the owner 2026-11-05. `LendTo` is removed from every effect handle and the revocation state with it (`src/sgo/effects.go`, `src/runtime/sgo_effects.go`); a call is refused as an unadmitted member. Effect handles stay outside the resource rules.
 
 ## D170 — Deadlines attach to nurseries · APPROVED 2026-11-05 (implementer, delegated)
 
@@ -1005,6 +1007,7 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 - 2026-11-03: user approved D116–D120 and the W15 drafts (sgo/docs/w15-drafts.md: SGO-LEX-004 v2, SGO-TYPE-008, SGO-TYPE-001 v8, SGO-TYPE-007 v2, SGO-VAL-002 v3, SGO-COMP-005 v2) as recommended ("looks good; approved"). W15 implementation starts; the drafts freeze at spec 0.12.0.
 - 2026-11-03: user approved D121–D126 and the W16 drafts (sgo/docs/w16-drafts.md: SGO-STD-001..007, SGO-IMP-004 v2) as recommended ("looks good; approved"). W16 implementation starts; the drafts freeze at spec 0.13.0.
 - 2026-11-03: user approved D127–D133 and the W17 drafts (sgo/docs/w17-drafts.md: SGO-IFACE-001 v2, SGO-IFACE-002..004, amendments) as recommended ("looks good; approved"). W17 starts with the share model; the drafts freeze at spec 0.14.0.
+- 2026-11-05: user approved D169 option (a): effect handles are shareable authority tokens, `LendTo` withdrawn.
 - 2026-11-03: the owner delegated D143–D146 to the implementer ("own the decisions, handle it to deliver a working version of Happy Eyeballs algorithm (RFC 8305)"). IPv6 endpoints were already admitted (SGO-NET-002); a connect timeout is the cancellation of an attempt (a waiting Dial is a cancellation point), so no timeout API is added. D134–D142 stay proposed.
 - 2026-11-04: user approved structured resources and `check` (D147–D156) after a design discussion ("this looks great! approved!"): resources are owned by scopes (nurseries and task bodies) and released when the scope ends; the earlier `defer check` draft (kept in a scratch file, not in the repo) was dropped. W21 starts with the scope–resource model.
 - 2026-11-04: user approved the W21 clause drafts (sgo/docs/w21-drafts.md: SGO-ERR-004, SGO-RES-001..004, amendments) as written ("approved!"). W21 implementation starts with `check`; the drafts freeze at spec 0.16.0.

@@ -41,6 +41,13 @@ freeze re-adds them as clause versions:
   `g.Go` inside the extent" (the escape pass already treats `sgo.Go` callbacks so, D161).
 - SGO-RES-004 v4: `ok` is false on any cancellation, "an ancestor's or a deadline's (SGO-CANCEL-005)
   included".
+- SGO-AUTH-001 and SGO-AUTH-003 new versions (D169, option a): remove "Every handle type
+  `*sgo.K` has `h.LendTo(n *sgo.Nursery) *sgo.K` (revocable copy)", the `LendTo` precondition,
+  "A lent handle is revoked when its nursery closes (A03)", and "a revoked handle" among the
+  `MissingCapability` causes; add "Effect handles are shareable authority tokens: any task may
+  hold one; authority is bounded by grants, ceilings, and attenuation, and is never revoked
+  (D169)". fixture:auth-lend-revoked moves to negative tests only (a reject: `LendTo` is not
+  admitted); acceptance case A03 is withdrawn.
 - SGO-RES-003 v4 also lists fixture:res-defer-nursery-close (the file-based form of
   res-defer-nursery-capture, W21 errata follow-up) among its negative tests.
 

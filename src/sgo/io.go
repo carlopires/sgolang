@@ -55,7 +55,6 @@ func IsEOF(err error) bool {
 // Dir is a directory grant, or a part of one: paths are resolved from the granted directory,
 // component by component, never following symlinks (D53).
 type Dir struct {
-	l        lent
 	g        int
 	sub      string // prefix of every path ("" or "a/b/")
 	readOnly bool
@@ -65,7 +64,7 @@ type Dir struct {
 func (c *Context) Dir(name string) *Dir {
 	c.own()
 	if !runtime_isRoot(c.t) {
-		runtime_fail("MissingCapability", "Dir: only the root task holds the grants; children use a handle lent to them")
+		runtime_fail("MissingCapability", "Dir: only the root task holds the grants; children use a handle the root passes to them")
 	}
 	g, ro, ok := runtime_dirGrant(name)
 	if !ok {
@@ -75,7 +74,6 @@ func (c *Context) Dir(name string) *Dir {
 }
 
 func (d *Dir) path(op, p string) string {
-	d.l.check(op)
 	return d.sub + p
 }
 
@@ -142,7 +140,7 @@ func (d *Dir) Sub(path string) (*Dir, error) {
 	if err := runtime_dirIsDir(d.g, p); err != nil {
 		return nil, err
 	}
-	return &Dir{l: d.l, g: d.g, sub: p + "/", readOnly: d.readOnly}, nil
+	return &Dir{g: d.g, sub: p + "/", readOnly: d.readOnly}, nil
 }
 
 // List returns the names in directory path ("" is d itself), sorted by byte order.
@@ -173,7 +171,7 @@ func (l *Listing) Name(i int) string {
 }
 
 // ReadOnly returns a handle that permits only Open, ReadFile, List, and Sub.
-func (d *Dir) ReadOnly() *Dir { return &Dir{l: d.l, g: d.g, sub: d.sub, readOnly: true} }
+func (d *Dir) ReadOnly() *Dir { return &Dir{g: d.g, sub: d.sub, readOnly: true} }
 
 // File is an open file, a resource of the scope it was opened in (SGO-RES-001).
 type File struct{ h unsafe.Pointer }
@@ -187,7 +185,7 @@ func (f *File) Write(s string) (int, error) { return runtime_ioWrite(f.h, s) }
 // Size returns the size of the file in bytes.
 func (f *File) Size() (int, error) { return runtime_fileSize(f.h) }
 
-// Close closes the file; only its owner may, and not while it is lent to an open nursery.
+// Close releases the file early (SGO-RES-002).
 func (f *File) Close() error { return runtime_close(f.h, "File.Close") }
 
 // MoveTo makes f a resource of s, a scope enclosing f's scope (SGO-RES-003).
