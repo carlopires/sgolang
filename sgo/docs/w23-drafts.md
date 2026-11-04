@@ -21,6 +21,13 @@ as D172 in W22), D167.
   pool-put-outlives, pool-value-escape, pool-lease-after-return, pool-acquire-outside; model
   `poolmodel.go` (1 422 states, four mutants).
 
+- **SGO-RES-006 (new, D176)**: resource interfaces. An interface embedding `sgo.Resource` is a
+  resource type; conversion to it ties as the source; no conversion or assertion from a resource
+  to a non-resource interface; values task-local; constructor results tied as narrowly as their
+  resource arguments jointly; results of calls through a resource interface tied to the receiver.
+  Predeclared `sgo.Reader`, `sgo.LineReader`, `sgo.Writer`. Amends SGO-RES-003 v? (Z1 holds for
+  non-resource interfaces) and SGO-IFACE (conversion and assertion rules).
+
 ## Amendments owed at 0.18.0 (frozen clauses; a new version each)
 
 - **SGO-SPAWN-006 v2** (W22 review G2, H1): each `h.Result()` call returns its own channel, which
