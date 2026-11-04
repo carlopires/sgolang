@@ -1,0 +1,40 @@
+package main
+
+import "sgo"
+
+// A caller cancelled before a server accepted its request withdraws it: the server never sees
+// it, and accepts the next caller's request (D174). A caller cancelled after acceptance is not
+// waited for: the server's reply to it is dropped.
+func main(root *sgo.Context) error {
+	nursery (n) {
+		c := sgo.NewCall[string, string](n)
+		srv := sgo.Go(n, func(t *sgo.Context) (string, error) {
+			check t.Sleep(20)
+			r := c.Accept(t)
+			first := r.Value()
+			r.Reply("ok "+first, nil)
+			late := c.Accept(t)
+			check t.Sleep(20) // its caller's deadline passes meanwhile
+			late.Reply("dropped", nil)
+			return first, nil
+		})
+		nursery (m) {
+			m.CancelAfter(5)
+			m.Spawn(func(u *sgo.Context) error {
+				_, err := c.Call(u, "withdrawn")
+				return err
+			})
+		}
+		got := check c.Call(root, "kept")
+		nursery (m2) {
+			m2.CancelAfter(30)
+			m2.Spawn(func(u *sgo.Context) error {
+				_, err := c.Call(u, "late")
+				return err
+			})
+		}
+		first := check srv.Wait(root)
+		check root.Stdout().WriteString(got + " / the server saw " + first + "\n")
+	}
+	return nil
+}

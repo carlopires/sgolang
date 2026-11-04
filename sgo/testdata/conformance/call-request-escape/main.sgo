@@ -1,0 +1,19 @@
+package main
+
+import "sgo"
+
+// An accepted request is a resource of the accepting task's body: it may not be sent where it
+// outlives that body (D174, SGO-RES-003).
+func main(root *sgo.Context) error {
+	keep := make(chan *sgo.Request[string, int], 1)
+	nursery (n) {
+		c := sgo.NewCall[string, int](n)
+		n.Spawn(func(t *sgo.Context) error {
+			r := c.Accept(t)
+			keep <- r
+			return nil
+		})
+		_, _ = c.Call(root, "x")
+	}
+	return nil
+}

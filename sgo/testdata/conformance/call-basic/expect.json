@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-008"
+ ],
+ "exit": 0,
+ "stdout": "abc 3, hello 5\nforget: NoReply\n",
+ "timeout_ms": 20000,
+ "note": "D174: each caller gets the reply to its own request whatever order the server accepts them in; the unanswered request is released with NoReply when the server's body ends."
+}

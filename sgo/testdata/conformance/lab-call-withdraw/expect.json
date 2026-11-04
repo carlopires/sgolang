@@ -1,0 +1,14 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-SPAWN-008"
+ ],
+ "exit": 0,
+ "sweep": {
+  "seeds": "0..15",
+  "outcomes": [
+   "ok kept / the server saw kept\n"
+  ]
+ },
+ "note": "D174: the caller whose deadline (5ms) passes before the server accepts (20ms) withdraws; the server's first request is the next caller's. A caller cancelled after acceptance (deadline at 30ms after its call, reply 20ms later) unwinds, and the reply is dropped."
+}

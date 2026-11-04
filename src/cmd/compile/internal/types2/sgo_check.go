@@ -186,7 +186,7 @@ func (check *Checker) sgoGoCalls(fd *syntax.FuncDecl) {
 			return true
 		}
 		fn, _ := check.Uses[sel.Sel].(*Func)
-		if fn == nil || fn.pkg == nil || fn.pkg.path != "sgo" || (fn.name != "Go" && fn.name != "NewGroup") {
+		if fn == nil || fn.pkg == nil || fn.pkg.path != "sgo" || (fn.name != "Go" && fn.name != "NewGroup" && fn.name != "NewCall") {
 			return true
 		}
 		tv, ok := check.Types[c]
@@ -197,8 +197,14 @@ func (check *Checker) sgoGoCalls(fd *syntax.FuncDecl) {
 		if p == nil {
 			return true
 		}
-		if nt, _ := p.base.(*Named); nt != nil && nt.TypeArgs().Len() == 1 {
-			T := nt.TypeArgs().At(0)
+		nt, _ := p.base.(*Named)
+		for i := 0; nt != nil && i < nt.TypeArgs().Len(); i++ {
+			T := nt.TypeArgs().At(i)
+			if fn.name == "NewCall" && sgoResType(T) {
+				// A request or reply crosses between tasks with no scope to tie it to (D174).
+				check.errorf(c, UnsupportedFeature, "SGO_E_UNADMITTED: the type %s of NewCall holds a resource; a resource cannot cross a call (D174)", T)
+				continue
+			}
 			check.sgoChanElemOK(c, T, false)
 			// The result crosses from the child to its readers without a send site to copy at, so it
 			// must be shareable: a task-local result (a slice, map, or pointer) is passed as

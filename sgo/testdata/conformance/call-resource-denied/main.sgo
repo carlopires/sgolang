@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+// A resource cannot cross a call: neither the request nor the reply type may hold one (D174).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		c := sgo.NewCall[string, *sgo.Conn](n)
+		_ = c
+	}
+	return nil
+}

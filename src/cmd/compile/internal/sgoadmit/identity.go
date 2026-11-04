@@ -6,6 +6,6 @@ package sgoadmit
 // (SGO-IMP-002).
 const (
 	SpecVersion     = "0.17.0"
-	AdmissionDigest = "74543facdd7c92d0"
+	AdmissionDigest = "0daf312c157601b3"
 	ABI             = "sgo-abi-1" // S-Go ABI identity: lowering of nurseries, failures, checked arithmetic
 )

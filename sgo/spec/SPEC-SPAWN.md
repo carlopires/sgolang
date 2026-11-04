@@ -155,3 +155,25 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 - **implementation_coverage:** W22: `src/sgo/group.go`, `src/sgo/task.go`, `src/runtime/sgo_group.go`, `src/runtime/sgo_native_ops.go`, `src/runtime/sgo_chan.go`, `src/cmd/compile/internal/types2/sgo_check.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`.
 - **executed_evidence:** conformance fixtures (darwin/arm64); Linux pending.
 - **supported_execution_configurations:** production and lab.
+
+### SGO-SPAWN-008 — Request/reply calls (subset 3)
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-SPAWN-006, SGO-NATIVE-001, SGO-RES-001, SGO-RES-002, SGO-RES-003, SGO-CANCEL-002; D167, D174.
+- **grammar_and_types:** `sgo.NewCall[Req, Resp](n *sgo.Nursery) *sgo.Call[Req, Resp]`; `(*sgo.Call[Req, Resp]).Call(t *sgo.Context, req Req) (Resp, error)`; `(*sgo.Call[Req, Resp]).Accept(t *sgo.Context) *sgo.Request[Req, Resp]`; `(*sgo.Request[Req, Resp]).Value() Req`; `(*sgo.Request[Req, Resp]).Reply(resp Resp, err error)`; `sgo.IsNoReply(err error) bool`. `*sgo.Call[Req, Resp]` is a shareable handle (D169); `*sgo.Request[Req, Resp]` is a resource handle (SGO-RES-001). `Req` and `Resp` follow the rule of `sgo.Go` results (SGO-SPAWN-006): no task-local types; and neither may hold a resource.
+- **preconditions:** `Call` and `Accept` run in a task inside the nursery `n` of `NewCall`; else `MissingCapability`. `n` is not nil.
+- **evaluation_and_value_semantics:** `Call` hands `req` to a server by rendezvous and returns the `resp` and `err` its server passes to `Reply`. `Accept` returns the next request handed over. Each request is answered at most once.
+- **ownership_and_lifecycle:** An accepted request is a resource of the accepting task's body: tasks inside that body's scope may use it (SGO-RES-002), and it may not outlive it (SGO-RES-003). When the body ends with the request unanswered, its release answers it with the error `NoReply`.
+- **effect_and_capability_requirements:** The call point handle; no ambient authority.
+- **concurrency_and_memory_order:** The hand-over of a request happens before `Accept` returns it; `Reply` happens before the caller's `Call` returns.
+- **allowed_nondeterminism:** Which waiting caller's request a server accepts first.
+- **failure_and_partial_progress:** A caller whose server's handler ends without `Reply` gets `NoReply` (`sgo.IsNoReply`). A second `Reply` is a `SpawnContractViolation`.
+- **cancellation_and_cleanup:** Both waits of `Call`, and `Accept`, are native channel waits (SGO-NATIVE): a waiting task in a cancelled scope unwinds. A caller cancelled before its request was accepted withdraws it: no server receives it. A caller cancelled after acceptance unwinds; the reply, when it comes, is dropped.
+- **compile_link_checks:** `SGO_E_UNADMITTED` for a task-local or resource-holding `Req` or `Resp`; `SGO_E_RESOURCE_ESCAPES` for an accepted request that may outlive the accepting body.
+- **runtime_guards:** The scope check of `Call` and `Accept`; the answered flag of a request.
+- **tcb_assumptions:** `src/runtime/sgo_call.go`, `sgo_taskres.go`; `src/sgo/call.go`.
+- **positive_tests:** fixture:call-basic, fixture:lab-call-withdraw; the model `sgo/model/callmodel.go` (CallExplore).
+- **negative_tests:** fixture:call-request-escape, fixture:call-resource-denied; the model's seeded bugs (no NoReply release, late withdrawal, misrouted reply, a second Reply delivering).
+- **implementation_coverage:** W23: runtime `src/runtime/sgo_call.go`; API `src/sgo/call.go`; compiler `sgoadmit/admit_expr.go`, `types2/sgo_check.go`, `sgo.go`, `sgo_values.go`, `sgo_resflow.go`.
+- **executed_evidence:** pending (W23).
+- **supported_execution_configurations:** production; lab.

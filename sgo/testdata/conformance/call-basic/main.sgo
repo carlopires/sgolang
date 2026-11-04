@@ -1,0 +1,42 @@
+package main
+
+import "sgo"
+
+// A call point (D167, D174): callers hand requests to a server and get their own replies; a
+// request the server accepts and leaves unanswered returns NoReply to its caller when the
+// server's body ends.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		c := sgo.NewCall[string, int](n)
+		n.Spawn(func(t *sgo.Context) error {
+			for i := 0; i < 3; i++ {
+				r := c.Accept(t)
+				if r.Value() == "forget" {
+					continue // left unanswered: its caller gets NoReply when this body ends
+				}
+				r.Reply(len(r.Value()), nil)
+			}
+			return nil
+		})
+		f := sgo.Go(n, func(t *sgo.Context) (bool, error) {
+			_, err := c.Call(t, "forget")
+			return sgo.IsNoReply(err), nil
+		})
+		a := check c.Call(root, "abc")
+		b := check c.Call(root, "hello")
+		noReply := check f.Wait(root)
+		check out.WriteString("abc " + itoa(a) + ", hello " + itoa(b) + "\n")
+		if noReply {
+			check out.WriteString("forget: NoReply\n")
+		}
+	}
+	return nil
+}
+
+func itoa(v int) string {
+	if v < 10 {
+		return string(rune('0' + v))
+	}
+	return itoa(v/10) + string(rune('0'+v%10))
+}

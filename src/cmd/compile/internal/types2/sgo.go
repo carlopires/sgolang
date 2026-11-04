@@ -115,7 +115,8 @@ func isSgoHandle(T Type) bool {
 	switch n.obj.name {
 	case "Context", "Nursery", "Writer", "Channel", "SendPermit", "Ready",
 		"Clock", "WallClock", "Random", "Entropy", "SimStore", "Event", "CapacityLimiter", "Token",
-		"Dir", "File", "Conn", "Listener", "Listing", "T", "Dialer", "Timer":
+		"Dir", "File", "Conn", "Listener", "Listing", "T", "Dialer", "Timer",
+		"Request": // an accepted request of a call point (D174)
 		return true
 	}
 	return false

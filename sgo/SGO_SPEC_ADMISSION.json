@@ -471,9 +471,10 @@
         "SGO-SPAWN-004",
         "SGO-SPAWN-005",
         "SGO-SPAWN-006",
-        "SGO-SPAWN-007"
+        "SGO-SPAWN-007",
+        "SGO-SPAWN-008"
       ],
-      "normative_text_digest": "dbeac59dbee02490181c2b2c8a06a1e7217c60ddc0d0c0856280c2d48dd5aa05",
+      "normative_text_digest": "f7a4cce322753f65a97520a292c51e1ff0529e192283ff15815dbd613ade5c12",
       "admitted_in": [
         "0.7.0"
       ],
@@ -499,7 +500,8 @@
         "SGO-SPAWN-004": "736b4cf7037c199e2e51358913f3cbc649a0933b4ca1b1a7432149f27b23fd96",
         "SGO-SPAWN-005": "f26e200b1285c109101a9cc06bd3cccc5a6795936733142147f4948c17c2eeeb",
         "SGO-SPAWN-006": "3afad84922ca9a93d825c582fbdd6bf345877f88002c78b8457f6d40bba5516b",
-        "SGO-SPAWN-007": "a97fb09bcb9a2582e661e1a85e6e8fcdcd3675c0874e96165bdd0b70c34af270"
+        "SGO-SPAWN-007": "a97fb09bcb9a2582e661e1a85e6e8fcdcd3675c0874e96165bdd0b70c34af270",
+        "SGO-SPAWN-008": "a339408576c0b5d962e6b46fbf17ef034c467447d4cc6dc98a55e5f4c94deb44"
       },
       "clause_status": {
         "SGO-SPAWN-001": "frozen",
@@ -508,7 +510,8 @@
         "SGO-SPAWN-004": "frozen",
         "SGO-SPAWN-005": "frozen",
         "SGO-SPAWN-006": "frozen",
-        "SGO-SPAWN-007": "frozen"
+        "SGO-SPAWN-007": "frozen",
+        "SGO-SPAWN-008": "draft"
       },
       "clause_versions": {
         "SGO-SPAWN-001": 1,
@@ -517,7 +520,8 @@
         "SGO-SPAWN-004": 2,
         "SGO-SPAWN-005": 1,
         "SGO-SPAWN-006": 1,
-        "SGO-SPAWN-007": 1
+        "SGO-SPAWN-007": 1,
+        "SGO-SPAWN-008": 1
       }
     },
     {
@@ -1811,5 +1815,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "b12d17861928099b4f8c748db27efd45369ed2e317353e71760ff6956c314100"
+  "rows_digest": "5b97b1b397a200de3be61086ab15eb3067d99c4306edb894bc4f14a086541330"
 }
