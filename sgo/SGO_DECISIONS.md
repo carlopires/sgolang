@@ -983,6 +983,12 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 
 **Why.** Every bug class HE-04 named (a greeting split across reads, a line split across chunks) disappears without a user-written loop, and no read loses data to cancellation, which a user-level buffer could not promise when the reading task is cancelled between chunks.
 
+## D174 — Request/reply calls: the shape of D167 · APPROVED 2026-11-06 (implementer, delegated)
+
+**Decision.** `c := sgo.NewCall[Req, Resp](n)` makes a call point served inside nursery `n`; the handle is shareable like task handles (D169), and only tasks inside `n`'s scope may use it. `resp, err := c.Call(t, req)` hands `req` to a server and waits for its own reply. The server takes requests with `r := c.Accept(t)` and answers with `r.Reply(resp, err)`; `r.Value()` is the request. Requests are handed over by rendezvous: a caller cancelled before a server accepted its request withdraws it, and no server ever sees it. Both waits are cancellation points with the unwinding of a native receive (SGO-NATIVE, as `Task.Wait`). A reply to a caller that was cancelled after the request was accepted is dropped. An accepted request is a resource of the accepting task's body: if the body ends without `Reply`, the caller's `Call` returns the error `NoReply` (`sgo.IsNoReply`), so a server that fails, unwinds, or forgets never strands a caller. A second `Reply` is a `SpawnContractViolation`. `Req` and `Resp` are types a task may hand to another (the rule of `sgo.Go` results: no task-local types, no resources). Accepting through a `select` arm is not in this version: a request received by an arm could not be registered with its receiver, so it would bypass the `NoReply` guarantee; a server's shutdown is the cancellation of its scope, which ends `Accept`.
+
+**Why.** The multiplexers, pool front ends, and services of W23 need a reply that is guaranteed to come back or fail, and withdrawal that cannot be raced; built on the rendezvous channel and the task-result record, the only new runtime state is the `NoReply` release.
+
 ---
 
 ## Approval record
@@ -1023,3 +1029,4 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 - 2026-11-05: implementer recorded D170 (deadlines on nurseries only; lab deadlines deferred) under the delegated authority.
 - 2026-11-05: user approved D171 (scope-owned timers) and groups before the Happy Eyeballs rewrite, with frozen slice results ("yes, go ahead"; "slice results => frozen is better"); recorded with the group shape as D172.
 - 2026-11-06: implementer recorded D173 (the read turn and read buffer behind D164) under the delegated authority.
+- 2026-11-06: implementer recorded D174 (the shape of D167's request/reply calls) under the delegated authority.

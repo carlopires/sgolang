@@ -101,3 +101,37 @@ func TestW22Mutations(t *testing.T) {
 		t.Logf("%s: %v", c.name, err)
 	}
 }
+
+func TestCallProtocol(t *testing.T) {
+	n, err := CallExplore()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("call: %d states", n)
+}
+
+func TestCallMutations(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		flag *bool
+		want string
+	}{
+		{"no NoReply release", &caNoRelease, "P4"},
+		{"late withdrawal", &caLateWithdraw, "P2"},
+		{"misrouted reply", &caMisroute, "P3"},
+		{"second Reply delivers", &caReplyTwice, "P1"},
+	} {
+		*c.flag = true
+		_, err := CallExplore()
+		*c.flag = false
+		if err == nil {
+			t.Errorf("%s: not caught", c.name)
+			continue
+		}
+		if got := err.Error()[:2]; got != c.want {
+			t.Errorf("%s: caught as %v, want %s", c.name, err, c.want)
+			continue
+		}
+		t.Logf("%s: %v", c.name, err)
+	}
+}
