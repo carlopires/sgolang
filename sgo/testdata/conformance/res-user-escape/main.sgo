@@ -1,0 +1,47 @@
+package main
+
+import "sgo"
+
+type logbook struct {
+	lines []string
+}
+
+// tx is a user resource (D152): Release(true) commits, Release(false) rolls back.
+type tx struct {
+	name string
+	log  *logbook
+}
+
+func (t *tx) Release(ok bool) error {
+	if ok {
+		t.log.lines = append(t.log.lines, t.name+" commit")
+	} else {
+		t.log.lines = append(t.log.lines, t.name+" rollback")
+	}
+	return nil
+}
+
+type holder struct {
+	t *tx
+}
+
+// A transaction owned by an inner nursery moves to the outer one (sgo.MoveTo, D158) and commits
+// when the outer nursery ends, after the inner one.
+func main(root *sgo.Context) error {
+	lb := &logbook{}
+	nursery (outer) {
+		outer.Spawn(func(t *sgo.Context) error { return nil })
+		h := holder{}
+		nursery (inner) {
+			t := &tx{name: "t", log: lb}
+			inner.Own(t)
+			h.t = t
+		}
+		lb.lines = append(lb.lines, "inner ended")
+		_ = h
+	}
+	for _, l := range lb.lines {
+		check root.Stdout().WriteString(l + "\n")
+	}
+	return nil
+}

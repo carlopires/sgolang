@@ -520,6 +520,8 @@ func (f *sgoResFlow) call(c *syntax.CallExpr) {
 			}
 		case fn.name == "MoveTo" && len(c.ArgList) == 1:
 			f.move(sel.X, c.ArgList[0])
+		case fn.name == "Own" && len(c.ArgList) == 1:
+			f.move(c.ArgList[0], sel.X) // a registered user resource is tied to its scope (D152)
 		case fn.name == "Commit" && len(c.ArgList) == 1:
 			f.send(sel.X, c.ArgList[0])
 		}

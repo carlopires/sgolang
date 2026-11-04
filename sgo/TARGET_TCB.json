@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.15.1",
- "allowlist_digest": "e42188ea74172dca446f98334a3d35d95c804b4c5e27f41384d175fde26de566",
+ "allowlist_digest": "10993fca4b61881a659e4a9bc2872fd2acdfd90dba774e0fd758a6147da61656",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -4606,7 +4606,7 @@
   },
   {
    "path": "src/runtime/sgo_nursery.go",
-   "sha256": "c516822ac1f846a8e4a3f52c9fdbe35ca6b42a651fead7b0744f550ae3e2f63e",
+   "sha256": "2f23c1c0aebaad1dd208d25b038c645b9dc19bba89421e81da0834cec629724c",
    "upstream_identical": false
   },
   {

@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-RES-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_RESOURCE_ESCAPES",
+   "position": "main.sgo:38:10"
+  }
+ ],
+ "note": "A user resource is tied to the scope that owns it; storing it in an outer variable needs MoveTo."
+}

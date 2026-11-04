@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-003",
+  "SGO-RES-004"
+ ],
+ "exit": 0,
+ "stdout": "inner ended\nt commit\n",
+ "note": "MoveTo works for user resources: the registration moves to the enclosing scope (D158)."
+}

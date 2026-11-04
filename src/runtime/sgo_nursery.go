@@ -50,7 +50,8 @@ func sgoNurseryExit(p unsafe.Pointer) {
 	}
 	// The nursery's resources are released after the join, before its outcome (SGO-RES-001).
 	t := getg().sgo
-	failed := sgoResRelease(&s.res, r.Outcome == sgoSucceeded)
+	// ok: the nursery ends normally, neither failing nor cancelled (D152: a cancelled scope rolls back).
+	failed := sgoResRelease(&s.res, r.Outcome == sgoSucceeded && sgoCancelledFrom(s) == nil)
 	if r.Outcome == sgoSucceeded {
 		if f := sgoReleaseOutcome(t, failed, false); f != nil {
 			panic(f) // a failed release: ReleaseError (D149), or a Release that panicked

@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-004",
+  "SGO-RES-001"
+ ],
+ "exit": 0,
+ "stdout": "a commit\nb rollback\n",
+ "note": "Release(ok): ok is true when the scope ends normally, false when it is cancelled (D152, D155)."
+}

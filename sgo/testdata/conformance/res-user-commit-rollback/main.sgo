@@ -1,0 +1,38 @@
+package main
+
+import "sgo"
+
+type logbook struct {
+	lines []string
+}
+
+// tx is a user resource (D152): Release(true) commits, Release(false) rolls back.
+type tx struct {
+	name string
+	log  *logbook
+}
+
+func (t *tx) Release(ok bool) error {
+	if ok {
+		t.log.lines = append(t.log.lines, t.name+" commit")
+	} else {
+		t.log.lines = append(t.log.lines, t.name+" rollback")
+	}
+	return nil
+}
+
+// A nursery that ends normally commits its transaction; a cancelled one rolls it back.
+func main(root *sgo.Context) error {
+	lb := &logbook{}
+	nursery (a) {
+		a.Own(&tx{name: "a", log: lb})
+	}
+	nursery (b) {
+		b.Own(&tx{name: "b", log: lb})
+		b.Cancel()
+	}
+	for _, l := range lb.lines {
+		check root.Stdout().WriteString(l + "\n")
+	}
+	return nil
+}
