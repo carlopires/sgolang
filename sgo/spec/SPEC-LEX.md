@@ -47,10 +47,10 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §1, decisions D14/D19, and resolut
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-LEX-003 — Reserved words
-- **version:** 1
-- **status:** frozen
-- **reference_closure:** SGO-LEX-002, SGO-SPAWN-005, SGO-ERR-001; D11, D14.
-- **grammar_and_types:** The reserved words are `break case chan const continue default defer else fallthrough for func go goto if import interface map package range return select struct switch type var nursery`. A reserved word is never an identifier, in any position. Of these, `chan`, `fallthrough`, `go`, `goto`, `interface`, `map`, `range`, `select`, `struct`, and `type` begin constructs denied in subset 0.
+- **version:** 2
+- **status:** draft
+- **reference_closure:** SGO-LEX-002, SGO-SPAWN-005, SGO-ERR-001, SGO-ERR-004; D11, D14, D147.
+- **grammar_and_types:** The reserved words are `break case chan const continue default defer else fallthrough for func go goto if import interface map package range return select struct switch type var nursery check`. A reserved word is never an identifier, in any position. Of these, `chan`, `fallthrough`, `go`, `goto`, `interface`, `map`, `range`, `select`, `struct`, and `type` begin constructs denied in subset 0.
 - **preconditions:** n/a — applies to every token.
 - **evaluation_and_value_semantics:** n/a — lexical rule.
 - **ownership_and_lifecycle:** n/a — no run-time objects.
@@ -63,7 +63,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §1, decisions D14/D19, and resolut
 - **runtime_guards:** n/a — no run-time behavior.
 - **tcb_assumptions:** n/a — compiler only.
 - **positive_tests:** X01, X02; fixture:lex-keywords.
-- **negative_tests:** S05, S19; fixture:lex-nursery-as-name, fixture:lex-bare-go.
+- **negative_tests:** S05, S19; fixture:lex-nursery-as-name, fixture:lex-bare-go, fixture:err-check-reserved-word.
 - **implementation_coverage:** partial — keyword table has room for `nursery` (fork commit 77100c67, TestKeywordHashRoom); the `nursery` token itself is W03.
 - **executed_evidence:** TestKeywordHashRoom and TestKeywordsStillScan passed on darwin/arm64 (host test lane) and on linux/amd64 and linux/arm64 (CI run 41085990334).
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

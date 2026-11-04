@@ -63,7 +63,7 @@
         "SGO-LEX-003",
         "SGO-LEX-004"
       ],
-      "normative_text_digest": "41816a89da1cf500146682910263cbd3c9bd261d9a317a804cc6eb11a915a150",
+      "normative_text_digest": "dd4671dce13b4b1a95794c47c09e9d079bd8306f02cd178a2e7dd07f4305a59e",
       "admitted_in": [
         "0.7.0"
       ],
@@ -84,19 +84,19 @@
       "clause_digests": {
         "SGO-LEX-001": "2235bd8f9312d1c7757421ad5275d263515361e10ce67d1e559891ae5088aa14",
         "SGO-LEX-002": "c3ef519a47f11778482f02765a96f83144bb575c08ac294f922446a8bf41d53c",
-        "SGO-LEX-003": "303c7bef90fe07f8265aa4556bc236e64376cfeb4dff119bbc88bac18ab5f5aa",
+        "SGO-LEX-003": "de0c10ea4eefa57fb11133c1967be5b7a029f845eede2f13e233495b9f582d81",
         "SGO-LEX-004": "f05b7b72c8de23c8fe2d1646fb294f36e643840ee5d312da9693e588ad7b7ed1"
       },
       "clause_status": {
         "SGO-LEX-001": "frozen",
         "SGO-LEX-002": "frozen",
-        "SGO-LEX-003": "frozen",
+        "SGO-LEX-003": "draft",
         "SGO-LEX-004": "frozen"
       },
       "clause_versions": {
         "SGO-LEX-001": 1,
         "SGO-LEX-002": 2,
-        "SGO-LEX-003": 1,
+        "SGO-LEX-003": 2,
         "SGO-LEX-004": 2
       }
     },
@@ -320,7 +320,7 @@
         "SGO-CTL-003",
         "SGO-CTL-004"
       ],
-      "normative_text_digest": "5ad00d5d2430dfafdb57631839007264e440aa3ae0e5b9cd34486e4180625605",
+      "normative_text_digest": "6e401853af6deef8ad5772478e119fadc3eb67d1526644f133e692c6f8d45257",
       "admitted_in": [
         "0.7.0"
       ],
@@ -337,19 +337,19 @@
       ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-CTL-001": "2c6b123d6fd956f40c05f762a97b151ecb85d565e3a17c9ec4f1b0bd98549730",
+        "SGO-CTL-001": "f75ac7e0d13014999e95d24b91488316b7a1b51d2c9ad778d4d509812939b951",
         "SGO-CTL-002": "3087cd21a820d14ed4f0e06471a6ad4337740c0c517db067c7baf24cc73e62e4",
         "SGO-CTL-003": "ca88b5232a175d679c9f77ed15214bf1a95f0f774346dd974e391ed29a3805d9",
         "SGO-CTL-004": "9e4a91bbd310b58c76f8d4529f545e0aa3a45a2b6f220bd87ae51d21d6c502b8"
       },
       "clause_status": {
-        "SGO-CTL-001": "frozen",
+        "SGO-CTL-001": "draft",
         "SGO-CTL-002": "frozen",
         "SGO-CTL-003": "frozen",
         "SGO-CTL-004": "frozen"
       },
       "clause_versions": {
-        "SGO-CTL-001": 2,
+        "SGO-CTL-001": 3,
         "SGO-CTL-002": 1,
         "SGO-CTL-003": 1,
         "SGO-CTL-004": 1
@@ -421,7 +421,7 @@
         "SGO-NUR-004",
         "SGO-NUR-005"
       ],
-      "normative_text_digest": "a871f6c9a093855d934c44aff321afea7df96f535cbe0de52e70fa4f1373c18a",
+      "normative_text_digest": "5f0d6fe9ef5bd2d65bcce49b894eb8378c589352b93a6661a5e2d17b612f292f",
       "admitted_in": [
         "0.7.0"
       ],
@@ -440,21 +440,21 @@
         "SGO-NUR-001": "12bf08589117df5d8470569f6ec0262361c5de6fbb03ae51ab3007ffa194c7c9",
         "SGO-NUR-002": "5fae5d6a50599224bbcd0f9c0e43266ce8c29e4cce4852f66aaddcc4348de630",
         "SGO-NUR-003": "6378dcbcd64989ca4fe22a6d9f72239ed43c5d767a54c024ec6aec1792688bb1",
-        "SGO-NUR-004": "680f8d9af19827d9800e718d87f1198ea71744aa7d3cf11ac0422ddccb632cfa",
+        "SGO-NUR-004": "24d5ff23ea06bcf4f9f7de9b32e393b62ee4c146b8e016ce177847f46ca7ff6c",
         "SGO-NUR-005": "68147c33764f0c3bd201527a65ca428e07e7230b50cda8eae196f28ea01216b0"
       },
       "clause_status": {
         "SGO-NUR-001": "frozen",
         "SGO-NUR-002": "frozen",
         "SGO-NUR-003": "frozen",
-        "SGO-NUR-004": "frozen",
+        "SGO-NUR-004": "draft",
         "SGO-NUR-005": "frozen"
       },
       "clause_versions": {
         "SGO-NUR-001": 1,
         "SGO-NUR-002": 1,
         "SGO-NUR-003": 1,
-        "SGO-NUR-004": 1,
+        "SGO-NUR-004": 2,
         "SGO-NUR-005": 1
       }
     },
@@ -471,7 +471,7 @@
         "SGO-SPAWN-004",
         "SGO-SPAWN-005"
       ],
-      "normative_text_digest": "beb516f9dce5cbf267e0d6caeaaf466ea317d851a87abd0e880a534ef0c93123",
+      "normative_text_digest": "e1e73775ab0cc41ced9adb309ef05bc0e7d8d845b15ccc9aa72c8fdd03fbc6a4",
       "admitted_in": [
         "0.7.0"
       ],
@@ -494,21 +494,21 @@
         "SGO-SPAWN-001": "2a90e2c678ca14b39c210763ba48ab5f22b2e9b0a9cb60f28c8cde5d8c83b0ba",
         "SGO-SPAWN-002": "3b5a4c8da056da54ae22e44fa1c8612b88e98169c774da18cdf83768f35c63aa",
         "SGO-SPAWN-003": "1cf041a1bfe0fe014a4443c46a42c6112e62d8fd4917b8cc0385a400289d0d23",
-        "SGO-SPAWN-004": "4d13f4daf63cba4af4836f2e9241599551e49943145bb8451f8a4abe2e038289",
+        "SGO-SPAWN-004": "736b4cf7037c199e2e51358913f3cbc649a0933b4ca1b1a7432149f27b23fd96",
         "SGO-SPAWN-005": "f26e200b1285c109101a9cc06bd3cccc5a6795936733142147f4948c17c2eeeb"
       },
       "clause_status": {
         "SGO-SPAWN-001": "frozen",
         "SGO-SPAWN-002": "frozen",
         "SGO-SPAWN-003": "frozen",
-        "SGO-SPAWN-004": "frozen",
+        "SGO-SPAWN-004": "draft",
         "SGO-SPAWN-005": "frozen"
       },
       "clause_versions": {
         "SGO-SPAWN-001": 1,
         "SGO-SPAWN-002": 1,
         "SGO-SPAWN-003": 1,
-        "SGO-SPAWN-004": 1,
+        "SGO-SPAWN-004": 2,
         "SGO-SPAWN-005": 1
       }
     },
@@ -1010,7 +1010,7 @@
         "SGO-FILE-002",
         "SGO-FILE-003"
       ],
-      "normative_text_digest": "4ed80d1de179b4db2fa44b05b0b990aef159b059dfa2f6d662f226d9c5f9665e",
+      "normative_text_digest": "10c83a8682a01dc1b00ffab9fb04b269c23d95a50043260bcd117570ded49bbf",
       "admitted_in": [
         "0.7.0"
       ],
@@ -1026,18 +1026,18 @@
       "subset0": "denied",
       "clause_digests": {
         "SGO-FILE-001": "4c63d65dec0bd4ad5b94562d4f439c038b9bfe7121376cde4f703d2254fe3b0b",
-        "SGO-FILE-002": "29ffc305ec2a26e210011610e7aec02058164b87de789d4324c41edef3581746",
-        "SGO-FILE-003": "4876fd6f7d4f685a7039857d09b768566d82abfea57076fa05f261c2d151d0ae"
+        "SGO-FILE-002": "4050e99841a8069ed202a43cc7c35ad9878018be1fa46cc5eead426e343c352b",
+        "SGO-FILE-003": "07654f4279e9da4f4664116c02a1ba4cf766458511f6ff7c8dc0312430c18fa2"
       },
       "clause_status": {
         "SGO-FILE-001": "superseded",
-        "SGO-FILE-002": "frozen",
-        "SGO-FILE-003": "frozen"
+        "SGO-FILE-002": "draft",
+        "SGO-FILE-003": "draft"
       },
       "clause_versions": {
         "SGO-FILE-001": 2,
-        "SGO-FILE-002": 3,
-        "SGO-FILE-003": 1
+        "SGO-FILE-002": 4,
+        "SGO-FILE-003": 2
       }
     },
     {
@@ -1052,7 +1052,7 @@
         "SGO-NET-003",
         "SGO-NET-004"
       ],
-      "normative_text_digest": "4c0b4966b93ec67fe63bf9f7130e4ff9b6edc0e315822bcd1c452660a508655a",
+      "normative_text_digest": "666f4d4cb8683bf1716f51e6798ab2b02f1b00b925965174453fb905fedbe1a7",
       "admitted_in": [
         "0.7.0"
       ],
@@ -1068,21 +1068,66 @@
       "subset0": "denied",
       "clause_digests": {
         "SGO-NET-001": "43ad25475ebf42449599a21e9cd2bba385bb89586308025767f8d96656483eea",
-        "SGO-NET-002": "96032bef2b7c45827922d5c7e142654e471ee7d6f2edd5fb1c907061b6d4a0f3",
-        "SGO-NET-003": "1d66eb1f44dfc09af79b0b7e41b742df35a8c11b4cb868f405070bada4cd80b7",
-        "SGO-NET-004": "4ea1019452a4fb66bbeede65bf020b9b524c4b800fb369b2646e65485d7d177d"
+        "SGO-NET-002": "09249ba92691939558f8216d51a093878645b2d2bf9c425469be69de590a9187",
+        "SGO-NET-003": "a2393c708b561cfd689cc4121820a0337f8982152562a3025d92f2aa9e3d96fa",
+        "SGO-NET-004": "80c00c6c650b7abcc8d4d59119c31d4aab2599073a3a57aeb8590e9ae70962ef"
       },
       "clause_status": {
         "SGO-NET-001": "superseded",
-        "SGO-NET-002": "frozen",
-        "SGO-NET-003": "frozen",
-        "SGO-NET-004": "frozen"
+        "SGO-NET-002": "draft",
+        "SGO-NET-003": "draft",
+        "SGO-NET-004": "superseded"
       },
       "clause_versions": {
         "SGO-NET-001": 2,
-        "SGO-NET-002": 2,
-        "SGO-NET-003": 2,
-        "SGO-NET-004": 1
+        "SGO-NET-002": 3,
+        "SGO-NET-003": 3,
+        "SGO-NET-004": 2
+      }
+    },
+    {
+      "id": "SPEC-RES",
+      "surface_family": "Structured resources: scopes own resources, release at scope end, sharing within a scope, no escape, user resources, hand-off within a scope",
+      "specification_work_package": "W21",
+      "implementation_owner_work_package": "W21",
+      "status": "admitted",
+      "clause_ids": [
+        "SGO-RES-001",
+        "SGO-RES-002",
+        "SGO-RES-003",
+        "SGO-RES-004",
+        "SGO-RES-005"
+      ],
+      "normative_text_digest": "715989e3637cd16d829576c47e1655efcca18e865653d1d5b40d2e28090aab6b",
+      "admitted_in": [
+        "0.16.0"
+      ],
+      "acceptance_case_ids": [],
+      "evidence": [
+        "sgo/evidence/w21/README.md"
+      ],
+      "decision_refs": "D147,D148,D149,D150,D151,D152,D153,D154,D155,D156,D158",
+      "subset0": "denied",
+      "clause_digests": {
+        "SGO-RES-001": "b7fb94226d6dd0b33c691f68ffaa41565b2c5b38faf7a4bd78b1ccfee64de6da",
+        "SGO-RES-002": "507c79ab1d239c0e533b0a953ec7fe440188bdeac9f90c880b61455179c9b3e9",
+        "SGO-RES-003": "037fa1dea4a5e7513d4e5ae222a03653cccd70c9bb3575897211d2d4243bf2a1",
+        "SGO-RES-004": "7b95de59f8e5bad076195f20665f0e3210954330ca0b1c16cc56034704a6bc87",
+        "SGO-RES-005": "cfee81d4f351ae84987d25c09433c6d0d7958a1e18abc350faef0009f71164d8"
+      },
+      "clause_status": {
+        "SGO-RES-001": "draft",
+        "SGO-RES-002": "draft",
+        "SGO-RES-003": "draft",
+        "SGO-RES-004": "draft",
+        "SGO-RES-005": "draft"
+      },
+      "clause_versions": {
+        "SGO-RES-001": 1,
+        "SGO-RES-002": 1,
+        "SGO-RES-003": 1,
+        "SGO-RES-004": 1,
+        "SGO-RES-005": 1
       }
     },
     {
@@ -1263,7 +1308,7 @@
         "SGO-ERR-003",
         "SGO-ERR-004"
       ],
-      "normative_text_digest": "d5407236a54c656285c78290662488c8bad75b72adafe6e53deb8c7fdef9f9ae",
+      "normative_text_digest": "99687f99b5acaed817d4413f41ab240ee5d47fb65b6ca03b867c9fd5f1c7382c",
       "admitted_in": [
         "0.7.0"
       ],
@@ -1284,7 +1329,7 @@
         "SGO-ERR-001": "17f732afab5e5edbe6fe8bdc2e22437be0d74923cfae45fb5b0b0363d4860a13",
         "SGO-ERR-002": "1f08a076f513576cf74f492c7eacecf5e7780e390ebbdff4ed2fb7b3d5971eaf",
         "SGO-ERR-003": "42a0da03bae9a0da8e186438fa26df95fe89442cddffa4df0ac5431f261b95a5",
-        "SGO-ERR-004": "a0c8076d6882ffbd6203fdc4cd548ee9b1cfc3a46104bc395a2c21490ea4ee29"
+        "SGO-ERR-004": "ea474fbbc387dc8a76634a57d79dc67e1dbb13a973f59805bcb7aeb0cd75910e"
       },
       "clause_status": {
         "SGO-ERR-001": "frozen",
@@ -1742,5 +1787,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "56726d0ec75584d27caeed3dd18500437ffcd593560226b74516410de5bde690"
+  "rows_digest": "e680c6f2d3e4e62658c476bfc10a982972c9ed3f09a135bf2b3604213920c959"
 }

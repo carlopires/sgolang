@@ -69,12 +69,12 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §8, decision D11, plan §4.3–§4
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-NUR-004 — Outcome
-- **version:** 1
-- **status:** frozen
-- **reference_closure:** SGO-SPAWN-004, SGO-DEF-003, SGO-DEF-005, SGO-PROC-002; R6; plan §4.5.
+- **version:** 2
+- **status:** draft
+- **reference_closure:** SGO-SPAWN-004, SGO-DEF-003, SGO-DEF-005, SGO-PROC-002, SGO-RES-001; R6, D149; plan §4.5.
 - **grammar_and_types:** n/a — dynamic rule.
 - **preconditions:** The scope is CLOSED.
-- **evaluation_and_value_semantics:** The nursery statement completes with exactly one outcome, chosen in this order: (1) if the owner's body was unwinding, that failure stays primary and continues unwinding (child failures are appended to its chain); (2) else if any child ended `Failed`, unwind with the failure of the failed child with the smallest creation ID; (3) else if any child ended `Errored`, unwind with kind `ChildError`, whose message is that of the error returned by the errored child with the smallest creation ID; (4) else complete normally and continue after the statement. Children that ended `Cancelled` or `Succeeded` never cause a failure. All child failures and errors other than the primary are recorded in the chain (SGO-ERR-002).
+- **evaluation_and_value_semantics:** The nursery statement completes with exactly one outcome, chosen in this order: (1) if the owner's body was unwinding, that failure stays primary and continues unwinding (child failures are appended to its chain); (2) else if any child ended `Failed`, unwind with the failure of the failed child with the smallest creation ID; (3) else if any child ended `Errored`, unwind with kind `ChildError`, whose message is that of the error returned by the errored child with the smallest creation ID; (4) else if a release of the nursery's resources failed (SGO-RES-001), unwind with kind `ReleaseError`, whose message is that of the first failed release in release order; (5) else complete normally and continue after the statement. The release step runs after the join and before this choice; failed releases other than the primary are recorded in the chain. Children that ended `Cancelled` or `Succeeded` never cause a failure. All child failures and errors other than the primary are recorded in the chain (SGO-ERR-002).
 - **ownership_and_lifecycle:** n/a — outcome rule.
 - **effect_and_capability_requirements:** n/a — outcome rule.
 - **concurrency_and_memory_order:** The outcome is computed after all children completed (OWN-4).
@@ -84,7 +84,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §8, decision D11, plan §4.3–§4
 - **compile_link_checks:** n/a — dynamic rule.
 - **runtime_guards:** Outcome computation in the runtime.
 - **tcb_assumptions:** Stable creation IDs assigned at registration (SGO-SPAWN-003).
-- **positive_tests:** O05, S08; fixture:nur-child-error-exit-1, fixture:def-child-panic-cancels-siblings, fixture:nur-two-failures-lowest-id.
+- **positive_tests:** O05, S08; fixture:nur-child-error-exit-1, fixture:def-child-panic-cancels-siblings, fixture:nur-two-failures-lowest-id, fixture:res-release-error-nursery, fixture:res-release-on-unwind.
 - **negative_tests:** n/a — behavioral; checked by positive fixtures of exact outcomes.
 - **implementation_coverage:** W02, W03: `src/cmd/compile/internal/syntax/parser.go`, `src/cmd/compile/internal/types2/sgo.go`, `src/runtime/sgo_scope.go`, `src/runtime/sgo_nursery.go`.
 - **executed_evidence:** conformance fixtures def-child-panic-cancels-siblings, nur-child-error-exit-1, nur-two-failures-lowest-id (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w02/README.md`; `sgo/evidence/w03/README.md`.

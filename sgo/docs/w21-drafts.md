@@ -6,6 +6,14 @@ SGO-RES-001..004 rely on; 9 seeded protocol bugs are each caught with a schedule
 
 These drafts are for approval. On approval they move into `sgo/spec/` and freeze at 0.16.0.
 
+**Status (2026-11-05):** approved and moved into `sgo/spec/` as drafts: `SPEC-RES.md`
+(SGO-RES-001..004, and SGO-RES-005 for D158), SGO-ERR-004 in `SPEC-ERRORS.md`, and the amendments
+below (SGO-LEX-003 v2, SGO-CTL-001 v3, SGO-NUR-004, SGO-SPAWN-004 v2, SGO-FILE-002 v4, SGO-FILE-003
+v2, SGO-NET-002 v3, SGO-NET-003 v3, SGO-NET-004 superseded). The spec files are authoritative from
+here on; this file keeps the approval record. D158 replaced the API table's `MoveTo`-only answer to
+the slot: hand-off uses scopes, channels within a scope, and `MoveTo` (`sgo.MoveTo` for user
+resources). Fixture names in the drafts were reconciled with the fixtures that exist.
+
 ## API at 0.16.0 (acquiring calls name their scope)
 
 A method on a scope acquires into that scope. Every other acquiring call takes the scope first.

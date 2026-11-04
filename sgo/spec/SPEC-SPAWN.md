@@ -69,12 +69,12 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-SPAWN-004 — Child outcomes
-- **version:** 1
-- **status:** frozen
-- **reference_closure:** SGO-CANCEL-001, SGO-CANCEL-003, SGO-DEF-005, SGO-NUR-004.
+- **version:** 2
+- **status:** draft
+- **reference_closure:** SGO-CANCEL-001, SGO-CANCEL-003, SGO-DEF-005, SGO-NUR-004, SGO-RES-001; D149.
 - **grammar_and_types:** n/a — dynamic rule.
 - **preconditions:** n/a — dynamic rule.
-- **evaluation_and_value_semantics:** A child ends with exactly one outcome: callback returns `nil` → `Succeeded`; returns an error `e` with `sgo.IsCancelled(e)` → `Cancelled`; returns any other non-nil error → `Errored`; unwinds with a failure → `Failed`. On `Errored` or `Failed`, the child's scope is cancelled (SGO-CANCEL-001) when the outcome is published, before the scope's join can complete. The outcome and its error or failure are retained for SGO-NUR-004. No outcome is discarded.
+- **evaluation_and_value_semantics:** A child ends with exactly one outcome: callback returns `nil` → `Succeeded`; returns an error `e` with `sgo.IsCancelled(e)` → `Cancelled`; returns any other non-nil error → `Errored`; unwinds with a failure → `Failed`. The outcome includes the release of the task body's resources (SGO-RES-001), which runs after the callback returns or unwinds and before the outcome exists: a callback that returned `nil` with a failed release ends `Errored`, with kind `ReleaseError` and the first failed release's message; any other failed release joins the chain of the outcome. On `Errored` or `Failed`, the child's scope is cancelled (SGO-CANCEL-001) when the outcome is published, before the scope's join can complete. The outcome and its error or failure are retained for SGO-NUR-004. No outcome is discarded.
 - **ownership_and_lifecycle:** The child stops being live when its outcome is published, after its deferred calls ran.
 - **effect_and_capability_requirements:** n/a — outcome rule.
 - **concurrency_and_memory_order:** Publication of the outcome happens-before the nursery completes (OWN-4).
@@ -84,7 +84,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 - **compile_link_checks:** n/a — dynamic rule.
 - **runtime_guards:** Outcome classification in the runtime.
 - **tcb_assumptions:** Outcome publication is atomic with live-count decrement (SGO-TCB-001).
-- **positive_tests:** S08, O05; fixture:nur-child-error-exit-1, fixture:spawn-cancelled-outcome, fixture:def-child-panic-cancels-siblings.
+- **positive_tests:** S08, O05; fixture:nur-child-error-exit-1, fixture:spawn-cancelled-outcome, fixture:def-child-panic-cancels-siblings, fixture:res-release-at-task-end, fixture:res-release-error-task.
 - **negative_tests:** n/a — behavioral; checked by exact-outcome fixtures and model histories.
 - **implementation_coverage:** W02: `src/cmd/compile/internal/types2/sgo.go`, `src/runtime/sgo_api.go`, `src/runtime/sgo_nursery.go`.
 - **executed_evidence:** conformance fixtures def-child-panic-cancels-siblings, nur-child-error-exit-1, spawn-cancelled-outcome (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w02/README.md`.
