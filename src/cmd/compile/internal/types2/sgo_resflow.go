@@ -796,6 +796,13 @@ func (f *sgoResFlow) assign(a *syntax.AssignStmt) {
 		}
 		obj := f.rootVar(l)
 		if obj == nil {
+			// A store through a call result (get(p).f, p.self().f, mk()[0].f): the memory may be
+			// reached from anywhere, so only a value tied to no scope may go there (W21 review Z1).
+			if f.indirect(l) {
+				if target := f.storeTarget(l); target != nil && !f.within(target, f.tie(r)) {
+					f.errorf(r, "%s is tied to a scope, and %s is memory reached through a call result, which may outlive it; store through a variable whose memory is made inside the scope", syntax.String(r), syntax.String(l))
+				}
+			}
 			continue
 		}
 		home := f.home[obj]
