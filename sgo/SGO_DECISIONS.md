@@ -910,6 +910,44 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race is an ordinary nursery.
 
+## D159 — Error exits cancel the nurseries they cross · APPROVED 2026-11-05
+
+**Decision.** A `check` that fails, or a `return` whose error result is not nil, cancels every nursery it crosses before joining it; the cancellation is consumed at each crossed nursery's boundary (SGO-CANCEL-004), and the error propagates unchanged. A normal exit (end of body, `return` with a nil error, `break`, `continue`) still joins without cancelling. Motivation: the Happy Eyeballs review (HE-02) showed that the natural error path, `check` inside a nursery, turned "give up" into "wait for everything". Amends SGO-CTL-004 and SGO-ERR-004.
+
+## D160 — Timers as `select` arms · APPROVED 2026-11-05
+
+**Decision.** `t.After(ms)` is a receive-only timer usable as a `select` arm (`case <-t.After(ms):`), on virtual time in the lab and a scheduling point with the arm tie-break rules of SPEC-CHAN/SPEC-LAB. It needs no clock grant: it reveals elapsed time only by ordering (D30's clock grant still guards reading the time). A timer belongs to the task that made it and costs nothing after its `select` ends. Removes timer tasks, tick events, and their sequence numbers (HE-01, HE-03).
+
+## D161 — Tasks that return values · APPROVED 2026-11-05
+
+**Decision.** `n.Go(func(t *sgo.Context) (T, error)) *sgo.Task[T]` spawns a child whose result is read by the nursery's tasks, also as a `select` arm (`case v, err := <-h:`). A child's error delivered this way is data: it does not fail the nursery (unlike `Spawn`). A `Task[T]` is tied to its nursery (SGO-RES-003); a resource result is acquired into the nursery (D158). `sgo.NewGroup[T](n)` collects the results of many such children in completion order.
+
+## D162 — Scope deadlines · APPROVED 2026-11-05
+
+**Decision.** `n.CancelAfter(ms)` and `t.CancelAfter(ms)` cancel the scope after `ms`, with a cancellation that `sgo.IsDeadline` recognizes (kind `DeadlineExceeded`, still `IsCancelled`). Virtual time in the lab.
+
+## D163 — Tagged unions with exhaustive switch · APPROVED 2026-11-05 (later work package)
+
+**Decision.** A union type lists named cases, each with its own fields; a `switch` over a union must cover every case or have `default`, and each case binds only its fields. Designed after W22 shows how much of the event-loop pattern remains.
+
+## D164 — Whole-message reads · APPROVED 2026-11-05
+
+**Decision.** `ReadAll(max int) (string, error)` (until end of stream, bounded) and `ReadLine(max int) (string, error)` on `*sgo.Conn` and `*sgo.File`. Removes the short-read bug class (HE-04).
+
+## D165 — Inherited deadlines · APPROVED 2026-11-05
+
+**Decision.** A deadline set with `CancelAfter` applies to every nested scope and I/O wait under it; an inner scope may only shorten it. `t.Deadline() (int, bool)` reports the remaining milliseconds, so code can pass it on (an outgoing request, a driver). Like `context.WithTimeout`, but attached to scopes, so it cannot be forgotten.
+
+## D166 — Bounded groups · APPROVED 2026-11-05
+
+**Decision.** `sgo.NewGroup[T](n, limit)`: `g.Go(...)` waits while `limit` children are running. Built on the capacity limiter (SPEC-SYNC) and D161, as one construct, so no program hand-writes the acquire/release pair.
+
+## D167 — Request/reply calls · APPROVED 2026-11-05
+
+**Decision.** `sgo.Call[Req, Resp]`: `c.Call(t, req) (Resp, error)` sends a request and waits for its own reply; the serving side receives `req, reply := c.Accept(t)` and answers with `reply.Send(resp)`. Cancelling the caller withdraws its request; a reply to a withdrawn request is dropped. The server's scope must enclose the caller's (SGO-RES-003). For multiplexers, pool front ends, and services.
+
+**Plan.** W22 (language core): D159, D160, D161, D162, D165, with a model of timers, task handles, and deadline inheritance first; acceptance is Happy Eyeballs rewritten on them. W23 (concurrency library): D164, D166, D167, `Reader`/`Writer` interfaces, a `Pool[T]` helper; acceptance is an HTTP/1.1 server example. Later: D163, TLS, JSON, HTTP/2. Plan: `sgo/docs/w22-w23-plan.md`.
+
 ---
 
 ## Approval record
@@ -944,3 +982,4 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 - 2026-11-04: user approved structured resources and `check` (D147–D156) after a design discussion ("this looks great! approved!"): resources are owned by scopes (nurseries and task bodies) and released when the scope ends; the earlier `defer check` draft (kept in a scratch file, not in the repo) was dropped. W21 starts with the scope–resource model.
 - 2026-11-04: user approved the W21 clause drafts (sgo/docs/w21-drafts.md: SGO-ERR-004, SGO-RES-001..004, amendments) as written ("approved!"). W21 implementation starts with `check`; the drafts freeze at spec 0.16.0.
 - 2026-11-05: user approved D158 after a design discussion ("approved; go ahead"): no slot construct; the deciding scope owns candidates, channels carry resources within their scope, `MoveTo` works for user resources, user resources serialize themselves. D157 (connection slot in scope terms) is withdrawn.
+- 2026-11-05: user approved D159–D167 ("approved, do it") after a design discussion derived from the Happy Eyeballs review: error exits cancel crossed nurseries, timers as select arms, value-returning tasks and groups, scope and inherited deadlines, whole-message reads, bounded groups, request/reply calls; tagged unions later. Work packages W22 (language core) and W23 (concurrency library).

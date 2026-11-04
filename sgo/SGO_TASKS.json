@@ -931,7 +931,55 @@
         "sharing within a scope; LendTo removed (D150)",
         "escape rule and MoveTo (D151)",
         "Own/Release user resources (D152)",
-        "examples rewritten; spec 0.16.0"
+        "examples rewritten; spec 0.16.0",
+        "hand-off within a scope: channels carry resources in their scope, sgo.MoveTo for user resources; ConnSlot removed (D158)"
+      ],
+      "acceptance_case_ids": [],
+      "evidence": [
+        "sgo/evidence/w21/README.md"
+      ],
+      "blockers": [],
+      "commit": null,
+      "completion_note": null
+    },
+    {
+      "id": "W22",
+      "title": "Language core from Happy Eyeballs: error exits cancel, timers as select arms, value tasks, deadlines",
+      "depends_on": [
+        "W21"
+      ],
+      "risk": "high",
+      "status": "planned",
+      "plan_section": "sgo/docs/w22-w23-plan.md",
+      "deliverables": [
+        "model of timers, task handles, deadline inheritance, cancelling error exits",
+        "error exits cancel crossed nurseries (D159)",
+        "t.After timers as select arms (D160)",
+        "n.Go, sgo.Task[T], groups (D161)",
+        "CancelAfter, IsDeadline, Deadline(), inheritance (D162, D165)",
+        "happyeyeballs rewritten; spec 0.17.0"
+      ],
+      "acceptance_case_ids": [],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": null
+    },
+    {
+      "id": "W23",
+      "title": "Concurrency library: whole-message reads, bounded groups, request/reply, HTTP/1.1 server example",
+      "depends_on": [
+        "W22"
+      ],
+      "risk": "medium",
+      "status": "planned",
+      "plan_section": "sgo/docs/w22-w23-plan.md",
+      "deliverables": [
+        "ReadAll, ReadLine (D164)",
+        "bounded groups (D166)",
+        "sgo.Call request/reply (D167)",
+        "Reader/Writer, Pool[T]",
+        "HTTP/1.1 server example; spec 0.18.0"
       ],
       "acceptance_case_ids": [],
       "evidence": [],
