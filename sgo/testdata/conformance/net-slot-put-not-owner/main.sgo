@@ -2,26 +2,14 @@ package main
 
 import "sgo"
 
-// Only a connection's owner hands it over, even when the connection is lent to the putter.
+// A slot takes only a connection whose scope it encloses (D157): a slot of a nursery cannot take a
+// connection of the root's body, which outlives the nursery.
 func main(root *sgo.Context) error {
-	l, err := root.Listen("127.0.0.1:47958")
-	if err != nil {
-		return err
-	}
-	c, derr := root.Dial("127.0.0.1:47958")
-	if derr != nil {
-		return derr
-	}
-	slot := root.NewConnSlot()
+	_ = check root.Listen("127.0.0.1:47958")
+	c := check root.Dial("127.0.0.1:47958")
 	nursery (n) {
-		c.LendTo(n)
-		slot.LendTo(n)
-		n.Spawn(func(t *sgo.Context) error { return slot.Put(c) })
-	}
-	for _, e := range []error{c.Close(), slot.Close(), l.Close()} {
-		if e != nil {
-			return e
-		}
+		slot := n.NewConnSlot()
+		check slot.Put(c)
 	}
 	return nil
 }

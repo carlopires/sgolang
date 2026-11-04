@@ -28,6 +28,7 @@ const (
 	sgoHConn
 	sgoHListener
 	sgoHDialer // a delegated dialer (sgo_netdial.go, D143)
+	sgoHSlot   // a connection slot (sgo_netdial.go, D144, D157)
 
 	sgoIOChunk = 1 << 20
 )
@@ -39,6 +40,7 @@ type sgoHandle struct {
 	fake     *sgoFakeFile // lab: a fake file (sgo_iofake.go)
 	conn     *sgoFakeConn // lab: a fake connection or listener (sgo_netfake.go)
 	dial     *sgoDialer   // a dialer: its endpoints (sgo_netdial.go)
+	slot     *sgoSlot     // a connection slot (sgo_netdial.go)
 	unix     bool         // a Unix domain socket (D60)
 	sockPath *byte        // a Unix listener: its socket file, removed at close (sgo_net.go)
 	sockID   sgoFileID

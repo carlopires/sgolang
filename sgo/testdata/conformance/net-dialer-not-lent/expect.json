@@ -1,9 +1,0 @@
-{
- "kind": "run",
- "clauses": [
-  "SGO-NET-003"
- ],
- "exit": 2,
- "stdout": "",
- "stderr_kind": "MissingCapability"
-}

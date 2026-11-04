@@ -2,54 +2,35 @@ package main
 
 import "sgo"
 
-func attempt(d *sgo.Dialer, slot *sgo.ConnSlot, addr string) error {
-	c, err := d.Dial(root, addr)
+// Two attempts race through a dialer; the first connection put into the slot wins and moves into
+// the root's body (D157). A losing connection stays a resource of its attempt's task and is
+// released when that task ends: nothing is closed by hand (SGO-RES-001).
+func attempt(t *sgo.Context, d *sgo.Dialer, slot *sgo.ConnSlot, addr string) error {
+	c, err := d.Dial(t, addr)
 	if err != nil {
 		return nil // a failed attempt is not an error of the race
 	}
-	if slot.Put(c) != nil {
-		return c.Close() // lost the race
-	}
+	_ = slot.Put(c) // AlreadySet for the loser
 	return nil
 }
 
 func main(root *sgo.Context) error {
-	l, err := root.Listen("127.0.0.1:47950")
-	if err != nil {
-		return err
-	}
+	l := check root.Listen("127.0.0.1:47950")
 	d := root.Dialer([]string{"[::1]:47950", "127.0.0.1:47950"})
 	slot := root.NewConnSlot()
 	nursery (n) {
-		d
-		slot
 		for _, addr := range []string{"[::1]:47950", "127.0.0.1:47950"} {
 			a := addr
-			n.Spawn(func(t *sgo.Context) error { return attempt(d, slot, a) })
+			n.Spawn(func(t *sgo.Context) error { return attempt(t, d, slot, a) })
 		}
 	}
 	c, ok := slot.Take()
 	if !ok {
 		return sgo.NewError("no connection")
 	}
-	s, aerr := l.Accept(root)
-	if aerr != nil {
-		return aerr
-	}
-	if _, werr := c.Write("ping"); werr != nil {
-		return werr
-	}
-	msg, rerr := s.Read(16)
-	if rerr != nil {
-		return rerr
-	}
-	if e := root.Stdout().WriteString("server got " + msg + "\n"); e != nil {
-		return e
-	}
-	for _, e := range []error{c.Close(), s.Close(), slot.Close(), d.Close(), l.Close()} {
-		if e != nil {
-			return e
-		}
-	}
+	s := check l.Accept(root)
+	check c.Write("ping")
+	msg := check s.Read(16)
+	check root.Stdout().WriteString("server got " + msg + "\n")
 	return nil
 }
