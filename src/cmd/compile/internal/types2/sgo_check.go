@@ -115,3 +115,56 @@ func (check *Checker) sgoCheckPlacement(fd *syntax.FuncDecl) {
 		return true
 	})
 }
+
+// sgoAfterPlacement reports every call of (*sgo.Context).After in fd that is not the operand of a
+// select receive arm, case <-t.After(ms): or case v := <-t.After(ms): (D160, SGO-WAIT-003).
+func (check *Checker) sgoAfterPlacement(fd *syntax.FuncDecl) {
+	ok := make(map[*syntax.CallExpr]bool)
+	syntax.Inspect(fd, func(n syntax.Node) bool {
+		cc, _ := n.(*syntax.CommClause)
+		if cc == nil || cc.Comm == nil {
+			return true
+		}
+		var x syntax.Expr
+		switch s := cc.Comm.(type) {
+		case *syntax.ExprStmt:
+			x = s.X
+		case *syntax.AssignStmt:
+			x = s.Rhs
+		}
+		if op, _ := syntax.Unparen(x).(*syntax.Operation); op != nil && op.Op == syntax.Recv && op.Y == nil {
+			if c, _ := syntax.Unparen(op.X).(*syntax.CallExpr); c != nil {
+				ok[c] = true
+			}
+		}
+		return true
+	})
+	syntax.Inspect(fd, func(n syntax.Node) bool {
+		c, _ := n.(*syntax.CallExpr)
+		if c == nil || ok[c] || !check.sgoIsAfter(c) {
+			return true
+		}
+		check.errorf(c, UnsupportedFeature, "SGO_E_UNADMITTED: t.After is admitted only as the operand of a select receive arm, case <-t.After(ms): (SGO-WAIT-003)")
+		return true
+	})
+}
+
+// sgoIsAfter reports whether c calls the method After of sgo.Context.
+func (check *Checker) sgoIsAfter(c *syntax.CallExpr) bool {
+	sel, _ := syntax.Unparen(c.Fun).(*syntax.SelectorExpr)
+	if sel == nil || sel.Sel.Value != "After" {
+		return false
+	}
+	var obj Object
+	if s := check.Selections[sel]; s != nil {
+		obj = s.obj
+	} else if check.Uses != nil {
+		obj = check.Uses[sel.Sel]
+	}
+	f, _ := obj.(*Func)
+	if f == nil || f.pkg == nil || f.pkg.path != "sgo" {
+		return false
+	}
+	sig, _ := f.typ.(*Signature)
+	return sig != nil && sig.recv != nil
+}

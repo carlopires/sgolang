@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+// A select with a timer arm and a channel that never becomes ready proceeds by the timer, which
+// delivers its duration (SGO-WAIT-003).
+func main(root *sgo.Context) error {
+	never := make(chan int)
+	select {
+	case <-never:
+		return sgo.NewError("never")
+	case ms := <-root.After(20):
+		if ms != 20 {
+			return sgo.NewError("wrong duration")
+		}
+	}
+	return root.Stdout().WriteString("timer fired\n")
+}

@@ -1,0 +1,20 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-WAIT-003",
+  "SGO-LAB-004"
+ ],
+ "lab_args": [
+  "-sched",
+  "fifo"
+ ],
+ "exit": 0,
+ "stdout": "done\n",
+ "timeout_ms": 60000,
+ "note": "D160: the first select drops its timer; the second advances virtual time to 250 ms and fires timer 1.",
+ "trace_events": [
+  "{\"e\":\"advance\",\"to\":250}",
+  "{\"e\":\"fire\",\"task\":0,\"timer\":1}",
+  "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+ ]
+}

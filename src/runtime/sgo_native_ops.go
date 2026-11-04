@@ -39,6 +39,13 @@ func sgoNativeTrySend(c *sgoChan, box unsafe.Pointer) (*sgoChanWait, int) {
 // sgoNativeTryRecv receives without waiting, under c.lock: the oldest queued value (refilling the
 // buffer from a waiting sender), a waiting sender's value, or closed (ok == false).
 func sgoNativeTryRecv(c *sgoChan) (box unsafe.Pointer, ok bool, wake *sgoChanWait, ready bool) {
+	if a := c.tmr; a != nil { // a timer (D160): its value once the deadline has passed
+		if sgoAfterDue(a) {
+			a.fired = true
+			return a.box, true, nil, true
+		}
+		return nil, false, nil, false
+	}
 	if c.count > 0 {
 		box = c.qpop()
 		for s := c.senders.first; s != nil; s = s.next {
@@ -120,6 +127,9 @@ func sgochansend1(c *sgoChan, elem unsafe.Pointer) {
 
 // sgochanrecv2 is v, ok := <-ch (and each step of range).
 func sgochanrecv2(c *sgoChan, dst unsafe.Pointer) bool {
+	if c.tmr != nil { // a one-arm select on a timer, lowered to a receive (D160)
+		defer sgoAfterStop(c)
+	}
 	sgoLabPoint()
 	t := sgoCurrent()
 	sgoRaceRendezvousStart(c)
@@ -239,6 +249,9 @@ func sgoSelUnlock(cs []*sgoChan) {
 
 // sgoSelCanProceed reports, under the arm's channel lock, whether the arm can proceed now.
 func sgoSelCanProceed(c *sgoChan, send bool) bool {
+	if c.tmr != nil {
+		return !send && sgoAfterDue(c.tmr)
+	}
 	if c.closed {
 		return true
 	}
@@ -279,6 +292,18 @@ func sgoSelParkUnlock(gp *g, p unsafe.Pointer) bool {
 // sgoselectgo is a select: the first nsends arms are sends, then nrecvs receives. It returns the
 // chosen arm and, for a receive, ok; -1 if block is false and no arm can proceed (default).
 func sgoselectgo(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs int, block bool) (int, bool) {
+	if sgoSelHasTimer(cas0, nsends, nrecvs) { // timer arms are dropped when select ends (D160)
+		return sgoselectgoTimers(cas0, order0, pc0, nsends, nrecvs, block)
+	}
+	return sgoselectgo1(cas0, order0, pc0, nsends, nrecvs, block)
+}
+
+func sgoselectgoTimers(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs int, block bool) (int, bool) {
+	defer sgoSelStopTimers(cas0, nsends, nrecvs)
+	return sgoselectgo1(cas0, order0, pc0, nsends, nrecvs, block)
+}
+
+func sgoselectgo1(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs int, block bool) (int, bool) {
 	sgoLabPoint()
 	t := sgoCurrent()
 	n := nsends + nrecvs

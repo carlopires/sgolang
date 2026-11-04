@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-WAIT-003"
+ ],
+ "exit": 0,
+ "stdout": "timer fired\n"
+}

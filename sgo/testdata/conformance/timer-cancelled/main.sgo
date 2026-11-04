@@ -1,0 +1,21 @@
+package main
+
+import "sgo"
+
+// A child parked in a select with a long timer arm ends by cancellation as soon as its nursery is
+// cancelled, not when the timer expires (SGO-WAIT-003, SGO-CANCEL-002).
+func main(root *sgo.Context) error {
+	never := make(chan int)
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			select {
+			case <-never:
+			case <-t.After(3600000):
+			}
+			return nil
+		})
+		check root.Sleep(10)
+		n.Cancel()
+	}
+	return root.Stdout().WriteString("cancelled\n")
+}

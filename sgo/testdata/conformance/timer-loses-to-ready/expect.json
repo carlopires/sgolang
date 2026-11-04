@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-WAIT-003"
+ ],
+ "exit": 0,
+ "stdout": "channel first\n",
+ "timeout_ms": 20000
+}

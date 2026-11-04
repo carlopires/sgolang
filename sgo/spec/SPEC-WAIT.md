@@ -45,3 +45,25 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §12, resolution R8, plan §6.2, in
 - **implementation_coverage:** W02: `src/runtime/sgo_api.go`, `src/runtime/sgo_nursery.go`.
 - **executed_evidence:** conformance fixtures nur-join-all (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w02/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
+
+### SGO-WAIT-003 — Timers as select arms
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-WAIT-001, SGO-CHAN-002, SGO-CANCEL-002, SGO-LAB-004, SGO-DEF-003; D160.
+- **grammar_and_types:** `task.After(ms int) <-chan int` where `task` has type `*sgo.Context`, admitted only as the operand of a select receive arm: `case <-task.After(ms):` or `case v := <-task.After(ms):`. A single-arm select is admitted.
+- **preconditions:** `task` is the calling task's own context (as SGO-CANCEL-002); `ms ≥ 0`.
+- **evaluation_and_value_semantics:** The arm operand is evaluated with the other arm operands (SGO-CHAN-002), which makes the timer. The arm can proceed once at least `ms` milliseconds of monotonic time have elapsed since then, and receives `ms`. An arm that can proceed when the select starts competes with the other ready arms by the select's choice rule; `After(0)` is ready at once. A select parked on a timer arm is woken when the deadline passes, exactly as by a sender.
+- **ownership_and_lifecycle:** The timer belongs to the task that made it and serves one select. When the select ends, by any arm or by cancellation, the timer is dropped: it is never delivered later and holds no runtime resource.
+- **effect_and_capability_requirements:** n/a — no external effect. No clock grant is needed: a timer reveals elapsed time only by the order in which arms proceed (D30 guards reading the time).
+- **concurrency_and_memory_order:** The timer's value is delivered at most once; exactly one arm of the select proceeds.
+- **allowed_nondeterminism:** In production, when the deadline and another arm become ready together, either may proceed. In the lab the order is decided by virtual time and the select rules (SGO-LAB-004): timers fire at an advance in creation order.
+- **failure_and_partial_progress:** `ms < 0` fails with `InvalidArgument` before the timer is made. Context misuse fails with `SpawnContractViolation`.
+- **cancellation_and_cleanup:** A select with a timer arm is a cancellation point like any select; cancellation wakes it promptly (bounded by scheduling, not by `ms`) and drops the timer.
+- **compile_link_checks:** `SGO_E_UNADMITTED` for `After` anywhere except as the operand of a select receive arm.
+- **runtime_guards:** Argument and context-ownership checks; one-winner delivery under the channel's wait protocol.
+- **tcb_assumptions:** Runtime timers and park/unpark (as SGO-WAIT-001); in the lab, virtual timers (SPEC-LAB).
+- **positive_tests:** fixture:timer-arm-fires, fixture:timer-loses-to-ready, fixture:timer-zero, fixture:timer-in-loop, fixture:timer-cancelled, fixture:lab-timer-arm.
+- **negative_tests:** fixture:timer-placement-denied, fixture:timer-negative.
+- **implementation_coverage:** W22: `src/runtime/sgo_after.go`, `src/runtime/sgo_native_ops.go`, `src/sgo/sgo.go`, `src/cmd/compile/internal/types2/sgo_check.go`.
+- **executed_evidence:** conformance fixtures (darwin/arm64); Linux pending.
+- **supported_execution_configurations:** production and lab.

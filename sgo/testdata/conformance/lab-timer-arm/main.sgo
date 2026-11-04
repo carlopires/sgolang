@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+// On virtual time a timer arm fires at an advance to its deadline; the dropped one-hour timer of
+// the first select never causes an advance (SGO-WAIT-003, SGO-LAB-004).
+func main(root *sgo.Context) error {
+	ready := make(chan int, 1)
+	ready <- 1
+	select {
+	case <-ready:
+	case <-root.After(3600000):
+	}
+	never := make(chan int)
+	select {
+	case <-never:
+	case <-root.After(250):
+	}
+	return root.Stdout().WriteString("done\n")
+}

@@ -1,0 +1,16 @@
+package main
+
+import "sgo"
+
+// A channel arm that is ready when the select starts proceeds before a timer that has not expired;
+// the timer is dropped, so the program does not wait for it (SGO-WAIT-003).
+func main(root *sgo.Context) error {
+	ready := make(chan int, 1)
+	ready <- 1
+	select {
+	case <-ready:
+		return root.Stdout().WriteString("channel first\n")
+	case <-root.After(3600000):
+		return sgo.NewError("timer first")
+	}
+}

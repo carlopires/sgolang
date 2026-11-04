@@ -1,0 +1,11 @@
+package main
+
+import "sgo"
+
+// After(0) is ready at once; a one-arm select on it proceeds without waiting (SGO-WAIT-003).
+func main(root *sgo.Context) error {
+	select {
+	case <-root.After(0):
+	}
+	return root.Stdout().WriteString("zero\n")
+}

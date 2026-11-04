@@ -42,6 +42,7 @@ type sgoLabTimer struct {
 	id       int64
 	t        *sgoTask
 	r        *sgoSleep // the Sleep call it ends
+	ch       *sgoChan  // or the After timer channel it delivers to (D160)
 }
 
 type sgoLabState struct {

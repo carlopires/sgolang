@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+// After is admitted only as the operand of a select receive arm (SGO-WAIT-003).
+func main(root *sgo.Context) error {
+	tm := root.After(10)
+	select {
+	case <-tm:
+	}
+	return nil
+}

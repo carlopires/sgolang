@@ -1,0 +1,15 @@
+package main
+
+import "sgo"
+
+func wait(root *sgo.Context, ms int) {
+	select {
+	case <-root.After(ms):
+	}
+}
+
+// After with a negative duration fails with InvalidArgument (SGO-WAIT-003).
+func main(root *sgo.Context) error {
+	wait(root, -1)
+	return nil
+}

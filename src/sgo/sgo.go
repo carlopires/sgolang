@@ -33,6 +33,7 @@ func runtime_fail(kind, msg string) // unwinds with a checked failure of the kin
 func runtime_cancel(scope unsafe.Pointer)
 func runtime_checkpoint(task unsafe.Pointer) error
 func runtime_sleep(task unsafe.Pointer, ms int) error
+func runtime_after(task unsafe.Pointer, ms int) <-chan int // sgo_after.go
 func runtime_isCancelled(err error) bool
 
 // Spawn admits f as a child of n (SGO-SPAWN-001..004). A refused admission is a
@@ -70,6 +71,19 @@ func (c *Context) Sleep(ms int) error {
 		runtime_fail("InvalidArgument", "Sleep with a negative duration")
 	}
 	return runtime_sleep(c.t, ms)
+}
+
+// After returns a timer for one select arm, case <-t.After(ms): (D160, SGO-WAIT-003). The arm can
+// proceed once at least ms milliseconds of monotonic time (virtual time in the lab) have passed;
+// it receives ms. The compiler admits After only as the operand of a select receive arm; the timer
+// belongs to the task that made it and is dropped when that select ends. It needs no clock grant:
+// it reveals elapsed time only by the order in which arms proceed.
+func (c *Context) After(ms int) <-chan int {
+	c.own()
+	if ms < 0 {
+		runtime_fail("InvalidArgument", "After with a negative duration")
+	}
+	return runtime_after(c.t, ms)
 }
 
 // Stdout returns the stdout capability; only the root context holds it (SGO-PROC-003).

@@ -56,6 +56,9 @@ func (l *sgoLabState) decide() *sgoTask {
 			if tm.r != nil && tm.r.state.CompareAndSwap(0, 1) {
 				l.wakeLocked(tm.t)
 			}
+			if tm.ch != nil {
+				l.fireAfter(tm.ch)
+			}
 		}
 		clear(l.timers[n:])
 		l.timers = l.timers[:n]
