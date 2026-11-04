@@ -105,9 +105,9 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §10, resolution R1, plan §6.1, in
 - **cancellation_and_cleanup:** As SGO-CANCEL-001; the owner's own deadline is consumed at the nursery's boundary (SGO-CANCEL-004).
 - **compile_link_checks:** n/a — checked at run time.
 - **runtime_guards:** Argument and ownership checks; the deadline only shortens.
-- **tcb_assumptions:** Runtime timers. In the lab, `CancelAfter` is not yet supported: it ends the run with `UnsupportedLabEffect` (D170).
-- **positive_tests:** fixture:deadline-basic, fixture:deadline-inherited, fixture:deadline-none.
+- **tcb_assumptions:** Runtime timers. In the lab, a deadline is a virtual timer: it fires at an advance (SGO-LAB-004), recorded as a `fire` event of the task that set it, and the nursery is then cancelled by the lab's deadline driver, a runtime service that is not a task and holds no lock while it cancels; the woken tasks become ready and the next decision is made as usual.
+- **positive_tests:** fixture:deadline-basic, fixture:deadline-inherited, fixture:deadline-none, fixture:lab-deadline-join, fixture:lab-deadline-select.
 - **negative_tests:** fixture:deadline-negative, fixture:deadline-not-owner.
 - **implementation_coverage:** W22: `src/runtime/sgo_deadline.go`, `src/runtime/sgo_cancel.go`, `src/runtime/sgo_scope.go`, `src/runtime/sgo_ioapi.go`, `src/sgo/sgo.go`.
 - **executed_evidence:** conformance fixtures (darwin/arm64); Linux pending.
-- **supported_execution_configurations:** production; lab unsupported (D170).
+- **supported_execution_configurations:** production and lab.

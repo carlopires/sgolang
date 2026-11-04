@@ -27,11 +27,12 @@ const (
 	sgoSvcTraceAdvancer                // (*traceAdvancerState).start; dormant (runtime/trace denied)
 	sgoSvcTraceCPU                     // traceStartReadCPU; dormant (runtime/trace denied)
 	sgoSvcJSEvent                      // beforeIdle; js/wasm only, not an admitted target
+	sgoSvcLabDriver                    // sgoLabDriver (sgoLabCancelAfter); lab binaries only (D170)
 	sgoSvcCount
 )
 
 var sgoServiceNames = [sgoSvcCount]string{"none", "gc-enable", "gc-mark-worker", "force-gc", "maxprocs",
-	"finalizer", "cleanup", "signal", "trace-advancer", "trace-cpu", "js-event"}
+	"finalizer", "cleanup", "signal", "trace-advancer", "trace-cpu", "js-event", "lab-driver"}
 
 var (
 	// sgoEnforce turns unclassified go-statement creation into a fail-stop defect. Set at start-up of
@@ -80,6 +81,10 @@ func sgoClassify(creator string, fn *funcval) sgoServiceKind {
 		return sgoSvcTraceCPU
 	case "runtime.beforeIdle":
 		return sgoSvcJSEvent
+	case "runtime.sgoLabCancelAfter":
+		if sgoLab != nil { // only a lab run has a deadline driver
+			return sgoSvcLabDriver
+		}
 	}
 	// forcegchelper is started from a runtime package init function (numbered name).
 	if initPrefix := "runtime.init."; len(creator) > len(initPrefix) && creator[:len(initPrefix)] == initPrefix {

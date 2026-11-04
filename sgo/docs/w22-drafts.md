@@ -82,3 +82,5 @@ the arms' channel locks held (`sgoLabBlock` is called before the park releases t
    current order closes, so it needs the model to show it safe.
 
 Option 1 is the likely choice: it keeps every wait protocol unchanged.
+
+**Done (2026-11-05): option 1.** `sgoLabDriver` (src/runtime/sgo_deadline.go), a lab-only runtime service (OWN-6: `lab-driver`, dormant in production). Fixtures lab-deadline-join and lab-deadline-select; production and lab agree on both. Still owed: the lab model (`sgo/model`) has no nurseries or cancellation, so this is pinned by fixtures and traces, not yet by a model (D30).

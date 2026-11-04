@@ -1,0 +1,22 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-CANCEL-005",
+  "SGO-LAB-004"
+ ],
+ "lab_args": [
+  "-sched",
+  "fifo"
+ ],
+ "exit": 1,
+ "stdout": "",
+ "stderr_kind": "MainError",
+ "stderr_message": "cancelled: deadline exceeded",
+ "timeout_ms": 60000,
+ "trace_events": [
+  "{\"e\":\"advance\",\"to\":50}",
+  "{\"e\":\"fire\",\"task\":0,\"timer\":0}",
+  "{\"e\":\"outcome\",\"status\":1,\"kind\":\"MainError\"}"
+ ],
+ "note": "D170 follow-up: the deadline fires while the nursery's body is parked in a select holding its arms' locks; the lab's driver cancels with no lock held, as production does."
+}

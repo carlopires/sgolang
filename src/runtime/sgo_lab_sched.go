@@ -59,9 +59,19 @@ func (l *sgoLabState) decide() *sgoTask {
 			if tm.ch != nil {
 				l.fireAfter(tm.ch)
 			}
+			if tm.scope != nil {
+				l.deadlines--
+				l.pending = append(l.pending, tm.scope) // lock-alloc: ok (capacity reserved)
+			}
 		}
 		clear(l.timers[n:])
 		l.timers = l.timers[:n]
+		if len(l.pending) > 0 {
+			// A deadline cancels its nursery, which takes locks the baton holder may hold: the
+			// driver takes the baton and cancels with no lock held (sgoLabDriver). No choice is
+			// made: nothing was ready at the advance.
+			return l.driver
+		}
 		ids = l.readyIDs()
 		if len(ids) == 0 {
 			return l.decide()

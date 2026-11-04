@@ -476,6 +476,9 @@ func sgoNurseryJoin(s *sgoScope) (sgoScopeResult, []*sgoTask, error) {
 	if dtimer != nil {
 		dtimer.stop()
 	}
+	if sgoLab != nil && s.deadline != 0 {
+		sgoLabScopeClosed(s) // the virtual deadline no longer applies (D162)
+	}
 	t.nest[len(t.nest)-1] = nil
 	t.nest = t.nest[:len(t.nest)-1]
 	// The children are finished and no longer change; collect the failed ones outside the lock.

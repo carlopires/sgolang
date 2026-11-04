@@ -533,7 +533,7 @@
         "SGO-CANCEL-004",
         "SGO-CANCEL-005"
       ],
-      "normative_text_digest": "a255b9d2c4647bb85f5384d22a64055bc7a852e3185cc3ee49087f550061fb3e",
+      "normative_text_digest": "430eb9042b4f2f4a349fadd58246bdca06964bfc542b5342b143f4504a1188ee",
       "admitted_in": [
         "0.7.0"
       ],
@@ -554,7 +554,7 @@
         "SGO-CANCEL-002": "80339981ff5ffb814b0b9321353e5feb1e90b92ad04a04137ef7d1878718f907",
         "SGO-CANCEL-003": "d6c4d21ede2d387d4b5f6e37c760c3fc839b80b6532cb45b4f48a8b406420409",
         "SGO-CANCEL-004": "0ffc77ed22373be0c68fd5a4b43dcf8b4c625edaf75f83730de08a069e099c60",
-        "SGO-CANCEL-005": "dd5a198fae82bb416cd12dc78ced388a9243dfe6d51588d0e26e870c277d605e"
+        "SGO-CANCEL-005": "1d277a51091919299a7eb93f0601bf543a8825bba274312365588e27713d012d"
       },
       "clause_status": {
         "SGO-CANCEL-001": "frozen",
@@ -1807,5 +1807,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "e127a36620ce5ac5aa2c604eb1556a82f38f0a0741676a75f375a76cd907aa12"
+  "rows_digest": "85ac6be924f1efd8ce480a0ea12725e5052908f467e85674b48fa184405abcac"
 }

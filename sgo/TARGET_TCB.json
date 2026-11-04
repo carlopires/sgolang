@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.16.2",
- "allowlist_digest": "6548a6f7228c62c595c5bb0bd32a96c0f852355c5a41a56c77c0658c17c6e714",
+ "allowlist_digest": "d681e5653d7a144fd56c40c4cdbf70b77d66629acf4e8d86beae7528e4879ac2",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -422,6 +422,13 @@
    "purpose": "scheduler: GOMAXPROCS updates from CPU limits"
   },
   {
+   "callee": "sgoLabDriver",
+   "file": "src/runtime/sgo_deadline.go",
+   "line": 116,
+   "status": "dormant",
+   "purpose": "lab only: the deadline driver, started by the first n.CancelAfter of a lab run; never in a production binary (D170)"
+  },
+  {
    "callee": "<func literal>",
    "file": "src/runtime/signal_unix.go",
    "line": 1076,
@@ -449,7 +456,7 @@
   "files_changed_from_upstream": 64,
   "services": {
    "active": 5,
-   "dormant": 5,
+   "dormant": 6,
    "not-built": 1
   }
  },
@@ -4476,7 +4483,7 @@
   },
   {
    "path": "src/runtime/sgo_deadline.go",
-   "sha256": "468964589c2cd4d6eb3f76f965014bc6763a4e291b7d5f0a5d144cde139c76e8",
+   "sha256": "8891b98e5e71130574ab5a97384645f8ca15d607ff4907743cc81fe8833b2dc7",
    "upstream_identical": false
   },
   {
@@ -4551,7 +4558,7 @@
   },
   {
    "path": "src/runtime/sgo_lab.go",
-   "sha256": "ae4cc94200c83994b7d9123e977027a8ce4148270d733992d1fde6509740ff9a",
+   "sha256": "005cf353c13ad5e9cc12943b8f846494b33e80be52a12bc16cda8d2c0743b55e",
    "upstream_identical": false
   },
   {
@@ -4566,7 +4573,7 @@
   },
   {
    "path": "src/runtime/sgo_lab_sched.go",
-   "sha256": "a316f3b065422b1c5eaa55a8d90bc4e8c3ddd0983c35572326a10a9f6c109a0d",
+   "sha256": "65e7100eb07a4646984749338b67fc38774cc1e63f600ffc03825c095ba4e276",
    "upstream_identical": false
   },
   {
@@ -4641,12 +4648,12 @@
   },
   {
    "path": "src/runtime/sgo_scope.go",
-   "sha256": "fcd188680f198a77d488a7d630d54bf716d40473bdd5b050437bf9680fc1c23d",
+   "sha256": "afa5004fbe21bd9b0b6a37243c53e6fd3c4fd64edffb1a8591da7285f9ef3e94",
    "upstream_identical": false
   },
   {
    "path": "src/runtime/sgo_service.go",
-   "sha256": "192771edecf5aaabc12bbb43b40fa3f7a6288824c588c358f3b98bd1cb6ddf04",
+   "sha256": "62f3ac254dbecc2ab12c76fcebdf55c0830dcf2e186ba91f261c47eb7c8fe484",
    "upstream_identical": false
   },
   {

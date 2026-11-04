@@ -1,0 +1,21 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-CANCEL-005",
+  "SGO-LAB-004"
+ ],
+ "lab_args": [
+  "-sched",
+  "fifo"
+ ],
+ "exit": 0,
+ "stdout": "deadline in 100ms\nclosed before its deadline\n",
+ "timeout_ms": 60000,
+ "trace_events": [
+  "{\"e\":\"advance\",\"to\":100}",
+  "{\"e\":\"fire\",\"task\":0,\"timer\":0}",
+  "{\"e\":\"advance\",\"to\":110}",
+  "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+ ],
+ "note": "D170 follow-up: on virtual time the deadline fires at 100 ms while the body waits in the nursery's join, and cancels a sleeping and a receiving child; the second nursery closes at 10 ms and its 1000 ms deadline never fires (the next advance is the root's sleep at 110)."
+}

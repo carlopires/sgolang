@@ -10,8 +10,11 @@
 // may only shorten the deadline. The timer is dropped when n closes. t.Deadline() reports the
 // time left before the earliest deadline of the scopes t is linked to.
 //
-// The lab does not run deadlines yet: a virtual fire happens while the blocked task may hold
-// channel and scope locks, so CancelAfter in the lab ends the run with UnsupportedLabEffect.
+// In the lab a deadline is a virtual timer (sgoLabCancelAfter). It fires at an advance, when no
+// task is ready, but cancelling takes the scope lock and the sleep lock, which the baton holder
+// may hold while it parks; so the advance hands the baton to the driver, a goroutine that is not
+// a task, which cancels the due nurseries with no lock held and then decides again (sgoLabDriver).
+// In the lab, s.deadline is the virtual deadline in milliseconds plus one (0: none).
 
 package runtime
 
@@ -29,8 +32,9 @@ func sgo_cancelAfter(scope unsafe.Pointer, ms int) {
 	case t.currentScope() != s:
 		panic(error(&sgoViolation{"CancelAfter of a nursery that is not the caller's current scope"}))
 	}
-	if sgoLab != nil {
-		sgoLabUnsupported()
+	if l := sgoLab; l != nil {
+		sgoLabCancelAfter(l, s, t, int64(ms))
+		return
 	}
 	ns := int64(ms) * 1_000_000
 	if ns/1_000_000 != int64(ms) {
@@ -78,6 +82,12 @@ func sgo_deadline(task unsafe.Pointer) (int, bool) {
 	if best == 0 {
 		return 0, false
 	}
+	if l := sgoLab; l != nil {
+		lock(&l.lock)
+		now := l.now
+		unlock(&l.lock)
+		return int(max(best-1-now, 0)), true
+	}
 	left := (best - nanotime()) / 1_000_000
 	if left < 0 {
 		left = 0
@@ -96,3 +106,114 @@ func sgoIsDeadline(err error) bool {
 
 //go:linkname sgo_isDeadline sgo.runtime_isDeadline
 func sgo_isDeadline(err error) bool { return err != nil && sgoIsDeadline(err) }
+
+// sgoLabCancelAfter is n.CancelAfter(ms) in the lab: the deadline is a virtual timer of scope s,
+// replacing an earlier one only if it is earlier (D165).
+func sgoLabCancelAfter(l *sgoLabState, s *sgoScope, t *sgoTask, ms int64) {
+	if l.driver == nil {
+		d := &sgoTask{labID: -1}
+		l.driver = d
+		go sgoLabDriver(l, d)
+	}
+	l.reserve()
+	if cap(l.pending) < l.deadlines+1 { // no runtime lock held: only the baton holder runs here
+		p := make([]*sgoScope, len(l.pending), 2*l.deadlines+4)
+		copy(p, l.pending)
+		l.pending = p
+	}
+	lock(&l.lock)
+	when := l.now + ms + 1
+	lock(&s.lock)
+	if s.state == sgoClosed || (s.deadline != 0 && s.deadline <= when) {
+		unlock(&s.lock)
+		unlock(&l.lock)
+		return // only shortened, never extended (D165)
+	}
+	s.deadline = when
+	unlock(&s.lock)
+	if l.dropDeadline(s) {
+		l.deadlines--
+	}
+	if cap(l.timers) == len(l.timers) {
+		throw("sgo: lab timer capacity not reserved")
+	}
+	l.timers = append(l.timers, sgoLabTimer{deadline: when - 1, id: l.nextTmr, t: t, scope: s}) // lock-alloc: ok (capacity reserved)
+	l.nextTmr++
+	l.deadlines++
+	unlock(&l.lock)
+}
+
+// dropDeadline removes scope s's deadline timer and any pending cancellation of s, with l.lock
+// held; it reports whether a timer was removed.
+func (l *sgoLabState) dropDeadline(s *sgoScope) bool {
+	found := false
+	n := 0
+	for _, tm := range l.timers {
+		if tm.scope == s {
+			found = true
+			continue
+		}
+		l.timers[n] = tm
+		n++
+	}
+	clear(l.timers[n:])
+	l.timers = l.timers[:n]
+	n = 0
+	for _, p := range l.pending {
+		if p != s {
+			l.pending[n] = p
+			n++
+		}
+	}
+	clear(l.pending[n:])
+	l.pending = l.pending[:n]
+	return found
+}
+
+// sgoLabScopeClosed drops the deadline of a nursery that closed (D162).
+func sgoLabScopeClosed(s *sgoScope) {
+	l := sgoLab
+	lock(&l.lock)
+	if l.dropDeadline(s) {
+		l.deadlines--
+	}
+	unlock(&l.lock)
+}
+
+// sgoLabDriver runs the lab's deadline cancellations. It waits for the baton like a task (it is
+// not one: no ID, never in a ready set, no trace events of its own); when an advance fires
+// deadlines it is chosen, cancels each due nursery in timer-ID order with no lock held (the
+// cancellation readies the tasks it wakes), and passes the baton on as a task's decision does.
+func sgoLabDriver(l *sgoLabState, d *sgoTask) {
+	lock(&l.lock)
+	d.labG = getg()
+	l.waitBaton(d)
+	for {
+		lock(&l.lock)
+		for len(l.pending) > 0 {
+			s := l.pending[0]
+			copy(l.pending, l.pending[1:])
+			l.pending[len(l.pending)-1] = nil
+			l.pending = l.pending[:len(l.pending)-1]
+			unlock(&l.lock)
+			sgoCancel(s, sgoCause{kind: sgoCauseDeadline})
+			lock(&l.lock)
+		}
+		if l.finished {
+			unlock(&l.lock)
+			return
+		}
+		p := l.decide()
+		if p == nil {
+			unlock(&l.lock)
+			l.stop()
+			return
+		}
+		if gp := l.transfer(p); gp != nil {
+			unlock(&l.lock)
+			goready(gp, 0)
+			lock(&l.lock)
+		}
+		l.waitBaton(d)
+	}
+}

@@ -1,0 +1,33 @@
+package main
+
+import "sgo"
+
+// A deadline on virtual time (D170): it fires at an advance and cancels its nursery.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	never := make(chan int)
+	nursery (n) {
+		n.CancelAfter(100)
+		left, ok := root.Deadline()
+		if ok && left == 100 {
+			check out.WriteString("deadline in 100ms\n")
+		}
+		n.Spawn(func(t *sgo.Context) error {
+			err := t.Sleep(3600000)
+			if sgo.IsDeadline(err) {
+				return err
+			}
+			return nil
+		})
+		n.Spawn(func(t *sgo.Context) error {
+			<-never
+			return nil
+		})
+	}
+	nursery (m) {
+		m.CancelAfter(1000)
+		check root.Sleep(10)
+	}
+	check out.WriteString("closed before its deadline\n")
+	return nil
+}

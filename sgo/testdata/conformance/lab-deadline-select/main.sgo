@@ -1,0 +1,26 @@
+package main
+
+import "sgo"
+
+// The deadline fires while the nursery's own body is parked in a select holding its arms' locks.
+// A deadline on virtual time (D170).
+func main(root *sgo.Context) error {
+	a, b := make(chan int), make(chan int)
+	got := "none"
+	nursery (n) {
+		n.CancelAfter(50)
+		n.Spawn(func(t *sgo.Context) error {
+			<-a
+			return nil
+		})
+		select {
+		case <-a:
+			got = "a"
+		case <-b:
+			got = "b"
+		case <-root.After(3600000):
+			got = "after"
+		}
+	}
+	return root.Stdout().WriteString("unreachable: " + got + "\n")
+}

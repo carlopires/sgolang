@@ -43,6 +43,7 @@ type sgoLabTimer struct {
 	t        *sgoTask
 	r        *sgoSleep // the Sleep call it ends
 	ch       *sgoChan  // or the After timer channel it delivers to (D160)
+	scope    *sgoScope // or the nursery whose deadline it is (D162, sgo_deadline.go)
 }
 
 type sgoLabState struct {
@@ -69,6 +70,12 @@ type sgoLabState struct {
 	epoch     int64 // WallClock at virtual time 0, in UTC milliseconds (manifest, D45)
 	rpos      int
 	doneG     *g // a test goroutine waiting for the stop (sgoLabWait)
+	// Deadlines (sgo_deadline.go): nurseries whose deadline fired at the last advance, cancelled by
+	// the driver, a goroutine that is not a task and takes the baton for it; and the number of
+	// deadline timers, so pending's capacity is reserved before l.lock is taken.
+	pending   []*sgoScope
+	driver    *sgoTask
+	deadlines int
 }
 
 // sgoLab is nil unless the lab is enabled: only lab binaries enable it (D41), and the runtime's
