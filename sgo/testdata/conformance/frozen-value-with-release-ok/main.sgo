@@ -1,0 +1,19 @@
+package main
+
+import "sgo"
+
+type Policy struct {
+	n int
+}
+
+func (p Policy) Release(ok bool) error { return nil }
+
+// W23 review M3: a value type is never a user resource (only a pointer is), so a value with a
+// value-receiver Release may be frozen.
+func main(root *sgo.Context) error {
+	f := sgo.Freeze([]Policy{{n: 1}, {n: 2}})
+	if len(f.Get()) != 2 {
+		return sgo.NewError("frozen length")
+	}
+	return root.Stdout().WriteString("frozen\n")
+}

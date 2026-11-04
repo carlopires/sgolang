@@ -1,0 +1,16 @@
+package main
+
+import "sgo"
+
+type Policy struct {
+	n int
+}
+
+func (p Policy) Release(ok bool) error { return nil }
+
+// W23 review M2: a user resource is found by identity, so Own takes a pointer; a value is boxed
+// afresh by each Own, and neither the double-Own guard nor identity would mean anything for it.
+func main(root *sgo.Context) error {
+	root.Own(Policy{n: 1})
+	return nil
+}

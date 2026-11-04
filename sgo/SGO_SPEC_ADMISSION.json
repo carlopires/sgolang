@@ -1131,7 +1131,7 @@
         "SGO-RES-005",
         "SGO-RES-006"
       ],
-      "normative_text_digest": "e9b78175d84722fc57a1677d9b494ed6ba483d516a62d4db750390bcfa15faec",
+      "normative_text_digest": "52bfaa9d2fe46e20a77dc2ff83f820fad7e28897545de0cf672f06c2adb87f79",
       "admitted_in": [
         "0.16.0"
       ],
@@ -1147,7 +1147,7 @@
         "SGO-RES-003": "d1ddf9057d29151afa4533cc5506d3d1896a3d8f3a1883d01f13a9d4fc0bfaca",
         "SGO-RES-004": "e00548986ea4167d6aed55a5896a001ec776dec82bc9194ba2bf2d10b84f14fe",
         "SGO-RES-005": "cfee81d4f351ae84987d25c09433c6d0d7958a1e18abc350faef0009f71164d8",
-        "SGO-RES-006": "22c8978a0c87c0543b5e08f05a35bd135fba15ec5b702d0e2afdb6330c88bac6"
+        "SGO-RES-006": "b0410de41238231bfdddc0fab1ffc30340dcdf5734becab14e5ed1c507966a6f"
       },
       "clause_status": {
         "SGO-RES-001": "frozen",
@@ -1827,5 +1827,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "a7198eb5c7ccdd663dbc5b58bd4c228c8bc7b2c2747f9068de88ba31bd5eaa5f"
+  "rows_digest": "73e7a871493a6449afa277ea30ce9cc0b6144b07e8a80669add27300174bf6ab"
 }

@@ -1,0 +1,20 @@
+package main
+
+import (
+	"sgo"
+	"std/io"
+)
+
+func keepW(w io.Writer) io.Writer { return w }
+
+// W23 review M1: stdout is untied, and a helper given no scope-tied authority and no function
+// value can reach no scope, so its result is untied too: it may be kept past the nursery.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	var w io.Writer = out
+	nursery (n) {
+		w = keepW(out)
+		_ = n
+	}
+	return io.WriteString(w, "kept\n")
+}

@@ -116,19 +116,19 @@ func sgoResTypeRec(T Type, seen map[Type]bool) bool {
 }
 
 func sgoHasRelease(T Type) bool {
-	for _, t := range []Type{T, NewPointer(T)} {
-		obj, _, _ := LookupFieldOrMethod(t, false, nil, "Release")
-		f, _ := obj.(*Func)
-		if f == nil {
-			continue
-		}
-		sig := f.Signature()
-		if sig.params.Len() == 1 && sig.results.Len() == 1 && isBoolean(sig.params.vars[0].typ) &&
-			Identical(sig.results.vars[0].typ, universeError) {
-			return true
-		}
+	// Only a pointer type: a user resource is found by identity (SGO-RES-004), and a value is
+	// boxed afresh wherever it is converted, so a value type is never one (W23 review M2, M3).
+	if _, ok := Unalias(T).(*Pointer); !ok {
+		return false
 	}
-	return false
+	obj, _, _ := LookupFieldOrMethod(T, false, nil, "Release")
+	f, _ := obj.(*Func)
+	if f == nil {
+		return false
+	}
+	sig := f.Signature()
+	return sig.params.Len() == 1 && sig.results.Len() == 1 && isBoolean(sig.params.vars[0].typ) &&
+		Identical(sig.results.vars[0].typ, universeError)
 }
 
 // sgoParamExt is the extent a resource parameter is tied to: some scope of the caller, enclosing
@@ -930,6 +930,11 @@ func (f *sgoResFlow) call(c *syntax.CallExpr) {
 		case fn.name == "MoveTo" && len(c.ArgList) == 1:
 			f.move(sel.X, c.ArgList[0])
 		case fn.name == "Own" && len(c.ArgList) == 1:
+			if tv, ok := f.check.Types[c.ArgList[0]]; ok && tv.Type != nil && f.report {
+				if _, isPtr := Unalias(tv.Type).(*Pointer); !isPtr {
+					f.check.errorf(c.ArgList[0], IncompatibleAssign, "SGO_E_TYPE_MISMATCH: Own takes a pointer to a user resource, not %s: a resource is found by identity (SGO-RES-004)", tv.Type)
+				}
+			}
 			if x := f.scopeExtent(sel.X); x != nil {
 				if pt := f.origin(c.ArgList[0]); pt != nil && !f.within(pt, x) {
 					f.errorf(c.ArgList[0], "Own of a value named outside the scope: %s is reachable after the scope releases it; make the value inside the scope (W21 review Z2)", syntax.String(c.ArgList[0]))
@@ -1105,8 +1110,10 @@ func sgoRecvNamed(fn *Func, name string) bool {
 // delivering resources, and aggregates or pointers of them), and the receiver. A callee can hold
 // and return only resources it was handed or acquired into a scope it was handed. A callee that is
 // a function value, an argument that is a function value (a closure carries any scope it
-// captured), no authority argument, or two ties that cannot be ordered: the caller's current
-// extent. ok is false for package sgo, whose calls keep their specified ties, and for builtins.
+// captured), or two ties that cannot be ordered: the caller's current extent. No authority
+// argument tied to a scope, and no function value: untied — the callee holds no scope, scoped
+// handle, or closure, and there are no package variables, so it can reach no scope's resource
+// (W23 review M1). ok is false for package sgo, whose calls keep their specified ties, and for builtins.
 func (f *sgoResFlow) callTie(e *syntax.CallExpr) (syntax.Node, bool) {
 	fun := syntax.Unparen(e.Fun)
 	if ix, _ := fun.(*syntax.IndexExpr); ix != nil {
@@ -1163,8 +1170,8 @@ func (f *sgoResFlow) callTie(e *syntax.CallExpr) (syntax.Node, bool) {
 			return f.cur(), true // ties that cannot be ordered
 		}
 	}
-	if t == nil || t == f.top {
-		return f.cur(), true
+	if t == nil {
+		return f.top, true
 	}
 	return t, true
 }

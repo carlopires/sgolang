@@ -1,0 +1,6 @@
+{
+ "kind": "run",
+ "clauses": ["SGO-COMP-009", "SGO-RES-004"],
+ "exit": 0,
+ "stdout": "frozen\n"
+}

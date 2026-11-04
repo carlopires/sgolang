@@ -104,3 +104,19 @@ as D172 in W22), D167.
   scope timer; a group's limit bounds running children, not queued results; deadlines are
   inherited and cannot be extended. `GUARANTEES.md` and the roadmap regenerated, with a
   non-mutating drift check.
+
+## W23 review M1–M3 (note2, at `df3f79e18a`)
+
+- **M1 — SGO-RES-006 (draft) C1 refined:** a call whose authority set is empty, or only untied, and
+  that has no function-valued callee or argument yields an **untied** result (was: the caller's
+  current extent). Sound by the same invariant: such a callee reaches no scope. Run case
+  `std-io-stdout-through-helper`; negatives `res-iface-closure-callee`, `std-io-escape` kept; the
+  mutant "untied even with a function argument" builds `res-iface-closure-callee`, so the guard is
+  necessary.
+- **M2 — SGO-RES-004 amendment at 0.18.0 (v2):** `compile_link_checks` gains "`Own` of a value
+  whose type is not a pointer type is a type error (`SGO_E_TYPE_MISMATCH`)", making explicit the
+  grammar's "a user resource is found by identity, so it is a pointer". Reject case
+  `res-own-value-type`.
+- **M3:** one predicate for "user resource": a pointer type whose method set has
+  `Release(bool) error` — used by `Own`, resource flow, and the frozen rule, so they cannot drift.
+  Run case `frozen-value-with-release-ok`; `res-iface-freeze-denied` kept.

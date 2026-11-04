@@ -1,0 +1,6 @@
+{
+ "kind": "reject",
+ "clauses": ["SGO-RES-004"],
+ "diagnostics": [{"code": "SGO_E_TYPE_MISMATCH", "position": "main.sgo:14:11"}],
+ "note": "W23 review M2: Own takes a pointer; a user resource is found by identity."
+}
