@@ -433,6 +433,9 @@ func (p *printer) printRawNode(n Node) {
 		}
 		p.print(_Rparen)
 
+	case *CheckExpr:
+		p.print(_Check, blank, n.X)
+
 	case *Operation:
 		if n.Y == nil {
 			// unary expr

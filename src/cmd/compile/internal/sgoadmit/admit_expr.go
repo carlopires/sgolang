@@ -336,6 +336,8 @@ func (a *admitter) name(n *syntax.Name) {
 func (a *admitter) expr(e syntax.Expr) {
 	switch e := e.(type) {
 	case nil:
+	case *syntax.CheckExpr:
+		a.expr(e.X) // check c (SGO-ERR-004): where it may stand is a types2 rule (sgo_check.go)
 	case *syntax.Name:
 		a.name(e)
 	case *syntax.BasicLit:

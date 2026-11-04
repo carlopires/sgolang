@@ -32,6 +32,10 @@ type scanner struct {
 	mode   uint
 	nlsemi bool // if set '\n' and EOF translate to ';'
 
+	// sgoKeywords: S-Go source, where check is a keyword (SGO-ERR-004). In Go source check stays a
+	// name (the toolchain itself uses it as one).
+	sgoKeywords bool
+
 	// current token, valid after calling next()
 	line, col uint
 	blank     bool // line is blank up to col
@@ -381,8 +385,8 @@ func (s *scanner) ident() {
 	// possibly a keyword
 	lit := s.segment()
 	if len(lit) >= 2 {
-		if tok := keywordMap[hash(lit)]; tok != 0 && tokStrFast(tok) == string(lit) {
-			s.nlsemi = contains(1<<_Break|1<<_Continue|1<<_Fallthrough|1<<_Return, tok)
+		if tok := keywordMap[hash(lit)]; tok != 0 && tokStrFast(tok) == string(lit) && (tok != _Check || s.sgoKeywords) {
+			s.nlsemi = contains(1<<_Break|1<<_Continue|1<<_Fallthrough|1<<_Return|1<<_Check, tok) // check: a misused name ends the line (SGO-LEX-003)
 			s.tok = tok
 			return
 		}

@@ -1,0 +1,27 @@
+package main
+
+import "sgo"
+
+func half(n int) (int, error) {
+	if n%2 != 0 {
+		return 0, sgo.NewError("odd")
+	}
+	return n / 2, nil
+}
+
+func say(c *sgo.Context, s string) error {
+	check c.Stdout().WriteString(s + "\n")
+	return nil
+}
+
+// check returns across the nursery: its child completes first (SGO-CTL-004).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			return t.Sleep(20)
+		})
+		check half(5)
+		check say(root, "not reached")
+	}
+	return nil
+}

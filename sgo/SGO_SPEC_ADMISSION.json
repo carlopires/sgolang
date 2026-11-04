@@ -1260,9 +1260,10 @@
       "clause_ids": [
         "SGO-ERR-001",
         "SGO-ERR-002",
-        "SGO-ERR-003"
+        "SGO-ERR-003",
+        "SGO-ERR-004"
       ],
-      "normative_text_digest": "d5b07404f472cf4e455df50ea8bb4344114ad10929d3dca93e440351f4e74f90",
+      "normative_text_digest": "d5407236a54c656285c78290662488c8bad75b72adafe6e53deb8c7fdef9f9ae",
       "admitted_in": [
         "0.7.0"
       ],
@@ -1282,17 +1283,20 @@
       "clause_digests": {
         "SGO-ERR-001": "17f732afab5e5edbe6fe8bdc2e22437be0d74923cfae45fb5b0b0363d4860a13",
         "SGO-ERR-002": "1f08a076f513576cf74f492c7eacecf5e7780e390ebbdff4ed2fb7b3d5971eaf",
-        "SGO-ERR-003": "42a0da03bae9a0da8e186438fa26df95fe89442cddffa4df0ac5431f261b95a5"
+        "SGO-ERR-003": "42a0da03bae9a0da8e186438fa26df95fe89442cddffa4df0ac5431f261b95a5",
+        "SGO-ERR-004": "a0c8076d6882ffbd6203fdc4cd548ee9b1cfc3a46104bc395a2c21490ea4ee29"
       },
       "clause_status": {
         "SGO-ERR-001": "frozen",
         "SGO-ERR-002": "frozen",
-        "SGO-ERR-003": "frozen"
+        "SGO-ERR-003": "frozen",
+        "SGO-ERR-004": "draft"
       },
       "clause_versions": {
         "SGO-ERR-001": 1,
         "SGO-ERR-002": 1,
-        "SGO-ERR-003": 1
+        "SGO-ERR-003": 1,
+        "SGO-ERR-004": 1
       }
     },
     {
@@ -1738,5 +1742,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "e44c4c269365802ca302bd5f497a82f77b63db50dcb87991b74b2deb99fc0dbb"
+  "rows_digest": "56726d0ec75584d27caeed3dd18500437ffcd593560226b74516410de5bde690"
 }

@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-ERR-004"
+ ],
+ "exit": 0,
+ "stdout": "x kept 7\nx became 3\n"
+}

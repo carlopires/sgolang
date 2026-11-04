@@ -1892,7 +1892,85 @@ func (r *reader) stmt1(tag codeStmt, out *ir.Nodes) ir.Node {
 		k := r.Len()
 		inner := r.stmt1(codeStmt(r.Code(pkgbits.SyncStmt1)), out)
 		return r.nurseryExit(k, inner)
+
+	case stmtSGoCheck:
+		return r.sgoCheckStmt(out)
 	}
+}
+
+// sgoCheckStmt lowers check c (SGO-ERR-004) to the code it is defined by:
+//
+//	t₁, …, tₙ := c
+//	if tₙ != nil { return z₁, …, zₘ₋₁, tₙ } // zᵢ: zero values; crossing k nurseries
+//	x₁, …, xₙ₋₁ = t₁, …, tₙ₋₁               // the assignment form only
+func (r *reader) sgoCheckStmt(out *ir.Nodes) ir.Node {
+	pos := r.pos()
+	k := r.Len()
+	tmps := make([]ir.Node, r.Len())
+	ts := make([]*types.Type, len(tmps))
+	for i := range ts {
+		ts[i] = r.typ()
+	}
+	call := r.expr()
+	var as ir.Node
+	if len(tmps) == 1 {
+		tmp := r.temp(pos, ts[0])
+		tmps[0] = tmp
+		a := ir.NewAssignStmt(pos, tmp, call)
+		a.Def = true
+		a.PtrInit().Append(ir.NewDecl(pos, ir.ODCL, tmp))
+		tmp.Defn = a
+		as = a
+	} else {
+		a := ir.NewAssignListStmt(pos, ir.OAS2, nil, []ir.Node{call})
+		a.Def = true
+		for i := range tmps {
+			tmp := r.temp(pos, ts[i])
+			tmp.Defn = a
+			a.PtrInit().Append(ir.NewDecl(pos, ir.ODCL, tmp))
+			a.Lhs.Append(tmp)
+			tmps[i] = tmp
+		}
+		as = a
+	}
+	out.Append(typecheck.Stmt(as))
+
+	errTmp := tmps[len(tmps)-1]
+	var results []ir.Node
+	fnResults := r.curfn.Type().Results()
+	for _, f := range fnResults[:len(fnResults)-1] {
+		results = append(results, ir.NewZero(pos, f.Type))
+	}
+	results = append(results, errTmp)
+	var ret ir.Node = ir.NewReturnStmt(pos, results)
+	if k > 0 {
+		ret = r.nurseryExit(k, ret)
+	}
+	cond := ir.NewBinaryExpr(pos, ir.ONE, errTmp, typecheck.NodNil())
+	out.Append(typecheck.Stmt(ir.NewIfStmt(pos, typecheck.Expr(cond), []ir.Node{ret}, nil)))
+
+	if !r.Bool() {
+		return nil
+	}
+	names, lhs := r.assignList()
+	rhs := make([]ir.Node, len(lhs))
+	for i := range lhs {
+		rhs[i] = tmps[i]
+		if r.Bool() {
+			n := ir.NewConvExpr(pos, ir.OCONV, r.typ(), tmps[i])
+			n.TypeWord, n.SrcRType = r.convRTTI(pos)
+			n.SetImplicit(true)
+			rhs[i] = typecheck.Expr(n)
+		}
+	}
+	if len(lhs) == 1 {
+		n := ir.NewAssignStmt(pos, lhs[0], rhs[0])
+		n.Def = r.initDefn(n, names)
+		return n
+	}
+	n := ir.NewAssignListStmt(pos, ir.OAS2, lhs, rhs)
+	n.Def = r.initDefn(n, names)
+	return n
 }
 
 // nurseryStmt lowers nursery (n) { body } (SGO-NUR-001, SGO-NUR-003) to

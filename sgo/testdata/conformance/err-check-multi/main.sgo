@@ -1,0 +1,25 @@
+package main
+
+import "sgo"
+
+func say(c *sgo.Context, s string) error {
+	check c.Stdout().WriteString(s + "\n")
+	return nil
+}
+
+func three(fail bool) (int, string, bool, error) {
+	if fail {
+		return 0, "", false, sgo.NewError("three failed")
+	}
+	return 1, "two", true, nil
+}
+
+func main(root *sgo.Context) error {
+	n, s, ok := check three(false)
+	if n == 1 && s == "two" && ok {
+		check say(root, "bound the three results")
+	}
+	_, s2, _ := check three(true)
+	check say(root, "not reached "+s2)
+	return nil
+}

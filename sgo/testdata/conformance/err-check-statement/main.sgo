@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	check root.Stdout().WriteString("first\n")
+	w := root.Stdout()
+	check w.WriteString("second\n")
+	return nil
+}

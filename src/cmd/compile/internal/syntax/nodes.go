@@ -253,6 +253,12 @@ type (
 		expr
 	}
 
+	// check X (S-Go, SGO-ERR-004): X is a call whose last result is an error.
+	CheckExpr struct {
+		X Expr
+		expr
+	}
+
 	// Fun(ArgList[0], ArgList[1], ...)
 	CallExpr struct {
 		Fun     Expr

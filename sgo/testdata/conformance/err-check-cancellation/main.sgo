@@ -1,0 +1,29 @@
+package main
+
+import "sgo"
+
+func say(c *sgo.Context, s string) error {
+	check c.Stdout().WriteString(s + "\n")
+	return nil
+}
+
+// A cancellation error propagated by check is still a cancellation: the child ends Cancelled.
+func wait(t *sgo.Context) error {
+	check t.Sleep(10000)
+	return nil
+}
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			err := wait(t)
+			if sgo.IsCancelled(err) {
+				return err
+			}
+			return sgo.NewError("not cancelled")
+		})
+		n.Cancel()
+	}
+	check say(root, "child cancelled; nursery completed")
+	return nil
+}

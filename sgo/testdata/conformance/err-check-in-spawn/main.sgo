@@ -1,0 +1,22 @@
+package main
+
+import "sgo"
+
+func half(n int) (int, error) {
+	if n%2 != 0 {
+		return 0, sgo.NewError("odd")
+	}
+	return n / 2, nil
+}
+
+// check in a spawned callback ends the child Errored; the nursery fails with ChildError.
+func main(root *sgo.Context) error {
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			check half(4)
+			check half(7)
+			return nil
+		})
+	}
+	return nil
+}

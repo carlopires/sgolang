@@ -39,6 +39,13 @@ func LoadPackage(filenames []string) {
 		noders[i] = &p
 	}
 
+	// S-Go source is parsed with its keywords (check, SGO-ERR-004); the admission decision depends
+	// only on the package path and the files, so it is known before parsing.
+	parseMode := syntax.CheckBranches
+	if !sgoadmit.Trusted(base.Ctxt.Pkgpath, filenames) {
+		parseMode |= syntax.SGoKeywords
+	}
+
 	// Move the entire syntax processing logic into a separate goroutine to avoid blocking on the "sem".
 	go func() {
 		for i, filename := range filenames {
@@ -56,7 +63,7 @@ func LoadPackage(filenames []string) {
 				}
 				defer f.Close()
 
-				p.file, _ = syntax.Parse(fbase, f, p.error, p.pragma, syntax.CheckBranches) // errors are tracked via p.error
+				p.file, _ = syntax.Parse(fbase, f, p.error, p.pragma, parseMode) // errors are tracked via p.error
 			}()
 		}
 	}()

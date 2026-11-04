@@ -1,0 +1,34 @@
+package main
+
+import "sgo"
+
+func half(n int) (int, error) {
+	if n%2 != 0 {
+		return 0, sgo.NewError("odd")
+	}
+	return n / 2, nil
+}
+
+func say(c *sgo.Context, s string) error {
+	check c.Stdout().WriteString(s + "\n")
+	return nil
+}
+
+// The targets of a failed check are not assigned (SGO-ERR-004): x keeps 7 when half fails.
+func try(c *sgo.Context, n int, x *int) error {
+	*x = check half(n)
+	return nil
+}
+
+func main(root *sgo.Context) error {
+	x := 7
+	err := try(root, 3, &x)
+	if err != nil && x == 7 {
+		check say(root, "x kept 7")
+	}
+	err = try(root, 6, &x)
+	if err == nil && x == 3 {
+		check say(root, "x became 3")
+	}
+	return nil
+}

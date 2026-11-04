@@ -27,6 +27,13 @@ import (
 
 const sgoNurseryMask = "__sgo_nursery"
 
+// check c (SGO-ERR-004) is masked as the statement __sgo_check followed by c, so go/format lays out
+// c exactly as it would without check (no change of expression depth); go/format puts the mask on
+// its own line (or keeps "; " in an init position), and the restore joins it back to check c.
+const sgoCheckMask = "__sgo_check"
+
+var checkRestore = regexp.MustCompile(sgoCheckMask + `(?:; *|\n[ \t]*)`)
+
 var nurseryRestore = regexp.MustCompile(sgoNurseryMask + `\(([A-Za-z_][A-Za-z0-9_]*)?\)\n\t*\{`)
 
 func cmdFmt(args []string) error {
@@ -70,8 +77,10 @@ func cmdFmt(args []string) error {
 
 // formatSgo returns the formatted source of one .sgo file.
 func formatSgo(name string, src []byte) ([]byte, error) {
-	if bytes.Contains(src, []byte(sgoNurseryMask)) {
-		return nil, &toolErr{name + ":1:1", "SGO_E_SYNTAX", "the identifier " + sgoNurseryMask + " is reserved by sgo fmt", 1}
+	for _, m := range []string{sgoNurseryMask, sgoCheckMask} {
+		if bytes.Contains(src, []byte(m)) {
+			return nil, &toolErr{name + ":1:1", "SGO_E_SYNTAX", "the identifier " + m + " is reserved by sgo fmt", 1}
+		}
 	}
 	masked, err := maskNurseries(name, src)
 	if err != nil {
@@ -92,8 +101,9 @@ func formatSgo(name string, src []byte) ([]byte, error) {
 		}
 		return []byte("nursery (" + string(name) + ") {")
 	})
-	if bytes.Contains(out, []byte(sgoNurseryMask)) {
-		return nil, &toolErr{name + ":1:1", "SGO_E_SYNTAX", "a nursery statement could not be formatted", 1}
+	out = checkRestore.ReplaceAll(out, []byte("check "))
+	if bytes.Contains(out, []byte(sgoNurseryMask)) || bytes.Contains(out, []byte(sgoCheckMask)) {
+		return nil, &toolErr{name + ":1:1", "SGO_E_SYNTAX", "a nursery statement or check could not be formatted", 1}
 	}
 	return out, nil
 }
@@ -129,6 +139,14 @@ func maskNurseries(name string, src []byte) ([]byte, error) {
 	var out bytes.Buffer
 	last := 0
 	for i := 0; i < len(toks); i++ {
+		if toks[i].tok == token.IDENT && toks[i].lit == "check" && i+1 < len(toks) &&
+			(toks[i+1].tok == token.IDENT || toks[i+1].tok == token.LPAREN) {
+			start := file.Offset(toks[i].pos)
+			out.Write(src[last:start])
+			out.WriteString(sgoCheckMask + ";")
+			last = start + len("check")
+			continue
+		}
 		if toks[i].tok != token.IDENT || toks[i].lit != "nursery" {
 			continue
 		}

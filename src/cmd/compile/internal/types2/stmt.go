@@ -463,6 +463,12 @@ func (check *Checker) stmt(ctxt stmtContext, s syntax.Stmt) {
 		check.stmt(ctxt, s.Stmt)
 
 	case *syntax.ExprStmt:
+		if ce, _ := syntax.Unparen(s.X).(*syntax.CheckExpr); ce != nil {
+			// S-Go: check c as a statement discards c's other results (SGO-ERR-004).
+			var x operand
+			check.rawExpr(nil, &x, s.X, nil, false)
+			return
+		}
 		// spec: "With the exception of specific built-in functions,
 		// function and method calls and receive operations can appear
 		// in statement context. Such statements may be parenthesized."

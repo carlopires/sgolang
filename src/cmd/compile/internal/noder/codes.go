@@ -32,6 +32,7 @@ const (
 	// S-Go (W03). Appended so that existing statement encodings are unchanged.
 	stmtNursery     // nursery (n) { ... } (SGO-NUR-001)
 	stmtNurseryExit // prefix of a return/break/continue that leaves k nurseries (SGO-CTL-004)
+	stmtSGoCheck    // check c, as a statement or the right side of an assignment (SGO-ERR-004)
 )
 
 // A codeExpr distinguishes among expression encodings.

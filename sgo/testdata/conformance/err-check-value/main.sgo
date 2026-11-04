@@ -1,0 +1,35 @@
+package main
+
+import "sgo"
+
+func half(n int) (int, error) {
+	if n%2 != 0 {
+		return 0, sgo.NewError("odd")
+	}
+	return n / 2, nil
+}
+
+func say(c *sgo.Context, s string) error {
+	check c.Stdout().WriteString(s + "\n")
+	return nil
+}
+
+func run(c *sgo.Context) error {
+	h := check half(8)
+	check say(c, "half of 8 is 4: "+yes(h == 4))
+	h = check half(3)
+	check say(c, "not reached")
+	return nil
+}
+
+func yes(b bool) string {
+	if b {
+		return "yes"
+	}
+	return "no"
+}
+
+func main(root *sgo.Context) error {
+	check run(root)
+	return nil
+}

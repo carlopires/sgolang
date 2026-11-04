@@ -1,0 +1,12 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-ERR-004"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_CHECK_NO_RESULT",
+   "at": "check ok()"
+  }
+ ]
+}

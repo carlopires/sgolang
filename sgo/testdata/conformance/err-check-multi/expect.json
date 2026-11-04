@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-ERR-004"
+ ],
+ "exit": 1,
+ "stdout": "bound the three results\n",
+ "stderr_kind": "MainError",
+ "stderr_message": "three failed"
+}

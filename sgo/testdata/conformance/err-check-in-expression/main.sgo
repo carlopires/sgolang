@@ -1,0 +1,11 @@
+package main
+
+import "sgo"
+
+func ok() (bool, error) { return true, nil }
+
+func main(root *sgo.Context) error {
+	x := !check ok()
+	_ = x
+	return nil
+}

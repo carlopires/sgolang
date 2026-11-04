@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-ERR-004"
+ ],
+ "exit": 0,
+ "stdout": "child cancelled; nursery completed\n"
+}

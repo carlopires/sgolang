@@ -1086,6 +1086,9 @@ func (check *Checker) exprInternal(T *target, x *operand, e syntax.Expr, hint Ty
 			goto Error
 		}
 
+	case *syntax.CheckExpr:
+		return check.sgoCheckExpr(x, e) // S-Go (sgo_check.go)
+
 	case *syntax.ParenExpr:
 		// type inference doesn't go past parentheses (target type T = nil)
 		kind := check.rawExpr(nil, x, e.X, nil, false)

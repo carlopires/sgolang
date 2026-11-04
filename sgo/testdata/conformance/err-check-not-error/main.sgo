@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+func plain() int { return 1 }
+
+func main(root *sgo.Context) error {
+	check plain()
+	return nil
+}

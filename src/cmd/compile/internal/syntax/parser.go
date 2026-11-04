@@ -88,6 +88,7 @@ func (p *parser) init(file *PosBase, r io.Reader, errh ErrorHandler, pragh Pragm
 		},
 		directives,
 	)
+	p.scanner.sgoKeywords = mode&SGoKeywords != 0
 
 	p.base = file
 	p.first = nil
@@ -896,6 +897,23 @@ func (p *parser) unaryExpr() Expr {
 	}
 
 	switch p.tok {
+	case _Check:
+		// S-Go: check X (SGO-ERR-004). Parsed as a prefix of a unary expression; where it may
+		// stand (a statement, or the whole right side of an assignment) is a type-checker rule.
+		x := new(CheckExpr)
+		x.pos = p.pos()
+		p.next()
+		switch p.tok {
+		case _Define, _Assign, _AssignOp, _IncOp, _Semi, _Comma, _Colon, _Dot, _Rparen, _Rbrack, _Rbrace, _EOF:
+			// check used as a name, e.g. check := 1 (SGO-LEX-003)
+			p.errorAt(x.pos, "SGO_E_RESERVED_WORD: check is a reserved word (SGO-LEX-003)")
+			p.advance(_Semi, _Rbrace)
+			x.X = NewName(x.pos, "_")
+			return x
+		}
+		x.X = p.unaryExpr()
+		return x
+
 	case _Operator, _Star:
 		switch p.op {
 		case Mul, Add, Sub, Not, Xor, Tilde:
@@ -2674,7 +2692,8 @@ func (p *parser) stmtOrNil() Stmt {
 
 	case _Literal, _Func, _Lparen, // operands
 		_Lbrack, _Struct, _Map, _Chan, _Interface, // composite types
-		_Arrow: // receive operator
+		_Arrow, // receive operator
+		_Check: // S-Go: check statement (SGO-ERR-004)
 		return p.simpleStmt(nil, 0)
 
 	case _For:
@@ -2795,9 +2814,9 @@ func (p *parser) name() *Name {
 	}
 
 	n := NewName(p.pos(), "_")
-	if p.tok == _Nursery {
+	if p.tok == _Nursery || p.tok == _Check {
 		// SGO-LEX-003: a reserved word is never a name.
-		p.errorAt(p.pos(), "SGO_E_RESERVED_WORD: nursery is a reserved word (SGO-LEX-003)")
+		p.errorAt(p.pos(), "SGO_E_RESERVED_WORD: "+p.tok.String()+" is a reserved word (SGO-LEX-003)")
 		p.next()
 		return n
 	}

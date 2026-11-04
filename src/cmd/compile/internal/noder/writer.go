@@ -1433,6 +1433,10 @@ func (w *writer) stmt1(stmt syntax.Stmt) {
 			w.implicitConvExpr(typ, stmt.Rhs)
 
 		default:
+			if ce, ok := syntax.Unparen(stmt.Rhs).(*syntax.CheckExpr); ok {
+				w.sgoCheckStmt(ce, stmt.Lhs)
+				break
+			}
 			w.assignStmt(stmt, stmt.Lhs, stmt.Rhs)
 		}
 
@@ -1479,6 +1483,10 @@ func (w *writer) stmt1(stmt syntax.Stmt) {
 		}
 
 	case *syntax.ExprStmt:
+		if ce, ok := syntax.Unparen(stmt.X).(*syntax.CheckExpr); ok {
+			w.sgoCheckStmt(ce, nil)
+			break
+		}
 		w.Code(stmtExpr)
 		w.expr(stmt.X)
 
@@ -1645,6 +1653,56 @@ func (w *writer) nurseryStmt(stmt *syntax.NurseryStmt) {
 	w.sgoNest--
 	w.pos(stmt.Body.Rbrace)
 	w.closeScope(stmt.Body.Rbrace)
+}
+
+// sgoCheckStmt writes check c (SGO-ERR-004), as a statement (lhs0 nil) or as the right side of an
+// assignment to lhs0: the call and its result types, the nursery depth for the implied return, and
+// the destinations with their implicit conversions. The reader lowers it to the code it stands
+// for: the results into temporaries, a return of the error if it is not nil, then the assignment.
+func (w *writer) sgoCheckStmt(ce *syntax.CheckExpr, lhs0 syntax.Expr) {
+	call := syntax.Unparen(ce.X)
+	var results []types2.Type
+	switch t := w.p.typeOf(call).(type) {
+	case *types2.Tuple:
+		for i := 0; i < t.Len(); i++ {
+			results = append(results, t.At(i).Type())
+		}
+	default:
+		results = append(results, t)
+	}
+	w.Code(stmtSGoCheck)
+	w.pos(ce)
+	w.Len(w.sgoNest)
+	w.Len(len(results))
+	for _, t := range results {
+		w.typ(t)
+	}
+	w.expr(call)
+	if !w.Bool(lhs0 != nil) {
+		return
+	}
+	lhs := syntax.UnpackListExpr(lhs0)
+	w.Len(len(lhs))
+	for _, expr := range lhs {
+		w.assign(expr)
+	}
+	for i, expr := range lhs {
+		src := results[i]
+		var dst types2.Type
+		if name, ok := syntax.Unparen(expr).(*syntax.Name); ok && name.Value == "_" {
+			dst = nil
+		} else if name, ok := syntax.Unparen(expr).(*syntax.Name); ok && w.p.info.Defs[name] != nil {
+			dst = w.p.info.Defs[name].(*types2.Var).Type()
+		} else if name, ok := syntax.Unparen(expr).(*syntax.Name); ok && w.p.info.Uses[name] != nil {
+			dst = w.p.info.Uses[name].(*types2.Var).Type()
+		} else {
+			dst = w.p.typeOf(expr)
+		}
+		if w.Bool(dst != nil && !types2.Identical(src, dst)) {
+			w.typ(dst)
+			w.convRTTI(src, dst)
+		}
+	}
 }
 
 // sgoExitPrefix records the nursery depth at break/continue targets and, for a return, break, or

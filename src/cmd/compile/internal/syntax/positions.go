@@ -204,6 +204,8 @@ func EndPos(n Node) Pos {
 			m = n.Type
 		case *TypeSwitchGuard:
 			m = n.X
+		case *CheckExpr:
+			m = n.X
 		case *Operation:
 			if n.Y != nil {
 				m = n.Y
