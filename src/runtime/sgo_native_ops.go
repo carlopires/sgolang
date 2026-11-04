@@ -39,8 +39,12 @@ func sgoNativeTrySend(c *sgoChan, box unsafe.Pointer) (*sgoChanWait, int) {
 // sgoNativeTryRecv receives without waiting, under c.lock: the oldest queued value (refilling the
 // buffer from a waiting sender), a waiting sender's value, or closed (ok == false).
 func sgoNativeTryRecv(c *sgoChan) (box unsafe.Pointer, ok bool, wake *sgoChanWait, ready bool) {
-	if c.latch != nil { // a published task result: every receive gets it, none consumes it
-		return c.latch, true, nil, true
+	if l := c.res; l != nil { // a task's result channel: the result once it is published
+		if !l.taken && l.r.done.Load() {
+			l.taken = true
+			return l.r.val, true, nil, true
+		}
+		return nil, false, nil, false
 	}
 	if a := c.tmr; a != nil { // a timer (D160): its value once the deadline has passed
 		if sgoAfterDue(a) {
@@ -148,8 +152,15 @@ func sgochanrecv2(c *sgoChan, dst unsafe.Pointer) bool {
 		lock(&c.lock)
 		box, ok, wake, ready = sgoNativeTryRecv(c)
 	}
+	if !ready && c.res != nil && !sgoTaskResRegister(c) {
+		box, ok, wake, ready = sgoNativeTryRecv(c) // published meanwhile: take it, do not park
+	}
 	if !ready {
-		if !sgoChanPark(c, &c.recvs, w, waitReasonChanReceive, false) || w.state.Load() == sgoWaitCancelled {
+		parked := sgoChanPark(c, &c.recvs, w, waitReasonChanReceive, false)
+		if c.res != nil {
+			sgoTaskResUnregister(c)
+		}
+		if !parked || w.state.Load() == sgoWaitCancelled {
 			unlock(&c.lock)
 			sgoNativeCancel(t)
 		}
@@ -258,8 +269,8 @@ func sgoSelCanProceed(c *sgoChan, send bool) bool {
 	if c.tmr != nil {
 		return !send && sgoAfterDue(c.tmr)
 	}
-	if c.latch != nil {
-		return !send
+	if l := c.res; l != nil {
+		return !send && !l.taken && l.r.done.Load()
 	}
 	if c.closed {
 		return true
@@ -402,6 +413,15 @@ func sgoselectgo1(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs i
 		sgoSelUnlock(locks)
 		return -1, false
 	}
+	// Result channels of tasks are listed on their task while the select waits on them; one
+	// published since the poll is taken by polling again (sgo_taskres.go).
+	for i := nsends; i < n; i++ {
+		if c := cas[i].c; c.res != nil && !sgoTaskResRegister(c) {
+			sgoSelUnregisterRes(cas[nsends:i])
+			sgoSelUnlock(locks)
+			return sgoselectgo1(cas0, order0, pc0, nsends, nrecvs, block)
+		}
+	}
 	// Wait on every arm under one decision.
 	gp := getg()
 	for i := range ws {
@@ -426,6 +446,7 @@ func sgoselectgo1(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs i
 	if sgoOuterCancelled(t) != nil {
 		unlock(&sgoSleepLock)
 		sgoSelRemove(cas, ws, nsends)
+		sgoSelUnregisterRes(cas[nsends:])
 		sgoSelUnlock(locks)
 		sgoNativeCancel(t)
 	}
@@ -446,6 +467,7 @@ func sgoselectgo1(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs i
 	sgoChanUnregister(rep)
 	unlock(&sgoSleepLock)
 	sgoSelRemove(cas, ws, nsends)
+	sgoSelUnregisterRes(cas[nsends:])
 	w := sel.winner
 	st := sel.state.Load()
 	var box unsafe.Pointer
@@ -476,6 +498,15 @@ func sgoselectgo1(cas0 *sgoScase, order0 *uint16, pc0 *uintptr, nsends, nrecvs i
 	sgoSelFinishRecv(cas[i].c, cas[i].elem, box, ok)
 	sgoRaceRendezvousEnd(cas[i].c)
 	return i, ok
+}
+
+// sgoSelUnregisterRes undoes the registration of the task result channels among receive arms.
+func sgoSelUnregisterRes(recvs []sgoScase) {
+	for i := range recvs {
+		if c := recvs[i].c; c.res != nil {
+			sgoTaskResUnregister(c)
+		}
+	}
 }
 
 func sgoSelRemove(cas []sgoScase, ws []sgoChanWait, nsends int) {

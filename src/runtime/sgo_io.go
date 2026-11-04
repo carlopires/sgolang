@@ -113,7 +113,9 @@ func sgoHandleClose(h *sgoHandle) *sgoIOErr {
 	if h.closed {
 		return &sgoIOErr{"HandleClosed", 0}
 	}
-	if h.ops.Load() != 0 {
+	// A task in an operation, or holding the read turn (a ReadLine or ReadAll between its reads,
+	// D173), is waiting on the handle (W22 review H2).
+	if h.ops.Load() != 0 || h.rturn.Load() != 0 {
 		return &sgoIOErr{"ResourceBusy", 0}
 	}
 	return sgoHandleFree(h)

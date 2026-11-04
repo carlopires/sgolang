@@ -1,0 +1,39 @@
+package main
+
+import "sgo"
+
+// A ReadLine between its reads is waiting on the connection: a sibling's Close is refused with
+// ResourceBusy (SGO-RES-002), and succeeds once the line is complete (D173, W22 review H2).
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	l := check root.Listen("127.0.0.1:47913")
+	busy := false
+	nursery (n) {
+		ll := l
+		n.Spawn(func(task *sgo.Context) error {
+			c := check ll.Accept(task)
+			check c.Write("par")
+			check task.Sleep(20)
+			check c.Write("tial\n")
+			check task.Sleep(20)
+			return c.Close()
+		})
+		c := check root.Dial("127.0.0.1:47913")
+		nursery (m) {
+			h := sgo.Go(m, func(task *sgo.Context) (bool, error) {
+				check task.Sleep(10)
+				err := c.Close()
+				return err != nil, nil
+			})
+			line := check c.ReadLine(64)
+			check out.WriteString(line + "\n")
+			busy = check h.Wait(root)
+		}
+		check c.Close()
+	}
+	if !busy {
+		return sgo.NewError("Close during ReadLine succeeded")
+	}
+	check out.WriteString("close refused while reading, then closed\n")
+	return l.Close()
+}

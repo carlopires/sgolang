@@ -535,22 +535,24 @@ func TestSGoEvent(t *testing.T) {
 	})
 }
 
-// TestSGoTaskResultLatch: a task's result channel is one channel per record (Result registers
-// nothing per call), every receiver parked before publication gets the result, and after it
-// every receive and every select arm on it proceeds without consuming it (W22 review G2).
-func TestSGoTaskResultLatch(t *testing.T) {
+// TestSGoTaskResult: every Result call gets its own channel, which delivers the result once
+// (edge-triggered); receivers parked before publication on their own channels all get it; a
+// channel abandoned by a select that took another arm leaves nothing listed on the task; and a
+// channel that delivered stays silent, so a select loop with another arm keeps taking that arm
+// (W22 review G2, H1).
+func TestSGoTaskResult(t *testing.T) {
 	root(t, func() {
 		r := runtime.SGoTaskResNew()
-		var ms0, ms1 runtime.MemStats
-		runtime.ReadMemStats(&ms0)
-		for range 10000 {
-			if runtime.SGoTaskResChan(r) != r {
-				t.Fatal("Result returned another channel")
+		timer := runtime.SGoNativeNew(1)
+		// Abandoned channels: a select that takes another arm unlists its result channel.
+		for range 1000 {
+			runtime.SGoNSend(timer, 1)
+			if arm, _, _ := runtime.SGoNSelect([]runtime.SGoNArm{{Ch: runtime.SGoTaskResChan(r)}, {Ch: timer}}, true); arm != 1 {
+				t.Fatalf("arm %d before publication", arm)
 			}
 		}
-		runtime.ReadMemStats(&ms1)
-		if d := ms1.Mallocs - ms0.Mallocs; d > 100 {
-			t.Fatalf("10000 Result calls made %d allocations", d)
+		if n := runtime.SGoTaskResParked(r); n != 0 {
+			t.Fatalf("%d result channels still listed", n)
 		}
 		var got atomic.Int64
 		s := mustOpen(t)
@@ -563,7 +565,7 @@ func TestSGoTaskResultLatch(t *testing.T) {
 				return nil
 			})
 		}
-		for runtime.SGoNWaiters(r) < 5 {
+		for runtime.SGoTaskResParked(r) < 5 {
 			runtime.Gosched()
 		}
 		runtime.SGoTaskResSet(r, 7)
@@ -572,17 +574,28 @@ func TestSGoTaskResultLatch(t *testing.T) {
 		if got.Load() != 5 {
 			t.Fatalf("%d of 5 parked receivers got the result", got.Load())
 		}
-		for i := range 3 {
-			if v, ok := runtime.SGoNRecv(r); !ok || v != 7 {
-				t.Fatalf("receive %d after publication: %d %v", i, v, ok)
-			}
-			arm, v, _ := runtime.SGoNSelect([]runtime.SGoNArm{{Ch: r}}, false)
-			if arm != 0 || v != 7 {
-				t.Fatalf("select %d after publication: arm %d value %d", i, arm, v)
+		// A kept channel delivers once; a loop with a timer arm then takes the timer arm.
+		res := runtime.SGoTaskResChan(r)
+		seen := 0
+		for range 5 {
+			runtime.SGoNSend(timer, 1)
+			arm, v, _ := runtime.SGoNSelect([]runtime.SGoNArm{{Ch: res}, {Ch: timer}}, true)
+			if arm == 0 {
+				if v != 7 {
+					t.Fatalf("result %d", v)
+				}
+				seen++
+				runtime.SGoNRecv(timer) // the timer value sent for this iteration
 			}
 		}
-		if runtime.SGoNWaiters(r) != 0 {
-			t.Fatal("waiters left on the result channel")
+		if seen != 1 {
+			t.Fatalf("a kept result channel delivered %d times", seen)
+		}
+		if v, ok := runtime.SGoNRecv(runtime.SGoTaskResChan(r)); !ok || v != 7 {
+			t.Fatalf("a new channel after publication: %d %v", v, ok)
+		}
+		if runtime.SGoTaskResParked(r) != 0 {
+			t.Fatal("result channels listed after publication")
 		}
 	})
 }

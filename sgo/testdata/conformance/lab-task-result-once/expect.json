@@ -1,0 +1,15 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-SPAWN-006",
+  "SGO-WAIT-003"
+ ],
+ "exit": 0,
+ "sweep": {
+  "seeds": "0..15",
+  "outcomes": [
+   "ticks 6, result seen 1 time, fresh 7, sibling 7\n"
+  ]
+ },
+ "note": "W22 review G2/H1: a kept Result() channel delivers once (edge-triggered), so the loop keeps taking the timer arm after the child ends at virtual 35ms; a new Result() channel delivers again; a Wait parked before the end gets the result."
+}

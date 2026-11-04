@@ -1,0 +1,15 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-FILE-004",
+  "SGO-RES-002"
+ ],
+ "exit": 0,
+ "sweep": {
+  "seeds": "0..15",
+  "outcomes": [
+   "partial\nclose refused while reading, then closed\n"
+  ]
+ },
+ "note": "W22 review H2: the ReadLine holds the read turn between the chunk \"par\" and \"tial\\n\" (virtual 0 to 20ms); the sibling's Close at 10ms is ResourceBusy, not a success that would depend on timing."
+}

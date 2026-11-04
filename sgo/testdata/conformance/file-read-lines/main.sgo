@@ -32,6 +32,16 @@ func main(root *sgo.Context) error {
 		}
 		rest := check g.ReadAll(100)
 		check out.WriteString(first + "|" + head + "|" + rest + "\n")
+		// An unterminated last line of exactly max bytes is a line; one byte more is too long.
+		four := check d.Open(n, "four.txt")
+		l4 := check four.ReadLine(4)
+		five := check d.Open(n, "five.txt")
+		_, e5 := five.ReadLine(4)
+		l5 := check five.ReadLine(10)
+		if !sgo.IsTooLong(e5) {
+			return sgo.NewError("expected TooLong for five bytes")
+		}
+		check out.WriteString(l4 + " too-long " + l5 + "\n")
 	}
 	return nil
 }

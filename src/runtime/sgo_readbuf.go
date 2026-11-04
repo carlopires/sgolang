@@ -20,7 +20,9 @@ func sgoRawRead(h *sgoHandle, max int) (string, *sgoIOErr) {
 }
 
 // sgoReadTurn waits for h's read turn; a task that finds it taken sleeps briefly, as a
-// cancellation point, and tries again.
+// cancellation point, and tries again. The handle is checked again once the turn is held, so a
+// read that waited for the turn sees a Close made meanwhile (HandleClosed) before it touches the
+// buffer (W22 review H2); Close refuses with ResourceBusy while the turn is held.
 func sgoReadTurn(h *sgoHandle, op string) *sgoIOErr {
 	if e := sgoHandleBegin(h, op); e != nil {
 		return e
@@ -32,6 +34,11 @@ func sgoReadTurn(h *sgoHandle, op string) *sgoIOErr {
 			return &sgoIOErr{"Cancelled", 0}
 		}
 	}
+	if e := sgoHandleBegin(h, op); e != nil {
+		h.rturn.Store(0)
+		return e
+	}
+	sgoHandleEnd(h)
 	return nil
 }
 
@@ -42,10 +49,6 @@ func sgoBufRead(h *sgoHandle, max int, op string) (string, *sgoIOErr) {
 	}
 	defer h.rturn.Store(0)
 	if h.rbuf != "" && max > 0 {
-		if e := sgoHandleBegin(h, op); e != nil { // closed or cancelled while waiting for the turn
-			return "", e
-		}
-		sgoHandleEnd(h)
 		n := min(max, len(h.rbuf))
 		s := h.rbuf[:n]
 		h.rbuf = h.rbuf[n:]
@@ -74,8 +77,23 @@ func sgoReadLine(h *sgoHandle, max int, op string) (string, *sgoIOErr) {
 				return line, nil
 			}
 		}
-		if len(buf) >= max {
+		if len(buf) > max || (len(buf) == max && max <= 0) {
 			h.rbuf = buf
+			return "", &sgoIOErr{"TooLong", 0}
+		}
+		if len(buf) == max {
+			// max bytes and no "\n": the last line if the stream ends here, else too long (one
+			// more byte decides; W22 review H3).
+			s, e := sgoRawRead(h, 1)
+			switch {
+			case e != nil && e.kind == "EOF":
+				h.rbuf = ""
+				return buf, nil
+			case e != nil:
+				h.rbuf = buf
+				return "", &sgoIOErr{e.kind, 0}
+			}
+			h.rbuf = buf + s
 			return "", &sgoIOErr{"TooLong", 0}
 		}
 		s, e := sgoRawRead(h, max-len(buf))

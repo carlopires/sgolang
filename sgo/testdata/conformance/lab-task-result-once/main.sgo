@@ -1,0 +1,41 @@
+package main
+
+import "sgo"
+
+// Each Result() channel delivers the task's result once (W22 review G2, H1): a select loop that
+// keeps one channel takes its arm once, at the child's end, and then keeps taking the timer arm;
+// a new Result() channel after the end delivers it again, and a sibling's Wait parked before the
+// end gets it too.
+func main(root *sgo.Context) error {
+	ticks, seen, fresh, sib := 0, 0, 0, 0
+	nursery (n) {
+		h := sgo.Go(n, func(t *sgo.Context) (int, error) {
+			check t.Sleep(35)
+			return 7, nil
+		})
+		w := sgo.Go(n, func(t *sgo.Context) (int, error) { return h.Wait(t) })
+		res := h.Result()
+		for ticks < 6 {
+			select {
+			case r := <-res:
+				if r.Err != nil || r.Value != 7 {
+					return sgo.NewError("wrong result")
+				}
+				seen++
+			case <-root.After(10):
+				ticks++
+			}
+		}
+		r := <-h.Result()
+		fresh = r.Value
+		sib = check w.Wait(root)
+	}
+	return root.Stdout().WriteString("ticks " + itoa(ticks) + ", result seen " + itoa(seen) + " time, fresh " + itoa(fresh) + ", sibling " + itoa(sib) + "\n")
+}
+
+func itoa(v int) string {
+	if v < 10 {
+		return string(rune('0' + v))
+	}
+	return itoa(v/10) + string(rune('0'+v%10))
+}

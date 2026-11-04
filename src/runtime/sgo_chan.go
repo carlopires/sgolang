@@ -48,9 +48,9 @@ type sgoChan struct {
 	recvs    sgoWaitList
 	elem     *_type // native channels (sgo_native.go): the element type of the boxed values
 	native   bool
-	tmr      *sgoAfter      // timer channels only (sgo_after.go, D160)
-	grp      *sgoGroupQ     // a group's result channel only: results beyond the buffer (sgo_group.go, D172)
-	latch    unsafe.Pointer // a task's result channel only, once published: the boxed result (sgo_taskres.go)
+	tmr      *sgoAfter       // timer channels only (sgo_after.go, D160)
+	grp      *sgoGroupQ      // a group's result channel only: results beyond the buffer (sgo_group.go, D172)
+	res      *sgoTaskResLink // a task's result channel only (sgo_taskres.go, D161)
 }
 
 type sgoPermit struct {
