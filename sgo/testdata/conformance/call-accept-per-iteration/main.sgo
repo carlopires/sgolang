@@ -1,0 +1,33 @@
+package main
+
+import "sgo"
+
+// Accept names the scope the request belongs to (D174 review Q1): a server that accepts into a
+// nursery per iteration answers a forgotten request with NoReply at that iteration's end, and
+// goes on serving.
+func main(root *sgo.Context) error {
+	nursery (n) {
+		c := sgo.NewCall[int, int](n)
+		n.Spawn(func(t *sgo.Context) error {
+			for i := 0; i < 2; i++ {
+				nursery (h) {
+					r := c.Accept(h)
+					if r.Value() != 1 {
+						r.Reply(r.Value()*10, nil)
+					}
+				}
+			}
+			return nil
+		})
+		one := sgo.Go(n, func(t *sgo.Context) (bool, error) {
+			_, err := c.Call(t, 1)
+			return sgo.IsNoReply(err), nil
+		})
+		two := check c.Call(root, 2)
+		noReply := check one.Wait(root)
+		if two == 20 && noReply {
+			check root.Stdout().WriteString("2 -> 20, 1 -> NoReply\n")
+		}
+	}
+	return nil
+}

@@ -1,0 +1,11 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-SPAWN-008",
+  "SGO-LAB-006"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "LabDeadlock",
+ "note": "D174 review K2: there is no notion of no server; a caller waits in Call until its scope is cancelled."
+}

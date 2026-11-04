@@ -599,3 +599,26 @@ func TestSGoTaskResult(t *testing.T) {
 		}
 	})
 }
+
+// TestSGoTaskResultOnce: two publications racing on one record (two Replies to one request) have
+// exactly one winner, decided under the record's lock (D174 review K1); run it under -race.
+func TestSGoTaskResultOnce(t *testing.T) {
+	for range 200 {
+		r := runtime.SGoTaskResNew()
+		var wins atomic.Int64
+		var wg sync.WaitGroup
+		for v := range 2 {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				if runtime.SGoTaskResSet(r, v) {
+					wins.Add(1)
+				}
+			}()
+		}
+		wg.Wait()
+		if wins.Load() != 1 {
+			t.Fatalf("%d publications won", wins.Load())
+		}
+	}
+}

@@ -114,7 +114,9 @@ type SGoTaskRes = sgoTaskRes
 func SGoTaskResNew() *SGoTaskRes {
 	return (*sgoTaskRes)(sgo_taskResNew(unsafe.Pointer(sgoChanIntType.Elem)))
 }
-func SGoTaskResSet(r *SGoTaskRes, v int) { sgo_taskResSet(unsafe.Pointer(r), unsafe.Pointer(&v)) }
+func SGoTaskResSet(r *SGoTaskRes, v int) bool {
+	return sgo_taskResSet(unsafe.Pointer(r), unsafe.Pointer(&v))
+}
 func SGoTaskResChan(r *SGoTaskRes) *SGoChan {
 	return (*SGoChan)(sgo_taskResChan(unsafe.Pointer(r)))
 }

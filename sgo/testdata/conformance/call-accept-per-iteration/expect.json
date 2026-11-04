@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-008"
+ ],
+ "exit": 0,
+ "stdout": "2 -> 20, 1 -> NoReply\n",
+ "timeout_ms": 20000,
+ "note": "D174 review Q1: request 1 is a resource of its iteration's nursery; it is released with NoReply when that nursery ends, whichever order the two requests arrive in."
+}

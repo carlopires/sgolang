@@ -1,0 +1,19 @@
+package main
+
+import "sgo"
+
+// A call is a rendezvous: with no task left to accept, Call waits until its scope is cancelled;
+// with nothing else live, the run is LabDeadlock (D174 review K2).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		c := sgo.NewCall[int, int](n)
+		n.Spawn(func(t *sgo.Context) error {
+			r := c.Accept(t)
+			r.Reply(1, nil)
+			return nil
+		})
+		_, _ = c.Call(root, 1)
+		_, _ = c.Call(root, 2) // the server has ended
+	}
+	return nil
+}

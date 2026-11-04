@@ -23,12 +23,11 @@ type Call[Req, Resp any] struct {
 	c unsafe.Pointer // the rendezvous channel of *Request[Req, Resp]
 }
 
-// Request is a request a server accepted: a resource of the accepting task's body. Its caller
-// waits until Reply answers it; if the body ends first, the caller's Call returns NoReply.
+// Request is a request a server accepted: a resource of the scope Accept named. Its caller waits
+// until Reply answers it; if the scope ends first, the caller's Call returns NoReply.
 type Request[Req, Resp any] struct {
-	value   Req
-	res     unsafe.Pointer // the reply record (sgo_taskres.go)
-	replied bool
+	value Req
+	res   unsafe.Pointer // the reply record (sgo_taskres.go): answered once, under its lock
 }
 
 // chanTypeOf returns the runtime type of chan E.
@@ -58,18 +57,17 @@ func (c *Call[Req, Resp]) Call(t *Context, req Req) (Resp, error) {
 	return res.Value, res.Err
 }
 
-// Accept waits for a request and returns it, a resource of the calling task's body: answer it
-// with Reply before the body ends, or its caller gets NoReply. The wait is a cancellation point.
-func (c *Call[Req, Resp]) Accept(t *Context) *Request[Req, Resp] {
-	t.own()
+// Accept waits for a request and returns it, a resource of scope s (a nursery, or a task's body,
+// as every acquisition names its scope, SGO-RES-001): answer it with Reply before s ends, or its
+// caller gets NoReply. A server loop that accepts into a nursery per iteration answers a forgotten
+// request at that iteration's end. The wait is a cancellation point.
+func (c *Call[Req, Resp]) Accept(s Scope) *Request[Req, Resp] {
+	task, nurs := s.sgoScope()
 	var r *Request[Req, Resp]
 	runtime_callRecv(c.s, c.c, unsafe.Pointer(&r))
-	runtime_resOwn(t.t, nil, unsafe.Pointer(r), func(bool) error {
-		if !r.replied {
-			r.replied = true
-			res := Result[Resp]{Err: runtime_noReply()}
-			runtime_taskResSet(r.res, unsafe.Pointer(&res))
-		}
+	runtime_resOwn(task, nurs, unsafe.Pointer(r), func(bool) error {
+		res := Result[Resp]{Err: runtime_noReply()}
+		runtime_taskResSet(r.res, unsafe.Pointer(&res)) // no effect if Reply answered it
 		return nil
 	})
 	return r
@@ -81,12 +79,10 @@ func (r *Request[Req, Resp]) Value() Req { return r.value }
 // Reply answers the request with resp and err; the caller's Call returns them. A reply to a caller
 // that was cancelled meanwhile is dropped. Replying twice is a SpawnContractViolation.
 func (r *Request[Req, Resp]) Reply(resp Resp, err error) {
-	if r.replied {
+	res := Result[Resp]{Value: resp, Err: err}
+	if !runtime_taskResSet(r.res, unsafe.Pointer(&res)) {
 		runtime_violation("Reply to a request that was already answered")
 	}
-	r.replied = true
-	res := Result[Resp]{Value: resp, Err: err}
-	runtime_taskResSet(r.res, unsafe.Pointer(&res))
 }
 
 // IsNoReply reports whether err is a Call whose request the server's handler left unanswered.

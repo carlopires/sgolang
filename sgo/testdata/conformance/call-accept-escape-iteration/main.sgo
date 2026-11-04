@@ -1,0 +1,20 @@
+package main
+
+import "sgo"
+
+// A request accepted into an iteration's nursery may not outlive it (D174, SGO-RES-003).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		c := sgo.NewCall[int, int](n)
+		n.Spawn(func(t *sgo.Context) error {
+			kept := make(chan *sgo.Request[int, int], 1)
+			nursery (h) {
+				r := c.Accept(h)
+				kept <- r
+			}
+			return nil
+		})
+		_, _ = c.Call(root, 1)
+	}
+	return nil
+}

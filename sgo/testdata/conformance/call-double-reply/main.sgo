@@ -1,0 +1,27 @@
+package main
+
+import "sgo"
+
+// Two tasks inside the accepting scope reply to one request: exactly one Reply answers it, the
+// other is a SpawnContractViolation (D174 review K1), whichever runs first.
+func main(root *sgo.Context) error {
+	nursery (n) {
+		c := sgo.NewCall[int, int](n)
+		n.Spawn(func(t *sgo.Context) error {
+			nursery (h) {
+				r := c.Accept(h)
+				h.Spawn(func(u *sgo.Context) error {
+					r.Reply(1, nil)
+					return nil
+				})
+				h.Spawn(func(u *sgo.Context) error {
+					r.Reply(2, nil)
+					return nil
+				})
+			}
+			return nil
+		})
+		_, _ = c.Call(root, 0)
+	}
+	return nil
+}

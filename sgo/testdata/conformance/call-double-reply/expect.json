@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-008"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "SpawnContractViolation",
+ "timeout_ms": 20000,
+ "note": "D174 review K1: the answer is decided once, under the reply record's lock."
+}

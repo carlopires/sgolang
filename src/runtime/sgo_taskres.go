@@ -42,10 +42,11 @@ func sgo_taskResNew(elem unsafe.Pointer) unsafe.Pointer {
 	return unsafe.Pointer(&sgoTaskRes{elem: (*_type)(elem)})
 }
 
-// sgo_taskResSet publishes the result *v once; later calls have no effect.
+// sgo_taskResSet publishes the result *v once and reports whether this call published it; later
+// calls have no effect and report false (decided under r.lock: D174 review K1).
 //
 //go:linkname sgo_taskResSet sgo.runtime_taskResSet
-func sgo_taskResSet(rp, v unsafe.Pointer) {
+func sgo_taskResSet(rp, v unsafe.Pointer) bool {
 	r := (*sgoTaskRes)(rp)
 	box := mallocgc(r.elem.Size_, r.elem, true)
 	typedmemmove(r.elem, box, v)
@@ -55,7 +56,7 @@ func sgo_taskResSet(rp, v unsafe.Pointer) {
 	lock(&r.lock)
 	if r.done.Load() {
 		unlock(&r.lock)
-		return
+		return false
 	}
 	r.val = box
 	r.done.Store(true)
@@ -71,6 +72,7 @@ func sgo_taskResSet(rp, v unsafe.Pointer) {
 		unlock(&c.lock)
 		sgoReadyOne(w)
 	}
+	return true
 }
 
 // sgoTaskResDeliver gives the published result to one parked receiver of result channel c, under

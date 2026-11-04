@@ -10,7 +10,7 @@ import "unsafe"
 
 // Implemented in the runtime (sgo_taskres.go).
 func runtime_taskResNew(elem unsafe.Pointer) unsafe.Pointer
-func runtime_taskResSet(r, v unsafe.Pointer)
+func runtime_taskResSet(r, v unsafe.Pointer) bool
 func runtime_taskResChan(r unsafe.Pointer) unsafe.Pointer
 func runtime_nativeRecv(c, dst unsafe.Pointer)
 func runtime_taskEndErr(task unsafe.Pointer) error
