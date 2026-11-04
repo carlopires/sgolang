@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-006"
+ ],
+ "exit": 0,
+ "stdout": "wrapper kept beyond the inner nursery\n",
+ "timeout_ms": 20000,
+ "note": "D176 C1: a wrapper is tied as narrowly as its authority arguments, here the outer timer, so it may outlive the inner nursery it was built in."
+}

@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-006"
+ ],
+ "exit": 0,
+ "stdout": "narrower interface and concrete assertion\n",
+ "timeout_ms": 20000,
+ "note": "D176 C3: a narrower resource interface keeps the tie; an assertion to the concrete handle gives the handle."
+}

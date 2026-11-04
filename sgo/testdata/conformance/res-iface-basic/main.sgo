@@ -1,0 +1,43 @@
+package main
+
+import (
+	"sgo"
+
+	"example.com/res-iface-basic/w"
+)
+
+type fake struct {
+	ch chan int
+}
+
+func (f *fake) Reset(ms int)  { f.ch <- ms }
+func (f *fake) C() <-chan int  { return f.ch }
+
+func twice(k w.Waker) int {
+	k.Reset(1)
+	a := <-k.C()
+	k.Reset(2)
+	b := <-k.C()
+	return a + b
+}
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		tm := n.NewTimer(1000)
+		if twice(tm) == 3 {
+			check out.WriteString("timer through a resource interface\n")
+		}
+		f := &fake{ch: make(chan int, 1)}
+		if twice(f) == 3 {
+			check out.WriteString("in-memory waker through the same interface\n")
+		}
+		c := w.NewCounting(tm)
+		c.Wait(1)
+		c.Wait(1)
+		if c.Count() == 2 {
+			check out.WriteString("wrapper from another package\n")
+		}
+	}
+	return nil
+}

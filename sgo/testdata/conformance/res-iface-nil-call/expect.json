@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-006"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "NilDereference",
+ "timeout_ms": 20000,
+ "note": "D176 C3: a nil resource interface value is admitted; a method call on it is NilDereference."
+}

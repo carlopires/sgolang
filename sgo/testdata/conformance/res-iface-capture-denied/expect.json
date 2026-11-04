@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-RES-006"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_TASK_LOCAL_CAPTURE",
+   "position": "main.sgo:12:11"
+  }
+ ],
+ "note": "D176: resource interface values are task-local; a child converts a captured concrete handle instead."
+}

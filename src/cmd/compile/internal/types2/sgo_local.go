@@ -418,6 +418,11 @@ func (check *Checker) sgoAssertToShared(at syntax.Expr, src, dst Type) {
 	if src == nil || dst == nil || !IsInterface(src) || !IsInterface(dst) {
 		return
 	}
+	if sgoResIface(src) && !sgoResIface(dst) {
+		// The dynamic value may be a resource: it may not become an untied interface value (D176).
+		check.errorf(at, UnsupportedFeature, "SGO_E_RESOURCE_ESCAPES: an assertion from the resource interface %s to %s could produce an untied value holding a resource; assert to a resource interface or a concrete type (SGO-RES-006)", src, dst)
+		return
+	}
 	if sgoTaskLocal(src) && !sgoTaskLocal(dst) {
 		check.errorf(at, UnsupportedFeature, "SGO_E_TASK_LOCAL_CAPTURE: an assertion from %s to %s could produce an error holding a task-local value; only shareable types may implement error, so assert to error only from an error (SGO-COMP-004, SGO-IFACE-004)", src, dst)
 	}
@@ -495,9 +500,10 @@ func (check *Checker) sgoTypeToIfaceArg(at syntax.Expr, src, dst Type, sgoArg bo
 	if _, tuple := src.(*Tuple); tuple {
 		return
 	}
-	if !sgoArg && !IsInterface(src) && sgoResType(src) {
-		// An interface value is not tied: holding a resource, it could outlive its scope (W21 review Z1).
-		check.errorf(at, UnsupportedFeature, "SGO_E_RESOURCE_ESCAPES: a value of the resource type %s cannot become %s: an interface value is not tied to a scope (SGO-RES-003)", src, dst)
+	if !sgoArg && sgoResType(src) && !sgoResIface(dst) && (!IsInterface(src) || sgoResIface(src)) {
+		// An interface value is not tied: holding a resource, it could outlive its scope (W21 review
+		// Z1). Only a resource interface is tied, as a resource is (D176).
+		check.errorf(at, UnsupportedFeature, "SGO_E_RESOURCE_ESCAPES: a value of the resource type %s cannot become %s: only a resource interface (one that embeds sgo.Resource) may hold a resource (SGO-RES-003, SGO-RES-006)", src, dst)
 		return
 	}
 	if sgoTaskLocal(dst) {

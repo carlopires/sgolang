@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-RES-006"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_RESOURCE_ESCAPES",
+   "position": "main.sgo:12:17"
+  }
+ ],
+ "note": "D176: a resource interface is a resource type: sgo.Copy refuses it."
+}

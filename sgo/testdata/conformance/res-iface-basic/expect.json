@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-006"
+ ],
+ "exit": 0,
+ "stdout": "timer through a resource interface\nin-memory waker through the same interface\nwrapper from another package\n",
+ "timeout_ms": 20000,
+ "note": "D176: one resource interface declared in another package serves a timer and an in-memory value; a wrapper constructor holds it."
+}

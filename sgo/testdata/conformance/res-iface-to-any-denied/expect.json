@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-RES-006"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_RESOURCE_ESCAPES",
+   "position": "main.sgo:12:15"
+  }
+ ],
+ "note": "D176: a resource interface converts to no unmarked interface; any never holds a resource."
+}

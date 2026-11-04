@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-RES-006"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_RESOURCE_ESCAPES",
+   "position": "main.sgo:13:11"
+  }
+ ],
+ "note": "D176: a resource interface value is tied as what it holds."
+}

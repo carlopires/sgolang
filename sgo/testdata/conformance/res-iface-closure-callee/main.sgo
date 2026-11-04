@@ -1,0 +1,20 @@
+package main
+
+import (
+	"sgo"
+
+	"example.com/res-iface-closure-callee/w"
+)
+
+func via(src w.Waker, f func() w.Waker) w.Waker { return f() }
+
+func main(root *sgo.Context) error {
+	nursery (outer) {
+		var keep w.Waker = outer.NewTimer(5)
+		nursery (n) {
+			keep = via(keep, func() w.Waker { return n.NewTimer(1000) })
+		}
+		keep.Reset(1)
+	}
+	return nil
+}

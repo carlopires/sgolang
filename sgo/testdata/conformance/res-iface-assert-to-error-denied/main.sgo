@@ -1,0 +1,17 @@
+package main
+
+import (
+	"sgo"
+
+	"example.com/res-iface-assert-to-error-denied/w"
+)
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		var k w.Waker = n.NewTimer(1000)
+		if e, ok := k.(error); ok {
+			_ = e
+		}
+	}
+	return nil
+}

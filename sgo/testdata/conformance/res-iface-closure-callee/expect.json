@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-RES-006"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_RESOURCE_ESCAPES",
+   "position": "main.sgo:15:11"
+  }
+ ],
+ "note": "D176: D176 C1: a function-valued argument may carry any scope it captured, so the result is tied to the caller extent (review counterexample)."
+}

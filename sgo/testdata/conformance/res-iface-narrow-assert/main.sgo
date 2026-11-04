@@ -1,0 +1,27 @@
+package main
+
+import (
+	"sgo"
+
+	"example.com/res-iface-narrow-assert/w"
+)
+
+type Resetter interface {
+	sgo.Resource
+	Reset(ms int)
+}
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		var k w.Waker = n.NewTimer(1000)
+		var r Resetter = k // a narrower resource interface keeps the tie
+		r.Reset(1)
+		<-k.C()
+		if tm, ok := k.(*sgo.Timer); ok { // back to the concrete handle, tied as k
+			tm.Reset(1)
+			<-tm.C()
+			check root.Stdout().WriteString("narrower interface and concrete assertion\n")
+		}
+	}
+	return nil
+}

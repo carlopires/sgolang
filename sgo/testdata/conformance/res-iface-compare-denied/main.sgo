@@ -1,0 +1,18 @@
+package main
+
+import (
+	"sgo"
+
+	"example.com/res-iface-compare-denied/w"
+)
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		var a w.Waker = n.NewTimer(1)
+		var b w.Waker = n.NewTimer(2)
+		if a == b {
+			return nil
+		}
+	}
+	return nil
+}

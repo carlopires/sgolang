@@ -1,0 +1,18 @@
+package main
+
+import (
+	"sgo"
+
+	"example.com/res-iface-wrapper-escape/w"
+)
+
+func main(root *sgo.Context) error {
+	nursery (outer) {
+		keep := w.NewCounting(outer.NewTimer(5))
+		nursery (n) {
+			keep = w.NewCounting(n.NewTimer(1000))
+		}
+		keep.Wait(1)
+	}
+	return nil
+}

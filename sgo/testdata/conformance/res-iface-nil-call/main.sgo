@@ -1,0 +1,13 @@
+package main
+
+import (
+	"sgo"
+
+	"example.com/res-iface-nil-call/w"
+)
+
+func main(root *sgo.Context) error {
+	var k w.Waker = nil
+	k.Reset(1)
+	return nil
+}

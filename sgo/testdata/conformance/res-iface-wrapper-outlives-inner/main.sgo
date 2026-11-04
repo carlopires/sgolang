@@ -1,0 +1,21 @@
+package main
+
+import (
+	"sgo"
+
+	"example.com/res-iface-wrapper-outlives-inner/w"
+)
+
+func main(root *sgo.Context) error {
+	nursery (outer) {
+		tm := outer.NewTimer(5)
+		keep := w.NewCounting(tm)
+		nursery (n) {
+			n.NewTimer(1).Stop()
+			keep = w.NewCounting(tm) // tied to outer, where tm is: it may outlive n (D176 C1)
+		}
+		keep.Wait(1)
+		check root.Stdout().WriteString("wrapper kept beyond the inner nursery\n")
+	}
+	return nil
+}

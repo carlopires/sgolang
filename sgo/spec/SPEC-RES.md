@@ -113,3 +113,25 @@ API at 0.16.0: a method on a scope acquires into that scope (`root.Listen`, `n.D
 - **implementation_coverage:** W21: compiler `src/cmd/compile/internal/types2/sgo_resflow.go`.
 - **executed_evidence:** `sgo/evidence/w21/README.md`.
 - **supported_execution_configurations:** production; lab.
+
+### SGO-RES-006 — Resource interfaces (subset 3)
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-RES-001, SGO-RES-002, SGO-RES-003, SGO-RES-005, SGO-IFACE-001, SGO-IFACE-002, SGO-COMP-004; D132, D176.
+- **grammar_and_types:** `sgo.Resource` is an interface type with no methods. An interface type is a *resource interface* when it embeds `sgo.Resource`, directly or through an embedded resource interface. A resource interface is a resource type (SGO-RES-001). Every other interface, `any` and `error` included, is not, and never holds a resource.
+- **preconditions:** n/a: static rules.
+- **evaluation_and_value_semantics:** A value converts to a resource interface whose method set it has. The interface value holds the same value; a method call dispatches to the dynamic value's method. A resource, or a value of a resource interface, converts to no interface that is not a resource interface. A type assertion or type-switch case from a resource interface to an interface that is not a resource interface is refused; to a resource interface or a concrete type it is admitted. A nil resource interface value is admitted; a method call on it is `NilDereference`. `==` on resource interface values is refused (SGO-IFACE-001).
+- **ownership_and_lifecycle:** A conversion moves nothing: a resource stays in its scope's list and is released once, by that scope (SGO-RES-001). A resource interface value is tied as what it holds: the converted value's tie, and for a value asserted from it, the interface value's tie; a resource-free value converts to an untied interface value. Every flow rule of resources applies (SGO-RES-003, SGO-RES-005). The result of a call of a function or method outside package `sgo` is tied to the innermost of the ties of its authority arguments — scope arguments, arguments holding resources (handles, user resources, resource interfaces, handles delivering resources, and aggregates or pointers of them), and the receiver — and to the caller's current extent if the callee or an argument is a function value, if there is no authority argument, or if two of the ties cannot be ordered.
+- **effect_and_capability_requirements:** n/a: a conversion grants nothing; the dynamic value's own rules apply to each call.
+- **concurrency_and_memory_order:** n/a: resource interface values are task-local (D132, SGO-COMP-004); a concrete handle crosses into a child and is converted there.
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** As the dynamic value's methods.
+- **cancellation_and_cleanup:** As the dynamic value's methods.
+- **compile_link_checks:** `SGO_E_RESOURCE_ESCAPES` (a resource or resource interface value becoming another interface; an assertion to one; a resource interface value outliving its tie; `sgo.Copy`); `SGO_E_TASK_LOCAL_CAPTURE` (capture by a child); `SGO_E_UNADMITTED` (`==`).
+- **runtime_guards:** `NilDereference` for a method call on a nil value.
+- **tcb_assumptions:** `src/cmd/compile/internal/types2/sgo_resflow.go` (`sgoResIface`, `callTie`), `sgo_local.go` (conversions and assertions).
+- **positive_tests:** fixture:res-iface-basic, fixture:res-iface-wrapper-outlives-inner, fixture:res-iface-narrow-assert, fixture:res-iface-nil-call.
+- **negative_tests:** fixture:res-iface-escape, fixture:res-iface-to-any-denied, fixture:res-iface-assert-to-error-denied, fixture:res-iface-copy-denied, fixture:res-iface-capture-denied, fixture:res-iface-closure-callee, fixture:res-iface-wrapper-escape, fixture:res-iface-compare-denied.
+- **implementation_coverage:** W23: `src/sgo/io.go` (`Resource`); compiler `sgoadmit/admit_expr.go`, `types2/sgo_resflow.go`, `types2/sgo_local.go`.
+- **executed_evidence:** pending (W23).
+- **supported_execution_configurations:** production; lab.

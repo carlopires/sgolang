@@ -28,6 +28,34 @@ func sgoResKind(T Type) bool {
 	return false
 }
 
+// sgoResIface reports whether T is a resource interface: an interface type that embeds
+// sgo.Resource, directly or through embedded interfaces (D176, SGO-RES-006).
+func sgoResIface(T Type) bool { return sgoResIfaceRec(T, map[Type]bool{}) }
+
+func sgoResIfaceRec(T Type, seen map[Type]bool) bool {
+	if T == nil {
+		return false
+	}
+	T = Unalias(T)
+	if n, _ := T.(*Named); n != nil && n.obj != nil && n.obj.pkg != nil && n.obj.pkg.path == "sgo" && n.obj.name == "Resource" {
+		return true
+	}
+	if seen[T] {
+		return false
+	}
+	seen[T] = true
+	it, _ := T.Underlying().(*Interface)
+	if it == nil {
+		return false
+	}
+	for _, e := range it.embeddeds {
+		if sgoResIfaceRec(e, seen) {
+			return true
+		}
+	}
+	return false
+}
+
 // sgoResType reports whether T is a resource type: a resource handle, a type with a method
 // Release(bool) error (a user resource, SGO-RES-004), or a struct, array, or slice holding one.
 func sgoResType(T Type) bool { return sgoResTypeRec(T, map[Type]bool{}) }
@@ -41,7 +69,7 @@ func sgoResTypeRec(T Type, seen map[Type]bool) bool {
 		return false
 	}
 	seen[T] = true
-	if sgoResKind(T) || sgoHasRelease(T) {
+	if sgoResKind(T) || sgoHasRelease(T) || sgoResIface(T) {
 		return true
 	}
 	if isSgoHandle(T) {
@@ -567,7 +595,15 @@ func (f *sgoResFlow) tie(e syntax.Expr) syntax.Node {
 			}
 		}
 		return t
+	case *syntax.AssertExpr:
+		return f.tie(e.X) // the dynamic value: tied as the interface value is (D176)
 	case *syntax.CallExpr:
+		if tv, ok := f.check.Types[e.Fun]; ok && tv.IsType() && len(e.ArgList) == 1 {
+			return f.tie(e.ArgList[0]) // a conversion keeps the value's tie (D176)
+		}
+		if t, ok := f.callTie(e); ok {
+			return t
+		}
 		// The result of append holds its arguments: tied as narrowly as they are.
 		if id, _ := syntax.Unparen(e.Fun).(*syntax.Name); id != nil {
 			if b, _ := f.check.Uses[id].(*Builtin); b != nil && b.id == _Append {
@@ -1061,4 +1097,74 @@ func sgoRecvNamed(fn *Func, name string) bool {
 	}
 	n, _ := Unalias(p.base).(*Named)
 	return n != nil && n.obj != nil && n.obj.name == name
+}
+
+// callTie is the tie of the result of a call of a function or method outside package sgo (D176,
+// rule 6 as amended, C1 and C2): the innermost of the ties of its authority arguments — scope
+// arguments, arguments holding resources (handles, user resources, resource interfaces, handles
+// delivering resources, and aggregates or pointers of them), and the receiver. A callee can hold
+// and return only resources it was handed or acquired into a scope it was handed. A callee that is
+// a function value, an argument that is a function value (a closure carries any scope it
+// captured), no authority argument, or two ties that cannot be ordered: the caller's current
+// extent. ok is false for package sgo, whose calls keep their specified ties, and for builtins.
+func (f *sgoResFlow) callTie(e *syntax.CallExpr) (syntax.Node, bool) {
+	fun := syntax.Unparen(e.Fun)
+	if ix, _ := fun.(*syntax.IndexExpr); ix != nil {
+		fun = ix.X
+	}
+	var fn *Func
+	var recv syntax.Expr
+	switch x := fun.(type) {
+	case *syntax.Name:
+		switch obj := f.check.Uses[x].(type) {
+		case *Builtin:
+			return nil, false
+		case *Func:
+			fn = obj
+		}
+	case *syntax.SelectorExpr:
+		fn, _ = f.check.Uses[x.Sel].(*Func)
+		if fn != nil {
+			if sig, _ := fn.typ.(*Signature); sig != nil && sig.recv != nil {
+				recv = x.X
+			}
+		}
+	}
+	if fn == nil {
+		return f.cur(), true // a function value
+	}
+	if fn.pkg != nil && fn.pkg.path == "sgo" {
+		return nil, false
+	}
+	args := e.ArgList
+	if recv != nil {
+		args = append([]syntax.Expr{recv}, args...)
+	}
+	var t syntax.Node
+	for _, a := range args {
+		if tv, ok := f.check.Types[a]; ok && tv.Type != nil {
+			if _, isFunc := tv.Type.Underlying().(*Signature); isFunc {
+				return f.cur(), true
+			}
+		}
+		var x syntax.Node
+		if s := f.scopeExtent(a); s != nil {
+			x = s
+		} else if f.isRes(a) {
+			x = f.tie(a)
+		} else {
+			continue
+		}
+		switch {
+		case t == nil || f.within(x, t):
+			t = x
+		case f.within(t, x):
+		default:
+			return f.cur(), true // ties that cannot be ordered
+		}
+	}
+	if t == nil || t == f.top {
+		return f.cur(), true
+	}
+	return t, true
 }

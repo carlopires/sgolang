@@ -1,0 +1,27 @@
+package w
+
+import "sgo"
+
+// Waker is a resource interface declared in another package (D176).
+type Waker interface {
+	sgo.Resource
+	Reset(ms int)
+	C() <-chan int
+}
+
+// Counting wraps a waker and counts its wake-ups.
+type Counting struct {
+	w Waker
+	n int
+}
+
+func NewCounting(w Waker) *Counting { return &Counting{w: w} }
+
+func (c *Counting) Wait(ms int) int {
+	c.w.Reset(ms)
+	v := <-c.w.C()
+	c.n++
+	return v
+}
+
+func (c *Counting) Count() int { return c.n }

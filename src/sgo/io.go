@@ -365,6 +365,12 @@ func moveTo(h unsafe.Pointer, s Scope) error {
 
 // Releaser is a user resource (SGO-RES-004): Release(ok) runs when its scope ends, with ok true
 // when the scope ends normally and false when it unwinds (a failure or cancellation).
+// Resource marks a resource interface (D176, SGO-RES-006): an interface that embeds Resource,
+// directly or through another resource interface, may hold resources, and its values are tied to
+// the scope of what they hold, like the resources themselves. No other interface, any and error
+// included, ever holds a resource. Resource has no methods.
+type Resource interface{}
+
 type Releaser interface {
 	Release(ok bool) error
 }
