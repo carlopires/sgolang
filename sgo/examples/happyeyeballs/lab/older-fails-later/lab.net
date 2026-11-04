@@ -1,0 +1,7 @@
+# IPv6 never answers; its connect fails after 75 virtual seconds. IPv4 starts at 250ms and its peer
+# accepts only after 80 virtual seconds, so the older IPv6 attempt fails while the newer one is in
+# flight. That failure is not the latest attempt's: the race keeps waiting, and IPv4 wins.
+resolve example.test 2001:db8::1
+resolve example.test 192.0.2.1
+blackhole [2001:db8::1]:443
+peer 192.0.2.1:443 80000

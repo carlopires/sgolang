@@ -75,6 +75,8 @@ sgo lab sweep -seeds 0..199 ./lab/all-refused     # everything refuses: an error
 sgo lab sweep -seeds 0..199 ./lab/late-a-after-tick     # A answers after IPv6's 250ms: IPv4 starts at once
 sgo lab sweep -seeds 0..199 ./lab/late-aaaa-after-tick  # AAAA answers after IPv4's 250ms: IPv6 starts at once
 sgo lab sweep -seeds 0..199 ./lab/log-fails-pending     # the logger fails mid-race: pending attempts cancelled
+sgo lab sweep -seeds 0..199 ./lab/older-fails-later     # IPv6 fails after IPv4 started: the race keeps IPv4
+sgo lab sweep -seeds 0..199 ./lab/two-connected         # both connect before selection: one kept, one released
 ```
 
 The real run resolves `localhost` from `/etc/hosts` (`::1`, then `127.0.0.1`). Other names go to
@@ -95,6 +97,8 @@ This is an RFC 8305-based example, not a conforming implementation:
   least 10ms between attempt starts and makes no exception for hard failures; this example keeps
   the immediate fallback on purpose.
 * No TCP fallback for truncated DNS answers and no search domains (SGO-NET-003).
-* Not yet covered by a scenario: an older attempt failing after a newer one started (the lab
-  network cannot schedule a delayed refusal), and a greeting split across reads (the lab peer
-  writes once; a library `ReadAll` is W23 work).
+* Not yet covered by a scenario: a greeting split across reads (the lab peer writes once; a
+  library `ReadAll` is W23 work). An older attempt failing after a newer one started is
+  `lab/older-fails-later` (a blackhole fails after 75 virtual seconds while the IPv4 peer answers at
+  80); two attempts connecting before the race selects either is `lab/two-connected` (the winner
+  depends on the schedule, and the sweep sees both).

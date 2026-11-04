@@ -23,11 +23,18 @@ func (t *trace) Log(line string) error {
 // Run races to example.test and prints the steps, then what the winning peer says. want is the
 // address the race must reach ("" if every address must fail); step, if not "", is a step the
 // race must take (the RFC 8305 rule the scenario is about).
-func Run(root *sgo.Context, want, step string) error { return RunWithout(root, want, step, "") }
+func Run(root *sgo.Context, want, step string) error { return run(root, want, "", step, "") }
+
+// RunOneOf is Run for a race whose winner depends on the schedule: it must reach want or alt.
+func RunOneOf(root *sgo.Context, want, alt, step string) error { return run(root, want, alt, step, "") }
 
 // RunWithout is Run, and it also fails if the race logged the step forbid (when forbid is not ""):
 // the late-answer scenarios forbid the pending attempt's failure, which the race must not wait for.
 func RunWithout(root *sgo.Context, want, step, forbid string) error {
+	return run(root, want, "", step, forbid)
+}
+
+func run(root *sgo.Context, want, alt, step, forbid string) error {
 	d := root.Dialer([]string{"example.test:443"})
 	steps := &trace{}
 	r, cerr := he.Connect(root, d, "example.test", steps)
@@ -48,7 +55,7 @@ func RunWithout(root *sgo.Context, want, step, forbid string) error {
 		}
 		return cerr
 	}
-	if r.Addr != want {
+	if r.Addr != want && (alt == "" || r.Addr != alt) {
 		return sgo.NewError("the race reached " + r.Addr + ", not " + want)
 	}
 	msg := check ReadGreeting(r.Conn)

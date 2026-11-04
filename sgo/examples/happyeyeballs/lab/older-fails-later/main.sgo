@@ -1,0 +1,14 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Command older-fails-later is a Happy Eyeballs lab scenario: an older attempt fails after a newer
+// one started; the race keeps the newer attempt and reaches IPv4 (see lab.net).
+package main
+
+import (
+	"example.com/happyeyeballs/demo"
+	"sgo"
+)
+
+func main(root *sgo.Context) error { return demo.Run(root, "192.0.2.1:443", "failed [2001:db8::1]:443") }

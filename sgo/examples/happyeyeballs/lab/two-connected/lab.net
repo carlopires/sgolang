@@ -1,0 +1,7 @@
+# IPv6 accepts after 300ms; IPv4 starts at 250ms and accepts after 50ms: both connect at virtual
+# 300ms, before the race selects either. Which one the race takes depends on the schedule; it must
+# take exactly one, and the nursery releases the other.
+resolve example.test 2001:db8::1
+resolve example.test 192.0.2.1
+peer [2001:db8::1]:443 300
+peer 192.0.2.1:443 50

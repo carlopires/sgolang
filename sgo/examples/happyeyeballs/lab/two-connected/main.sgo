@@ -1,0 +1,16 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Command two-connected is a Happy Eyeballs lab scenario: two attempts connect at the same virtual
+// time, before the race selects either; the race keeps one and releases the other (see lab.net).
+package main
+
+import (
+	"example.com/happyeyeballs/demo"
+	"sgo"
+)
+
+func main(root *sgo.Context) error {
+	return demo.RunOneOf(root, "[2001:db8::1]:443", "192.0.2.1:443", "attempt 192.0.2.1:443")
+}
