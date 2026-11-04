@@ -618,9 +618,10 @@
       "clause_ids": [
         "SGO-WAIT-001",
         "SGO-WAIT-002",
-        "SGO-WAIT-003"
+        "SGO-WAIT-003",
+        "SGO-WAIT-004"
       ],
-      "normative_text_digest": "4d9fef7aa444375950add6900883c85da5fa75fb6eddfdd466012a6a73830775",
+      "normative_text_digest": "6109935b2d23d5f4f0babab1167aa53fde055b2308d881c4559be6eb18cf19ed",
       "admitted_in": [
         "0.7.0"
       ],
@@ -636,17 +637,20 @@
       "clause_digests": {
         "SGO-WAIT-001": "f7d2036b89d4992fcac526824569046e5ed598f1be387141927437c5ad852b04",
         "SGO-WAIT-002": "abdf2196d49216cdf8039688db092763fdc8f04033573ab6dac95705b98acb03",
-        "SGO-WAIT-003": "d98b1e844ef706012814bcb9dde4382feb09b98054090ed59d75195f1f9580b4"
+        "SGO-WAIT-003": "d98b1e844ef706012814bcb9dde4382feb09b98054090ed59d75195f1f9580b4",
+        "SGO-WAIT-004": "d8877fea8369ad77d49ad2c6cf181968f67f520abb47fd4b3c4a6db7d6fbe692"
       },
       "clause_status": {
         "SGO-WAIT-001": "frozen",
         "SGO-WAIT-002": "frozen",
-        "SGO-WAIT-003": "draft"
+        "SGO-WAIT-003": "draft",
+        "SGO-WAIT-004": "draft"
       },
       "clause_versions": {
         "SGO-WAIT-001": 1,
         "SGO-WAIT-002": 1,
-        "SGO-WAIT-003": 1
+        "SGO-WAIT-003": 1,
+        "SGO-WAIT-004": 1
       }
     },
     {
@@ -1799,5 +1803,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "f449ef0c87db15fe0e5b07403c2c7c868a4e2a9f11100959d59a2bc3df8ce117"
+  "rows_digest": "ee6e23a2b4f4377d6c892dc74d4f498ea03d95eb4f9b60419947d53b8b1ca48b"
 }

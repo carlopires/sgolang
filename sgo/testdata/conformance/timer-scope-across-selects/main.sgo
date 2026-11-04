@@ -1,0 +1,29 @@
+package main
+
+import "sgo"
+
+// A scope timer is kept when a select using it ends by another arm, so the next select still
+// waits for the same deadline (D171, SGO-WAIT-004).
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		tm := n.NewTimer(20)
+		ready := make(chan int, 1)
+		ready <- 1
+		select {
+		case <-ready:
+			check out.WriteString("ready arm first\n")
+		case <-tm.C():
+			check out.WriteString("BAD: timer before its deadline\n")
+		}
+		never := make(chan int)
+		select {
+		case <-never:
+		case v := <-tm.C():
+			if v == 20 {
+				check out.WriteString("same timer fired\n")
+			}
+		}
+	}
+	return nil
+}

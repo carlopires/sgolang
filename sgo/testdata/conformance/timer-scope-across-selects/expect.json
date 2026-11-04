@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-WAIT-004"
+ ],
+ "exit": 0,
+ "stdout": "ready arm first\nsame timer fired\n",
+ "note": "D171: the timer outlives the first select."
+}

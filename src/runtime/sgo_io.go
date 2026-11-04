@@ -40,6 +40,7 @@ type sgoHandle struct {
 	fake     *sgoFakeFile // lab: a fake file (sgo_iofake.go)
 	conn     *sgoFakeConn // lab: a fake connection or listener (sgo_netfake.go)
 	dial     *sgoDialer   // a dialer: its endpoints (sgo_netdial.go)
+	tmr      *sgoChan     // a scope timer: its channel (sgo_timer.go, D171)
 	unix     bool         // a Unix domain socket (D60)
 	sockPath *byte        // a Unix listener: its socket file, removed at close (sgo_net.go)
 	sockID   sgoFileID
@@ -117,6 +118,9 @@ func sgoHandleClose(h *sgoHandle) *sgoIOErr {
 // sgoHandleFree closes h and removes it from its scope; the result is a failed close (IOError).
 func sgoHandleFree(h *sgoHandle) *sgoIOErr {
 	h.closed = true
+	if h.tmr != nil {
+		sgoTimerDisarm(h.tmr)
+	}
 	if h.sockPath != nil {
 		sgoNetUnlinkSocket(h)
 	}

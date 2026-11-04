@@ -4580,7 +4580,7 @@ func sgoIRResType(t *types.Type) bool {
 	e := t.Elem()
 	if s := e.Sym(); s != nil && s.Pkg != nil && s.Pkg.Path == "sgo" {
 		switch s.Name {
-		case "File", "Conn", "Listener", "Dialer":
+		case "File", "Conn", "Listener", "Dialer", "Timer":
 			return true
 		}
 		return false

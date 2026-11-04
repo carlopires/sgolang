@@ -22,7 +22,7 @@ func sgoResKind(T Type) bool {
 		return false
 	}
 	switch Unalias(Unalias(T).(*Pointer).base).(*Named).obj.name {
-	case "File", "Conn", "Listener", "Dialer":
+	case "File", "Conn", "Listener", "Dialer", "Timer":
 		return true
 	}
 	return false

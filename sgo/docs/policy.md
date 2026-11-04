@@ -16,11 +16,11 @@ There is no ambient authority. A program's root grants are the `grant` lines of 
 
 Attenuation: `SimStore.ReadOnly`, `SimStore.Prefix`; every handle has `LendTo(n)`, revoked when `n` closes (SGO-AUTH-003).
 
-Capability handle types (opaque, used only behind `*`, never nil, never compared; SGO-TYPE-005): `*sgo.CapacityLimiter`, `*sgo.Channel`, `*sgo.Clock`, `*sgo.Conn`, `*sgo.Context`, `*sgo.Dialer`, `*sgo.Dir`, `*sgo.Entropy`, `*sgo.Event`, `*sgo.File`, `*sgo.Listener`, `*sgo.Listing`, `*sgo.Nursery`, `*sgo.Random`, `*sgo.Ready`, `*sgo.SendPermit`, `*sgo.SimStore`, `*sgo.T`, `*sgo.Token`, `*sgo.WallClock`, `*sgo.Writer` (`Channel` and `SendPermit` only instantiated, SGO-PERMIT-002).
+Capability handle types (opaque, used only behind `*`, never nil, never compared; SGO-TYPE-005): `*sgo.CapacityLimiter`, `*sgo.Channel`, `*sgo.Clock`, `*sgo.Conn`, `*sgo.Context`, `*sgo.Dialer`, `*sgo.Dir`, `*sgo.Entropy`, `*sgo.Event`, `*sgo.File`, `*sgo.Listener`, `*sgo.Listing`, `*sgo.Nursery`, `*sgo.Random`, `*sgo.Ready`, `*sgo.SendPermit`, `*sgo.SimStore`, `*sgo.T`, `*sgo.Timer`, `*sgo.Token`, `*sgo.WallClock`, `*sgo.Writer` (`Channel` and `SendPermit` only instantiated, SGO-PERMIT-002).
 
 ## Trusted computing base
 
-`sgo/TARGET_TCB.json` (SGO-TCB-002): spec 0.16.2, allowlist digest `32c9cb396b30f1df`, 31 packages, 1075 files (60 changed from upstream), 19 primitives. A file is trusted only at its own import path and file name with its exact SHA-256: neither a package name nor copied content confers trust (W12 R1).
+`sgo/TARGET_TCB.json` (SGO-TCB-002): spec 0.16.2, allowlist digest `823dd1c44efe2877`, 31 packages, 1077 files (62 changed from upstream), 19 primitives. A file is trusted only at its own import path and file name with its exact SHA-256: neither a package name nor copied content confers trust (W12 R1).
 
 ## Denied escape routes
 

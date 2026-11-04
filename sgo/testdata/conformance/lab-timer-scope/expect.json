@@ -1,0 +1,18 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-WAIT-004",
+  "SGO-LAB-004"
+ ],
+ "lab_args": [
+  "-sched",
+  "fifo"
+ ],
+ "exit": 0,
+ "stdout": "3 ticks, then the timer\n",
+ "timeout_ms": 60000,
+ "trace_events": [
+  "{\"e\":\"advance\",\"to\":100}",
+  "{\"e\":\"outcome\",\"status\":0,\"kind\":\"\"}"
+ ]
+}

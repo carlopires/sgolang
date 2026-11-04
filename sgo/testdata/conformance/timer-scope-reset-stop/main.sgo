@@ -1,0 +1,26 @@
+package main
+
+import "sgo"
+
+// Reset re-arms a fired timer; Stop disarms it until the next Reset (D171, SGO-WAIT-004).
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	tm := root.NewTimer(0)
+	<-tm.C()
+	tm.Reset(10)
+	v := <-tm.C()
+	if v == 10 {
+		check out.WriteString("reset fired\n")
+	}
+	tm.Reset(5)
+	tm.Stop()
+	select {
+	case <-tm.C():
+		check out.WriteString("BAD: stopped timer fired\n")
+	case <-root.After(40):
+		check out.WriteString("stopped\n")
+	}
+	tm.Reset(1)
+	<-tm.C()
+	return out.WriteString("re-armed after stop\n")
+}

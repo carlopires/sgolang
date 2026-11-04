@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-WAIT-004"
+ ],
+ "exit": 0,
+ "stdout": "reset fired\nstopped\nre-armed after stop\n"
+}

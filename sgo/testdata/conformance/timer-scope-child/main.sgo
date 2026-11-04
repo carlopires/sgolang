@@ -1,0 +1,19 @@
+package main
+
+import "sgo"
+
+// Every task inside a timer's scope may use it (D150, D171, SGO-WAIT-004).
+func main(root *sgo.Context) error {
+	done := make(chan int, 1)
+	nursery (n) {
+		tm := n.NewTimer(3600000)
+		n.Spawn(func(t *sgo.Context) error {
+			tm.Reset(5)
+			<-tm.C()
+			done <- 1
+			return nil
+		})
+	}
+	<-done
+	return root.Stdout().WriteString("child reset and waited\n")
+}

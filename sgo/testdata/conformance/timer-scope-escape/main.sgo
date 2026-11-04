@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+// A timer is a resource of its scope: it may not outlive the nursery that made it (SGO-RES-003).
+func leak(root *sgo.Context) *sgo.Timer {
+	out := root.NewTimer(0)
+	nursery (n) {
+		out = n.NewTimer(10)
+	}
+	return out
+}
+
+func main(root *sgo.Context) error {
+	tm := leak(root)
+	<-tm.C()
+	return nil
+}

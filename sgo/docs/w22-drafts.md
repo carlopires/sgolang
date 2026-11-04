@@ -41,3 +41,7 @@ freeze re-adds them as clause versions:
   `g.Go` inside the extent" (the escape pass already treats `sgo.Go` callbacks so, D161).
 - SGO-RES-004 v4: `ok` is false on any cancellation, "an ancestor's or a deadline's (SGO-CANCEL-005)
   included".
+
+## SGO-WAIT-004 (D171)
+
+Drafted in `sgo/spec/SPEC-WAIT.md` (status draft); freezes at 0.17.0.

@@ -1,0 +1,34 @@
+package main
+
+import "sgo"
+
+// On virtual time, a timer armed at 100 ms fires after three 30 ms ticks however the selects
+// interleave, because it is measured from its arming, not from each select (D171, SGO-WAIT-004).
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		tm := n.NewTimer(100)
+		ticks := make(chan int)
+		n.Spawn(func(t *sgo.Context) error {
+			for i := 0; i < 3; i++ {
+				check t.Sleep(30)
+				ticks <- i
+			}
+			return nil
+		})
+		got := 0
+		for {
+			select {
+			case <-ticks:
+				got++
+				continue
+			case <-tm.C():
+			}
+			break
+		}
+		if got == 3 {
+			check out.WriteString("3 ticks, then the timer\n")
+		}
+	}
+	return nil
+}

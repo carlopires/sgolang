@@ -25,6 +25,7 @@ type sgoAfter struct {
 	box   unsafe.Pointer // the delivered value (the duration), boxed at creation
 	fired bool           // under c.lock: the value was taken or delivered
 	timer *timer         // production only
+	owned bool           // a scope timer (D171, sgo_timer.go): kept when a select using it ends
 }
 
 // sgo_after is task.After(ms) after the argument and ownership checks.
@@ -95,6 +96,10 @@ func sgoAfterDeliver(c *sgoChan) *sgoChanWait {
 func sgoAfterFire(arg any, _ uintptr, _ int64) {
 	c := arg.(*sgoChan)
 	lock(&c.lock)
+	if nanotime() < c.tmr.when { // a stale fire of a scope timer that was re-armed (D171)
+		unlock(&c.lock)
+		return
+	}
 	w := sgoAfterDeliver(c)
 	unlock(&c.lock)
 	sgoReadyOne(w)
@@ -117,6 +122,9 @@ func (l *sgoLabState) fireAfter(c *sgoChan) {
 
 // sgoAfterStop drops timer channel c when the select (or receive) using it ends.
 func sgoAfterStop(c *sgoChan) {
+	if c.tmr.owned {
+		return // a scope timer outlives the select: its scope stops it (D171)
+	}
 	if l := sgoLab; l != nil {
 		lock(&l.lock)
 		n := 0

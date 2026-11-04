@@ -67,3 +67,25 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §12, resolution R8, plan §6.2, in
 - **implementation_coverage:** W22: `src/runtime/sgo_after.go`, `src/runtime/sgo_native_ops.go`, `src/sgo/sgo.go`, `src/cmd/compile/internal/types2/sgo_check.go`.
 - **executed_evidence:** conformance fixtures (darwin/arm64); Linux pending.
 - **supported_execution_configurations:** production and lab.
+
+### SGO-WAIT-004 — Scope timers
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-WAIT-003, SGO-CHAN-002, SGO-RES-001, SGO-RES-002, SGO-RES-003, SGO-CANCEL-002, SGO-LAB-004, SGO-DEF-003; D171.
+- **grammar_and_types:** `s.NewTimer(ms int) *sgo.Timer` where `s` has type `*sgo.Context` or `*sgo.Nursery`; methods `tm.C() <-chan int`, `tm.Reset(ms int)`, `tm.Stop()`, `tm.MoveTo(s Scope) error`. `*sgo.Timer` is a resource handle type (SGO-RES-001). `tm.C()` may be used wherever a receive-only channel of `int` is admitted, in any number of selects and receives.
+- **preconditions:** For a context, `s` is the calling task's own context (as SGO-CANCEL-002). The calling task runs inside the scope `s` names, and a nursery has not ended. `ms ≥ 0`. `C`, `Reset`, and `Stop` are called by a task running inside the timer's scope (D150).
+- **evaluation_and_value_semantics:** `NewTimer` makes a timer of scope `s`, armed for `ms` milliseconds of monotonic time from the call. An armed timer's channel has a value once its deadline has passed: the duration it was last armed with. One receive takes it, and the timer is then fired. Until it is fired, every select or receive on `tm.C()` sees the same deadline, whichever selects started or ended before. A parked receiver is woken when the deadline passes, as by a sender. `Reset(ms)` re-arms the timer for `ms` from the call, whether it was armed, fired, or stopped; a value of the previous arming that was not taken is discarded. `Stop()` disarms it: no receive on `tm.C()` proceeds until a `Reset`.
+- **ownership_and_lifecycle:** A timer is a resource of the scope it was made in (SGO-RES-002). The scope disarms it when it ends, after its join. The resource flow rule (SGO-RES-003) keeps the handle inside the scope's extent; `MoveTo` moves it to an enclosing scope. Ending a select that used it, by any arm or by cancellation, does not disarm it (unlike SGO-WAIT-003).
+- **effect_and_capability_requirements:** n/a — no external effect. No clock grant is needed, as SGO-WAIT-003: a timer reveals elapsed time only by the order in which receives proceed.
+- **concurrency_and_memory_order:** Each arming's value is delivered at most once. `Reset` and `Stop` by one task and receives by others are ordered by the timer's channel lock: a receive that proceeds after a `Stop` or `Reset` completes sees its effect.
+- **allowed_nondeterminism:** In production, when a deadline and another arm become ready together, either may proceed. In the lab, time is virtual (SGO-LAB-004): a timer fires at the advance to its deadline, in arming order with the other timers due then.
+- **failure_and_partial_progress:** `ms < 0` fails with `InvalidArgument` before any effect. A task outside the timer's scope fails with `MissingCapability`; context misuse fails with `SpawnContractViolation`.
+- **cancellation_and_cleanup:** A select or receive on `tm.C()` is a cancellation point like any channel wait; cancellation wakes it and leaves the timer armed. The timer holds no runtime resource after its scope ends.
+- **compile_link_checks:** `SGO_E_RESOURCE_ESCAPES` for a timer flowing beyond its scope's extent (SGO-RES-003).
+- **runtime_guards:** Argument checks; the scope check for `C`, `Reset`, `Stop`; `HandleClosed` for a use after the scope ended (unreachable from admitted code). A fire left from an earlier arming is ignored.
+- **tcb_assumptions:** Runtime timers and park/unpark (as SGO-WAIT-003); in the lab, virtual timers (SPEC-LAB).
+- **positive_tests:** fixture:timer-scope-across-selects, fixture:timer-scope-reset-stop, fixture:timer-scope-child, fixture:lab-timer-scope.
+- **negative_tests:** fixture:timer-scope-negative, fixture:timer-scope-escape.
+- **implementation_coverage:** W22: `src/runtime/sgo_timer.go`, `src/runtime/sgo_after.go`, `src/sgo/timer.go`, `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/types2/sgo_resflow.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`, `src/cmd/compile/internal/noder/reader.go`.
+- **executed_evidence:** conformance fixtures (darwin/arm64); Linux pending.
+- **supported_execution_configurations:** production and lab.

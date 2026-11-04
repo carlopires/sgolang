@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-WAIT-004",
+  "SGO-RES-003"
+ ],
+ "exit": 0,
+ "stdout": "child reset and waited\n",
+ "note": "The one-hour arming is replaced by the child's Reset; the nursery ends without waiting an hour."
+}
