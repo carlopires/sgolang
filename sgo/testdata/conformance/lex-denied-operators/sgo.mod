@@ -1,3 +1,3 @@
 module example.com/lex-denied-operators
 
-sgo 0.16.0
+sgo 0.16.1

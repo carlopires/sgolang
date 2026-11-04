@@ -1,3 +1,3 @@
 module example.com/val-string-range-invalid-utf8
 
-sgo 0.16.0
+sgo 0.16.1

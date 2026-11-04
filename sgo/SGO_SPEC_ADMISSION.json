@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": "0.16.0",
+  "spec_version": "0.16.1",
   "status": "admitted_0.7.0",
   "warning": "Spec 0.7.0 admits every row marked 'admitted': its clauses are frozen, the toolchain implements and enforces them, and its acceptance cases have executed evidence (constitution §6, D83). Rows marked 'denied' stay rejected. Admission does not widen any row beyond its clauses; everything the clauses do not name is rejected.",
   "default_decision": "reject",
@@ -1098,7 +1098,7 @@
         "SGO-RES-004",
         "SGO-RES-005"
       ],
-      "normative_text_digest": "715989e3637cd16d829576c47e1655efcca18e865653d1d5b40d2e28090aab6b",
+      "normative_text_digest": "6306eb8d4931d71264f8cfe199f3f4fcf23a996df5af03e8e0597abc933d1622",
       "admitted_in": [
         "0.16.0"
       ],
@@ -1109,10 +1109,10 @@
       "decision_refs": "D147,D148,D149,D150,D151,D152,D153,D154,D155,D156,D158",
       "subset0": "denied",
       "clause_digests": {
-        "SGO-RES-001": "b7fb94226d6dd0b33c691f68ffaa41565b2c5b38faf7a4bd78b1ccfee64de6da",
-        "SGO-RES-002": "507c79ab1d239c0e533b0a953ec7fe440188bdeac9f90c880b61455179c9b3e9",
-        "SGO-RES-003": "037fa1dea4a5e7513d4e5ae222a03653cccd70c9bb3575897211d2d4243bf2a1",
-        "SGO-RES-004": "7b95de59f8e5bad076195f20665f0e3210954330ca0b1c16cc56034704a6bc87",
+        "SGO-RES-001": "174536cd18127d089211a6a40471a97d879a0991c241316cf7b1edb16c69754b",
+        "SGO-RES-002": "5657f70c4d04d5fcf2434ea944b80650418536e2961ced9e45910f17877e2015",
+        "SGO-RES-003": "5e5dabbe796ca4f143b808264362540d5503c1cee6f9e9b60dc509beb06bed4e",
+        "SGO-RES-004": "5b5ea5de14d123760b5d5532708fa8e76d723bdb729973e4ed4d38e958cac332",
         "SGO-RES-005": "cfee81d4f351ae84987d25c09433c6d0d7958a1e18abc350faef0009f71164d8"
       },
       "clause_status": {
@@ -1123,10 +1123,10 @@
         "SGO-RES-005": "frozen"
       },
       "clause_versions": {
-        "SGO-RES-001": 1,
-        "SGO-RES-002": 1,
-        "SGO-RES-003": 1,
-        "SGO-RES-004": 1,
+        "SGO-RES-001": 2,
+        "SGO-RES-002": 2,
+        "SGO-RES-003": 2,
+        "SGO-RES-004": 2,
         "SGO-RES-005": 1
       }
     },
@@ -1308,7 +1308,7 @@
         "SGO-ERR-003",
         "SGO-ERR-004"
       ],
-      "normative_text_digest": "99687f99b5acaed817d4413f41ab240ee5d47fb65b6ca03b867c9fd5f1c7382c",
+      "normative_text_digest": "352b1999ab80bab0823082e8c8af386429ca24a9776b2a00419196aa7791686f",
       "admitted_in": [
         "0.7.0"
       ],
@@ -1329,7 +1329,7 @@
         "SGO-ERR-001": "17f732afab5e5edbe6fe8bdc2e22437be0d74923cfae45fb5b0b0363d4860a13",
         "SGO-ERR-002": "1f08a076f513576cf74f492c7eacecf5e7780e390ebbdff4ed2fb7b3d5971eaf",
         "SGO-ERR-003": "42a0da03bae9a0da8e186438fa26df95fe89442cddffa4df0ac5431f261b95a5",
-        "SGO-ERR-004": "ea474fbbc387dc8a76634a57d79dc67e1dbb13a973f59805bcb7aeb0cd75910e"
+        "SGO-ERR-004": "0e51ee24795a06d12e864115ee0c6dfa5b30f1f85f9249d4837325224feb6ee3"
       },
       "clause_status": {
         "SGO-ERR-001": "frozen",
@@ -1341,7 +1341,7 @@
         "SGO-ERR-001": 1,
         "SGO-ERR-002": 1,
         "SGO-ERR-003": 1,
-        "SGO-ERR-004": 1
+        "SGO-ERR-004": 2
       }
     },
     {
@@ -1389,7 +1389,7 @@
         "SGO-COMP-008",
         "SGO-COMP-009"
       ],
-      "normative_text_digest": "bb0b400d1e6e289ddd428f5f370a1d39656b82eac51879ef7f60ce6c8151bac6",
+      "normative_text_digest": "261679f9535b713c7af676b56deba868422fcdd48ea02324589d6d3bbe1a0a73",
       "admitted_in": [
         "0.8.0"
       ],
@@ -1411,7 +1411,7 @@
         "SGO-COMP-004": "f6b5dd38cb412e111cf7449b53a164d619a8007225ecca624e2eddaea5db17a1",
         "SGO-COMP-005": "30285f70fc95e3bd0a9dbca34df4d7556398ca3afceb7d51cbd07b53edb6650e",
         "SGO-COMP-006": "bb39567d75a84983104484d7081fdc346f6ca963323d4514118f31751cd5ecbe",
-        "SGO-COMP-007": "36a23a04740d9c7e98a8567e38525fff70679421b038ed62b57f645480623d6e",
+        "SGO-COMP-007": "013c1cd59f2c1d46057f00ad158a3f7522ff0611f5aeb9909c5c7164ec1c37f5",
         "SGO-COMP-008": "cca8bb919334b87b58a94ca91321e4789a9d6fbba748e0de10558b61089ba4b0",
         "SGO-COMP-009": "2612e22abf457cedb90aa643d62f6efaa2404fe33867223a8e71dfe9bc4ad93d"
       },
@@ -1433,7 +1433,7 @@
         "SGO-COMP-004": 5,
         "SGO-COMP-005": 2,
         "SGO-COMP-006": 1,
-        "SGO-COMP-007": 1,
+        "SGO-COMP-007": 2,
         "SGO-COMP-008": 1,
         "SGO-COMP-009": 1
       }
@@ -1787,5 +1787,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "e680c6f2d3e4e62658c476bfc10a982972c9ed3f09a135bf2b3604213920c959"
+  "rows_digest": "941c9f244c88d6f4bc4595cb93aa16c1cb74a81573c028cd556d9a8ac68bf876"
 }

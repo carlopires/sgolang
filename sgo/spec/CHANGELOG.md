@@ -2,6 +2,19 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.16.1 — 2026-11-05
+
+Errata from the W21 review (Z1–Z4): the resource flow rule could be evaded through pointers, interfaces, parameter and receiver stores, call results, `Own` of outer values, and `defer` inside nursery bodies; a nil resource result with a nil error, and a call on a nil handle, were misreported. Programs that relied on those holes no longer compile; every other 0.16.0 program keeps its meaning.
+
+Amended clauses:
+
+- SGO-RES-001 v2 — pointers and maps reaching a resource are resource types; a resource never becomes an interface value (except as an argument of package `sgo`).
+- SGO-RES-002 v2 — `LendTo` is removed from resource handles and `*sgo.Dir`; effect handles keep it until D169.
+- SGO-RES-003 v2 — stores through pointers, slices, maps, and call results are checked against where that memory may be reached from; stores between parameters are escapes; `defer` inside a nursery body may not use that nursery's resources.
+- SGO-RES-004 v2 — `Own` requires a value made inside the scope; `ok` is false on any cancellation, ancestor's or deadline's included.
+- SGO-ERR-004 v2 — `return nil, err` for a resource result checks `err` at run time (`InvalidArgument` at the `return`).
+- SGO-COMP-007 v2 — a method call on a nil handle fails with `NilDereference` at the call.
+
 ## 0.16.0 — 2026-11-05
 
 Structured resources and `check` (W21; D147–D158). Resources belong to scopes — nursery bodies and task bodies — which release them when they end, after their children, in reverse order of acquisition; tasks inside a scope share its resources; the compiler refuses every flow that would let a resource outlive its scope (`SGO_E_RESOURCE_ESCAPES`). `check c` propagates an error. Not every 0.15.1 program keeps its meaning: `LendTo`, `sgo.ConnSlot`, and the `HandleAbandoned` outcome are removed; `Accept`, `Dialer.Dial`, `Dir.Open`, and `Dir.Create` take a scope as their first argument; `check` is a reserved word.

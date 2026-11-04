@@ -1,4 +1,4 @@
 module example.com/auth-random-deterministic
 
-sgo 0.16.0
+sgo 0.16.1
 grant random

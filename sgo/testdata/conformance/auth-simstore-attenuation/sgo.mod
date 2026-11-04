@@ -1,4 +1,4 @@
 module example.com/auth-simstore-attenuation
 
-sgo 0.16.0
+sgo 0.16.1
 grant simstore

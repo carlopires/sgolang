@@ -1,3 +1,3 @@
 module example.com/std-math-pow-negative
 
-sgo 0.16.0
+sgo 0.16.1

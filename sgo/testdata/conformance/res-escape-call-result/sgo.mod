@@ -1,3 +1,3 @@
 module example.com/res-escape-call-result
 
-sgo 0.16.0
+sgo 0.16.1

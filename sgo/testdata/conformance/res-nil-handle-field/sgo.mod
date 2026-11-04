@@ -1,3 +1,3 @@
 module example.com/res-nil-handle-field
 
-sgo 0.16.0
+sgo 0.16.1

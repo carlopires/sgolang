@@ -1,4 +1,4 @@
 module example.com/mod-sum-mismatch
 
-sgo 0.16.0
+sgo 0.16.1
 require example.com/lib v1.0.0

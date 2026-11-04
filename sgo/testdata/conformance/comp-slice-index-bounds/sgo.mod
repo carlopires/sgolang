@@ -1,3 +1,3 @@
 module example.com/comp-slice-index-bounds
 
-sgo 0.16.0
+sgo 0.16.1

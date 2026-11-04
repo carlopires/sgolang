@@ -1,3 +1,3 @@
 module example.com/permit-cancel-after-commit
 
-sgo 0.16.0
+sgo 0.16.1
