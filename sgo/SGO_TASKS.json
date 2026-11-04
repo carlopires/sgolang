@@ -950,7 +950,7 @@
         "W21"
       ],
       "risk": "high",
-      "status": "planned",
+      "status": "passed",
       "plan_section": "sgo/docs/w22-w23-plan.md",
       "deliverables": [
         "model of timers, task handles, deadline inheritance, cancelling error exits",
@@ -961,10 +961,13 @@
         "happyeyeballs rewritten; spec 0.17.0"
       ],
       "acceptance_case_ids": [],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w22/README.md",
+        "sgo-w00 run 41884028104 (linux/amd64, linux/arm64) on main at ba71ee9d4f (0.17.0 freeze, W22 model, Happy Eyeballs acceptance scenarios)"
+      ],
       "blockers": [],
-      "commit": null,
-      "completion_note": null
+      "commit": "ba71ee9d4f",
+      "completion_note": "Language core frozen at spec 0.17.0 (D159-D172): error exits cancel crossed nurseries, timers as select arms and scope timers, value-returning tasks and groups, deadlines; W22 model (groups, timers, lab deadline driver, cancellation tree; 11 seeded bugs caught); Happy Eyeballs rewritten, with the two scenarios the 0.16 version could not test. Review of 0.17.0: no blocker (G1-G3 fixed on w23)."
     },
     {
       "id": "W23",
