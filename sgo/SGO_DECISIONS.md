@@ -894,6 +894,22 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Decision.** Unchanged: comma-ok results (`v, ok := …`), errors as data (inspected with `IsCancelled`, `Error()`, comparison), error values (sealed, no wrapping at `check`, no position recorded). Not added: a `handle` hook, `try`-style operators, exceptions, result types. Channels, events, limiters, and tokens are not resources in this sense (tokens keep their D39 rules) unless a later decision says so.
 
+## D157 — Withdrawn: the connection slot in scope terms · WITHDRAWN 2026-11-05
+
+**Record.** Briefly implemented on the W21 branch: `sgo.ConnSlot` as a resource of its scope, the first `Put` moving a connection into it. Withdrawn before any freeze in favour of D158: a slot is a mailbox, an unstructured construct specific to one resource kind, while the nursery already decides who owns what. D153 stands as written: the slot is removed.
+
+## D158 — The deciding scope owns the candidates · APPROVED 2026-11-05
+
+**Decision.** Hand-off of resources between tasks uses only scopes, `MoveTo`, and channels; there is no slot or lending construct. The idiom: acquire candidates into the scope that decides (for a race, the race nursery: `d.Dial(n, addr)`), report them to its body over a channel, `MoveTo` the chosen one outward, and let the scope's end release the rest.
+
+1. **Channels may carry resources within their scope.** A channel type whose element type holds a resource is a resource type for SGO-RES-003: tied to the extent where it was made, never escaping it. A value tied to scope `s` may be sent only on a channel tied within `s`'s extent; a received value is tied to the channel's tie. `sgo.Copy` of a resource stays denied.
+2. **(Gap A) `MoveTo` for user resources.** The runtime records, with each `Own` registration, the registered value itself; `sgo.MoveTo(r, s)` moves the registration of `r` (built-in or user resource) to the enclosing scope `s` under SGO-RES-003's rule. Built-in handles keep their `r.MoveTo(s)` method.
+3. **(Gap B) Concurrent use of user resources.** Tasks sharing a scope share its user resources; a user resource serializes itself (with `sgo.Mutex`, a limiter, or its own built-in handles' per-kind rules). The runtime adds no lock around user methods; `Release` runs once, in the task ending the scope, after the join.
+4. **(Gap C) Long-lived deciding scopes.** Not a language rule: the idiom is one nested nursery per decision or request, so candidates and per-request resources are released at its end. Documented with the examples.
+5. **(Gap D) No inward moves.** A resource is never moved to a narrower scope; narrower use is by sharing (D150), by acquiring where used, or by a lease (a user resource of the narrow scope holding a reference to an outer resource).
+
+Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race is an ordinary nursery.
+
 ---
 
 ## Approval record
@@ -927,3 +943,4 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 - 2026-11-03: the owner delegated D143–D146 to the implementer ("own the decisions, handle it to deliver a working version of Happy Eyeballs algorithm (RFC 8305)"). IPv6 endpoints were already admitted (SGO-NET-002); a connect timeout is the cancellation of an attempt (a waiting Dial is a cancellation point), so no timeout API is added. D134–D142 stay proposed.
 - 2026-11-04: user approved structured resources and `check` (D147–D156) after a design discussion ("this looks great! approved!"): resources are owned by scopes (nurseries and task bodies) and released when the scope ends; the earlier `defer check` draft (kept in a scratch file, not in the repo) was dropped. W21 starts with the scope–resource model.
 - 2026-11-04: user approved the W21 clause drafts (sgo/docs/w21-drafts.md: SGO-ERR-004, SGO-RES-001..004, amendments) as written ("approved!"). W21 implementation starts with `check`; the drafts freeze at spec 0.16.0.
+- 2026-11-05: user approved D158 after a design discussion ("approved; go ahead"): no slot construct; the deciding scope owns candidates, channels carry resources within their scope, `MoveTo` works for user resources, user resources serialize themselves. D157 (connection slot in scope terms) is withdrawn.
