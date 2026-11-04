@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-006",
+  "SGO-SPAWN-007"
+ ],
+ "exit": 0,
+ "stdout": "local cancel: cancelled result\ninherited deadline: deadline result\ngroup: 2 cancelled results\n",
+ "timeout_ms": 20000,
+ "note": "SGO17-01: before 0.17.1 no child was admitted and nothing was published, so the handle never resolved (a reader outside the scope waited forever; here the select took default) and a group's slot was never released."
+}

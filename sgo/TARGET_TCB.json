@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.17.0",
- "allowlist_digest": "7caa7e75f33101d61a6ea6a6a307faf227dad397179687713155acfafe03f28d",
+ "allowlist_digest": "66e09f9f687e0c02e7ed67485a2c0909da23aa9c9a084fa0bb046ac393a6b627",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -4458,7 +4458,7 @@
   },
   {
    "path": "src/runtime/sgo_api.go",
-   "sha256": "8c808563c467dd403dab219d9ee4da6fb417fc2d071f0e8f5180ece3888c3145",
+   "sha256": "b9dbd9179d87e937e32abd9cca3079a6d93f502d648ec4ce95a6c43f727d2e09",
    "upstream_identical": false
   },
   {
@@ -4473,7 +4473,7 @@
   },
   {
    "path": "src/runtime/sgo_cancel.go",
-   "sha256": "447c2c2e99eb0da162bdd4791eb92b9c2a8842b50ff17b9e63010f0367526eb7",
+   "sha256": "c0737337b9ad3d987fe9eb7ee658b30f9211c9be1c0ae6867b21af7a2373f825",
    "upstream_identical": false
   },
   {
@@ -5853,7 +5853,7 @@
   },
   {
    "path": "src/sgo/task.go",
-   "sha256": "c9379337b95058ed8017e3e7a0a3cdac0e04a1c8b09a8774f12f00e32d57495e",
+   "sha256": "a244c2bf660062212c9ee49dd5910797fbf051298a640747766f25d73eeec059",
    "upstream_identical": false
   },
   {

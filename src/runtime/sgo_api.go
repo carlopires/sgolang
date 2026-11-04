@@ -16,6 +16,21 @@ func sgo_spawn(scope unsafe.Pointer, fn func(task unsafe.Pointer) error) error {
 	return sgoSpawn((*sgoScope)(scope), *(*func(*sgoTask) error)(unsafe.Pointer(&fn)))
 }
 
+// sgo_spawnResult is sgo_spawn for a child that publishes a result (sgo.Go, Group.Go): when the
+// nursery or an ancestor is cancelling and no child is admitted, it returns the scope's
+// cancellation error, which the caller publishes as the result, so no returned handle stays
+// unresolved (SGO17-01). The admission decision is sgoAdmit's, under the scope lock.
+//
+//go:linkname sgo_spawnResult sgo.runtime_spawnResult
+func sgo_spawnResult(scope unsafe.Pointer, fn func(task unsafe.Pointer) error) (notAdmitted, err error) {
+	s := (*sgoScope)(scope)
+	c, err := sgoAdmit(s, *(*func(*sgoTask) error)(unsafe.Pointer(&fn)), nil, 0)
+	if err != nil || c != nil {
+		return nil, err
+	}
+	return sgoScopeCancellation(s), nil
+}
+
 //go:linkname sgo_isRoot sgo.runtime_isRoot
 func sgo_isRoot(task unsafe.Pointer) bool {
 	t := (*sgoTask)(task)

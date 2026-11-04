@@ -11,6 +11,7 @@ import "unsafe"
 // Implemented in the runtime (sgo_taskres.go).
 func runtime_taskResNew(elem unsafe.Pointer) unsafe.Pointer
 func runtime_taskResSet(r, v unsafe.Pointer) bool
+func runtime_spawnResult(scope unsafe.Pointer, fn func(task unsafe.Pointer) error) (notAdmitted, err error)
 func runtime_taskResChan(r unsafe.Pointer) unsafe.Pointer
 func runtime_nativeRecv(c, dst unsafe.Pointer)
 func runtime_taskEndErr(task unsafe.Pointer) error
@@ -52,9 +53,12 @@ func resultType[T any]() unsafe.Pointer {
 }
 
 // start starts f as a child of n and publishes its Result once: the value and error it returns,
-// with a resource moved into n (D158), or the cancellation or failure it ends with.
+// with a resource moved into n (D158), or the cancellation or failure it ends with. When n or an
+// ancestor is cancelling, no child is admitted and f never runs: the result is the scope's
+// cancellation, published at once (SGO17-01), so no handle stays unresolved and a group's slot is
+// released by the publication.
 func start[T any](n *Nursery, f func(*Context) (T, error), publish func(*Result[T])) {
-	if err := runtime_spawn(n.s, func(t unsafe.Pointer) error {
+	notAdmitted, err := runtime_spawnResult(n.s, func(t unsafe.Pointer) error {
 		set := false
 		defer func() {
 			if !set { // the child unwinds: publish why, so no reader waits forever
@@ -74,8 +78,13 @@ func start[T any](n *Nursery, f func(*Context) (T, error), publish func(*Result[
 		publish(&res)
 		set = true
 		return nil
-	}); err != nil {
+	})
+	if err != nil {
 		panic(err)
+	}
+	if notAdmitted != nil {
+		res := Result[T]{Err: notAdmitted}
+		publish(&res)
 	}
 }
 

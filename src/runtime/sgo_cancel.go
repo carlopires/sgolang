@@ -110,9 +110,19 @@ func sgoTaskCancellation(t *sgoTask) error {
 	if outer == nil {
 		return nil
 	}
-	from := sgoCancelledFrom(outer)
-	if from == outer {
-		return sgoCancelError(outer.cause, 0)
+	return sgoScopeCancellation(outer)
+}
+
+// sgoScopeCancellation is the cancellation error of scope s, CANCELLING in effect: its own cause if
+// it was cancelled first, else the ancestor's, with an inherited deadline classified as a deadline
+// (D165).
+func sgoScopeCancellation(s *sgoScope) error {
+	from := sgoCancelledFrom(s)
+	if from == nil {
+		return sgoCancelError(sgoCause{}, 0)
+	}
+	if from == s {
+		return sgoCancelError(s.cause, 0)
 	}
 	if raceenabled {
 		raceacquire(unsafe.Pointer(&from.cancelSeq))

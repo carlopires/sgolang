@@ -1,0 +1,76 @@
+package main
+
+import "sgo"
+
+// A value-returning start into a cancelling nursery admits no child and never runs its callback;
+// its handle resolves at once to the scope's cancellation (SGO17-01, SGO-SPAWN-006 v2): a local
+// Cancel, an inherited deadline (classified IsDeadline), and a bounded group, whose cancelled
+// submissions each yield a result and release their slot.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	ran := make(chan int, 8)
+	nursery (n) {
+		n.Cancel()
+		h := sgo.Go(n, func(t *sgo.Context) (int, error) {
+			ran <- 1
+			return 1, nil
+		})
+		select {
+		case r := <-h.Result():
+			if sgo.IsCancelled(r.Err) && !sgo.IsDeadline(r.Err) {
+				check out.WriteString("local cancel: cancelled result\n")
+			}
+		default:
+			check out.WriteString("local cancel: no result\n")
+		}
+	}
+	nursery (outer) {
+		outer.CancelAfter(1)
+		nursery (inner) {
+			_ = root.Sleep(10) // the deadline of outer passes
+			h := sgo.Go(inner, func(t *sgo.Context) (int, error) {
+				ran <- 2
+				return 2, nil
+			})
+			select {
+			case r := <-h.Result():
+				if sgo.IsDeadline(r.Err) {
+					check out.WriteString("inherited deadline: deadline result\n")
+				}
+			default:
+				check out.WriteString("inherited deadline: no result\n")
+			}
+		}
+	}
+	nursery (g) {
+		grp := sgo.NewGroup[int](g, 1)
+		g.Cancel()
+		grp.Go(root, func(t *sgo.Context) (int, error) {
+			ran <- 3
+			return 3, nil
+		})
+		grp.Go(root, func(t *sgo.Context) (int, error) { // the slot was released: no wait
+			ran <- 4
+			return 4, nil
+		})
+		results := 0
+		for i := 0; i < 2; i++ {
+			select {
+			case r := <-grp.Next():
+				if sgo.IsCancelled(r.Err) {
+					results++
+				}
+			default:
+			}
+		}
+		if results == 2 {
+			check out.WriteString("group: 2 cancelled results\n")
+		}
+	}
+	select {
+	case <-ran:
+		return sgo.NewError("a callback that was not admitted ran")
+	default:
+	}
+	return nil
+}
