@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-006",
+  "SGO-SPAWN-007",
+  "SGO-COMP-004"
+ ],
+ "exit": 0,
+ "stdout": "both readers got 42\n"
+}

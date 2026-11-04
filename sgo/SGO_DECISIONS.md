@@ -950,6 +950,17 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 
 **Decision.** D161's semantics stand; its surface changes because the trusted `sgo` package is Go code: Go has no generic methods (`n.Go` cannot infer `T`), and a two-value receive is `(value, ok bool)`, never `(value, error)`. The spelling is `h := sgo.Go(n, func(t *sgo.Context) (T, error) {...})` returning `*sgo.Task[T]`; `v, err := h.Wait(t)` waits for the result; and the select arm is `case r := <-h.Result():`, where `Result()` returns a receive-only native channel of `sgo.Result[T]` (fields `Value T`, `Err error`) that the runtime fills once when the child ends. The child's error is data: it does not fail the nursery. `sgo.NewGroup[T](n)` follows the same shape. No compiler special case is needed beyond the admission rules D161 already requires.
 
+## D169 — Effect handles and `LendTo` **[NEEDS USER]** · PROPOSED
+
+**Question.** SGO-RES-002 v2 removed `LendTo` from resources; effect handles (`Clock`, `WallClock`, `Random`, `Entropy`, `SimStore`, SPEC-AUTH) still have it: `h.LendTo(n)` returns a copy revoked when `n` closes (A03, fixture `auth-lend-revoked`). Since W21, structure already bounds what `LendTo` was for: nothing started in `n` runs after `n` closes, and ceilings (`SpawnWithout`) and attenuation (`ReadOnly`, `Prefix`) already narrow authority. Revocation only matters when a copy leaves `n`, which needs a channel to a task outside it.
+
+**Options.**
+- (a) **Effect handles are shareable authority tokens; `LendTo` is withdrawn.** Authority is bounded by grants, ceilings, and attenuation, not by scope. A handle may be captured and sent like today. Simplest; one less concept; matches how `Dialer` (a resource) and `Clock` (not one) already differ.
+- (b) **Effect handles become scope resources** like `Timer`: `root.SimStore()` is a resource of the root body, `s.Attenuate(n)` (replacing `LendTo`) makes a copy tied to `n` by the flow rule and revoked when `n` ends. Gives compile-time containment and keeps revocation, at the cost of resource rules on every effect handle (no interface conversion, no storing outside the extent).
+- (c) Keep `LendTo` as it is (status quo): a run-time revocation unlike every other scoping rule in the language.
+
+**Recommendation.** (a). Revocation has no remaining use that structure doesn't cover, except handing a copy to an outside task over a channel, which (a) treats as deliberate delegation, as passing any authority is. `auth-lend-revoked` becomes a reject fixture (`LendTo` not admitted); SGO-AUTH-001/003 get new versions at 0.17.0.
+
 ## D170 — Deadlines attach to nurseries · APPROVED 2026-11-05 (implementer, delegated)
 
 **Decision.** D162's `t.CancelAfter(ms)` on a task context is not provided: a task body is not a cancellable scope (cancellation lives on nurseries and a task's linked scopes), and making it one would change every wait's wake path. A timeout for a task's work is written by opening a nursery around it: `nursery (n) { n.CancelAfter(ms); … }`. `n.CancelAfter`, `sgo.IsDeadline`, and `t.Deadline()` are as D162 and D165 decided; `CancelAfter` follows `Cancel`'s caller rule. In the lab, `CancelAfter` ends the run with `UnsupportedLabEffect` for now: a virtual fire happens while the blocked task may hold channel and scope locks, so lab deadlines need their own design (a later step), not a cancellation run inside the scheduler.

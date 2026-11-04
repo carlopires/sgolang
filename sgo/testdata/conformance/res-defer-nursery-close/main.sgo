@@ -1,0 +1,17 @@
+package main
+
+import "sgo"
+
+// defer f.Close() inside a nursery would run when main returns, after the nursery released the
+// file: the deferred call takes the file out of its scope's extent (SGO-RES-003, W21 errata).
+func main(root *sgo.Context) error {
+	d := root.Dir("data")
+	nursery (n) {
+		f := check d.Create(n, "a.txt")
+		defer func() {
+			_ = f.Close()
+		}()
+		_ = check f.Write("x")
+	}
+	return nil
+}

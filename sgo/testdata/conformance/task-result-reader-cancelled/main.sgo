@@ -1,0 +1,24 @@
+package main
+
+import "sgo"
+
+// A child cancelled before it returns still publishes a result, so a reader after the cancelled
+// nursery has ended does not wait forever: the result's error is the cancellation (SGO-SPAWN-006).
+func main(root *sgo.Context) error {
+	nursery (outer) {
+		h := sgo.Go(outer, func(t *sgo.Context) (int, error) { return 0, nil })
+		nursery (n) {
+			h = sgo.Go(n, func(t *sgo.Context) (int, error) {
+				check t.Sleep(3600000)
+				return 1, nil
+			})
+			n.Cancel()
+		}
+		v, err := h.Wait(root)
+		if !sgo.IsCancelled(err) || v != 0 {
+			return sgo.NewError("unexpected result")
+		}
+		check root.Stdout().WriteString("reader after the nursery got the cancellation\n")
+	}
+	return nil
+}

@@ -41,6 +41,8 @@ freeze re-adds them as clause versions:
   `g.Go` inside the extent" (the escape pass already treats `sgo.Go` callbacks so, D161).
 - SGO-RES-004 v4: `ok` is false on any cancellation, "an ancestor's or a deadline's (SGO-CANCEL-005)
   included".
+- SGO-RES-003 v4 also lists fixture:res-defer-nursery-close (the file-based form of
+  res-defer-nursery-capture, W21 errata follow-up) among its negative tests.
 
 ## SGO-WAIT-004 (D171)
 

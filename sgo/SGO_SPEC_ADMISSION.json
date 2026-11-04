@@ -473,7 +473,7 @@
         "SGO-SPAWN-006",
         "SGO-SPAWN-007"
       ],
-      "normative_text_digest": "0c205f8aab296efeb4e375ef23a4137fe914fcd3c84be25b14d7c984443fb6cd",
+      "normative_text_digest": "dbeac59dbee02490181c2b2c8a06a1e7217c60ddc0d0c0856280c2d48dd5aa05",
       "admitted_in": [
         "0.7.0"
       ],
@@ -498,8 +498,8 @@
         "SGO-SPAWN-003": "1cf041a1bfe0fe014a4443c46a42c6112e62d8fd4917b8cc0385a400289d0d23",
         "SGO-SPAWN-004": "736b4cf7037c199e2e51358913f3cbc649a0933b4ca1b1a7432149f27b23fd96",
         "SGO-SPAWN-005": "f26e200b1285c109101a9cc06bd3cccc5a6795936733142147f4948c17c2eeeb",
-        "SGO-SPAWN-006": "d54bbe374d6fc58abf8600c7ec65d7a4693452d1a79b3cb468a4aa77fc7ecee1",
-        "SGO-SPAWN-007": "01c9fb108afa1da53bdc61d88a1c4299ead7cd9b686348d90a1fb7491831baa8"
+        "SGO-SPAWN-006": "3afad84922ca9a93d825c582fbdd6bf345877f88002c78b8457f6d40bba5516b",
+        "SGO-SPAWN-007": "a97fb09bcb9a2582e661e1a85e6e8fcdcd3675c0874e96165bdd0b70c34af270"
       },
       "clause_status": {
         "SGO-SPAWN-001": "frozen",
@@ -1807,5 +1807,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "c1ea2d1df41a1dbbde36b2c2a940d98360f3cb6cc63fb9c75f5f8da9488eae23"
+  "rows_digest": "e127a36620ce5ac5aa2c604eb1556a82f38f0a0741676a75f375a76cd907aa12"
 }

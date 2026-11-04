@@ -56,6 +56,16 @@ func sgoResTypeRec(T Type, seen map[Type]bool) bool {
 		}
 		return false
 	}
+	if sgoSharedGeneric(T) {
+		// *sgo.Task[E] and *sgo.Group[E] delivering resources: tied to the nursery the children
+		// were started in, where sgo.Go moves their resource results (D158, D161, D172).
+		for _, a := range Unalias(Unalias(T).(*Pointer).base).(*Named).TypeArgs().list() {
+			if sgoResTypeRec(a, seen) {
+				return true
+			}
+		}
+		return false
+	}
 	switch u := T.Underlying().(type) {
 	case *Chan:
 		return sgoResTypeRec(u.elem, seen)
@@ -566,7 +576,11 @@ func (f *sgoResFlow) tie(e syntax.Expr) syntax.Node {
 		}
 		// An acquisition is tied to its scope argument or receiver; another call's resource
 		// results are tied to the caller's scope, as narrowly as the extent of the call.
-		sel, _ := syntax.Unparen(e.Fun).(*syntax.SelectorExpr)
+		fun := syntax.Unparen(e.Fun)
+		if ix, _ := fun.(*syntax.IndexExpr); ix != nil {
+			fun = ix.X // sgo.Go[T](n, f), sgo.NewGroup[T](n, limit)
+		}
+		sel, _ := fun.(*syntax.SelectorExpr)
 		if sel == nil {
 			break
 		}
@@ -574,8 +588,13 @@ func (f *sgoResFlow) tie(e syntax.Expr) syntax.Node {
 		if fn == nil || fn.pkg == nil || fn.pkg.path != "sgo" {
 			break
 		}
-		if fn.name == "Receive" || fn.name == "Reserve" {
+		switch fn.name {
+		case "Receive", "Reserve":
 			return f.tie(sel.X) // a received value or a permit: tied as the channel is
+		case "Wait", "Result", "Next":
+			if sig, _ := fn.typ.(*Signature); sig != nil && sig.recv != nil && sgoSharedGeneric(sig.recv.typ) {
+				return f.tie(sel.X) // a task's or group's result: tied as the handle is
+			}
 		}
 		for _, a := range append([]syntax.Expr{sel.X}, e.ArgList...) {
 			if x := f.scopeExtent(a); x != nil {

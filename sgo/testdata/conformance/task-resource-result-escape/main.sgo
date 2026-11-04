@@ -1,0 +1,21 @@
+package main
+
+import "sgo"
+
+// A task delivering a resource is tied to the nursery it was started in, where sgo.Go moves the
+// resource: the handle may not flow beyond that nursery (SGO-RES-003, SGO-SPAWN-006).
+func main(root *sgo.Context) error {
+	l := check root.Listen("127.0.0.1:47981")
+	d := root.Dialer([]string{"127.0.0.1:47981"})
+	nursery (outer) {
+		h := sgo.Go(outer, func(t *sgo.Context) (*sgo.Conn, error) { return d.Dial(t, "127.0.0.1:47981") })
+		nursery (n) {
+			h = sgo.Go(n, func(t *sgo.Context) (*sgo.Conn, error) { return d.Dial(t, "127.0.0.1:47981") })
+		}
+		c := check h.Wait(root)
+		_, err := c.Write("after the nursery")
+		check root.Stdout().WriteString("write after release: " + err.Error() + "\n")
+	}
+	_ = l
+	return nil
+}

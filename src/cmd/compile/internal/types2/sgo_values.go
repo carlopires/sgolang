@@ -116,13 +116,29 @@ func sgoTaskLocal(T Type) bool {
 	return sgoTaskLocalRec(T, map[Type]bool{})
 }
 
+// sgoSharedGeneric reports whether T is *sgo.Task[E] or *sgo.Group[E]: handles that every task
+// of the nursery may hold (SGO-SPAWN-006, SGO-SPAWN-007). They are immutable after creation and
+// every operation on them is synchronized by the runtime, and the results they deliver are copies
+// of values that are not task-local.
+func sgoSharedGeneric(T Type) bool {
+	p, ok := Unalias(T).(*Pointer)
+	if !ok {
+		return false
+	}
+	n, ok := Unalias(p.base).(*Named)
+	if !ok || n.obj == nil || n.obj.pkg == nil || n.obj.pkg.path != "sgo" {
+		return false
+	}
+	return n.obj.name == "Task" || n.obj.name == "Group"
+}
+
 func sgoTaskLocalRec(T Type, seen map[Type]bool) bool {
 	T = Unalias(T)
 	if seen[T] {
 		return false
 	}
 	seen[T] = true
-	if isSgoHandle(T) {
+	if isSgoHandle(T) || sgoSharedGeneric(T) {
 		return false
 	}
 	if _, ok := sgoFrozenElem(T); ok {

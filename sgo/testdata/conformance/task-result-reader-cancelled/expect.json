@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-006",
+  "SGO-CANCEL-003"
+ ],
+ "exit": 0,
+ "stdout": "reader after the nursery got the cancellation\n"
+}

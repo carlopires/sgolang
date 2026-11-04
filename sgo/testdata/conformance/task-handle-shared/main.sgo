@@ -1,0 +1,26 @@
+package main
+
+import "sgo"
+
+// A task handle is shared by the nursery's tasks: a sibling captures it and reads the result, and
+// so does a group child (SGO-SPAWN-006, SGO-SPAWN-007).
+func main(root *sgo.Context) error {
+	got := make(chan int, 2)
+	nursery (n) {
+		h := sgo.Go(n, func(t *sgo.Context) (int, error) { return 42, nil })
+		n.Spawn(func(t *sgo.Context) error {
+			v := check h.Wait(t)
+			got <- v
+			return nil
+		})
+		g := sgo.NewGroup[int](n, 0)
+		g.Go(root, func(t *sgo.Context) (int, error) { return h.Wait(t) })
+		r := <-g.Next()
+		got <- r.Value
+	}
+	a, b := <-got, <-got
+	if a == 42 && b == 42 {
+		return root.Stdout().WriteString("both readers got 42\n")
+	}
+	return sgo.NewError("wrong values")
+}
