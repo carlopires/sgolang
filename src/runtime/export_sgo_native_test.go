@@ -107,3 +107,10 @@ func SGoAcquire(l *SGoLimiter) (*SGoToken, error) {
 	return sgoLimiterAcquire(l, sgoCurrent())
 }
 func SGoRelease(k *SGoToken) { sgoTokenRelease(k) }
+
+// Task result records (sgo_taskres.go; W22 review G2), with an int result.
+func SGoTaskResNew() *SGoChan { return (*SGoChan)(sgo_taskResNew(unsafe.Pointer(sgoChanIntType.Elem))) }
+func SGoTaskResSet(c *SGoChan, v int) {
+	sgo_taskResSet(unsafe.Pointer(c), unsafe.Pointer(&v))
+}
+func SGoTaskResChan(c *SGoChan) *SGoChan { return (*SGoChan)(sgo_taskResChan(unsafe.Pointer(c))) }

@@ -39,6 +39,9 @@ func sgoNativeTrySend(c *sgoChan, box unsafe.Pointer) (*sgoChanWait, int) {
 // sgoNativeTryRecv receives without waiting, under c.lock: the oldest queued value (refilling the
 // buffer from a waiting sender), a waiting sender's value, or closed (ok == false).
 func sgoNativeTryRecv(c *sgoChan) (box unsafe.Pointer, ok bool, wake *sgoChanWait, ready bool) {
+	if c.latch != nil { // a published task result: every receive gets it, none consumes it
+		return c.latch, true, nil, true
+	}
 	if a := c.tmr; a != nil { // a timer (D160): its value once the deadline has passed
 		if sgoAfterDue(a) {
 			a.fired = true
@@ -254,6 +257,9 @@ func sgoSelUnlock(cs []*sgoChan) {
 func sgoSelCanProceed(c *sgoChan, send bool) bool {
 	if c.tmr != nil {
 		return !send && sgoAfterDue(c.tmr)
+	}
+	if c.latch != nil {
+		return !send
 	}
 	if c.closed {
 		return true

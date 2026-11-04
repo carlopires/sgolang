@@ -4,83 +4,57 @@
 
 // Results of value-returning tasks (D161, D168; sgo.Go, sgo.Task[T]).
 //
-// A result record holds the child's Result[T] once it ends. Every reader gets its own native
-// channel of capacity 1 (Task.Result, Task.Wait), filled when the result is set, or at once if it
-// already is; the value is delivered with the channel's send protocol, so a select parked on it is
-// woken as by any sender. Nothing is allocated under r.lock (W12 R9): channels, list nodes, and
-// boxes are made before it is taken.
+// A result record is one native channel that the runtime latches when the child ends (W22 review
+// G2): the result is boxed once and stored as c.latch, and from then on every receive, from any
+// reader, any number of times, gets it without consuming it, and every select arm on the channel
+// can proceed (level-triggered). Task.Result and Task.Wait all use this one channel, so a call
+// registers nothing; receivers parked before publication are all woken with the value, as close
+// wakes every waiter. The box is made before c.lock is taken (W12 R9).
 
 package runtime
 
 import "unsafe"
 
-type sgoTaskRes struct {
-	lock    mutex
-	elem    *_type
-	done    bool
-	val     unsafe.Pointer // the result, boxed, once done
-	waiters *sgoTaskResWaiter
-}
-
-type sgoTaskResWaiter struct {
-	c    *sgoChan
-	next *sgoTaskResWaiter
-}
-
 //go:linkname sgo_taskResNew sgo.runtime_taskResNew
 func sgo_taskResNew(elem unsafe.Pointer) unsafe.Pointer {
-	return unsafe.Pointer(&sgoTaskRes{elem: (*_type)(elem)})
+	return unsafe.Pointer(&sgoChan{elem: (*_type)(elem), native: true})
 }
 
 // sgo_taskResSet publishes the result *v once; later calls have no effect.
 //
 //go:linkname sgo_taskResSet sgo.runtime_taskResSet
 func sgo_taskResSet(rp, v unsafe.Pointer) {
-	r := (*sgoTaskRes)(rp)
-	box := mallocgc(r.elem.Size_, r.elem, true)
-	typedmemmove(r.elem, box, v)
-	lock(&r.lock)
-	if r.done {
-		unlock(&r.lock)
+	c := (*sgoChan)(rp)
+	box := mallocgc(c.elem.Size_, c.elem, true)
+	typedmemmove(c.elem, box, v)
+	if raceenabled {
+		racereleasemerge(box)
+	}
+	lock(&c.lock)
+	if c.latch != nil {
+		unlock(&c.lock)
 		return
 	}
-	r.done, r.val = true, box
-	ws := r.waiters
-	r.waiters = nil
-	unlock(&r.lock)
-	for w := ws; w != nil; w = w.next {
-		sgoTaskResPut(w.c, box)
+	c.latch = box
+	var wake *sgoChanWait
+	for r := c.recvs.first; r != nil; {
+		next := r.next
+		if r.claim(sgoWaitDone) {
+			c.recvs.remove(r)
+			r.val, r.delivered = box, true
+			sgoLabSelectWoken(r)
+			r.wake, wake = wake, r
+		}
+		r = next
 	}
+	unlock(&c.lock)
+	sgoChanReady(wake)
 }
 
-// sgo_taskResChan returns a new channel that receives the result.
+// sgo_taskResChan returns the record's channel: the same one for every call.
 //
 //go:linkname sgo_taskResChan sgo.runtime_taskResChan
-func sgo_taskResChan(rp unsafe.Pointer) unsafe.Pointer {
-	r := (*sgoTaskRes)(rp)
-	c := &sgoChan{cap: 1, buf: sgoChanBuf(1), elem: r.elem, native: true}
-	w := &sgoTaskResWaiter{c: c}
-	lock(&r.lock)
-	if !r.done {
-		w.next, r.waiters = r.waiters, w
-		unlock(&r.lock)
-		return unsafe.Pointer(c)
-	}
-	val := r.val
-	unlock(&r.lock)
-	sgoTaskResPut(c, val)
-	return unsafe.Pointer(c)
-}
-
-// sgoTaskResPut delivers a copy of the boxed result into reader channel c (capacity 1, never sent
-// on otherwise, so it never blocks).
-func sgoTaskResPut(c *sgoChan, val unsafe.Pointer) {
-	box := sgoNativeBox(c, val)
-	lock(&c.lock)
-	w, _ := sgoNativeTrySend(c, box)
-	unlock(&c.lock)
-	sgoReadyOne(w)
-}
+func sgo_taskResChan(rp unsafe.Pointer) unsafe.Pointer { return rp }
 
 //go:linkname sgo_nativeRecv sgo.runtime_nativeRecv
 func sgo_nativeRecv(c, dst unsafe.Pointer) {

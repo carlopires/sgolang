@@ -88,8 +88,10 @@ func (h *Task[T]) Wait(c *Context) (T, error) {
 	return r.Value, r.Err
 }
 
-// Result returns a channel that receives the task's result once it ends, for a select arm:
-// case r := <-h.Result():. Each call returns a new channel.
+// Result returns the task's result channel, for a select arm: case r := <-h.Result():. Every call
+// returns the same channel. Once the task ends its result is latched: every receive, by any
+// reader, any number of times, gets it, so an arm on it proceeds on every iteration after the end
+// (level-triggered); nothing is consumed and nothing is registered per call (W22 review G2).
 func (h *Task[T]) Result() <-chan Result[T] {
 	p := runtime_taskResChan(h.r)
 	return *(*<-chan Result[T])(unsafe.Pointer(&p))
