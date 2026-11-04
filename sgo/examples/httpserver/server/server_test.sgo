@@ -1,0 +1,31 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package server
+
+import "sgo"
+
+func TestKeepAliveAndDeadline(t *sgo.T) error {
+	out := check Run(t.Context(), "unix:http.sock", []string{"/slow", "/hello", "/slow"})
+	want := "/slow -> Gateway Timeout: deadline\n/hello -> OK: hello\n/slow -> Gateway Timeout: deadline\n"
+	if out != want {
+		return sgo.NewError("transcript: " + out)
+	}
+	return nil
+}
+
+func TestShutdownIdle(t *sgo.T) error {
+	// No request at all: the server is cancelled with an accepted, idle connection.
+	out := check Run(t.Context(), "unix:http.sock", []string{})
+	if out != "" {
+		return sgo.NewError("transcript: " + out)
+	}
+	return nil
+}
+
+func TestRestart(t *sgo.T) error {
+	check Run(t.Context(), "unix:http.sock", []string{"/hello"})
+	_, err := Run(t.Context(), "unix:http.sock", []string{"/hello"})
+	return err
+}

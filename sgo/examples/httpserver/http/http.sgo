@@ -1,0 +1,129 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package http reads and writes HTTP/1.1 messages over any stream (a subset: requests with a
+// Content-Length body, keep-alive connections). It is written once against std/io resource
+// interfaces (D176), so the same code serves a *sgo.Conn, a *sgo.File, or an in-memory stream in a
+// test, and the compiler keeps a stream tied to the scope that owns its connection.
+package http
+
+import (
+	"sgo"
+	"std/io"
+	"std/strconv"
+	"std/strings"
+)
+
+// Stream is what a reader of HTTP messages needs: lines for the head, bytes for the body.
+type Stream interface {
+	io.LineReader
+	io.Reader
+}
+
+// Request is a parsed request; it holds no reference to its stream.
+type Request struct {
+	Method string
+	Path   string
+	Body   string
+}
+
+// Response is a parsed response.
+type Response struct {
+	Status int
+	Body   string
+}
+
+const maxLine = 4096
+
+// ReadRequest reads one request from r. At the end of the stream, before a request line, it
+// returns an error for which sgo.IsEOF holds.
+func ReadRequest(r Stream) (Request, error) {
+	line := check r.ReadLine(maxLine)
+	f := strings.Fields(line)
+	if len(f) != 3 || !strings.HasPrefix(f[2], "HTTP/1.") {
+		return Request{}, sgo.NewError("http: malformed request line: " + line)
+	}
+	n := check readHeaders(r)
+	body := check readBody(r, n)
+	return Request{Method: f[0], Path: f[1], Body: body}, nil
+}
+
+// NextRequest reads the next request of a keep-alive stream: ok is false, with no error, when the
+// client has closed the stream between requests.
+func NextRequest(r Stream) (req Request, ok bool, err error) {
+	req, err = ReadRequest(r)
+	if err != nil {
+		if sgo.IsEOF(err) {
+			return Request{}, false, nil
+		}
+		return Request{}, false, err
+	}
+	return req, true, nil
+}
+
+// ReadResponse reads one response from r.
+func ReadResponse(r Stream) (Response, error) {
+	line := check r.ReadLine(maxLine)
+	f := strings.Fields(line)
+	if len(f) < 2 || !strings.HasPrefix(f[0], "HTTP/1.") {
+		return Response{}, sgo.NewError("http: malformed status line: " + line)
+	}
+	status := check strconv.Atoi(f[1])
+	n := check readHeaders(r)
+	body := check readBody(r, n)
+	return Response{Status: status, Body: body}, nil
+}
+
+// readHeaders reads header lines up to the blank line and returns the Content-Length (0 if none).
+func readHeaders(r Stream) (int, error) {
+	length := 0
+	for {
+		line := check r.ReadLine(maxLine)
+		if line == "" {
+			return length, nil
+		}
+		name, value, ok := strings.Cut(line, ":")
+		if !ok {
+			return 0, sgo.NewError("http: malformed header: " + line)
+		}
+		if strings.EqualFoldASCII(strings.TrimSpace(name), "Content-Length") {
+			length = check strconv.Atoi(strings.TrimSpace(value))
+		}
+	}
+}
+
+// readBody reads exactly n bytes.
+func readBody(r Stream, n int) (string, error) {
+	body := ""
+	for len(body) < n {
+		part := check r.Read(n - len(body))
+		body += part
+	}
+	return body, nil
+}
+
+// WriteRequest writes a request with body to w.
+func WriteRequest(w io.Writer, method, path, body string) error {
+	return io.WriteString(w, method+" "+path+" HTTP/1.1\r\nContent-Length: "+strconv.Itoa(len(body))+"\r\n\r\n"+body)
+}
+
+// WriteResponse writes a response with body to w.
+func WriteResponse(w io.Writer, status int, body string) error {
+	return io.WriteString(w, "HTTP/1.1 "+strconv.Itoa(status)+" "+StatusText(status)+"\r\nContent-Length: "+strconv.Itoa(len(body))+"\r\n\r\n"+body)
+}
+
+// StatusText is the reason phrase of the statuses this package writes.
+func StatusText(status int) string {
+	switch status {
+	case 200:
+		return "OK"
+	case 404:
+		return "Not Found"
+	case 500:
+		return "Internal Server Error"
+	case 504:
+		return "Gateway Timeout"
+	}
+	return "Status"
+}

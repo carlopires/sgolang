@@ -1,0 +1,72 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package http
+
+import (
+	"sgo"
+	"std/strings"
+)
+
+// memory is an in-memory Stream: the parser does not know it is not a connection.
+type memory struct {
+	data string
+	out  string
+}
+
+func (m *memory) ReadLine(limit int) (string, error) {
+	if m.data == "" {
+		return "", sgo.NewError("eof")
+	}
+	line, rest, ok := strings.Cut(m.data, "\n")
+	if !ok {
+		line, rest = m.data, ""
+	}
+	m.data = rest
+	line, _ = strings.CutSuffix(line, "\r")
+	return line, nil
+}
+
+func (m *memory) Read(limit int) (string, error) {
+	n := limit
+	if n > len(m.data) {
+		n = len(m.data)
+	}
+	s := m.data[:n]
+	m.data = m.data[n:]
+	return s, nil
+}
+
+func (m *memory) Write(s string) (int, error) {
+	m.out += s
+	return len(s), nil
+}
+
+func TestReadRequest(t *sgo.T) error {
+	m := &memory{data: "POST /order HTTP/1.1\r\nHost: x\r\nContent-Length: 5\r\n\r\nhello"}
+	r := check ReadRequest(m)
+	if r.Method != "POST" || r.Path != "/order" || r.Body != "hello" {
+		return sgo.NewError("parsed " + r.Method + " " + r.Path + " " + r.Body)
+	}
+	return nil
+}
+
+func TestRoundTrip(t *sgo.T) error {
+	m := &memory{}
+	check WriteResponse(m, 504, "deadline")
+	m.data = m.out
+	r := check ReadResponse(m)
+	if r.Status != 504 || r.Body != "deadline" {
+		return sgo.NewError("round trip gave " + r.Body)
+	}
+	return nil
+}
+
+func TestMalformed(t *sgo.T) error {
+	m := &memory{data: "GARBAGE\r\n\r\n"}
+	if _, err := ReadRequest(m); err == nil {
+		return sgo.NewError("a malformed request line was accepted")
+	}
+	return nil
+}

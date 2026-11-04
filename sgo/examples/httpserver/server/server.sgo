@@ -1,0 +1,96 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package server is a small HTTP/1.1 server built on structured concurrency: one task per
+// connection inside the server's nursery, keep-alive request loops, a deadline per request, and a
+// shutdown that is one Cancel of the server's scope. No connection, task, or timer can outlive it.
+package server
+
+import (
+	"sgo"
+	"std/strings"
+
+	"example.com/httpserver/http"
+)
+
+// SlowLimitMs is the deadline of a request to /slow; its handler would take far longer.
+const SlowLimitMs = 30
+
+// Run serves on addr, sends paths over one keep-alive connection, then shuts the server down while
+// that connection is still open. It returns one transcript line per request.
+func Run(root *sgo.Context, addr string, paths []string) (string, error) {
+	l := check root.Listen(addr)
+	out := ""
+	nursery (n) {
+		ll := l
+		check n.Start(func(task *sgo.Context, ready *sgo.Ready) error {
+			return serve(task, ll, ready)
+		})
+		c := check root.Dial(addr)
+		for _, p := range paths {
+			check http.WriteRequest(c, "GET", p, "")
+			r := check http.ReadResponse(c)
+			out += p + " -> " + http.StatusText(r.Status) + ": " + r.Body + "\n"
+		}
+		n.Cancel() // shutdown: the server's Accept and the open connection's read both end
+		check c.Close()
+	}
+	check l.Close()
+	return out, nil
+}
+
+// serve accepts connections into its own nursery and gives each one a task.
+func serve(task *sgo.Context, ll *sgo.Listener, ready *sgo.Ready) error {
+	nursery (m) {
+		ready.Signal()
+		for {
+			c := check ll.Accept(m)
+			m.Spawn(func(w *sgo.Context) error {
+				return serveConn(w, c)
+			})
+		}
+	}
+}
+
+// serveConn answers requests on c until the client closes it.
+func serveConn(w *sgo.Context, c *sgo.Conn) error {
+	for {
+		req, ok := check http.NextRequest(c)
+		if !ok {
+			return c.Close()
+		}
+		status, body := route(w, req)
+		check http.WriteResponse(c, status, body)
+	}
+}
+
+// route runs the handler for req.
+func route(w *sgo.Context, req http.Request) (int, string) {
+	switch {
+	case req.Path == "/hello":
+		return 200, "hello"
+	case req.Path == "/slow":
+		return slow(w)
+	case strings.HasPrefix(req.Path, "/echo/"):
+		return 200, req.Path[len("/echo/"):]
+	}
+	return 404, req.Path
+}
+
+// slow is a handler that would take an hour; its deadline answers for it.
+func slow(w *sgo.Context) (int, string) {
+	if err := sleepWithin(w, SlowLimitMs, 3600000); sgo.IsDeadline(err) {
+		return 504, "deadline"
+	}
+	return 200, "slow"
+}
+
+// sleepWithin waits ms in a scope of its own, cancelled after limit ms: whatever a handler starts
+// in such a scope ends with it.
+func sleepWithin(w *sgo.Context, limit, ms int) error {
+	nursery (h) {
+		h.CancelAfter(limit)
+		return w.Sleep(ms)
+	}
+}
