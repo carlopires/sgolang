@@ -36,6 +36,15 @@ HE_SCENARIOS = ["silent-v6", "slow-aaaa", "prefer-v6", "slow-v6", "all-refused",
                 "late-aaaa-after-tick", "log-fails-pending", "older-fails-later", "two-connected"]
 
 
+def lab_sweeps(name):
+    """The lab sweeps of example name, as (package, use expected.txt): the D80 stress lane
+    (stress.py) sweeps exactly these (W12 review G3). Happy Eyeballs' root package uses the real
+    network, so its sweeps are the lab scenarios, each checking its own winner and step."""
+    if name == "happyeyeballs":
+        return [("./lab/" + sc, False) for sc in HE_SCENARIOS]
+    return [(m, True) for m in EXAMPLES[name][0]]
+
+
 def main():
     sgoargs.check(flags={"--sgo": "value", "--examples": "value"})  # strict command line (W12 R14)
     args = sys.argv[1:]
@@ -78,10 +87,10 @@ def main():
                 ok = ok and ("he: attempt [::1]:47970" not in race or "he: failed [::1]:47970" in race)
                 if not ok:
                     problems.append(f"{name}: sgo run: exit {r.returncode}, stdout {r.stdout!r}, want a race ending {last!r} (reference {expected!r}); {r.stderr[-200:]!r}")
-                for sc in HE_SCENARIOS:
-                    r = run("lab", "sweep", "-seeds", seeds, "./lab/" + sc)
+                for pkg, _ in lab_sweeps(name):
+                    r = run("lab", "sweep", "-seeds", seeds, pkg)
                     if r.returncode != 0 or " 0 failed" not in r.stderr + r.stdout:
-                        problems.append(f"{name}: lab sweep {sc}: exit {r.returncode}: {(r.stdout + r.stderr)[-300:]!r}")
+                        problems.append(f"{name}: lab sweep {pkg}: exit {r.returncode}: {(r.stdout + r.stderr)[-300:]!r}")
                 continue
             r = run("test", "./...")
             if r.returncode != 0 or "--- FAIL" in r.stdout or "--- PASS" not in r.stdout:

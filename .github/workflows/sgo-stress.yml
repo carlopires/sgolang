@@ -27,7 +27,13 @@ jobs:
       - name: Stage-0 toolchain
         run: sgo/scripts/build-stage0.sh
       - name: Stress (D80)
-        run: sgo/scripts/stress.py --seeds 1000 --count 20 --cpus 1,4,16
+        run: |
+          git status --ignored --porcelain sgo/ > "$RUNNER_TEMP/before.txt"
+          sgo/scripts/stress.py --seeds 1000 --count 20 --cpus 1,4,16
+      - name: The stress lane left the source tree as it was (W12 review G3)
+        run: |
+          git status --ignored --porcelain sgo/ > "$RUNNER_TEMP/after.txt"
+          diff "$RUNNER_TEMP/before.txt" "$RUNNER_TEMP/after.txt"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
