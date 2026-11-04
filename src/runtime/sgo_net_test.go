@@ -73,7 +73,6 @@ func TestSGoNet(t *testing.T) {
 
 		// Cancellation ends an Accept wait; the listener then accepts again.
 		s = mustOpen(t)
-		runtime.SGoHandleLend(l, s)
 		mustSpawn(t, s, func(*runtime.SGoTask) error {
 			if _, k := runtime.SGoAccept(l); k != "Cancelled" {
 				t.Errorf("accept under cancellation: %q", k)
@@ -92,8 +91,6 @@ func TestSGoNet(t *testing.T) {
 		// Cancellation ends a Read wait and a Write wait (with its progress); the connection works
 		// afterwards.
 		s = mustOpen(t)
-		runtime.SGoHandleLend(cl, s)
-		runtime.SGoHandleLend(sv, s)
 		var wrote int
 		mustSpawn(t, s, func(*runtime.SGoTask) error {
 			if _, k := runtime.SGoConnRead(sv, 10); k != "Cancelled" {
@@ -127,19 +124,7 @@ func TestSGoNet(t *testing.T) {
 			t.Fatalf("read after cancellation: %q %s", s, k)
 		}
 
-		// A handle can be lent only to a nursery its owner owns.
-		s = mustOpen(t)
-		mustSpawn(t, s, func(*runtime.SGoTask) error {
-			h, _ := runtime.SGoConnect(port)
-			if err := recovered(func() { runtime.SGoHandleLend(h, s) }); err == nil || !isViolation(err) {
-				t.Errorf("lend to the parent's nursery: %v", err)
-			}
-			runtime.SGoHandleClose(h)
-			return nil
-		})
-		mustJoin(t, s)
-		a, _ := runtime.SGoAccept(l)
-		for _, h := range []*runtime.SGoHandle{a, cl, sv, l} {
+		for _, h := range []*runtime.SGoHandle{cl, sv, l} {
 			if k := runtime.SGoHandleClose(h); k != "" {
 				t.Errorf("close: %s", k)
 			}

@@ -85,36 +85,41 @@ func TestSGoHandle(t *testing.T) {
 			t.Fatalf("read %q", got)
 		}
 
-		// I04: a handle lent to a nursery is usable inside it and cannot be closed until it closes;
-		// a task outside the lend may not use it, and only the owner may close it.
+		// I04 (SGO-RES-002): a resource of the root's body is usable by a task inside the root's
+		// nursery; a resource of one nursery is not usable by a task of another.
 		s := mustOpen(t)
-		runtime.SGoHandleLend(in, s)
-		var notOwner, outside error
 		mustSpawn(t, s, func(*runtime.SGoTask) error {
 			if _, k := runtime.SGoFileSize(in); k != "" {
-				t.Errorf("lent use: %s", k)
+				t.Errorf("shared use: %s", k)
 			}
-			notOwner = recovered(func() { runtime.SGoHandleClose(in) })
 			return nil
 		})
-		if k := runtime.SGoHandleClose(in); k != "HandleLent" {
-			t.Errorf("close while lent: %q", k)
-		}
 		mustJoin(t, s)
-		if notOwner == nil || !isViolation(notOwner) {
-			t.Errorf("close by a borrower: %v", notOwner)
-		}
 		s = mustOpen(t)
+		scoped, _ := runtime.SGoDirFile(ro, "in", false)
+		runtime.SGoAdopt(scoped, s)
+		var outside error
+		s2 := mustOpen(t)
+		_ = s2
+		mustJoin(t, s2)
+		mustJoin(t, s)
+		runtime.SGoNurseryRelease(s)
+		s = mustOpen(t)
+		other, _ := runtime.SGoDirFile(ro, "in", false)
+		s3 := mustOpen(t)
+		runtime.SGoAdopt(other, s3)
+		mustJoin(t, s3)
 		mustSpawn(t, s, func(*runtime.SGoTask) error {
-			outside = recovered(func() { runtime.SGoFileSize(in) })
+			outside = recovered(func() { runtime.SGoFileSize(other) })
 			return nil
 		})
 		mustJoin(t, s)
 		if outside == nil {
-			t.Error("use outside the lend was allowed")
+			t.Error("use outside the resource's scope was allowed")
 		}
+		runtime.SGoNurseryRelease(s3)
 		if k := runtime.SGoHandleClose(in); k != "" {
-			t.Fatalf("close after the lend: %s", k)
+			t.Fatalf("close: %s", k)
 		}
 
 		// I05: a closed handle reaches nothing, even when its descriptor number is reused.
@@ -127,16 +132,20 @@ func TestSGoHandle(t *testing.T) {
 		}
 		runtime.SGoHandleClose(again)
 
-		// I03: a handle left open in a nursery body is closed at its exit, recorded as abandoned.
+		// I03 (SGO-RES-001): a resource of a nursery is released after its join, not abandoned.
 		before, abandoned := runtime.SGoOpenHandles(), runtime.SGoAbandoned()
 		s = mustOpen(t)
 		left, _ := runtime.SGoDirFile(ro, "in", false)
+		runtime.SGoAdopt(left, s)
 		mustJoin(t, s)
-		if runtime.SGoOpenHandles() != before || runtime.SGoAbandoned() != abandoned+1 {
-			t.Errorf("abandoned handle: open %d (want %d), abandoned %d", runtime.SGoOpenHandles(), before, runtime.SGoAbandoned()-abandoned)
+		if n := runtime.SGoNurseryRelease(s); n != 0 {
+			t.Errorf("release failed: %d", n)
+		}
+		if runtime.SGoOpenHandles() != before || runtime.SGoAbandoned() != abandoned {
+			t.Errorf("released handle: open %d (want %d), abandoned %d", runtime.SGoOpenHandles(), before, runtime.SGoAbandoned()-abandoned)
 		}
 		if runtime.SGoHandleFD(left) != -1 {
-			t.Error("abandoned handle still holds a descriptor")
+			t.Error("released handle still holds a descriptor")
 		}
 
 		// D55: an operation started after cancellation observes it (the nursery body is cancelled).

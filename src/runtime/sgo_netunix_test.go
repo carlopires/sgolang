@@ -78,7 +78,6 @@ func TestSGoNetUnix(t *testing.T) {
 
 		// Cancellation ends an Accept wait on a Unix listener.
 		s = mustOpen(t)
-		runtime.SGoHandleLend(l, s)
 		mustSpawn(t, s, func(*runtime.SGoTask) error {
 			if _, k := runtime.SGoAccept(l); k != "Cancelled" {
 				t.Errorf("accept under cancellation: %q", k)

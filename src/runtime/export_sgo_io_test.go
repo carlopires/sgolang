@@ -61,13 +61,32 @@ func SGoFileSize(h *SGoHandle) (int, string) {
 	return n, sgoIOErrKind(e)
 }
 func SGoHandleClose(h *SGoHandle) string      { return sgoIOErrKind(sgoHandleClose(h)) }
-func SGoHandleLend(h *SGoHandle, s *SGoScope) { sgoHandleLend(h, s) }
-func SGoHandleFD(h *SGoHandle) int32          { return h.fd }
+func SGoHandleFD(h *SGoHandle) int32 { return h.fd }
+
+// SGoOpenHandles counts the resources of the current task's body (SGO-RES-001).
 func SGoOpenHandles() (n int) {
-	for h := sgoCurrent().handles; h != nil; h = h.next {
+	l := &sgoCurrent().res
+	lock(&l.lock)
+	for h := l.first; h != nil; h = h.next {
 		n++
 	}
+	unlock(&l.lock)
 	return n
+}
+
+// SGoAdopt makes h a resource of nursery s, as an acquiring call naming s does.
+func SGoAdopt(h *SGoHandle, s *SGoScope) { sgoResPlace(h, &s.res, s, nil) }
+
+// SGoNurseryRelease releases nursery s's resources, as its exit does after the join.
+func SGoNurseryRelease(s *SGoScope) int { return len(sgoResRelease(&s.res, true)) }
+
+// SGoReleaseBody releases the current task's body resources, as its end does, and returns the
+// failed releases' kinds.
+func SGoReleaseBody(ok bool) (kinds []string) {
+	for _, r := range sgoResRelease(&sgoCurrent().res, ok) {
+		kinds = append(kinds, r.info.kind)
+	}
+	return kinds
 }
 
 func sgoLoopback() (ip [16]byte) {
