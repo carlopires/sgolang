@@ -1,3 +1,3 @@
 module example.com/nur-anonymous
 
-sgo 0.15.1
+sgo 0.16.0

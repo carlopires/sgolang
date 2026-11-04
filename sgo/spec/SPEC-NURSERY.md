@@ -70,7 +70,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §8, decision D11, plan §4.3–§4
 
 ### SGO-NUR-004 — Outcome
 - **version:** 2
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-SPAWN-004, SGO-DEF-003, SGO-DEF-005, SGO-PROC-002, SGO-RES-001; R6, D149; plan §4.5.
 - **grammar_and_types:** n/a — dynamic rule.
 - **preconditions:** The scope is CLOSED.

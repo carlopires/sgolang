@@ -1,4 +1,4 @@
 module example.com/lab-random
 
-sgo 0.15.1
+sgo 0.16.0
 grant random

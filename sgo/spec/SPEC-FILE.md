@@ -26,7 +26,7 @@ Ambient file-system access stays denied (SGO-FILE-001). Spec 0.5.0 admits confin
 
 ### SGO-FILE-002 — Directory grants and confined paths (subset 3)
 - **version:** 4
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-FILE-001, SGO-FILE-003, SGO-AUTH-002, SGO-TYPE-005, SGO-CAP-001, SGO-DEF-003, SGO-CANCEL-002, SGO-BUILD-001, SGO-LAB-002; D52, D53, D55, D56, D58, D59 (amended: `List`).
 - **grammar_and_types:** In the main module's `sgo.mod`: `grant dir NAME PATH ro|rw`, where NAME is a lower-case letter followed by at most 31 of `[a-z0-9_-]` and PATH is absolute or relative to the working directory when the program starts; each NAME at most once. API: `root.Dir(name string) *sgo.Dir`; on `d *sgo.Dir`: `Open(s sgo.Scope, path string) (*sgo.File, error)`, `Create(s sgo.Scope, path string) (*sgo.File, error)`, `ReadFile(path string) (string, error)`, `WriteFile(path, data string) error`, `Remove(path string) error`, `Mkdir(path string) error`, `List(path string) (*sgo.Listing, error)`, `Sub(path string) (*sgo.Dir, error)`, `ReadOnly() *sgo.Dir`; on `l *sgo.Listing`: `Len() int`, `Name(i int) string`. `*sgo.Dir` and `*sgo.Listing` are capability handle types (SGO-TYPE-005). A path is a sequence of names separated by `/`: no empty name, `.`, `..`, NUL, or leading `/`; names of at most 255 bytes; at most 4096 bytes in total. `List("")` names the handle's own directory; `""` is not a path for any other operation. No seek, rename, link, permission, or metadata operation is admitted.
 - **preconditions:** `root.Dir` is called by the root task (every task that can name the `Dir` may use it) with a declared NAME. `Create`, `WriteFile`, `Remove`, and `Mkdir` need a handle that is neither from an `ro` grant nor `ReadOnly`.
@@ -48,7 +48,7 @@ Ambient file-system access stays denied (SGO-FILE-001). Spec 0.5.0 admits confin
 
 ### SGO-FILE-003 — I/O handles: ownership, progress, and closing (subset 3)
 - **version:** 2
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-FILE-002, SGO-NET-002, SGO-SYNC-002, SGO-PERMIT-002, SGO-CANCEL-002, SGO-DEF-003, SGO-TYPE-005, SGO-RES-001, SGO-RES-002, SGO-RES-003; D54, D55, D56, D150, D153.
 - **grammar_and_types:** `*sgo.File` with `Read(max int) (string, error)`, `Write(s string) (int, error)`, `Size() (int, error)`, `Close() error`, `MoveTo(s sgo.Scope) error`; the same contract applies to `*sgo.Conn` and `*sgo.Listener` (SGO-NET-002). `sgo.Progress(err error) int`, `sgo.NoEffect(err error) bool`, `sgo.IsEOF(err error) bool`. The handles are capability handle types (SGO-TYPE-005).
 - **preconditions:** The caller runs inside the handle's scope (SGO-RES-002). `dir.Open(s, path)` and `dir.Create(s, path)` name a scope the caller runs inside.

@@ -48,7 +48,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §1, decisions D14/D19, and resolut
 
 ### SGO-LEX-003 — Reserved words
 - **version:** 2
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-LEX-002, SGO-SPAWN-005, SGO-ERR-001, SGO-ERR-004; D11, D14, D147.
 - **grammar_and_types:** The reserved words are `break case chan const continue default defer else fallthrough for func go goto if import interface map package range return select struct switch type var nursery check`. A reserved word is never an identifier, in any position. Of these, `chan`, `fallthrough`, `go`, `goto`, `interface`, `map`, `range`, `select`, `struct`, and `type` begin constructs denied in subset 0.
 - **preconditions:** n/a — applies to every token.

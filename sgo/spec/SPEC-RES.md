@@ -6,7 +6,7 @@ API at 0.16.0: a method on a scope acquires into that scope (`root.Listen`, `n.D
 
 ### SGO-RES-001 — Scopes own resources
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-NUR-001, SGO-NUR-004, SGO-SPAWN-004, SGO-FILE-003, SGO-NET-002, SGO-NET-003, SGO-RES-002, SGO-RES-003, SGO-RES-004; D148, D149, D153, D155; model `sgo/model/scoperes.go`.
 - **grammar_and_types:** A *scope* is the body of a nursery statement, named by its nursery `n`, or the body of a task, named by its context (`root`, or the parameter of a spawned callback). `sgo.Scope` is the interface both implement. A *resource* is a value of a built-in resource type (`*sgo.File`, `*sgo.Listener`, `*sgo.Conn`, `*sgo.Dialer`) or a user resource (SGO-RES-004). A *resource type* is one of these; a struct, array, or slice type holding one; or a channel, `sgo.Channel`, or `sgo.SendPermit` type whose element holds one (SGO-RES-005).
 - **preconditions:** An acquiring call runs in a task inside the named scope (the scope or a scope nested in it), and the scope has not ended.
@@ -28,7 +28,7 @@ API at 0.16.0: a method on a scope acquires into that scope (`root.Listen`, `n.D
 
 ### SGO-RES-002 — Sharing a resource within its scope
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-RES-001, SGO-NET-002, SGO-FILE-003, SGO-CANCEL-002; D150.
 - **grammar_and_types:** There is no `LendTo`: the methods are removed from every handle type and from `*sgo.Dir`.
 - **preconditions:** The caller runs inside the resource's scope.
@@ -50,7 +50,7 @@ API at 0.16.0: a method on a scope acquires into that scope (`root.Listen`, `n.D
 
 ### SGO-RES-003 — A resource never outlives the name of its scope; `MoveTo`
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-RES-001, SGO-RES-005, SGO-COMP-004, SGO-COMP-009, SGO-CHAN-001, SGO-MEM-001, SGO-ERR-004; D151, D158.
 - **grammar_and_types:** Every expression of a resource type is *tied* to a scope name: the scope argument (or receiver) of the call that acquired it, the scope it was moved to (`r.MoveTo(s)` on built-in resources, `sgo.MoveTo(r, s)` for any resource), the scope that owns it (`s.Own(r)`), or, for a parameter or result, a scope of the caller (a function's resource parameters and results are tied to scopes its caller is in; two parameters' scopes are not comparable). A composite value holding no resource is tied to no scope.
 - **preconditions:** For a move to `s`: the caller runs inside the resource's scope, and `s` encloses that scope.
@@ -72,7 +72,7 @@ API at 0.16.0: a method on a scope acquires into that scope (`root.Listen`, `n.D
 
 ### SGO-RES-004 — User resources: `Own` and `Release`
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-RES-001, SGO-RES-003, SGO-DEF-004, SGO-IFACE-002; D152, D155, D158.
 - **grammar_and_types:** `sgo.Releaser` is the interface `Release(ok bool) error`. `s.Own(r)` takes a value implementing it and ties `r` to `s`. A user resource is found by identity, so it is a pointer.
 - **preconditions:** The caller runs inside `s`; `r` is not a resource of any scope.
@@ -94,7 +94,7 @@ API at 0.16.0: a method on a scope acquires into that scope (`root.Listen`, `n.D
 
 ### SGO-RES-005 — Hand-off within a scope: channels and the deciding scope
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-RES-001, SGO-RES-002, SGO-RES-003, SGO-CHAN-001, SGO-PERMIT-001, SGO-NET-003; D158.
 - **grammar_and_types:** A native channel, `*sgo.Channel[E]`, or `*sgo.SendPermit[E]` whose element type `E` holds a resource is a resource type: it is tied to the extent where it was made (`make` or `sgo.NewChannel`), and a permit is tied as its channel is.
 - **preconditions:** For a send of `v`: the channel's scope lies within `v`'s scope.

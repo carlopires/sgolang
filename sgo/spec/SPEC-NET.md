@@ -26,7 +26,7 @@ Ambient network access stays denied (SGO-NET-001). Spec 0.5.0 admits exact TCP a
 
 ### SGO-NET-002 — Endpoint grants: TCP and Unix domain sockets (subset 3)
 - **version:** 3
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-NET-001, SGO-NET-003, SGO-FILE-003, SGO-AUTH-002, SGO-TYPE-005, SGO-CANCEL-002, SGO-BUILD-001, SGO-LAB-002, SGO-LAB-003; D52, D54, D55, D56, D57, D58, D60.
 - **grammar_and_types:** In the main module's `sgo.mod`: `grant connect IP:PORT` and `grant listen IP:PORT`, with IP an IPv4 literal or a bracketed IPv6 literal (not IPv4-mapped, no zone) and PORT in 1–65535 (a host name is admitted only in a connect grant, for a dialer: SGO-NET-003); and `grant connect unix:PATH` and `grant listen unix:PATH` for a Unix domain stream socket at PATH, absolute or relative to the working directory at start, of 1 to 103 bytes. API: `root.Dial(addr string) (*sgo.Conn, error)`, `root.Listen(addr string) (*sgo.Listener, error)`; on `c *sgo.Conn`: `Read(max int) (string, error)`, `Write(s string) (int, error)`, `PeerUID() (int, error)`, `Close() error`, `LendTo(n *sgo.Nursery) *sgo.Conn`; on `l *sgo.Listener`: `Accept(s sgo.Scope) (*sgo.Conn, error)`, `Close() error`, `LendTo(n *sgo.Nursery) *sgo.Listener`. `*sgo.Conn` and `*sgo.Listener` are capability handle types (SGO-TYPE-005). `addr` is `IP:PORT` or `unix:PATH`. No DNS outside `Dialer.Resolve` (SGO-NET-003), no UDP, Unix datagram or seqpacket sockets, Linux abstract socket names, descriptor or credential passing, socket options, or deadlines are admitted.
 - **preconditions:** `Dial` and `Listen` are called by the root task (children use the resources of the scopes they run in, SGO-RES-002) with an address that a grant of the same direction names exactly (IP endpoints compared as IP and port; Unix endpoints as the exact path text).
@@ -48,7 +48,7 @@ Ambient network access stays denied (SGO-NET-001). Spec 0.5.0 admits exact TCP a
 
 ### SGO-NET-003 — Dialers and host-name resolution (subset 3)
 - **version:** 3
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-NET-002, SGO-RES-001, SGO-RES-002, SGO-RES-005, SGO-FILE-003, SGO-TYPE-005, SGO-CANCEL-002, SGO-LAB-002; D143, D145, D146.
 - **grammar_and_types:** In `sgo.mod`, `grant connect HOST:PORT` with HOST a canonical host name: dot-separated labels of `[a-z0-9-]`, 1 to 63 bytes each, not starting or ending with `-`, 253 bytes in all, with at least one letter or `-`. Listen grants never name a host. API: `root.Dialer(endpoints []string) *sgo.Dialer`; on `d *sgo.Dialer`: `Resolve(host, family string) ([]string, error)` with family `"ip4"` or `"ip6"`, `Dial(s sgo.Scope, addr string) (*sgo.Conn, error)`, `LendTo(n *sgo.Nursery) *sgo.Dialer`, `Close() error`. `*sgo.Dialer` is a capability handle type (SGO-TYPE-005).
 - **preconditions:** `Dialer` is called by the root task, and each endpoint is named exactly by a connect grant (IP, Unix, or host name). `Resolve` takes a host that one of the dialer's endpoints names. `Dial` takes one of the dialer's IP or Unix endpoints, or an address that this dialer's `Resolve` returned. The caller of `Resolve` and `Dial` runs inside the dialer's scope (SGO-RES-002), and `Dial` names a scope the caller runs inside.

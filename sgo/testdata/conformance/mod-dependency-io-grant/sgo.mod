@@ -1,4 +1,4 @@
 module example.com/mod-dependency-io-grant
 
-sgo 0.15.1
+sgo 0.16.0
 require example.com/lib v1.0.0

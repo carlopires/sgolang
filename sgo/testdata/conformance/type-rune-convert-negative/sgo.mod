@@ -1,3 +1,3 @@
 module example.com/type-rune-convert-negative
 
-sgo 0.15.1
+sgo 0.16.0

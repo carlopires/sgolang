@@ -1,3 +1,3 @@
 module example.com/comp-map-copy-order
 
-sgo 0.15.1
+sgo 0.16.0

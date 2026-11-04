@@ -2,6 +2,34 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.16.0 — 2026-11-05
+
+Structured resources and `check` (W21; D147–D158). Resources belong to scopes — nursery bodies and task bodies — which release them when they end, after their children, in reverse order of acquisition; tasks inside a scope share its resources; the compiler refuses every flow that would let a resource outlive its scope (`SGO_E_RESOURCE_ESCAPES`). `check c` propagates an error. Not every 0.15.1 program keeps its meaning: `LendTo`, `sgo.ConnSlot`, and the `HandleAbandoned` outcome are removed; `Accept`, `Dialer.Dial`, `Dir.Open`, and `Dir.Create` take a scope as their first argument; `check` is a reserved word.
+
+New frozen clauses:
+
+- SGO-ERR-004 v1 — `check`: checked propagation (D147); a function with a resource result returns only the error on its error path, and a written `return` may give `nil` for a resource result exactly when its error operand is not the literal `nil`.
+- SGO-RES-001 v1 — scopes own resources; release after the join, in reverse acquisition order; failed releases are never dropped (`ReleaseError`, D148, D149).
+- SGO-RES-002 v1 — sharing a resource within its scope; `Close` by any task inside it, `ResourceBusy` while another waits (D150).
+- SGO-RES-003 v1 — a resource never outlives the name of its scope; `MoveTo` and `sgo.MoveTo` move it outward (D151, D158).
+- SGO-RES-004 v1 — user resources: `s.Own(r)` and `Release(ok bool) error`, commit or roll back; a second `Own` fails with `InvalidArgument` (D152).
+- SGO-RES-005 v1 — hand-off within a scope: channels may carry resources that outlive them; the deciding scope owns the candidates (D158).
+
+Amended:
+
+- SGO-LEX-003 v2 — `check` is a reserved word.
+- SGO-CTL-001 v3 — `check c` is a statement and a use of the error of `c`.
+- SGO-NUR-004 v2 — the release step between the join and the outcome; a failed release in an otherwise successful nursery unwinds with `ReleaseError`.
+- SGO-SPAWN-004 v2 — a task's outcome includes the release of its body's resources.
+- SGO-FILE-002 v4 — `Dir.LendTo` removed; `Open` and `Create` take a scope; a `Dir` is never released or lent.
+- SGO-FILE-003 v2 — handle ownership by scopes (SGO-RES-001/002); `LendTo` and `HandleLent` removed; `MoveTo` added.
+- SGO-NET-002 v3 — `Accept` takes a scope; children use the resources of the scopes they run in.
+- SGO-NET-003 v3 — a dialer is a resource of the scope that made it; `Dial` takes a scope; a race is an ordinary nursery.
+
+Superseded:
+
+- SGO-NET-004 v2 — connection slots, superseded by SGO-RES-003 and SGO-RES-005 (D158; D157 withdrawn).
+
 ## 0.15.1 — 2026-11-04
 
 Review fixes (W18 review Y2–Y4). Programs valid under 0.15.0 keep their meaning; `Dialer.Resolve` returns fewer addresses in three cases that widened authority or trusted unrelated data.

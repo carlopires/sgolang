@@ -70,7 +70,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 
 ### SGO-SPAWN-004 — Child outcomes
 - **version:** 2
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-CANCEL-001, SGO-CANCEL-003, SGO-DEF-005, SGO-NUR-004, SGO-RES-001; D149.
 - **grammar_and_types:** n/a — dynamic rule.
 - **preconditions:** n/a — dynamic rule.

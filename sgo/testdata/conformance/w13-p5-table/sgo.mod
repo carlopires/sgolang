@@ -1,3 +1,3 @@
 module example.com/w13-p5-table
 
-sgo 0.15.1
+sgo 0.16.0

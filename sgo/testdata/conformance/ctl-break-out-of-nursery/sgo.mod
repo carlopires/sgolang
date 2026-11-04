@@ -1,3 +1,3 @@
 module example.com/ctl-break-out-of-nursery
 
-sgo 0.15.1
+sgo 0.16.0

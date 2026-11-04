@@ -70,7 +70,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §15, decision D16, resolution R9.
 
 ### SGO-ERR-004 — `check`: checked propagation
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-LEX-003, SGO-CTL-001, SGO-CTL-004, SGO-BIND-002, SGO-VAL-005, SGO-DEF-001, SGO-TYPE-005, SGO-TYPE-006, SGO-NUR-004, SGO-RES-001, SGO-RES-003; D147, D156.
 - **grammar_and_types:** `check` is a reserved word. Two forms, each with a single call `c` whose last result has type `error`: the statement `check c`, and the whole right side of an assignment or short declaration, `x₁, …, xₙ = check c` or `x₁, …, xₙ := check c`, whose left side binds the results of `c` except the last (count and types as for an assignment of those results; `_` admitted per position). The enclosing function or function literal has a last result of type `error`.
 - **preconditions:** n/a: a static rule.

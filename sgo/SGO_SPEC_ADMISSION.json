@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": "0.15.1",
+  "spec_version": "0.16.0",
   "status": "admitted_0.7.0",
   "warning": "Spec 0.7.0 admits every row marked 'admitted': its clauses are frozen, the toolchain implements and enforces them, and its acceptance cases have executed evidence (constitution §6, D83). Rows marked 'denied' stay rejected. Admission does not widen any row beyond its clauses; everything the clauses do not name is rejected.",
   "default_decision": "reject",
@@ -90,7 +90,7 @@
       "clause_status": {
         "SGO-LEX-001": "frozen",
         "SGO-LEX-002": "frozen",
-        "SGO-LEX-003": "draft",
+        "SGO-LEX-003": "frozen",
         "SGO-LEX-004": "frozen"
       },
       "clause_versions": {
@@ -343,7 +343,7 @@
         "SGO-CTL-004": "9e4a91bbd310b58c76f8d4529f545e0aa3a45a2b6f220bd87ae51d21d6c502b8"
       },
       "clause_status": {
-        "SGO-CTL-001": "draft",
+        "SGO-CTL-001": "frozen",
         "SGO-CTL-002": "frozen",
         "SGO-CTL-003": "frozen",
         "SGO-CTL-004": "frozen"
@@ -447,7 +447,7 @@
         "SGO-NUR-001": "frozen",
         "SGO-NUR-002": "frozen",
         "SGO-NUR-003": "frozen",
-        "SGO-NUR-004": "draft",
+        "SGO-NUR-004": "frozen",
         "SGO-NUR-005": "frozen"
       },
       "clause_versions": {
@@ -501,7 +501,7 @@
         "SGO-SPAWN-001": "frozen",
         "SGO-SPAWN-002": "frozen",
         "SGO-SPAWN-003": "frozen",
-        "SGO-SPAWN-004": "draft",
+        "SGO-SPAWN-004": "frozen",
         "SGO-SPAWN-005": "frozen"
       },
       "clause_versions": {
@@ -1031,8 +1031,8 @@
       },
       "clause_status": {
         "SGO-FILE-001": "superseded",
-        "SGO-FILE-002": "draft",
-        "SGO-FILE-003": "draft"
+        "SGO-FILE-002": "frozen",
+        "SGO-FILE-003": "frozen"
       },
       "clause_versions": {
         "SGO-FILE-001": 2,
@@ -1074,8 +1074,8 @@
       },
       "clause_status": {
         "SGO-NET-001": "superseded",
-        "SGO-NET-002": "draft",
-        "SGO-NET-003": "draft",
+        "SGO-NET-002": "frozen",
+        "SGO-NET-003": "frozen",
         "SGO-NET-004": "superseded"
       },
       "clause_versions": {
@@ -1116,11 +1116,11 @@
         "SGO-RES-005": "cfee81d4f351ae84987d25c09433c6d0d7958a1e18abc350faef0009f71164d8"
       },
       "clause_status": {
-        "SGO-RES-001": "draft",
-        "SGO-RES-002": "draft",
-        "SGO-RES-003": "draft",
-        "SGO-RES-004": "draft",
-        "SGO-RES-005": "draft"
+        "SGO-RES-001": "frozen",
+        "SGO-RES-002": "frozen",
+        "SGO-RES-003": "frozen",
+        "SGO-RES-004": "frozen",
+        "SGO-RES-005": "frozen"
       },
       "clause_versions": {
         "SGO-RES-001": 1,
@@ -1335,7 +1335,7 @@
         "SGO-ERR-001": "frozen",
         "SGO-ERR-002": "frozen",
         "SGO-ERR-003": "frozen",
-        "SGO-ERR-004": "draft"
+        "SGO-ERR-004": "frozen"
       },
       "clause_versions": {
         "SGO-ERR-001": 1,

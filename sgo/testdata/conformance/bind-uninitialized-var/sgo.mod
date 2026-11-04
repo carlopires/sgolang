@@ -1,3 +1,3 @@
 module example.com/bind-uninitialized-var
 
-sgo 0.15.1
+sgo 0.16.0

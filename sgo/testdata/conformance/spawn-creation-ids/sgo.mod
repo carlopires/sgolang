@@ -1,3 +1,3 @@
 module example.com/spawn-creation-ids
 
-sgo 0.15.1
+sgo 0.16.0
