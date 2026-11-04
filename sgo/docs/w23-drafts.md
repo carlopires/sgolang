@@ -8,6 +8,13 @@ as D172 in W22), D167.
 - **SGO-FILE-004 — Whole-message reads** (D164, D173): `ReadLine`, `ReadAll`, `sgo.IsTooLong`; the
   handle's read turn and read buffer. Cases: file-read-lines, lab-net-read-line.
 
+- **SGO-SPAWN-008 — Request/reply calls** (D167, D174): `sgo.NewCall[Req, Resp](n)`, `Call`,
+  `Accept`, `Request.Value`, `Request.Reply`, `sgo.IsNoReply`; rendezvous hand-over (withdrawal by
+  cancellation before acceptance), an accepted request as a resource of the accepting body
+  (`NoReply` when it ends unanswered). Model `sgo/model/callmodel.go`. Cases: call-basic,
+  lab-call-withdraw, call-request-escape, call-resource-denied. Deferred: acceptance through a
+  `select` arm.
+
 ## Amendments owed at 0.18.0 (frozen clauses; a new version each)
 
 - **SGO-SPAWN-006 v2** (W22 review G2, H1): each `h.Result()` call returns its own channel, which
