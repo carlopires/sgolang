@@ -11,6 +11,10 @@
 
 package runtime
 
+// sgoReadLineHook, set only by the runtime's tests, runs between two reads of one ReadLine, with
+// the read turn held: the window a Close must not enter (W22 review H2).
+var sgoReadLineHook func(h *sgoHandle)
+
 // sgoRawRead is one bounded read of the handle's stream, below the buffer.
 func sgoRawRead(h *sgoHandle, max int) (string, *sgoIOErr) {
 	if h.kind == sgoHConn {
@@ -106,6 +110,9 @@ func sgoReadLine(h *sgoHandle, max int, op string) (string, *sgoIOErr) {
 			return "", &sgoIOErr{e.kind, 0}
 		}
 		buf += s
+		if sgoReadLineHook != nil {
+			sgoReadLineHook(h)
+		}
 	}
 }
 

@@ -60,8 +60,8 @@ func SGoFileSize(h *SGoHandle) (int, string) {
 	n, e := sgoFileSize(h)
 	return n, sgoIOErrKind(e)
 }
-func SGoHandleClose(h *SGoHandle) string      { return sgoIOErrKind(sgoHandleClose(h)) }
-func SGoHandleFD(h *SGoHandle) int32 { return h.fd }
+func SGoHandleClose(h *SGoHandle) string { return sgoIOErrKind(sgoHandleClose(h)) }
+func SGoHandleFD(h *SGoHandle) int32     { return h.fd }
 
 // SGoOpenHandles counts the resources of the current task's body (SGO-RES-001).
 func SGoOpenHandles() (n int) {
@@ -220,3 +220,10 @@ func SGoHasOpenat2() bool {
 	_, ok := sgoOpenBeneath(sgoAT_FDCWD, sgoCString("."), sgoO_RDONLY|sgoO_DIRECTORY|sgoO_CLOEXEC, 0)
 	return ok
 }
+
+// Whole-message reads (D173): ReadLine, and the hook between two of its reads (W22 review H2).
+func SGoReadLine(h *SGoHandle, max int) (string, string) {
+	s, e := sgoReadLine(h, max, "File.ReadLine")
+	return s, sgoIOErrKind(e)
+}
+func SGoSetReadLineHook(f func(h *SGoHandle)) { sgoReadLineHook = f }

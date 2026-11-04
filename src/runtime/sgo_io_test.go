@@ -354,3 +354,32 @@ func TestSGoCreateRaceReported(t *testing.T) {
 		}
 	}
 }
+
+// TestSGoReadLineClose: a Close between two reads of one ReadLine (the read turn held, no
+// operation in progress) is ResourceBusy, and the ReadLine returns its line (W22 review H2).
+func TestSGoReadLineClose(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "in"), []byte("abc"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	root(t, func() {
+		d := runtime.SGoDirOpen(dir, true)
+		f, k := runtime.SGoDirFile(d, "in", false)
+		if k != "" {
+			t.Fatalf("open: %s", k)
+		}
+		var closed []string
+		runtime.SGoSetReadLineHook(func(h *runtime.SGoHandle) { closed = append(closed, runtime.SGoHandleClose(h)) })
+		line, k := runtime.SGoReadLine(f, 10) // "abc", then end of file: two reads
+		runtime.SGoSetReadLineHook(nil)
+		if len(closed) != 1 || closed[0] != "ResourceBusy" {
+			t.Fatalf("Close between the reads of ReadLine: %q, want [ResourceBusy]", closed)
+		}
+		if line != "abc" || k != "" {
+			t.Fatalf("ReadLine: %q %q", line, k)
+		}
+		if k := runtime.SGoHandleClose(f); k != "" {
+			t.Fatalf("Close after ReadLine: %q", k)
+		}
+	})
+}

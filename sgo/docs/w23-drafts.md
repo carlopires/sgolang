@@ -15,8 +15,9 @@ as D172 in W22), D167.
   that arm once and then waits on its other arms, so the 0.17.0 meaning of an arm on `h.Result()`
   is unchanged. A call registers nothing: a result channel is listed on its task only while a
   receiver is parked on it, so abandoned channels are garbage and the list is bounded by the
-  receivers parked now. Receivers parked before the end are all woken, one per channel. `Wait`
-  uses a fresh channel per call. A level-triggered latch was tried at `69eaccd6f3` and withdrawn:
+  receivers parked now. Receivers parked before the end are all woken, one per channel. After its
+  value, a `Result()` channel never becomes ready again: a plain receive on it is an ordinary
+  wait, ended by cancellation or reported by `LabDeadlock`. `Wait` uses a fresh channel per call. A level-triggered latch was tried at `69eaccd6f3` and withdrawn:
   S-Go has no nil channel to switch an arm off, so every select loop over it spun (review H1).
   Cases: lab-task-result-once; runtime lane TestSGoTaskResult (1 000 abandoned select arms leave
   nothing listed; five parked receivers; a kept channel delivers once while a timer arm keeps
@@ -27,6 +28,8 @@ as D172 in W22), D167.
 - **SGO-FILE-004** (W22 review H2, H3): a task holding the read turn is waiting on the handle, so
   `Close` is `ResourceBusy` while a `ReadLine`/`ReadAll` runs; the handle is checked again once the
   turn is taken. An unterminated last line of exactly `max` bytes is a line; one more byte is
-  `TooLong`. Cases: lab-net-readline-close, file-read-lines.
+  `TooLong`. Cases: lab-net-readline-close, file-read-lines; runtime lane TestSGoReadLineClose (a
+  Close from a test hook between two reads of one ReadLine is ResourceBusy; the mutant without the
+  read-turn check fails it).
 - **SGO-FILE-003** concurrency text: reads of one handle now run one at a time (the read turn of
   SGO-FILE-004); writes keep the per-call serialization.
