@@ -991,6 +991,23 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 
 **Why.** The multiplexers, pool front ends, and services of W23 need a reply that is guaranteed to come back or fail, and withdrawal that cannot be raced; built on the rendezvous channel and the task-result record, the only new runtime state is the `NoReply` release.
 
+## D175 — Pools with leases (W23 step 4) · APPROVED 2026-11-06 (implementer, delegated)
+
+**Decision.** `p := sgo.NewPool[T](n)` makes a pool of items of type `T` that lives in nursery `n`; the handle is shareable like task handles and call points, and is tied to `n` when `T` holds resources (as `*sgo.Task[T]` is). `p.Put(v)` adds an idle item; it is checked as a send on the pool (D158): an item that holds a resource must be tied at least as long as the pool, so an item is never released before its pool. `l := p.Acquire(s)` waits for an idle item and returns a lease, a resource of scope `s` (SGO-RES-001), which must lie within the pool's extent; `l.Value()` is the item, tied as the lease. Waiters are served oldest first; the wait is a cancellation point with the unwinding of a native receive, and a waiter either gets an item or is cancelled, never both (an item is handed over by the channel protocol). When the lease is released (its scope ends, after the scope's tasks have ended), the item goes back to the pool: to the oldest waiter, or idle. `l.Return()` puts it back early; `l.Drop()` keeps it out of the pool for good (a connection found broken; the item is still released by its own owner). Using a lease after `Return` or `Drop` is a `SpawnContractViolation`. `T` is a type a task may hand to another (the rule of `sgo.Go` results). Commit or rollback of a transaction over a leased connection is the transaction's own business: a user resource in the lease's scope sees `Release(false)` when that scope unwinds or an error exit crosses it (D159), and the item still goes back.
+
+**Why.** The W23 server example needs a database-style pool whose connections are used exclusively, come back on every exit path, and cannot outlive the nursery that owns them. Built on the unbounded native queue of groups (`sgo_group.go`) and on resource registration (`runtime_resOwn`), it adds no runtime state. Model: `sgo/model/poolmodel.go` (1 422 states; four mutants caught: a returned item put back twice, a dropped item put back, a cancelled waiter taking an item, a put-back that wakes no waiter).
+
+## D176 — Reader and Writer over the I/O handles **[NEEDS USER]** · PROPOSED 2026-11-06
+
+**Question.** W23 step 4 plans "Reader/Writer interfaces over the I/O types", and D134 (std/io shape, PROPOSED) recommends Go's `io.Reader`/`io.Writer`. But a resource never becomes an interface value (W21 review Z1, SGO-RES-003, frozen): an interface is not tied to a scope, so a `*Conn` or `*File` in an `io.Writer` could outlive its scope. And every interface but `error` is task-local (D132).
+
+**Options.**
+- (a) **Resource interfaces in package sgo.** `sgo.Reader` and `sgo.Writer` are interface types that the compiler treats as resource kinds: a conversion from `*Conn`/`*File` (or any type with the methods) gives a value tied as its source, under every flow rule of resources (no storing beyond the extent, no `any`, no `sgo.Copy`). Library code (an HTTP parser, a line reader) is written once against them. Z1 keeps its meaning for every other interface. Cost: a new kind of resource type in the checker (an interface whose dynamic value may be a resource), and a frozen clause amended (SGO-RES-003).
+- (b) **Generic functions over a method constraint.** No interface values: `func ReadRequest[R sgo.LineReader](r R) (Request, error)` with `R` a type parameter constrained by the methods. Every instantiation is a concrete handle type, so the existing flow rules apply unchanged and Z1 is untouched. Cost: generics with resource type arguments must be admitted and checked (today generic code over resources is not exercised), and a reader cannot be stored in a struct field of interface type.
+- (c) **No abstraction yet.** The HTTP example takes `*sgo.Conn` directly; a test double is a lab network peer (already scripted). Cost: library code is tied to one handle type.
+
+**Recommendation.** (b) for W23: it keeps the frozen rule, and the lab already replaces test doubles; (a) if user code needs to hold readers of different handle types in one variable.
+
 ---
 
 ## Approval record

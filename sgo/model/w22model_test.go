@@ -135,3 +135,37 @@ func TestCallMutations(t *testing.T) {
 		t.Logf("%s: %v", c.name, err)
 	}
 }
+
+func TestPoolLeases(t *testing.T) {
+	n, err := PoolExplore()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("pool: %d states", n)
+}
+
+func TestPoolMutations(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		flag *bool
+		want string
+	}{
+		{"scope end puts back a returned item", &plReturnTwice, "P3"},
+		{"dropped item put back", &plDropReturns, "P2"},
+		{"cancelled waiter takes the item", &plCancelLoses, "P2"},
+		{"put back without waking a waiter", &plNoWake, "P4"},
+	} {
+		*c.flag = true
+		_, err := PoolExplore()
+		*c.flag = false
+		if err == nil {
+			t.Errorf("%s: not caught", c.name)
+			continue
+		}
+		if got := err.Error()[:2]; got != c.want {
+			t.Errorf("%s: caught as %v, want %s", c.name, err, c.want)
+			continue
+		}
+		t.Logf("%s: %v", c.name, err)
+	}
+}
