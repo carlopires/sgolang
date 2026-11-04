@@ -24,16 +24,23 @@ clause version, and all of them freeze together as 0.16.1.
   assignment of a reference value makes the target's extent reach the source's memory, and
   aliases share it; parameters and receivers reach the caller's memory, so a store of one
   parameter's resource into another parameter's or the receiver's memory is an escape. Memory
-  of unknown origin (a call result, a package-level variable) may be reached from anywhere."
+  of unknown origin (a call result, a package-level variable) may be reached from anywhere, so
+  a store through it (`get(p).f = r`, `p.self().f = r`, `mk()[0].f = r`) admits only a value tied
+  to no scope." A value of a resource type counts as tied to the scope that declares its variable,
+  even if it holds no owned resource yet: a literal that captures such a variable and is not
+  called in place or spawned is refused (stricter than needed; relaxing it for untied values is
+  possible later).
 - Rule (3): "…a function literal called in place, or deferred when the deferring function's own
   extent is the scope (a task body, or a scope parameter)". A deferred call inside a nursery
   statement may not mention a resource tied to that nursery or to a scope nested inside the
   function (`SGO_E_RESOURCE_ESCAPES` at the use): it runs when the function returns, after the
   nursery released the resource.
-- **negative_tests:** add fixture:res-escape-alias, fixture:res-escape-any, fixture:res-escape-addr,
+- **negative_tests:** add fixture:res-escape-call-result, fixture:res-escape-method-result,
+  fixture:res-escape-alias, fixture:res-escape-any, fixture:res-escape-addr,
   fixture:res-escape-param-store, fixture:res-escape-receiver-store,
   fixture:res-defer-nursery-capture.
-- **positive_tests:** add fixture:res-local-holder-ok, fixture:res-defer-task-scope.
+- **positive_tests:** add fixture:res-local-holder-ok, fixture:res-defer-task-scope,
+  fixture:res-call-result-untied-ok.
 
 ## SGO-RES-004 v2: user resources
 

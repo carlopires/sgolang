@@ -1,0 +1,29 @@
+package main
+
+import "sgo"
+
+type Tx struct {
+	done bool
+	log  string
+}
+
+func (t *Tx) Release(ok bool) error {
+	t.done = true
+	t.log += "released;"
+	return nil
+}
+
+type holder struct {
+	tx *Tx
+}
+
+func get(p *holder) *holder {
+	return p
+}
+
+// A value tied to no scope may be stored through a call result (W21 review Z1: still legal).
+func main(root *sgo.Context) error {
+	p := &holder{}
+	get(p).tx = &Tx{}
+	return root.Stdout().WriteString("stored\n")
+}

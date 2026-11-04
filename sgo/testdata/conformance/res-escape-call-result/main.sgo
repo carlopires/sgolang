@@ -1,0 +1,35 @@
+package main
+
+import "sgo"
+
+type Tx struct {
+	done bool
+	log  string
+}
+
+func (t *Tx) Release(ok bool) error {
+	t.done = true
+	t.log += "released;"
+	return nil
+}
+
+type holder struct {
+	tx *Tx
+}
+
+func get(p *holder) *holder {
+	return p
+}
+
+// A store through a call result is a store into memory that may be reached from anywhere (W21
+// review Z1): a resource tied to the nursery cannot go there.
+func main(root *sgo.Context) error {
+	p := &holder{}
+	nursery (n) {
+		tx := &Tx{}
+		n.Own(tx)
+		get(p).tx = tx
+	}
+	_ = p
+	return nil
+}
