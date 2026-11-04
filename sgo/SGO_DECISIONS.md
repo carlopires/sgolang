@@ -977,6 +977,12 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 
 **Plan.** W22 (language core): D159, D160, D161, D162, D165, with a model of timers, task handles, and deadline inheritance first; acceptance is Happy Eyeballs rewritten on them. W23 (concurrency library): D164, D166, D167, `Reader`/`Writer` interfaces, a `Pool[T]` helper; acceptance is an HTTP/1.1 server example. Later: D163, TLS, JSON, HTTP/2. Plan: `sgo/docs/w22-w23-plan.md`.
 
+## D173 — Whole-message reads: the read turn and the handle's read buffer (D164) · APPROVED 2026-11-06 (implementer, delegated)
+
+**Decision.** D164's `ReadLine` must read past the line end, so a `*sgo.Conn` or `*sgo.File` keeps the bytes it read and has not returned in a buffer on the handle, and every read (`Read`, `ReadLine`, `ReadAll`) takes the handle's read turn for its duration: one read at a time per handle, another task's read waits for the turn (a cancellation point), so buffered bytes are never reordered between readers. `Read(max)` returns buffered bytes first, without a system call. `ReadLine(max)` returns the next line without its `\n` and one `\r` before it; the line with its terminator is at most `max` bytes, else the error is `TooLong` (`sgo.IsTooLong`) and nothing is consumed; a last line without `\n` is returned at end of stream, and `EOF` comes only when nothing is left. `ReadAll(max)` reads to end of stream, at most `max` bytes, else `TooLong` with nothing consumed. A cancelled or failed `ReadLine`/`ReadAll` consumes nothing: the bytes it read stay buffered for the next read. No read-ahead conflicts with writing: a file is opened for reading or for writing, never both. The buffer is part of the handle and goes with it on `MoveTo`; closing the handle discards it.
+
+**Why.** Every bug class HE-04 named (a greeting split across reads, a line split across chunks) disappears without a user-written loop, and no read loses data to cancellation, which a user-level buffer could not promise when the reading task is cancelled between chunks.
+
 ---
 
 ## Approval record
@@ -1016,3 +1022,4 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 - 2026-11-05: implementer recorded D168 (spelling of D161, forced by the Go type system) under the delegated authority; semantics unchanged.
 - 2026-11-05: implementer recorded D170 (deadlines on nurseries only; lab deadlines deferred) under the delegated authority.
 - 2026-11-05: user approved D171 (scope-owned timers) and groups before the Happy Eyeballs rewrite, with frozen slice results ("yes, go ahead"; "slice results => frozen is better"); recorded with the group shape as D172.
+- 2026-11-06: implementer recorded D173 (the read turn and read buffer behind D164) under the delegated authority.

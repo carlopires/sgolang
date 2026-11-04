@@ -1028,9 +1028,10 @@
       "clause_ids": [
         "SGO-FILE-001",
         "SGO-FILE-002",
-        "SGO-FILE-003"
+        "SGO-FILE-003",
+        "SGO-FILE-004"
       ],
-      "normative_text_digest": "10c83a8682a01dc1b00ffab9fb04b269c23d95a50043260bcd117570ded49bbf",
+      "normative_text_digest": "b18661c75dfd16d18b6c0602fe62daeb966b1af0265532a768acf841c00ec1dd",
       "admitted_in": [
         "0.7.0"
       ],
@@ -1047,17 +1048,20 @@
       "clause_digests": {
         "SGO-FILE-001": "4c63d65dec0bd4ad5b94562d4f439c038b9bfe7121376cde4f703d2254fe3b0b",
         "SGO-FILE-002": "4050e99841a8069ed202a43cc7c35ad9878018be1fa46cc5eead426e343c352b",
-        "SGO-FILE-003": "07654f4279e9da4f4664116c02a1ba4cf766458511f6ff7c8dc0312430c18fa2"
+        "SGO-FILE-003": "07654f4279e9da4f4664116c02a1ba4cf766458511f6ff7c8dc0312430c18fa2",
+        "SGO-FILE-004": "af7ea76832ff0a6ec90be9696b2cdc43d8b093a0f865f5af0e46187f69ef7fce"
       },
       "clause_status": {
         "SGO-FILE-001": "superseded",
         "SGO-FILE-002": "frozen",
-        "SGO-FILE-003": "frozen"
+        "SGO-FILE-003": "frozen",
+        "SGO-FILE-004": "draft"
       },
       "clause_versions": {
         "SGO-FILE-001": 2,
         "SGO-FILE-002": 4,
-        "SGO-FILE-003": 2
+        "SGO-FILE-003": 2,
+        "SGO-FILE-004": 1
       }
     },
     {
@@ -1807,5 +1811,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "91bb0914dff141026a1bf5fd71e6a193606f5e0a3caf69f9d1e15c4bcf4c90d9"
+  "rows_digest": "b12d17861928099b4f8c748db27efd45369ed2e317353e71760ff6956c314100"
 }

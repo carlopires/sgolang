@@ -1,0 +1,28 @@
+package main
+
+import "sgo"
+
+// D164/D173: the server writes a line split across three writes and the next line's start; the
+// client's ReadLine returns the whole line whatever the chunks, and ReadAll the rest until the
+// server closes. Under every schedule the output is the same.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	l := check root.Listen("127.0.0.1:47912")
+	nursery (n) {
+		ll := l
+		n.Spawn(func(task *sgo.Context) error {
+			c := check ll.Accept(task)
+			for _, part := range []string{"HTTP/1", ".1 200 ", "OK\r\nhel", "lo"} {
+				check c.Write(part)
+				check task.Sleep(1)
+			}
+			return c.Close()
+		})
+		c := check root.Dial("127.0.0.1:47912")
+		status := check c.ReadLine(64)
+		body := check c.ReadAll(64)
+		check out.WriteString(status + "|" + body + "\n")
+		check c.Close()
+	}
+	return l.Close()
+}

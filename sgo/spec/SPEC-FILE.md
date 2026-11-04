@@ -67,3 +67,25 @@ Ambient file-system access stays denied (SGO-FILE-001). Spec 0.5.0 admits confin
 - **implementation_coverage:** W09: model `sgo/model/iohandle.go`; runtime `src/runtime/sgo_io.go`, `sgo_ioapi.go`; API `src/sgo/io.go`.
 - **executed_evidence:** `sgo/evidence/w09/README.md` (model path and handle scenarios; runtime tests; the conformance cases above on darwin/arm64, linux/amd64, linux/arm64).
 - **supported_execution_configurations:** production; lab (fake handles with the same contract, D58).
+
+### SGO-FILE-004 — Whole-message reads (subset 3)
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-FILE-003, SGO-NET-002, SGO-CANCEL-002, SGO-RES-002; D164, D173.
+- **grammar_and_types:** `*sgo.File` and `*sgo.Conn` with `ReadLine(max int) (string, error)` and `ReadAll(max int) (string, error)`; `sgo.IsTooLong(err error) bool`.
+- **preconditions:** As for `Read` (SGO-FILE-003): the caller runs inside the handle's scope.
+- **evaluation_and_value_semantics:** `ReadLine(max)` returns the next line without its `\n` and one `\r` before it. The line with its terminator is at most `max` bytes, else the error is `TooLong`. A last line without `\n` is returned at end of stream, and `EOF` comes only when nothing is left. `ReadAll(max)` returns the rest of the stream (a connection: until the peer closes its side), at most `max` bytes, else `TooLong`. A handle keeps the bytes it read and has not returned; every read (`Read`, `ReadLine`, `ReadAll`) returns them first, and `Read` returns buffered bytes without a system call.
+- **ownership_and_lifecycle:** The read buffer is part of the handle: it moves with it (`MoveTo`) and ends with it.
+- **effect_and_capability_requirements:** The handle itself.
+- **concurrency_and_memory_order:** Every read takes the handle's read turn for its duration: one read at a time per handle, and the buffered bytes are never reordered between readers. Writes are not ordered against reads (SGO-FILE-003). A file is opened for reading or for writing, never both, so read-ahead never moves a write position.
+- **allowed_nondeterminism:** Which task's read takes the turn first; the system calls a whole-message read is split into.
+- **failure_and_partial_progress:** A `ReadLine` or `ReadAll` that fails (`TooLong`, cancellation, an I/O error) consumes nothing: the bytes it read stay buffered for the next read, and its error has progress 0.
+- **cancellation_and_cleanup:** Waiting for the read turn, and every wait of the underlying reads, are cancellation points (SGO-CANCEL-002).
+- **compile_link_checks:** `SGO_E_DISCARDED_ERROR` for unused errors.
+- **runtime_guards:** The scope check of SGO-FILE-003 before every read and after the read turn is taken.
+- **tcb_assumptions:** `src/runtime/sgo_readbuf.go`.
+- **positive_tests:** fixture:file-read-lines, fixture:lab-net-read-line.
+- **negative_tests:** fixture:file-read-lines (`TooLong` consumes nothing).
+- **implementation_coverage:** W23: runtime `src/runtime/sgo_readbuf.go`, `sgo_ioapi.go`; API `src/sgo/io.go`.
+- **executed_evidence:** pending (W23).
+- **supported_execution_configurations:** production; lab.

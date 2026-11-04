@@ -1,0 +1,37 @@
+package main
+
+import "sgo"
+
+// D164/D173: ReadLine returns lines without "\n" or "\r\n"; a line longer than max is TooLong and
+// consumes nothing; the last line needs no "\n"; EOF only when nothing is left. ReadAll reads the
+// rest, after a Read that took buffered bytes, and is TooLong (consuming nothing) beyond max.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	d := root.Dir("data")
+	nursery (n) {
+		f := check d.Open(n, "lines.txt")
+		for _, limit := range []int{10, 10, 10, 5, 20, 20, 20} {
+			line, err := f.ReadLine(limit)
+			switch {
+			case sgo.IsTooLong(err):
+				check out.WriteString("too long\n")
+			case sgo.IsEOF(err):
+				check out.WriteString("eof\n")
+			case err != nil:
+				return err
+			default:
+				check out.WriteString("[" + line + "]\n")
+			}
+		}
+		g := check d.Open(n, "lines.txt")
+		first := check g.ReadLine(10)
+		head := check g.Read(2)
+		_, err := g.ReadAll(5)
+		if !sgo.IsTooLong(err) {
+			return sgo.NewError("expected TooLong")
+		}
+		rest := check g.ReadAll(100)
+		check out.WriteString(first + "|" + head + "|" + rest + "\n")
+	}
+	return nil
+}

@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-FILE-004"
+ ],
+ "exit": 0,
+ "stdout": "[a]\n[bb]\n[]\ntoo long\n[long-line-here]\n[last]\neof\na|bb|\n\nlong-line-here\nlast\n",
+ "note": "ReadLine strips \"\\n\" and \"\\r\\n\"; a 15-byte line with max 5 is TooLong and stays buffered for the next ReadLine; the last line has no terminator. Read after ReadLine returns buffered bytes; ReadAll(5) is TooLong and consumes nothing, so ReadAll(100) returns all of the rest."
+}

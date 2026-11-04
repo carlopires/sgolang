@@ -15,7 +15,7 @@ var sgoMembers = map[string]bool{"Context": true, "Nursery": true, "Writer": tru
 	"Channel": true, "SendPermit": true, "NewChannel": true, "Ready": true,
 	"Clock": true, "WallClock": true, "Random": true, "Entropy": true, "SimStore": true,
 	"Event": true, "NewEvent": true, "CapacityLimiter": true, "NewCapacityLimiter": true, "Token": true,
-	"Dir": true, "File": true, "Conn": true, "Listener": true, "Listing": true, "Dialer": true, "MoveTo": true, "Progress": true, "NoEffect": true, "IsEOF": true,
+	"Dir": true, "File": true, "Conn": true, "Listener": true, "Listing": true, "Dialer": true, "MoveTo": true, "Progress": true, "NoEffect": true, "IsEOF": true, "IsTooLong": true,
 	"T": true, "Copy": true, "Frozen": true, "Freeze": true,
 	"Go": true, "Task": true, "Result": true, "Timer": true, "Group": true, "NewGroup": true} // Timer: D171; Group: D172; value-returning tasks (D161, D168)
 

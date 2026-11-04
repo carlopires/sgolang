@@ -101,15 +101,42 @@ func sgo_dirWriteFile(g int, path, data string) error {
 	return sgoIOResult(sgoDirWriteFile(g, path, data), "Dir.WriteFile")
 }
 
+// sgoReadOp names a read of h for messages: "Conn.op" or "File.op".
+func sgoReadOp(h *sgoHandle, op string) string {
+	if h.kind == sgoHConn {
+		return "Conn." + op
+	}
+	return "File." + op
+}
+
 //go:linkname sgo_read sgo.runtime_read
 func sgo_read(h unsafe.Pointer, max int) (string, error) {
 	hh := (*sgoHandle)(h)
-	if hh.kind == sgoHConn {
-		s, e := sgoConnRead(hh, max)
-		return s, sgoIOResult(e, "Conn.Read")
-	}
-	s, e := sgoFileRead(hh, max)
-	return s, sgoIOResult(e, "File.Read")
+	op := sgoReadOp(hh, "Read")
+	s, e := sgoBufRead(hh, max, op)
+	return s, sgoIOResult(e, op)
+}
+
+//go:linkname sgo_readLine sgo.runtime_readLine
+func sgo_readLine(h unsafe.Pointer, max int) (string, error) {
+	hh := (*sgoHandle)(h)
+	op := sgoReadOp(hh, "ReadLine")
+	s, e := sgoReadLine(hh, max, op)
+	return s, sgoIOResult(e, op)
+}
+
+//go:linkname sgo_readAll sgo.runtime_readAll
+func sgo_readAll(h unsafe.Pointer, max int) (string, error) {
+	hh := (*sgoHandle)(h)
+	op := sgoReadOp(hh, "ReadAll")
+	s, e := sgoReadAll(hh, max, op)
+	return s, sgoIOResult(e, op)
+}
+
+//go:linkname sgo_isTooLong sgo.runtime_isTooLong
+func sgo_isTooLong(err error) bool {
+	e, ok := any(err).(*sgoIOError)
+	return ok && e.kind == "TooLong"
 }
 
 //go:linkname sgo_ioWrite sgo.runtime_ioWrite

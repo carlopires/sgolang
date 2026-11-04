@@ -1,0 +1,15 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-FILE-004",
+  "SGO-NET-002"
+ ],
+ "exit": 0,
+ "sweep": {
+  "seeds": "0..15",
+  "outcomes": [
+   "HTTP/1.1 200 OK|hello\n"
+  ]
+ },
+ "note": "HE-04's bug class: a line split across writes, and the next message's start in the same chunk as the line's end. ReadLine joins the chunks and keeps the bytes past the line for ReadAll."
+}

@@ -58,6 +58,10 @@ type sgoHandle struct {
 	// Sockets: whether a task is waiting in the poller to read (Read, Accept) or to write. The
 	// poller keeps one waiter per descriptor and direction, so other tasks wait for the turn.
 	awaitR, awaitW atomic.Uint32
+	// Connections and files: the read turn and the bytes read but not yet returned (D173,
+	// sgo_readbuf.go). Only the holder of the turn touches rbuf.
+	rturn atomic.Uint32
+	rbuf  string
 	name           string     // for messages: the path or address
 	prev           *sgoHandle // the scope's resources (sgoResList)
 	next           *sgoHandle

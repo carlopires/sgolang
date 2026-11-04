@@ -32,6 +32,9 @@ func runtime_peerUID(h unsafe.Pointer) (int, error)
 func runtime_dialerNew(task, nurs unsafe.Pointer, endpoints []string) unsafe.Pointer
 func runtime_dialerDial(h, task, nurs unsafe.Pointer, addr string) (unsafe.Pointer, error)
 func runtime_dialerResolve(h unsafe.Pointer, host, family string) ([]string, error)
+func runtime_readLine(h unsafe.Pointer, max int) (string, error)
+func runtime_readAll(h unsafe.Pointer, max int) (string, error)
+func runtime_isTooLong(err error) bool
 
 // Progress returns the bytes an I/O operation transferred before err (0 for other errors).
 func Progress(err error) int {
@@ -45,6 +48,10 @@ func NoEffect(err error) bool {
 	_, n, _ := runtime_ioInfo(err)
 	return n
 }
+
+// IsTooLong reports whether err is a ReadLine or ReadAll that met more than its max bytes; it
+// consumed nothing (D173).
+func IsTooLong(err error) bool { return runtime_isTooLong(err) }
 
 // IsEOF reports whether err is the end of a file or connection.
 func IsEOF(err error) bool {
@@ -179,6 +186,15 @@ type File struct{ h unsafe.Pointer }
 // Read reads at most max bytes: at least one, or an error (IsEOF at the end of the file).
 func (f *File) Read(max int) (string, error) { return runtime_read(f.h, max) }
 
+// ReadLine returns the next line without its "\n" and one "\r" before it (D164, D173). The line
+// with its terminator is at most max bytes, else the error is TooLong and nothing is consumed; a
+// last line without "\n" is returned at end of file, and EOF comes only when nothing is left.
+func (f *File) ReadLine(max int) (string, error) { return runtime_readLine(f.h, max) }
+
+// ReadAll returns the rest of the file, at most max bytes, else the error is TooLong and nothing
+// is consumed (D164, D173).
+func (f *File) ReadAll(max int) (string, error) { return runtime_readAll(f.h, max) }
+
 // Write writes all of s, or returns an error with the bytes written (Progress).
 func (f *File) Write(s string) (int, error) { return runtime_ioWrite(f.h, s) }
 
@@ -223,6 +239,16 @@ func rootOnly(op string) {
 
 // Read reads at most max bytes: at least one, or an error (IsEOF when the peer has closed).
 func (c *Conn) Read(max int) (string, error) { return runtime_read(c.h, max) }
+
+// ReadLine returns the next line without its "\n" and one "\r" before it (D164, D173). The line
+// with its terminator is at most max bytes, else the error is TooLong and nothing is consumed; a
+// last line without "\n" is returned when the peer closes, and EOF comes only when nothing is
+// left. Reads of one connection run one at a time; bytes read past the line wait for the next.
+func (c *Conn) ReadLine(max int) (string, error) { return runtime_readLine(c.h, max) }
+
+// ReadAll returns what the peer sends until it closes its side, at most max bytes, else the
+// error is TooLong and nothing is consumed (D164, D173).
+func (c *Conn) ReadAll(max int) (string, error) { return runtime_readAll(c.h, max) }
 
 // Write writes all of s, or returns an error with the bytes written (Progress).
 func (c *Conn) Write(s string) (int, error) { return runtime_ioWrite(c.h, s) }
