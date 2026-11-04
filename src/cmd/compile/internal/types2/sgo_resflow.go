@@ -69,6 +69,10 @@ func sgoResTypeRec(T Type, seen map[Type]bool) bool {
 		return sgoResTypeRec(u.elem, seen)
 	case *Slice:
 		return sgoResTypeRec(u.elem, seen)
+	case *Pointer: // a pointer to a value holding a resource (W21 review Z1)
+		return sgoResTypeRec(u.base, seen)
+	case *Map:
+		return sgoResTypeRec(u.key, seen) || sgoResTypeRec(u.elem, seen)
 	}
 	return false
 }
@@ -104,11 +108,17 @@ type sgoResFlow struct {
 	// stored in it: how long its contents surely live) and its destination tie (the widest tie
 	// of a channel or permit stored in it: how long it may live as a send destination).
 	val, dst map[Object]syntax.Node
-	pseudo   map[Object]*sgoParamExt // each resource parameter's extent, stable across passes
-	top      syntax.Node             // the tie of a value holding no resource: it may flow anywhere
-	unknown  syntax.Node             // a destination of unknown lifetime: nothing holding a resource is sent on it
-	changed  bool
-	report   bool
+	// pext is a variable's pointee extent (W21 review Z1): the widest extent from which the memory
+	// reachable through the variable (by a pointer, slice, or map) may be reached. Aliases share
+	// it: an assignment of a reference value joins the extents of both sides.
+	pext    map[Object]syntax.Node
+	psh     map[Object]syntax.Node  // the shallow pointee extent: of the top-level pointee only
+	org     map[Object]syntax.Node  // where the values assigned to a variable were made (for Own, Z2)
+	pseudo  map[Object]*sgoParamExt // each resource parameter's extent, stable across passes
+	top     syntax.Node             // the tie of a value holding no resource: it may flow anywhere
+	unknown syntax.Node             // a destination of unknown lifetime: nothing holding a resource is sent on it
+	changed bool
+	report  bool
 }
 
 // within reports whether extent a lies within (or is) extent b.
@@ -212,6 +222,249 @@ func (f *sgoResFlow) dest(e syntax.Expr) syntax.Node {
 }
 
 func (f *sgoResFlow) cur() syntax.Node { return f.ext[len(f.ext)-1] }
+
+// joinP joins pointee extents; nil is "reaches no memory".
+func (f *sgoResFlow) joinP(a, b syntax.Node) syntax.Node {
+	switch {
+	case a == nil:
+		return b
+	case b == nil:
+		return a
+	}
+	return f.join(a, b)
+}
+
+func (f *sgoResFlow) setPext(obj Object, t syntax.Node) { f.setP(f.pext, obj, t) }
+func (f *sgoResFlow) setPsh(obj Object, t syntax.Node)  { f.setP(f.psh, obj, t) }
+
+func (f *sgoResFlow) setP(m map[Object]syntax.Node, obj Object, t syntax.Node) {
+	if obj == nil || t == nil {
+		return
+	}
+	if old, ok := m[obj]; ok {
+		t = f.joinP(old, t)
+		if t == old {
+			return
+		}
+	}
+	m[obj], f.changed = t, true
+}
+
+// pextOf returns the deep pointee extent of e's value (nil: it reaches no memory).
+func (f *sgoResFlow) pextOf(e syntax.Expr) syntax.Node { return f.ptr(e, true) }
+
+// ptr returns where the memory e's value points to may be reached from: with deep, any memory
+// reachable through it; otherwise its top-level pointee only (W21 review Z1, Z2).
+func (f *sgoResFlow) ptr(e syntax.Expr, deep bool) syntax.Node {
+	switch e := syntax.Unparen(e).(type) {
+	case *syntax.CheckExpr:
+		return f.ptr(e.X, deep)
+	case *syntax.BasicLit:
+		return nil
+	case *syntax.Name:
+		obj := f.check.Uses[e]
+		if obj == nil {
+			obj = f.check.Defs[e]
+		}
+		v, _ := obj.(*Var)
+		if v == nil {
+			return nil // nil, a constant, a function
+		}
+		if v.parent == v.pkg.scope {
+			return f.unknown // a package-level variable
+		}
+		m := f.psh
+		if deep {
+			m = f.pext
+		}
+		if x, ok := m[obj]; ok {
+			return x
+		}
+		if ps, ok := f.home[obj].(*sgoParamExt); ok {
+			return ps // memory of the caller
+		}
+		if !sgoRefType(v.typ) {
+			return nil
+		}
+		return f.unknown
+	case *syntax.Operation:
+		if e.Y == nil && e.Op == syntax.And {
+			if _, lit := syntax.Unparen(e.X).(*syntax.CompositeLit); lit {
+				if deep {
+					return f.joinP(f.cur(), f.ptr(e.X, true))
+				}
+				return f.cur()
+			}
+			if n, _ := syntax.Unparen(e.X).(*syntax.Name); n != nil {
+				if obj := f.check.Uses[n]; obj != nil && f.home[obj] != nil {
+					t := f.joinP(f.home[obj], f.psh[obj]) // &x: x's own storage
+					if deep {
+						t = f.joinP(t, f.ptr(n, true))
+					}
+					return t
+				}
+			}
+			return f.ptr(e.X, true)
+		}
+		if e.Y == nil {
+			return f.ptr(e.X, true) // *p: a pointer loaded from memory reachable through p
+		}
+		return nil
+	case *syntax.CompositeLit:
+		t := syntax.Node(nil)
+		if T := f.check.typeOf(e); T != nil {
+			switch Unalias(T).Underlying().(type) {
+			case *Slice, *Map:
+				t = f.cur() // allocated here
+				if !deep {
+					return t
+				}
+			}
+		}
+		for _, el := range e.ElemList {
+			if kv, _ := el.(*syntax.KeyValueExpr); kv != nil {
+				el = kv.Value
+			}
+			t = f.joinP(t, f.ptr(el, true))
+		}
+		return t
+	case *syntax.SelectorExpr:
+		if n, _ := e.X.(*syntax.Name); n != nil {
+			if _, pkg := f.check.Uses[n].(*PkgName); pkg {
+				return f.ptr(e.Sel, deep)
+			}
+		}
+		return f.ptr(e.X, true) // a pointer loaded from memory reachable through e.X
+	case *syntax.IndexExpr:
+		return f.ptr(e.X, true)
+	case *syntax.SliceExpr:
+		return f.ptr(e.X, deep) // the same backing memory
+	case *syntax.CallExpr:
+		if T := f.check.typeOf(e); T == nil || !sgoRefType(T) {
+			return nil
+		}
+		if tv, ok := f.check.Types[e.Fun]; ok && tv.IsType() {
+			if len(e.ArgList) == 1 {
+				return f.ptr(e.ArgList[0], deep) // a conversion
+			}
+		}
+		if id, _ := syntax.Unparen(e.Fun).(*syntax.Name); id != nil {
+			if b, _ := f.check.Uses[id].(*Builtin); b != nil {
+				switch b.id {
+				case _New, _Make:
+					return f.cur()
+				case _Append:
+					t := f.cur()
+					for i, a := range e.ArgList {
+						if i == 0 || deep {
+							t = f.joinP(t, f.ptr(a, deep || i > 0))
+						}
+					}
+					return t
+				}
+			}
+		}
+		return f.unknown // a call may return memory reachable from anywhere
+	}
+	return f.unknown
+}
+
+// storeTarget returns where the memory written by a store to l (an indirect target) may be
+// reached from: the root's top-level pointee for p.f, p[i], *p; any memory reachable through the
+// root for a deeper path.
+func (f *sgoResFlow) storeTarget(l syntax.Expr) syntax.Node {
+	steps, atRoot := 0, false
+	e := l
+	for {
+		ind, next := false, syntax.Expr(nil)
+		switch x := syntax.Unparen(e).(type) {
+		case *syntax.SelectorExpr:
+			if T := f.check.typeOf(x.X); T != nil {
+				_, ind = Unalias(T).Underlying().(*Pointer)
+			}
+			next = x.X
+		case *syntax.IndexExpr:
+			if T := f.check.typeOf(x.X); T != nil {
+				switch Unalias(T).Underlying().(type) {
+				case *Slice, *Map, *Pointer:
+					ind = true
+				}
+			}
+			next = x.X
+		case *syntax.Operation:
+			ind, next = x.Y == nil && x.Op == syntax.Mul, x.X
+		case *syntax.Name:
+			if steps == 1 && atRoot {
+				return f.ptr(x, false)
+			}
+			return f.ptr(x, true)
+		default:
+			return f.unknown
+		}
+		if ind {
+			steps++
+			_, atRoot = syntax.Unparen(next).(*syntax.Name)
+		}
+		e = next
+	}
+}
+
+// sgoRefType reports whether a store through a value of type T can reach shared memory: T is, or
+// holds, a pointer, slice, or map (not a handle of package sgo, which is opaque).
+func sgoRefType(T Type) bool { return sgoRefTypeRec(T, map[Type]bool{}) }
+
+func sgoRefTypeRec(T Type, seen map[Type]bool) bool {
+	if T == nil || seen[T] {
+		return false
+	}
+	seen[T] = true
+	if isSgoHandle(T) {
+		return false
+	}
+	switch u := Unalias(T).Underlying().(type) {
+	case *Pointer, *Slice, *Map:
+		return true
+	case *Struct:
+		for _, fl := range u.fields {
+			if sgoRefTypeRec(fl.typ, seen) {
+				return true
+			}
+		}
+	case *Array:
+		return sgoRefTypeRec(u.elem, seen)
+	}
+	return false
+}
+
+// indirect reports whether storing to e writes memory reached through a pointer, slice, or map.
+func (f *sgoResFlow) indirect(e syntax.Expr) bool {
+	for {
+		switch x := syntax.Unparen(e).(type) {
+		case *syntax.SelectorExpr:
+			if T := f.check.typeOf(x.X); T != nil {
+				if _, ptr := Unalias(T).Underlying().(*Pointer); ptr {
+					return true
+				}
+			}
+			e = x.X
+		case *syntax.IndexExpr:
+			if T := f.check.typeOf(x.X); T != nil {
+				switch Unalias(T).Underlying().(type) {
+				case *Slice, *Map, *Pointer:
+					return true
+				}
+			}
+			e = x.X
+		case *syntax.Operation:
+			if x.Y == nil && x.Op == syntax.Mul {
+				return true
+			}
+			e = x.X
+		default:
+			return false
+		}
+	}
+}
 
 // inner returns the innermost of two extents on one chain.
 func (f *sgoResFlow) inner(a, b syntax.Node) syntax.Node {
@@ -350,7 +603,7 @@ func (check *Checker) sgoResourceFlow(fd *syntax.FuncDecl) {
 	if fd.Body == nil {
 		return
 	}
-	f := &sgoResFlow{check: check, val: map[Object]syntax.Node{}, dst: map[Object]syntax.Node{},
+	f := &sgoResFlow{check: check, val: map[Object]syntax.Node{}, dst: map[Object]syntax.Node{}, pext: map[Object]syntax.Node{}, psh: map[Object]syntax.Node{}, org: map[Object]syntax.Node{},
 		unknown: &sgoParamExt{}, top: &sgoParamExt{}, pseudo: map[Object]*sgoParamExt{}}
 	// Ties only narrow and destinations only widen, along finite chains: iterate to the fixpoint,
 	// then report in one last pass.
@@ -416,6 +669,51 @@ func (f *sgoResFlow) pass(fd *syntax.FuncDecl) {
 			f.send(n.Chan, n.Value)
 		case *syntax.CallExpr:
 			f.call(n)
+		case *syntax.VarDecl:
+			vals := sgoList(n.Values)
+			if len(vals) == len(n.NameList) {
+				for i, nm := range n.NameList {
+					f.setPext(check.Defs[nm], f.pextOf(vals[i]))
+					f.setPsh(check.Defs[nm], f.ptr(vals[i], false))
+					f.setP(f.org, check.Defs[nm], f.origin(vals[i]))
+				}
+			}
+		case *syntax.RangeClause:
+			if n.Def {
+				for _, l := range sgoList(n.Lhs) {
+					if nm, _ := l.(*syntax.Name); nm != nil {
+						f.setPext(check.Defs[nm], f.pextOf(n.X))
+					}
+				}
+			}
+		case *syntax.CallStmt:
+			if n.Tok == syntax.Defer {
+				f.deferUses(n)
+			}
+		}
+		return true
+	})
+}
+
+// deferUses reports a deferred call inside a nursery statement that mentions a resource tied to a
+// scope of this function narrower than the function itself: deferred calls run when the function
+// returns, after that scope has released the resource (W21 review Z3).
+func (f *sgoResFlow) deferUses(d *syntax.CallStmt) {
+	fn := f.funcExtent()
+	if f.cur() == fn {
+		return
+	}
+	syntax.Inspect(d.Call, func(n syntax.Node) bool {
+		nm, _ := n.(*syntax.Name)
+		if nm == nil {
+			return true
+		}
+		obj, _ := f.check.Uses[nm].(*Var)
+		if obj == nil || !sgoResType(obj.Type()) {
+			return true
+		}
+		if t := f.tie(nm); t != nil && t != fn && f.within(t, fn) {
+			f.errorf(nm, "%s is tied to a scope that releases it before this function's deferred calls run; use it in that scope, or in a spawned task's own defer", nm.Value)
 		}
 		return true
 	})
@@ -508,8 +806,32 @@ func (f *sgoResFlow) assign(a *syntax.AssignStmt) {
 			f.errorf(l, "%s is not a local variable; a resource lives only in its scope", syntax.String(l))
 			continue
 		}
-		if !f.within(home, f.tie(r)) {
+		target := home
+		if f.indirect(l) {
+			target = f.storeTarget(l) // the store writes memory reached through a pointer, slice, or map
+		}
+		if target != nil && !f.within(target, f.tie(r)) {
 			f.errorf(r, "%s is tied to a scope that ends before %s does; acquire it into the outer scope, or MoveTo that scope first", syntax.String(r), syntax.String(l))
+		}
+		if sgoRefType(T) {
+			if !f.indirect(l) {
+				f.setP(f.org, obj, f.origin(r))
+				f.setPsh(obj, f.joinP(f.ptr(r, false), home))
+				f.setPext(obj, f.joinP(f.ptr(r, true), home))
+			} else {
+				f.setPext(obj, f.ptr(r, true)) // obj now reaches r's memory
+			}
+			// The source's memory is now reachable from the target too: aliases share extents.
+			if rv, _ := f.rootVar(r).(*Var); rv != nil && rv.parent != rv.pkg.scope {
+				shallow, deep := target, target
+				if !f.indirect(l) {
+					shallow, deep = f.psh[obj], f.pext[obj]
+				}
+				if sgoBareAlias(r) {
+					f.setPsh(rv, shallow)
+				}
+				f.setPext(rv, deep)
+			}
 		}
 		if _, param := f.home[obj].(*sgoParamExt); !param {
 			f.setVal(obj, f.tie(r))
@@ -536,6 +858,11 @@ func (f *sgoResFlow) call(c *syntax.CallExpr) {
 		case fn.name == "MoveTo" && len(c.ArgList) == 1:
 			f.move(sel.X, c.ArgList[0])
 		case fn.name == "Own" && len(c.ArgList) == 1:
+			if x := f.scopeExtent(sel.X); x != nil {
+				if pt := f.origin(c.ArgList[0]); pt != nil && !f.within(pt, x) {
+					f.errorf(c.ArgList[0], "Own of a value named outside the scope: %s is reachable after the scope releases it; make the value inside the scope (W21 review Z2)", syntax.String(c.ArgList[0]))
+				}
+			}
 			f.move(c.ArgList[0], sel.X) // a registered user resource is tied to its scope (D152)
 		case fn.name == "Commit" && len(c.ArgList) == 1:
 			f.send(sel.X, c.ArgList[0])
@@ -612,4 +939,68 @@ func (f *sgoResFlow) capture(n *syntax.Name, obj *Var, stack []syntax.Node) {
 			return
 		}
 	}
+}
+
+// sgoBareAlias reports whether e's value is (the top-level pointee of) a variable itself: x, &x,
+// or x[a:b], not a value loaded from memory reachable through it.
+func sgoBareAlias(e syntax.Expr) bool {
+	switch x := syntax.Unparen(e).(type) {
+	case *syntax.Name:
+		return true
+	case *syntax.SliceExpr:
+		return sgoBareAlias(x.X)
+	case *syntax.Operation:
+		return x.Y == nil && x.Op == syntax.And && sgoBareAlias(x.X)
+	}
+	return false
+}
+
+// origin returns where the top-level pointee of e's value was made: the extent of an allocation,
+// or what the variable was assigned (not where it flowed later; those flows are checked as stores
+// of a tied value). Own requires the origin within the owning scope (W21 review Z2).
+func (f *sgoResFlow) origin(e syntax.Expr) syntax.Node {
+	switch x := syntax.Unparen(e).(type) {
+	case *syntax.CheckExpr:
+		return f.origin(x.X)
+	case *syntax.Name:
+		obj := f.check.Uses[x]
+		v, _ := obj.(*Var)
+		if v == nil {
+			return nil
+		}
+		if v.parent == v.pkg.scope {
+			return f.unknown
+		}
+		if o, ok := f.org[obj]; ok {
+			return o
+		}
+		if ps, ok := f.home[obj].(*sgoParamExt); ok {
+			return ps
+		}
+		if !sgoRefType(v.typ) {
+			return nil
+		}
+		return f.unknown
+	case *syntax.Operation:
+		if x.Y == nil && x.Op == syntax.And {
+			if _, lit := syntax.Unparen(x.X).(*syntax.CompositeLit); lit {
+				return f.cur()
+			}
+			if n, _ := syntax.Unparen(x.X).(*syntax.Name); n != nil {
+				if obj := f.check.Uses[n]; obj != nil && f.home[obj] != nil {
+					return f.home[obj]
+				}
+			}
+		}
+	case *syntax.CallExpr:
+		if tv, ok := f.check.Types[x.Fun]; ok && tv.IsType() && len(x.ArgList) == 1 {
+			return f.origin(x.ArgList[0])
+		}
+		if id, _ := syntax.Unparen(x.Fun).(*syntax.Name); id != nil {
+			if b, _ := f.check.Uses[id].(*Builtin); b != nil && (b.id == _New || b.id == _Make) {
+				return f.cur()
+			}
+		}
+	}
+	return f.ptr(e, false)
 }

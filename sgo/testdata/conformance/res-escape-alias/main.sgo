@@ -1,0 +1,31 @@
+package main
+
+import "sgo"
+
+type Tx struct {
+	done bool
+	log  string
+}
+
+func (t *Tx) Release(ok bool) error {
+	t.done = true
+	t.log += "released;"
+	return nil
+}
+
+type holder struct {
+	tx *Tx
+}
+
+// Storing a resource through an alias of an outer pointer is an escape (W21 review Z1).
+func main(root *sgo.Context) error {
+	p := &holder{}
+	nursery (n) {
+		tx := &Tx{}
+		n.Own(tx)
+		q := p
+		q.tx = tx
+	}
+	_ = p
+	return nil
+}

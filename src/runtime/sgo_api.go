@@ -122,6 +122,11 @@ func sgoNilDereference(pos string) {
 	panic(error(&sgoFailure{"NilDereference", "dereference of a nil pointer", pos}))
 }
 
+// sgoNilResource is a return of a nil resource result with a nil error (SGO-ERR-004, W21 review Z4).
+func sgoNilResource(pos string) {
+	panic(error(&sgoFailure{"InvalidArgument", "a function returned a nil resource with a nil error", pos}))
+}
+
 // sgoNilInterfaceCall is a method call on a nil interface value in S-Go code (SGO-IFACE-003, D130).
 func sgoNilInterfaceCall(pos string) {
 	panic(error(&sgoFailure{"NilDereference", "method call on a nil interface value", pos}))

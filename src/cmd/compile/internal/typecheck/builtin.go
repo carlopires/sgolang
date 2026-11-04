@@ -257,6 +257,7 @@ var runtimeDecls = [...]struct {
 	{"sgoNurseryEnter", funcTag, 164},
 	{"sgoNurseryExit", funcTag, 165},
 	{"sgoNurseryErrorExit", funcTag, 165},
+	{"sgoNilResource", funcTag, 31},
 	{"sgomakechan", funcTag, 106},
 	{"sgochanrecv1", funcTag, 108},
 	{"sgochanrecv2", funcTag, 109},

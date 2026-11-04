@@ -1,0 +1,31 @@
+package main
+
+import "sgo"
+
+type Tx struct {
+	done bool
+	log  string
+}
+
+func (t *Tx) Release(ok bool) error {
+	t.done = true
+	t.log += "released;"
+	return nil
+}
+
+type holder struct {
+	tx *Tx
+}
+
+// A pointer to a holder made inside the scope may hold the scope's resource (Z1: still legal).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		tx := &Tx{}
+		n.Own(tx)
+		p := &holder{}
+		q := p
+		q.tx = tx
+		q.tx.log += "used;"
+	}
+	return root.Stdout().WriteString("ok\n")
+}

@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-003",
+  "SGO-RES-004"
+ ],
+ "exit": 0,
+ "stdout": "owned\n"
+}

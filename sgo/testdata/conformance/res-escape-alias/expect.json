@@ -1,0 +1,13 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-RES-003"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_RESOURCE_ESCAPES",
+   "position": "main.sgo:27:10"
+  }
+ ],
+ "note": "Z1: a store through an alias of an outer pointer is checked against the pointee's extent. (W21 review)"
+}

@@ -1870,7 +1870,13 @@ func (r *reader) stmt1(tag codeStmt, out *ir.Nodes) ir.Node {
 	case stmtReturn:
 		pos := r.pos()
 		results := r.multiExpr()
-		return ir.NewReturnStmt(pos, results)
+		ret := ir.NewReturnStmt(pos, results)
+		if base.SGo {
+			if g := r.sgoNilResourceGuard(ret); g != nil {
+				return g
+			}
+		}
+		return ret
 
 	case stmtSelect:
 		return r.selectStmt(label)
@@ -2036,6 +2042,12 @@ func (r *reader) nurseryExit(k int, inner ir.Node) ir.Node {
 	}
 	pos := inner.Pos()
 	var stmts ir.Nodes
+	if b, ok := inner.(*ir.BlockStmt); ok && b.Op() == ir.OBLOCK && len(b.List) > 0 {
+		if ret, ok := b.List[len(b.List)-1].(*ir.ReturnStmt); ok && sgoIsGuard(b) {
+			stmts.Append(b.List[:len(b.List)-1]...) // the nil-resource guard (W21 review Z4)
+			inner = ret
+		}
+	}
 	if ret, ok := inner.(*ir.ReturnStmt); ok {
 		for i, res := range ret.Results {
 			tmp := r.temp(pos, res.Type())
@@ -4545,4 +4557,76 @@ func shapeSig(fn *ir.Func, dict *readerDict) *types.Type {
 	typ := types.NewSignature(recv, params, results)
 	typ.SetHasShape(true)
 	return typ
+}
+
+// sgoGuards marks the blocks made by sgoNilResourceGuard.
+var sgoGuards = map[*ir.BlockStmt]bool{}
+
+func sgoIsGuard(b *ir.BlockStmt) bool { return sgoGuards[b] }
+
+// sgoIRResType reports whether t is a resource type that can be nil: a pointer to a built-in
+// resource handle or to a type with a Release method (SGO-RES-001, SGO-RES-004).
+func sgoIRResType(t *types.Type) bool {
+	if t == nil || !t.IsPtr() {
+		return false
+	}
+	e := t.Elem()
+	if s := e.Sym(); s != nil && s.Pkg != nil && s.Pkg.Path == "sgo" {
+		switch s.Name {
+		case "File", "Conn", "Listener", "Dialer":
+			return true
+		}
+		return false
+	}
+	for _, m := range e.Methods() {
+		if m.Sym != nil && m.Sym.Name == "Release" {
+			return true
+		}
+	}
+	return false
+}
+
+// sgoNilResourceGuard lowers return v1, ..., err where some vi is the literal nil of a resource
+// result type: the operands are held in order, then the return fails with InvalidArgument at
+// its position if err is nil, because a resource result is nil only with an error (SGO-ERR-004,
+// W21 review Z4). It returns nil when the statement needs no guard.
+func (r *reader) sgoNilResourceGuard(ret *ir.ReturnStmt) ir.Node {
+	if r.curfn == nil {
+		return nil
+	}
+	sig := r.curfn.Nname.Type()
+	n := sig.NumResults()
+	if n < 2 || len(ret.Results) != n || !types.Identical(sig.Result(n-1).Type, types.ErrorType) {
+		return nil
+	}
+	need := false
+	for i := 0; i < n-1; i++ {
+		if ret.Results[i].Op() == ir.ONIL && sgoIRResType(sig.Result(i).Type) {
+			need = true
+		}
+	}
+	if !need || ret.Results[n-1].Op() == ir.ONIL {
+		return nil // no nil resource, or the literal nil error, which types2 refuses already
+	}
+	pos := ret.Pos()
+	var stmts ir.Nodes
+	for i, res := range ret.Results {
+		if res.Op() == ir.ONIL {
+			continue
+		}
+		tmp := r.temp(pos, res.Type())
+		as := ir.NewAssignStmt(pos, tmp, res)
+		as.Def = true
+		as.PtrInit().Append(ir.NewDecl(pos, ir.ODCL, tmp))
+		tmp.Defn = as
+		stmts.Append(typecheck.Stmt(as))
+		ret.Results[i] = tmp
+	}
+	cond := typecheck.Expr(ir.NewBinaryExpr(pos, ir.OEQ, ret.Results[n-1], typecheck.NodNil()))
+	fail := typecheck.Stmt(typecheck.Call(pos, typecheck.LookupRuntime("sgoNilResource"), []ir.Node{ir.NewString(pos, base.SGoPos(pos))}, false))
+	stmts.Append(typecheck.Stmt(ir.NewIfStmt(pos, cond, []ir.Node{fail}, nil)))
+	stmts.Append(ret)
+	b := ir.NewBlockStmt(pos, stmts)
+	sgoGuards[b] = true
+	return b
 }

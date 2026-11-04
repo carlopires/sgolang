@@ -1,0 +1,42 @@
+package main
+
+import "sgo"
+
+type Tx struct {
+	done bool
+	log  string
+}
+
+func (t *Tx) Release(ok bool) error {
+	t.done = true
+	t.log += "released;"
+	return nil
+}
+
+type holder struct {
+	tx *Tx
+}
+
+// A defer in a spawned callback uses the callback's own resource: it runs before the task body
+// releases it (Z3: still legal).
+func main(root *sgo.Context) error {
+	ch := make(chan string, 1)
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			tx := &Tx{}
+			t.Own(tx)
+			defer func() {
+				ch <- "deferred done=" + boolText(tx.done)
+			}()
+			return nil
+		})
+	}
+	return root.Stdout().WriteString(<-ch + "\n")
+}
+
+func boolText(b bool) string {
+	if b {
+		return "true"
+	}
+	return "false"
+}

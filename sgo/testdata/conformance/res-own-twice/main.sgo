@@ -33,8 +33,8 @@ func drain(root *sgo.Context, ch chan string, k int) error {
 // A value is a resource of one scope at a time: a second Own fails the task.
 func main(root *sgo.Context) error {
 	ch := make(chan string, 4)
-	x := &note{name: "x", ch: ch}
 	nursery (n) {
+		x := &note{name: "x", ch: ch}
 		n.Own(x)
 		n.Own(x)
 	}

@@ -353,14 +353,15 @@ func (check *Checker) sgoIfaceConversions(fd *syntax.FuncDecl) {
 					}
 					break
 				}
+				sgoArg := check.sgoCalleeInSgo(n) // package sgo takes resources as Releaser (Own, MoveTo)
 				for i, a := range n.ArgList {
 					switch {
 					case sig.Variadic() && i >= params.Len()-1 && !n.HasDots:
 						if s, _ := params.At(params.Len() - 1).Type().(*Slice); s != nil {
-							check.sgoToIface(a, s.elem)
+							check.sgoToIfaceArg(a, s.elem, sgoArg)
 						}
 					case i < params.Len():
-						check.sgoToIface(a, params.At(i).Type())
+						check.sgoToIfaceArg(a, params.At(i).Type(), sgoArg)
 					}
 				}
 			}
@@ -453,7 +454,9 @@ func (check *Checker) sgoCompositeIface(n *syntax.CompositeLit) {
 }
 
 // sgoToIface reports x, of a task-local type, used where a value of interface type T is expected.
-func (check *Checker) sgoToIface(x syntax.Expr, T Type) {
+func (check *Checker) sgoToIface(x syntax.Expr, T Type) { check.sgoToIfaceArg(x, T, false) }
+
+func (check *Checker) sgoToIfaceArg(x syntax.Expr, T Type, sgoArg bool) {
 	if x == nil {
 		return
 	}
@@ -461,17 +464,36 @@ func (check *Checker) sgoToIface(x syntax.Expr, T Type) {
 	if !ok || tv.IsNil() {
 		return
 	}
-	check.sgoTypeToIface(x, tv.Type, T)
+	check.sgoTypeToIfaceArg(x, tv.Type, T, sgoArg)
+}
+
+// sgoCalleeInSgo reports whether call c calls a function or method of package sgo.
+func (check *Checker) sgoCalleeInSgo(c *syntax.CallExpr) bool {
+	sel, _ := syntax.Unparen(c.Fun).(*syntax.SelectorExpr)
+	if sel == nil {
+		return false
+	}
+	fn, _ := check.Uses[sel.Sel].(*Func)
+	return fn != nil && fn.pkg != nil && fn.pkg.path == "sgo"
 }
 
 // sgoTypeToIface is the one test of SGO-COMP-004 rule 4: a value of type src, at at, converted to
 // the interface type dst. Every conversion site calls it (single values and the elements of
 // multi-value calls, W13 review V2).
 func (check *Checker) sgoTypeToIface(at syntax.Expr, src, dst Type) {
+	check.sgoTypeToIfaceArg(at, src, dst, false)
+}
+
+func (check *Checker) sgoTypeToIfaceArg(at syntax.Expr, src, dst Type, sgoArg bool) {
 	if src == nil || dst == nil || !IsInterface(dst) {
 		return
 	}
 	if _, tuple := src.(*Tuple); tuple {
+		return
+	}
+	if !sgoArg && !IsInterface(src) && sgoResType(src) {
+		// An interface value is not tied: holding a resource, it could outlive its scope (W21 review Z1).
+		check.errorf(at, UnsupportedFeature, "SGO_E_RESOURCE_ESCAPES: a value of the resource type %s cannot become %s: an interface value is not tied to a scope (SGO-RES-003)", src, dst)
 		return
 	}
 	if sgoTaskLocal(dst) {
