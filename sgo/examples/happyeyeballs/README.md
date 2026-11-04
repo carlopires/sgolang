@@ -8,36 +8,39 @@ timer, a growing set of connection attempts, one timer per attempt, and a winner
 right with free-running threads is notoriously hard: the losers must be stopped, their
 connections closed, and nothing may outlive the call.
 
-`he.Connect` (in `he/he.sgo`) does it in **one nursery**, the race:
+`he.Connect` (in `he/he.sgo`) does it in **one nursery**, the race, and one `select`:
 
 | RFC 8305 | in `he.Connect` |
 |---|---|
-| §3 query AAAA and A at once; start on AAAA, or on A after a 50ms resolution delay | two resolver children and a delay timer child |
+| §3 query AAAA and A at once; start on AAAA, or on A after a 50ms resolution delay | two tasks with results (`sgo.Go`) and a scope timer (`n.NewTimer`) |
 | §4 interleave the families, IPv6 first | the nursery body picks the next address |
-| §5 start the next attempt after 250ms, or at once when the latest attempt fails | one attempt child and one timer child per attempt |
-| the first connection wins; the rest are abandoned | the body moves the first reported connection out, then cancels the race |
+| §5 start the next attempt after 250ms, or at once when the latest attempt fails | a group of attempts (`sgo.NewGroup`) and one scope timer, re-armed per attempt |
+| the first connection wins; the rest are abandoned | the body moves the first connection out, then cancels the race |
 
-One coordinator, the nursery body, holds the address queues, decides when to start an attempt,
-picks the winner, and logs. Every child does one thing and reports it on one channel made in the
-race nursery. Expected failures (a refused address, a failed query) are events the coordinator
-handles, not errors of the race.
+The nursery body is the only place that decides anything. It selects on the two query results,
+the two timers, and the group's results, which arrive in completion order. A query result is a
+`sgo.Frozen[[]string]`: the addresses cross from the query task to the body without a copy and
+without sharing anything mutable. A timer is measured from when it was armed, not from each
+`select`, so answers arriving in between do not stretch an RFC delay. Expected failures (a
+refused address, a failed query) are results the body handles, not errors of the race.
 
-### Who owns what (SGO-RES-001..005)
+### Who owns what (SGO-RES-001..005, SGO-WAIT-004, SGO-SPAWN-007)
 
 1. The caller's scope owns the dialer (`root.Dialer`).
-2. Resolvers and attempts run inside the race nursery, and every attempt dials **into the race
-   nursery** (`d.Dial(n, addr)`): each candidate connection is a resource of the race.
-3. The channel carries references to candidates; sending one transfers nothing.
-4. The coordinator moves exactly one connection out, the winner, with `c.MoveTo(task)`.
-5. Every exit from the race goes through one `n.Cancel()`: the remaining queries, timers, and
-   attempts stop; the nursery joins them; then it releases every candidate still in it.
+2. The queries, the attempts, and both timers belong to the race nursery, and every attempt dials
+   **into the race nursery** (`d.Dial(n, addr)`): each candidate connection is a resource of the
+   race.
+3. An attempt's result carries a reference to its candidate; receiving it transfers nothing.
+4. The body moves exactly one connection out, the winner, with `c.MoveTo(task)`.
+5. Every exit from the race goes through one `n.Cancel()`: the remaining queries and attempts
+   stop; the nursery joins them, disarms its timers, and releases every candidate still in it.
 
 So two attempts that both connect are safe: only the selected one leaves the race, and the other
-stays a resource of the race nursery, even if its attempt has already returned or its report is
-never read. Ownership alone does not end the race, though: a nursery joins its children, and a
-child waiting on a blackholed connection waits until it is cancelled. That is why every exit of
-the coordinator, including a failed log write or receive, cancels before it leaves the nursery,
-and why `main` cancels its waiting server when the client fails.
+stays a resource of the race nursery, even if its result is never received. A child never waits to
+publish its result (the group queues results), so an unread result cannot hold up the join. A
+child waiting on a blackholed connection does wait until it is cancelled, which is why every exit
+of the body, including a failed log write, cancels before it leaves the nursery, and why `main`
+cancels its waiting server when the client fails.
 
 ### What S-Go guarantees here, and Go does not
 
@@ -94,5 +97,4 @@ This is an RFC 8305-based example, not a conforming implementation:
 * No TCP fallback for truncated DNS answers and no search domains (SGO-NET-003).
 * Not yet covered by a scenario: an older attempt failing after a newer one started (the lab
   network cannot schedule a delayed refusal), and a greeting split across reads (the lab peer
-  writes once). Both mechanisms are replaced in the W22 rewrite (timers as `select` arms, and a
-  library `ReadAll`), where they get their tests.
+  writes once; a library `ReadAll` is W23 work).
