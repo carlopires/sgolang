@@ -48,7 +48,8 @@ type sgoChan struct {
 	recvs    sgoWaitList
 	elem     *_type // native channels (sgo_native.go): the element type of the boxed values
 	native   bool
-	tmr      *sgoAfter // timer channels only (sgo_after.go, D160)
+	tmr      *sgoAfter  // timer channels only (sgo_after.go, D160)
+	grp      *sgoGroupQ // a group's result channel only: results beyond the buffer (sgo_group.go, D172)
 }
 
 type sgoPermit struct {

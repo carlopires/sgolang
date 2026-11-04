@@ -45,3 +45,7 @@ freeze re-adds them as clause versions:
 ## SGO-WAIT-004 (D171)
 
 Drafted in `sgo/spec/SPEC-WAIT.md` (status draft); freezes at 0.17.0.
+
+## SGO-SPAWN-007 (D172) and SGO-SPAWN-006 amendment
+
+Drafted in `sgo/spec/SPEC-SPAWN.md` (status draft); freeze at 0.17.0. SGO-SPAWN-006 now refuses a task-local result type (a slice result is returned as `sgo.Frozen`).

@@ -1,0 +1,15 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-SPAWN-007",
+  "SGO-LAB-004"
+ ],
+ "lab_args": [
+  "-sched",
+  "fifo"
+ ],
+ "exit": 0,
+ "stdout": "limit 1: 40 30 20 10\nlimit 0: 10 20 30 40\n",
+ "timeout_ms": 60000,
+ "note": "Virtual time makes the completion order exact."
+}

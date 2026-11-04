@@ -48,6 +48,9 @@ func sgoNativeTryRecv(c *sgoChan) (box unsafe.Pointer, ok bool, wake *sgoChanWai
 	}
 	if c.count > 0 {
 		box = c.qpop()
+		if q := c.grp; q != nil && q.first != nil { // a group's queued results (D172)
+			c.qpush(q.pop())
+		}
 		for s := c.senders.first; s != nil; s = s.next {
 			if s.claim(sgoWaitDone) {
 				c.senders.remove(s)

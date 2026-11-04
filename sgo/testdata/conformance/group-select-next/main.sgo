@@ -1,0 +1,29 @@
+package main
+
+import "sgo"
+
+// Next is a select arm, and the same channel serves every read; each result is received once
+// (D172, SGO-SPAWN-007).
+func main(root *sgo.Context) error {
+	sum := 0
+	nursery (n) {
+		g := sgo.NewGroup[int](n, 2)
+		for i := 1; i <= 6; i++ {
+			v := i
+			g.Go(root, func(t *sgo.Context) (int, error) { return v, nil })
+		}
+		for k := 0; k < 6; k++ {
+			select {
+			case r := <-g.Next():
+				if r.Err != nil {
+					return r.Err
+				}
+				sum += r.Value
+			}
+		}
+	}
+	if sum == 21 {
+		return root.Stdout().WriteString("each result once\n")
+	}
+	return sgo.NewError("wrong sum")
+}

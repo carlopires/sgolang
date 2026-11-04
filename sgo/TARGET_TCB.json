@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.16.2",
- "allowlist_digest": "823dd1c44efe287783491c74489d654c8e16301393e46c50b02d1e82a94b7000",
+ "allowlist_digest": "7245fad6fe030c0a8258e9f78f61139088ed5e143b9f789f3a1af27d97362724",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -445,8 +445,8 @@
  ],
  "summary": {
   "packages": 31,
-  "files": 1077,
-  "files_changed_from_upstream": 62,
+  "files": 1079,
+  "files_changed_from_upstream": 64,
   "services": {
    "active": 5,
    "dormant": 5,
@@ -4466,7 +4466,7 @@
   },
   {
    "path": "src/runtime/sgo_chan.go",
-   "sha256": "1e2542dfb7bdaf41abce253b282d2f8c550bc764684224934d91b81c4edeada3",
+   "sha256": "8d7c163fd5e40786da67299159f68c89c162349ea1a8b8240864bff12a94d572",
    "upstream_identical": false
   },
   {
@@ -4487,6 +4487,11 @@
   {
    "path": "src/runtime/sgo_fs.go",
    "sha256": "050c98440f05fc1cfdc5e3eab524dec213adb836f6626399ae0d63e516a29293",
+   "upstream_identical": false
+  },
+  {
+   "path": "src/runtime/sgo_group.go",
+   "sha256": "dd2e31b737b21ba4d224e06c7d34e44013b67035a6241370524966956087c2b0",
    "upstream_identical": false
   },
   {
@@ -4581,7 +4586,7 @@
   },
   {
    "path": "src/runtime/sgo_native_ops.go",
-   "sha256": "1169db250ae552a1cee343d44f064a33f26091e14930a655cfdf9fd21b9ae24d",
+   "sha256": "1694abf79d93a6f1f97e711df1e79d96ae4f5ebd5786030493d9becce07aed47",
    "upstream_identical": false
   },
   {
@@ -5795,6 +5800,11 @@
    "upstream_identical": false
   },
   {
+   "path": "src/sgo/group.go",
+   "sha256": "2797b9c1f1b26d715b44a4661a2772d283c16e627cf61444ae1d1d40f4724559",
+   "upstream_identical": false
+  },
+  {
    "path": "src/sgo/io.go",
    "sha256": "824515193baa726bfbba5a44ced6cc28f14f9085ad813f719cfbc72f819df4f7",
    "upstream_identical": false
@@ -5821,7 +5831,7 @@
   },
   {
    "path": "src/sgo/task.go",
-   "sha256": "6a1b19e61d04ce2bce7bad8e0ef4d5a95d9b1bfca08da6d7e15db2eaf7e9593f",
+   "sha256": "e50c388f229ea03394c45c0ad3a27568445bc670ec94baab25d8d21a27aede39",
    "upstream_identical": false
   },
   {

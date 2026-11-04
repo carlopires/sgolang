@@ -1,0 +1,22 @@
+package main
+
+import "sgo"
+
+// A g.Go waiting at the limit is a cancellation point: when a sibling fails, the nursery is
+// cancelled and the wait ends (D172, SGO-SPAWN-007).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			check t.Sleep(10)
+			return sgo.NewError("sibling failed")
+		})
+		g := sgo.NewGroup[int](n, 1)
+		g.Go(root, func(t *sgo.Context) (int, error) {
+			check t.Sleep(3600000)
+			return 1, nil
+		})
+		g.Go(root, func(t *sgo.Context) (int, error) { return 2, nil })
+		check root.Stdout().WriteString("BAD: the second Go did not wait\n")
+	}
+	return nil
+}

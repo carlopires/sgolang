@@ -1,0 +1,17 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-SPAWN-007",
+  "SGO-SPAWN-006"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNADMITTED",
+   "position": "main.sgo:8:8"
+  },
+  {
+   "code": "SGO_E_UNADMITTED",
+   "position": "main.sgo:10:7"
+  }
+ ]
+}

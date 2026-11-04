@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-007"
+ ],
+ "exit": 0,
+ "stdout": "joined\n"
+}

@@ -169,7 +169,7 @@ func (check *Checker) sgoIsAfter(c *syntax.CallExpr) bool {
 	return sig != nil && sig.recv != nil
 }
 
-// sgoGoCalls checks the result type T of every sgo.Go call in fd, inferred or written: the result
+// sgoGoCalls checks the result type T of every sgo.Go and sgo.NewGroup call in fd (D161, D172), inferred or written: the result
 // is delivered to the nursery's tasks over a channel, so T is a channel element (D161).
 func (check *Checker) sgoGoCalls(fd *syntax.FuncDecl) {
 	syntax.Inspect(fd, func(n syntax.Node) bool {
@@ -186,7 +186,7 @@ func (check *Checker) sgoGoCalls(fd *syntax.FuncDecl) {
 			return true
 		}
 		fn, _ := check.Uses[sel.Sel].(*Func)
-		if fn == nil || fn.pkg == nil || fn.pkg.path != "sgo" || fn.name != "Go" {
+		if fn == nil || fn.pkg == nil || fn.pkg.path != "sgo" || (fn.name != "Go" && fn.name != "NewGroup") {
 			return true
 		}
 		tv, ok := check.Types[c]
@@ -198,7 +198,14 @@ func (check *Checker) sgoGoCalls(fd *syntax.FuncDecl) {
 			return true
 		}
 		if nt, _ := p.base.(*Named); nt != nil && nt.TypeArgs().Len() == 1 {
-			check.sgoChanElemOK(c, nt.TypeArgs().At(0), false)
+			T := nt.TypeArgs().At(0)
+			check.sgoChanElemOK(c, T, false)
+			// The result crosses from the child to its readers without a send site to copy at, so it
+			// must be shareable: a task-local result (a slice, map, or pointer) is passed as
+			// sgo.Frozen (D172) or copied into a value type.
+			if sgoTaskLocal(T) {
+				check.errorf(c, UnsupportedFeature, "SGO_E_UNADMITTED: the result type %s of %s is task-local; return sgo.Frozen[%s] instead (SGO-SPAWN-006, D172)", T, fn.name, T)
+			}
 		}
 		return true
 	})

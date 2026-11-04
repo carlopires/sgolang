@@ -1,0 +1,19 @@
+package main
+
+import "sgo"
+
+// A slice result is passed as sgo.Frozen (D172, SGO-SPAWN-007).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		g := sgo.NewGroup[sgo.Frozen[[]string]](n, 0)
+		g.Go(root, func(t *sgo.Context) (sgo.Frozen[[]string], error) {
+			return sgo.Freeze([]string{"a", "b", "c"}), nil
+		})
+		r := <-g.Next()
+		if r.Err != nil {
+			return r.Err
+		}
+		check root.Stdout().WriteString(r.Value.Get()[0] + r.Value.Get()[1] + r.Value.Get()[2] + "\n")
+	}
+	return nil
+}

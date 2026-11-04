@@ -1,0 +1,13 @@
+package main
+
+import "sgo"
+
+// A task-local result crosses tasks with no send site to copy at: it is refused (D172).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		g := sgo.NewGroup[[]string](n, 0)
+		g.Go(root, func(t *sgo.Context) ([]string, error) { return []string{"a"}, nil })
+		_ = sgo.Go(n, func(t *sgo.Context) (map[string]int, error) { return nil, nil })
+	}
+	return nil
+}

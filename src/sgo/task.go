@@ -39,15 +39,27 @@ func Go[T any](n *Nursery, f func(*Context) (T, error)) *Task[T] {
 	if f == nil {
 		runtime_violation("Go with a nil callback")
 	}
+	h := &Task[T]{r: runtime_taskResNew(resultType[T]())}
+	start(n, f, func(r *Result[T]) { runtime_taskResSet(h.r, unsafe.Pointer(r)) })
+	return h
+}
+
+// resultType returns the runtime type of Result[T].
+func resultType[T any]() unsafe.Pointer {
 	var zero Result[T]
 	var e any = zero
-	h := &Task[T]{r: runtime_taskResNew((*[2]unsafe.Pointer)(unsafe.Pointer(&e))[0])}
+	return (*[2]unsafe.Pointer)(unsafe.Pointer(&e))[0]
+}
+
+// start starts f as a child of n and publishes its Result once: the value and error it returns,
+// with a resource moved into n (D158), or the cancellation or failure it ends with.
+func start[T any](n *Nursery, f func(*Context) (T, error), publish func(*Result[T])) {
 	if err := runtime_spawn(n.s, func(t unsafe.Pointer) error {
 		set := false
 		defer func() {
 			if !set { // the child unwinds: publish why, so no reader waits forever
 				res := Result[T]{Err: runtime_taskEndErr(t)}
-				runtime_taskResSet(h.r, unsafe.Pointer(&res))
+				publish(&res)
 			}
 		}()
 		v, err := f(&Context{t: t})
@@ -59,13 +71,12 @@ func Go[T any](n *Nursery, f func(*Context) (T, error)) *Task[T] {
 			}
 		}
 		res := Result[T]{Value: v, Err: err}
-		runtime_taskResSet(h.r, unsafe.Pointer(&res))
+		publish(&res)
 		set = true
 		return nil
 	}); err != nil {
 		panic(err)
 	}
-	return h
 }
 
 // Wait waits for the task's result and returns it: the child's value and error. It is a channel

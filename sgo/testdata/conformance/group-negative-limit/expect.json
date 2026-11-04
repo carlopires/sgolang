@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-SPAWN-007",
+  "SGO-DEF-003"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "InvalidArgument"
+}

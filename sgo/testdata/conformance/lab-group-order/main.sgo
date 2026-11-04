@@ -1,0 +1,42 @@
+package main
+
+import "sgo"
+
+// Results arrive in completion order; with limit 1 the children run one at a time, so they
+// complete in start order whatever their durations (D172, SGO-SPAWN-007).
+func order(root *sgo.Context, limit int) error {
+	nursery (n) {
+		g := sgo.NewGroup[int](n, limit)
+		for i := 0; i < 4; i++ {
+			d := (4 - i) * 10
+			g.Go(root, func(t *sgo.Context) (int, error) {
+				check t.Sleep(d)
+				return d, nil
+			})
+		}
+		s := ""
+		for i := 0; i < 4; i++ {
+			r := <-g.Next()
+			s = s + " " + itoa(r.Value)
+		}
+		check root.Stdout().WriteString("limit " + itoa(limit) + ":" + s + "\n")
+	}
+	return nil
+}
+
+func itoa(v int) string {
+	if v == 0 {
+		return "0"
+	}
+	s := ""
+	for v > 0 {
+		s = string(rune('0'+v%10)) + s
+		v = v / 10
+	}
+	return s
+}
+
+func main(root *sgo.Context) error {
+	check order(root, 1)
+	return order(root, 0)
+}
