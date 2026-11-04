@@ -922,7 +922,7 @@
         "W18"
       ],
       "risk": "high",
-      "status": "in_progress",
+      "status": "passed",
       "plan_section": "sgo/docs/structured-resources-plan.md",
       "deliverables": [
         "scope-resource model (sgo/model/scoperes.go)",
@@ -936,11 +936,12 @@
       ],
       "acceptance_case_ids": [],
       "evidence": [
-        "sgo/evidence/w21/README.md"
+        "sgo/evidence/w21/README.md",
+        "sgo-w00 run 41828619012 (linux/amd64, linux/arm64) on main at a1b82ddf8a (0.16.0 freeze + Happy Eyeballs fixes)"
       ],
       "blockers": [],
-      "commit": null,
-      "completion_note": null
+      "commit": "2c85b0e7f2",
+      "completion_note": "Structured resources and check frozen at spec 0.16.0 (D147-D158; D157 withdrawn): scopes own resources (SPEC-RES), escape pass sgo_resflow, sgo.MoveTo, check; 37 res-* cases; G-RES published."
     },
     {
       "id": "W22",

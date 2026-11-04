@@ -45,4 +45,12 @@ SGO-FILE-003 v2, SGO-NET-002 v3, SGO-NET-003 v3; superseded SGO-NET-004 v2.
 
 ## Linux
 
-Pending: the sgo-w00 run on `main` after the merge (linux/amd64, linux/arm64).
+sgo-w00 run 41828619012 on `main` (commit `a1b82ddf8a`, which includes the 0.16.0 freeze, the
+Happy Eyeballs review fixes, and the three new lab scenarios): passed on linux/amd64 and
+linux/arm64 — conformance, sgo check/build agreement, negative-fixture honesty, identity, TCB,
+cross-package nurseries (X10), sgo fmt, examples with every lab scenario, and the runtime lane.
+sgo-runtime and sgo-spec passed on the same commits.
+
+The first sgo-w00 run of the freeze (41822765026, commit `2c85b0e7f2`) failed on both runners at
+X10: its test program named a function `check`, a reserved word since 0.16.0. Fixed in
+`66d2589ec5` (the program was not an S-Go conformance case, so the local suite had not run it).
