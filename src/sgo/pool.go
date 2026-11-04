@@ -25,7 +25,10 @@ type Pool[T any] struct {
 
 // Lease is exclusive use of one item of a pool, a resource of the scope that acquired it
 // (SGO-RES-001). When the scope ends, after its tasks have ended, the item goes back to the pool
-// (to the oldest waiting Acquire, or idle) unless the lease was returned or dropped first.
+// (to the oldest waiting Acquire, or idle) unless the lease was returned or dropped first. It goes
+// back also when the scope unwinds (a failure, a cancellation, an error exit): the state of a
+// transaction over the item is the transaction's own resource, which sees Release(false). Drop an
+// item that may be broken before the scope ends.
 type Lease[T any] struct {
 	p    *Pool[T]
 	item poolItem[T]

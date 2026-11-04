@@ -622,3 +622,84 @@ func TestSGoTaskResultOnce(t *testing.T) {
 		}
 	}
 }
+
+// TestSGoPoolContention drives a pool's item queue and lease spending (D175) from many tasks:
+// each lease is spent by its holder (Return, or Drop with a fresh replacement) racing a release
+// on another goroutine, so exactly one of them may put an item back. No item is ever held twice,
+// and the population stays K. The mutant whose spend always wins puts items back twice (W23
+// review of f4944488b9).
+func TestSGoPoolContention(t *testing.T) {
+	const K, M, iters = 3, 8, 300
+	run := func() error {
+		var held [K + M*iters + 1]atomic.Int32
+		var next atomic.Int64
+		next.Store(K)
+		q := runtime.SGoPoolQNew()
+		for id := 1; id <= K; id++ {
+			runtime.SGoPoolQPut(q, id)
+		}
+		var bad atomic.Value
+		worker := func(w int) {
+			rng := rand.New(rand.NewSource(int64(w)))
+			for range iters {
+				if bad.Load() != nil {
+					return
+				}
+				id := runtime.SGoPoolQTake(q)
+				if held[id].Add(1) != 1 {
+					bad.Store(fmt.Sprintf("item %d held twice", id))
+					return
+				}
+				var flag uint32
+				back := func(v int) {
+					held[id].Add(-1)
+					runtime.SGoPoolQPut(q, v)
+				}
+				var rel sync.WaitGroup
+				rel.Add(1)
+				go func() { // the lease's release, racing its holder (publishing never parks)
+					defer rel.Done()
+					if runtime.SGoPoolSpend(&flag) {
+						back(id)
+					}
+				}()
+				if rng.Intn(4) == 0 { // Drop: a fresh item replaces it
+					if runtime.SGoPoolSpend(&flag) {
+						back(int(next.Add(1)))
+					}
+				} else if runtime.SGoPoolSpend(&flag) { // Return
+					back(id)
+				}
+				rel.Wait()
+			}
+		}
+		root(t, func() {
+			n := mustOpen(t)
+			for w := range M {
+				mustSpawn(t, n, func(*runtime.SGoTask) error { // a task: a take parks on a native receive
+					worker(w)
+					return nil
+				})
+			}
+			mustJoin(t, n)
+		})
+		if v := bad.Load(); v != nil {
+			return fmt.Errorf("%v", v)
+		}
+		if n := runtime.SGoPoolQLen(q); n != K {
+			return fmt.Errorf("population %d, want %d", n, K)
+		}
+		return nil
+	}
+	defer runtime.GOMAXPROCS(runtime.GOMAXPROCS(8))
+	if err := run(); err != nil {
+		t.Fatal(err)
+	}
+	runtime.SGoPoolSpendAlways = true
+	err := run()
+	runtime.SGoPoolSpendAlways = false
+	if err == nil {
+		t.Fatal("mutant (spend always wins) not caught")
+	}
+	t.Logf("mutant caught: %v", err)
+}

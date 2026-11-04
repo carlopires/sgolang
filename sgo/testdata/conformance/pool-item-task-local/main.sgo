@@ -1,0 +1,13 @@
+package main
+
+import "sgo"
+
+// A pool's items cross between tasks with no send site to copy at, so the item type is not
+// task-local (D175, the rule of sgo.Go results).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		p := sgo.NewPool[[]int](n)
+		_ = p
+	}
+	return nil
+}

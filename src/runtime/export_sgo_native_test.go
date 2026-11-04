@@ -121,3 +121,34 @@ func SGoTaskResChan(r *SGoTaskRes) *SGoChan {
 	return (*SGoChan)(sgo_taskResChan(unsafe.Pointer(r)))
 }
 func SGoTaskResParked(r *SGoTaskRes) int { return sgoTaskResParked(r) }
+
+// Pools (D175): the item queue and the lease's spent flag, driven from goroutines.
+type SGoPoolQ = sgoGroup
+
+var SGoPoolSpendAlways bool // mutant: every spend wins
+
+func SGoPoolQNew() *SGoPoolQ {
+	return (*sgoGroup)(sgo_groupNew(unsafe.Pointer(sgoChanIntType.Elem), 0))
+}
+func SGoPoolQPut(q *SGoPoolQ, v int) { sgo_groupPublish(unsafe.Pointer(q), unsafe.Pointer(&v)) }
+func SGoPoolQTake(q *SGoPoolQ) int {
+	var v int
+	sgochanrecv1(q.res, unsafe.Pointer(&v))
+	return v
+}
+func SGoPoolSpend(flag *uint32) bool {
+	if SGoPoolSpendAlways {
+		return true
+	}
+	return sgo_poolSpend(flag)
+}
+func SGoPoolQLen(q *SGoPoolQ) int {
+	c := q.res
+	lock(&c.lock)
+	n := int(c.count)
+	for x := c.grp.first; x != nil; x = x.next {
+		n++
+	}
+	unlock(&c.lock)
+	return n
+}

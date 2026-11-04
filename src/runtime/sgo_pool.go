@@ -41,6 +41,9 @@ func sgo_poolAcquire(scope, g, task, nurs, dst unsafe.Pointer) {
 	if !sgoEncloses((*sgoScope)(scope), nil, ln, lb) {
 		panic(error(&sgoFailure{"MissingCapability", "Acquire: the lease's scope does not lie inside the pool's nursery", ""}))
 	}
+	if !sgoInside(sgoCurrent(), ln, lb) { // a lease is registered only into a scope the caller runs in
+		panic(error(&sgoFailure{"MissingCapability", "Acquire: the task does not run inside the lease's scope", ""}))
+	}
 	sgochanrecv1((*sgoGroup)(g).res, dst)
 }
 

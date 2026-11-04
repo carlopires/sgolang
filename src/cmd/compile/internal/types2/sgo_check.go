@@ -210,7 +210,11 @@ func (check *Checker) sgoGoCalls(fd *syntax.FuncDecl) {
 			// must be shareable: a task-local result (a slice, map, or pointer) is passed as
 			// sgo.Frozen (D172) or copied into a value type.
 			if sgoTaskLocal(T) {
-				check.errorf(c, UnsupportedFeature, "SGO_E_UNADMITTED: the result type %s of %s is task-local; return sgo.Frozen[%s] instead (SGO-SPAWN-006, D172)", T, fn.name, T)
+				what := "result"
+				if fn.name == "NewPool" {
+					what = "item" // a pool's items, not a result (D175)
+				}
+				check.errorf(c, UnsupportedFeature, "SGO_E_UNADMITTED: the %s type %s of %s is task-local; use sgo.Frozen[%s] instead (SGO-SPAWN-006, D172)", what, T, fn.name, T)
 			}
 		}
 		return true
