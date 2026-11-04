@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-004",
+  "SGO-RES-003"
+ ],
+ "exit": 0,
+ "stdout": "size 5\nreturned\nsize 5\nreturned after a cancelled request\n",
+ "note": "A lease is a user resource of the narrow scope referring to an outer resource (D158 gap D)."
+}

@@ -1,0 +1,55 @@
+package main
+
+import "sgo"
+
+// pool holds files of the root's scope; a request borrows one through a lease, a user resource of
+// the request's nursery that refers to the outer file and returns it to the pool when the request
+// ends (D158: narrower use by lease, never by moving a resource inward).
+type pool struct {
+	free []*sgo.File
+	log  []string
+}
+
+type lease struct {
+	p *pool
+	f *sgo.File
+}
+
+func (l *lease) Release(ok bool) error {
+	l.p.free = append(l.p.free, l.f)
+	if ok {
+		l.p.log = append(l.p.log, "returned")
+	} else {
+		l.p.log = append(l.p.log, "returned after a cancelled request")
+	}
+	return nil
+}
+
+// get leases the last free file to the request nursery n.
+func (p *pool) get(n *sgo.Nursery) *lease {
+	l := &lease{p: p, f: p.free[len(p.free)-1]}
+	p.free = p.free[:len(p.free)-1]
+	n.Own(l)
+	return l
+}
+
+func main(root *sgo.Context) error {
+	d := root.Dir("data")
+	p := &pool{}
+	f := check d.Open(root, "a.txt")
+	p.free = append(p.free, f)
+	for i := 0; i < 2; i++ {
+		nursery (req) {
+			l := p.get(req)
+			n := check l.f.Size()
+			p.log = append(p.log, "size "+string(rune('0'+n)))
+			if i == 1 {
+				req.Cancel()
+			}
+		}
+	}
+	for _, line := range p.log {
+		check root.Stdout().WriteString(line + "\n")
+	}
+	return nil
+}

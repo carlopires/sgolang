@@ -1,0 +1,36 @@
+package main
+
+import "sgo"
+
+// A producer opens files into the pipeline nursery n and hands them to the body on a channel made
+// in n. The body reads each; it closes the first early, and n releases the second when it ends
+// (D158: channels carry resources within their scope).
+func main(root *sgo.Context) error {
+	d := root.Dir("data")
+	nursery (n) {
+		files := sgo.NewChannel[*sgo.File](2)
+		n.Spawn(func(t *sgo.Context) error {
+			for _, name := range []string{"a.txt", "b.txt"} {
+				f := check d.Open(n, name)
+				p := check files.Reserve(t)
+				check p.Commit(f)
+			}
+			files.Close()
+			return nil
+		})
+		first := true
+		for {
+			f, ok := check files.Receive(root)
+			if !ok {
+				break
+			}
+			s := check f.Read(16)
+			check root.Stdout().WriteString(s + "\n")
+			if first {
+				check f.Close() // early release is still allowed
+				first = false
+			}
+		}
+	}
+	return root.Stdout().WriteString("pipeline done\n")
+}

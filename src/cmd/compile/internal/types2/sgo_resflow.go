@@ -299,6 +299,18 @@ func (f *sgoResFlow) tie(e syntax.Expr) syntax.Node {
 		}
 		return t
 	case *syntax.CallExpr:
+		// The result of append holds its arguments: tied as narrowly as they are.
+		if id, _ := syntax.Unparen(e.Fun).(*syntax.Name); id != nil {
+			if b, _ := f.check.Uses[id].(*Builtin); b != nil && b.id == _Append {
+				t := f.top
+				for _, a := range e.ArgList {
+					if f.isRes(a) {
+						t = f.inner(f.tie(a), t)
+					}
+				}
+				return t
+			}
+		}
 		// An acquisition is tied to its scope argument or receiver; another call's resource
 		// results are tied to the caller's scope, as narrowly as the extent of the call.
 		sel, _ := syntax.Unparen(e.Fun).(*syntax.SelectorExpr)
@@ -358,6 +370,9 @@ func (f *sgoResFlow) pass(fd *syntax.FuncDecl) {
 	f.parent, f.home = map[syntax.Node]syntax.Node{}, map[Object]syntax.Node{}
 	f.scope, f.moved = map[Object]syntax.Node{}, map[Object]syntax.Node{}
 	f.ext = []syntax.Node{fd}
+	if fd.Recv != nil {
+		f.params(&syntax.FuncType{ParamList: []*syntax.Field{fd.Recv}}, fd) // the receiver is a parameter
+	}
 	f.params(fd.Type, fd)
 	var stack []syntax.Node
 	syntax.Inspect(fd.Body, func(n syntax.Node) bool {

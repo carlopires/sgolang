@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-003",
+  "SGO-RES-001"
+ ],
+ "exit": 0,
+ "stdout": "alpha\nbeta\npipeline done\n",
+ "note": "Files flow through a pipeline inside the scope that owns them; leftovers are released at its end."
+}
