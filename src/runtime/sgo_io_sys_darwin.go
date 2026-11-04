@@ -138,7 +138,13 @@ func sgoClearNonblock(fd int32) {
 }
 
 // sgoCloseFD closes fd.
-func sgoCloseFD(fd int32) { closefd(fd) }
+func sgoCloseFD(fd int32) int32 {
+	// EINTR leaves the descriptor closed on these systems: not a failed close.
+	if r := closefd(fd); r < 0 && r != -_EINTR {
+		return r
+	}
+	return 0
+}
 
 //go:cgo_import_dynamic libc_openat openat "/usr/lib/libSystem.B.dylib"
 //go:cgo_import_dynamic libc_fstatat fstatat "/usr/lib/libSystem.B.dylib"

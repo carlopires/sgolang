@@ -69,6 +69,7 @@ type sgoScope struct {
 	joiner   *g // owner parked in join, or nil
 	nchild   int64
 	snapshot sgoScopeResult // filled at CLOSED (immutable afterwards)
+	res      sgoResList     // resources of the nursery, released after its join (sgo_res.go, D148)
 	// frame is stack.hi minus the SP of the frame executing the nursery statement (set by
 	// sgoNurseryEnter). It is an offset, not an address, so it survives stack copying (§2.4);
 	// unwinding uses it to complete the nurseries of the frames it leaves (SGO-DEF-005).
@@ -109,7 +110,7 @@ type sgoTask struct {
 	// task), and how many the runtime aborted because the task left them unresolved.
 	permits *sgoPermit
 	tokens  *sgoToken  // limiter tokens the task holds (sgo_sync.go)
-	handles *sgoHandle // I/O handles the task owns and has not closed (sgo_io.go)
+	res     sgoResList // resources of the task body, released when it ends (sgo_res.go, D148)
 	// Lab state (sgo_lab.go): the lab task ID, ready and waiting flags, and the step count since
 	// the task's last decision. Touched under sgoLab.lock or by the baton holder.
 	labID                                 int32
@@ -181,6 +182,7 @@ func sgoLeaveRoot() {
 		throw("sgo: leaving root with open nurseries")
 	}
 	sgoPermitsResolve(gp.sgo, nil, true)
+	sgoResRelease(&gp.sgo.res, true)
 	gp.sgo = nil
 }
 
@@ -296,8 +298,9 @@ func sgoTaskMain(c *sgoTask, fn func(*sgoTask) error) {
 			var primary any
 			c.origin = sgoOriginOf(c)
 			// Unresolved permits are aborted first, so their PermitAbandoned entries are in the
-			// chain (SGO-PERMIT-002, H09).
+			// chain (SGO-PERMIT-002, H09); the body's resources are released, unwinding (D148).
 			sgoPermitsResolve(c, nil, true)
+			sgoReleaseOutcome(c, sgoResRelease(&c.res, false), true)
 			if p := getg()._panic; p != nil {
 				primary, _ = sgoUnwound(p)
 				c.chain, c.origin = sgoChain(c, p), sgoPrimaryOrigin(p)
@@ -324,6 +327,15 @@ func sgoTaskMain(c *sgoTask, fn func(*sgoTask) error) {
 		sgoTaskExit(c)
 	}()
 	err := fn(c)
+	// The body's resources are released before the outcome exists (SGO-RES-001): a failed release
+	// of a body that returned nil makes the task Errored (D149); a panicking Release fails it.
+	if f := sgoReleaseOutcome(c, sgoResRelease(&c.res, err == nil), err != nil); f != nil {
+		if e, ok := f.(*sgoFailure); ok && e.kind == "ReleaseError" {
+			err = e
+		} else {
+			panic(f)
+		}
+	}
 	normal = true
 	sgoPermitsResolve(c, nil, true)
 	switch {

@@ -73,15 +73,18 @@ func sgo_dirRemove(g int, path string) error {
 }
 
 //go:linkname sgo_dirOpen sgo.runtime_dirOpen
-func sgo_dirOpen(g int, path string, write bool) (unsafe.Pointer, error) {
+func sgo_dirOpen(task, nurs unsafe.Pointer, g int, path string, write bool) (unsafe.Pointer, error) {
 	op := "Dir.Open"
 	if write {
 		op = "Dir.Create"
 	}
+	n, b := sgoScopeOf(task, nurs)
+	l := sgoResTarget(n, b, op)
 	h, e := sgoDirOpenGrant(g, path, write)
 	if e != nil {
 		return nil, sgoIOResult(e, op)
 	}
+	sgoResPlace(h, l, n, b)
 	return unsafe.Pointer(h), nil
 }
 
@@ -129,11 +132,10 @@ func sgo_close(h unsafe.Pointer, op string) error {
 	return sgoIOResult(sgoHandleClose((*sgoHandle)(h)), op)
 }
 
-//go:linkname sgo_lend sgo.runtime_lend
-func sgo_lend(h, scope unsafe.Pointer) { sgoHandleLend((*sgoHandle)(h), (*sgoScope)(scope)) }
-
 //go:linkname sgo_dial sgo.runtime_dial
-func sgo_dial(addr string) (unsafe.Pointer, error) {
+func sgo_dial(task, nurs unsafe.Pointer, addr string) (unsafe.Pointer, error) {
+	n, b := sgoScopeOf(task, nurs)
+	l := sgoResTarget(n, b, "Dial")
 	g := sgoNetGrantFor(addr, false)
 	if g == nil {
 		panic(error(&sgoFailure{"MissingCapability", "Dial " + quoteKind(addr) + ": no connect grant for this endpoint", ""}))
@@ -141,12 +143,12 @@ func sgo_dial(addr string) (unsafe.Pointer, error) {
 	if g.host != "" {
 		panic(error(&sgoFailure{"MissingCapability", "Dial " + quoteKind(addr) + ": a host name is dialed through a Dialer after Resolve", ""}))
 	}
-	return sgoDialGrant(g, "Dial")
+	return sgoDialGrantInto(g, "Dial", l, n, b)
 }
 
-// sgoDialGrant connects to the endpoint of connect grant g; the connection belongs to the calling
-// task. root.Dial and Dialer.Dial both come here.
-func sgoDialGrant(g *sgoNetGrant, op string) (unsafe.Pointer, error) {
+// sgoDialGrantInto connects to the endpoint of connect grant g; the connection is a resource of
+// the scope (n, b), whose list l was checked before the effect. Dial and Dialer.Dial come here.
+func sgoDialGrantInto(g *sgoNetGrant, op string, l *sgoResList, n *sgoScope, b *sgoTask) (unsafe.Pointer, error) {
 	var h *sgoHandle
 	var e *sgoIOErr
 	if sgoLab != nil {
@@ -157,11 +159,14 @@ func sgoDialGrant(g *sgoNetGrant, op string) (unsafe.Pointer, error) {
 	if e != nil {
 		return nil, sgoIOResult(e, op)
 	}
+	sgoResPlace(h, l, n, b)
 	return unsafe.Pointer(h), nil
 }
 
 //go:linkname sgo_listen sgo.runtime_listen
-func sgo_listen(addr string) (unsafe.Pointer, error) {
+func sgo_listen(task, nurs unsafe.Pointer, addr string) (unsafe.Pointer, error) {
+	n, b := sgoScopeOf(task, nurs)
+	l := sgoResTarget(n, b, "Listen")
 	g := sgoNetGrantFor(addr, true)
 	if g == nil {
 		panic(error(&sgoFailure{"MissingCapability", "Listen " + quoteKind(addr) + ": no listen grant for this endpoint", ""}))
@@ -176,15 +181,19 @@ func sgo_listen(addr string) (unsafe.Pointer, error) {
 	if e != nil {
 		return nil, sgoIOResult(e, "Listen")
 	}
+	sgoResPlace(h, l, n, b)
 	return unsafe.Pointer(h), nil
 }
 
 //go:linkname sgo_accept sgo.runtime_accept
-func sgo_accept(h unsafe.Pointer) (unsafe.Pointer, error) {
+func sgo_accept(h, task, nurs unsafe.Pointer) (unsafe.Pointer, error) {
+	n, b := sgoScopeOf(task, nurs)
+	l := sgoResTarget(n, b, "Listener.Accept")
 	c, e := sgoNetAccept((*sgoHandle)(h))
 	if e != nil {
 		return nil, sgoIOResult(e, "Listener.Accept")
 	}
+	sgoResPlace(c, l, n, b)
 	return unsafe.Pointer(c), nil
 }
 

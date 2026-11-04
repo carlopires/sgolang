@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.15.1",
- "allowlist_digest": "e7263ccd42ef08e523c7ea04f966f853e5ffaf1a7749d9067315b4650b568e55",
+ "allowlist_digest": "465f5fb26abd132a5cc5b2398931f7c91b12865510b67d3e0e6910ffb3e53282",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -445,8 +445,8 @@
  ],
  "summary": {
   "packages": 31,
-  "files": 1070,
-  "files_changed_from_upstream": 55,
+  "files": 1071,
+  "files_changed_from_upstream": 56,
   "services": {
    "active": 5,
    "dormant": 5,
@@ -4446,7 +4446,7 @@
   },
   {
    "path": "src/runtime/sgo_api.go",
-   "sha256": "be876f0499c2d6f72194f2e88172aade59ebf917cf97b6a12dadc64b9e21f03a",
+   "sha256": "b057d0cd9e863fea48f1b40b80b78b3478c80a36e901e92eaadb7a0772823f49",
    "upstream_identical": false
   },
   {
@@ -4461,7 +4461,7 @@
   },
   {
    "path": "src/runtime/sgo_chan.go",
-   "sha256": "2c309167dd31553c2e741903043356a447b0bc8f9147ea1b5c3626b5cb2cefd6",
+   "sha256": "c3a1c757c8e0e7447ae512676b7c424e065f562608a3971e4cf2cfafa54fd791",
    "upstream_identical": false
   },
   {
@@ -4481,12 +4481,12 @@
   },
   {
    "path": "src/runtime/sgo_io.go",
-   "sha256": "f3c8b541b93c184efdc2bbc8ff8f551c26545a05c9767a245bae2d24369bfbf7",
+   "sha256": "1e8ee29793ce7f192450f026da4140942b0deb75059fe1fb4a7d42ca2ce5008e",
    "upstream_identical": false
   },
   {
    "path": "src/runtime/sgo_io_sys_darwin.go",
-   "sha256": "9e1123bcea433cc6bf1fa947ab268b24d053edf6a8beccd0facc657cf9618c18",
+   "sha256": "1c266f3bd2fb45f180c0efbfe24fb077b591d0ba523c5df06ef124a4021d50b1",
    "upstream_identical": false
   },
   {
@@ -4496,7 +4496,7 @@
   },
   {
    "path": "src/runtime/sgo_io_sys_linux.go",
-   "sha256": "cac8a70b544d16a2bd106c87bb6d23cac99620465dfe48bac886fa1cf29f83e5",
+   "sha256": "31e01b10fb25d0a68f508dbb685aa6cdd192eaf5692161b4b3b5fb93d586bcf0",
    "upstream_identical": false
   },
   {
@@ -4511,12 +4511,12 @@
   },
   {
    "path": "src/runtime/sgo_io_sys_other.go",
-   "sha256": "cfba60d19b495d936212d9e481c4a8672f20c83bc7e772d2d84e0d1c7687e06f",
+   "sha256": "c3ad9938b636c9566aa41383556ea236d8fc3378aa059b13ab0c0f156d5547eb",
    "upstream_identical": false
   },
   {
    "path": "src/runtime/sgo_ioapi.go",
-   "sha256": "fd1846ad43b68a26a5fed2761a527213ed9ebf30141cc2a86f5ccbba84c8232b",
+   "sha256": "8abc957bbd82b837eaab1e672ef471ff14c1120f47cf2db13f35d57df83dfcdb",
    "upstream_identical": false
   },
   {
@@ -4556,7 +4556,7 @@
   },
   {
    "path": "src/runtime/sgo_main.go",
-   "sha256": "d60f79c37b6c2ea1b48be6dd62715be0c024333473eca7ab604c4869d9923998",
+   "sha256": "c2b3b80d7540a36d947648084a0fbba29e53d8d872da3a9c24084c63f471d4e0",
    "upstream_identical": false
   },
   {
@@ -4591,7 +4591,7 @@
   },
   {
    "path": "src/runtime/sgo_netdial.go",
-   "sha256": "ba5937307a811c0bdec5801930f3e848be34fa4ef398278f760760135fbaca2d",
+   "sha256": "2d3b786d4db9adbbbb483cd14f37e15dc03d459e1aeb03919564fefeababce0a",
    "upstream_identical": false
   },
   {
@@ -4606,7 +4606,7 @@
   },
   {
    "path": "src/runtime/sgo_nursery.go",
-   "sha256": "eb5f7567eb0fa9428a9274ab5bfb01197184f4cdbb91f934d3f6e01dc5f6c368",
+   "sha256": "c516822ac1f846a8e4a3f52c9fdbe35ca6b42a651fead7b0744f550ae3e2f63e",
    "upstream_identical": false
   },
   {
@@ -4620,8 +4620,13 @@
    "upstream_identical": false
   },
   {
+   "path": "src/runtime/sgo_res.go",
+   "sha256": "acedb6a3848a12b6a1a673b21d50d21efc095b4282442bfd79c8f6b487da09d0",
+   "upstream_identical": false
+  },
+  {
    "path": "src/runtime/sgo_scope.go",
-   "sha256": "7c43c2c3e738caa259f49d6a9238599959fb523fb1c17e4cf21d5aad4cfdca7c",
+   "sha256": "489f9f210ff8488ca5ad16e1128750372412ab8c77a829bb32b255db06d2dec3",
    "upstream_identical": false
   },
   {
@@ -5771,7 +5776,7 @@
   },
   {
    "path": "src/sgo/io.go",
-   "sha256": "23d124c4b8f0e744416777725ad955508d809f574cbec374473d81ec5d96459c",
+   "sha256": "9e80225ea4a34ff684d85a5d774b38299725881a8578f39fccb6fe900969899b",
    "upstream_identical": false
   },
   {

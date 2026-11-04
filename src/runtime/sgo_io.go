@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// I/O handles of the S-Go adapters (W09, D54–D56; reference: sgo/model/iohandle.go).
+// I/O handles of the S-Go adapters (W09, D54–D56; W21, D148–D153; reference: sgo/model/iohandle.go,
+// sgo/model/scoperes.go).
 //
-// A handle is task-affine: owned by the task that opened it, closed only by it. It may be lent to
-// nurseries; a task inside a lent nursery that is still open may read and write it, and the owner
-// cannot close it until those nurseries have closed (HandleLent). Every open makes a new handle
-// record, never reused: once closed, a handle refers to no descriptor, so no operation on it can
-// reach a descriptor the system later reuses. A handle left open is closed when the owner's
-// nursery body exits or the owner ends, with a HandleAbandoned entry (like tokens, D39).
+// A handle is a resource of a scope (sgo_res.go): usable by every task inside the scope, released
+// when the scope ends, or earlier by Close from any task inside it while no other task is in an
+// operation on it (ResourceBusy otherwise). Every open makes a new handle record, never reused:
+// once closed, a handle refers to no descriptor, so no operation on it can reach a descriptor the
+// system later reuses.
 //
 // File reads and writes are blocking system calls on the calling thread, bounded to 1 MiB per
 // call (the processor is handed off as for any system call); cancellation is observed before
@@ -28,7 +28,6 @@ const (
 	sgoHConn
 	sgoHListener
 	sgoHDialer // a delegated dialer (sgo_netdial.go, D143)
-	sgoHSlot   // a connection slot (sgo_netdial.go, D144)
 
 	sgoIOChunk = 1 << 20
 )
@@ -40,22 +39,24 @@ type sgoHandle struct {
 	fake     *sgoFakeFile // lab: a fake file (sgo_iofake.go)
 	conn     *sgoFakeConn // lab: a fake connection or listener (sgo_netfake.go)
 	dial     *sgoDialer   // a dialer: its endpoints (sgo_netdial.go)
-	slot     *sgoSlot     // a connection slot: its content (sgo_netdial.go)
 	unix     bool         // a Unix domain socket (D60)
 	sockPath *byte        // a Unix listener: its socket file, removed at close (sgo_net.go)
 	sockID   sgoFileID
 	readOnly bool // a directory opened from an ro grant, or ReadOnly
 	write    bool // a file opened for writing
-	owner    *sgoTask
-	scope    *sgoScope // the owner's innermost nursery at open (nil: the task body)
-	closed   bool
-	lentTo   []*sgoScope  // nurseries the handle is lent to (touched by the owner)
-	ops      atomic.Int32 // operations in progress
+	// The scope it is a resource of (sgo_res.go): a nursery, or the body of task body; and the list
+	// it is in (nil once released or closed).
+	nurs    *sgoScope
+	body    *sgoTask
+	list    *sgoResList
+	release func(ok bool) error // a user resource (sgoHUser): its Release method (D152)
+	closed  bool
+	ops     atomic.Int32 // operations in progress
 	// Sockets: whether a task is waiting in the poller to read (Read, Accept) or to write. The
 	// poller keeps one waiter per descriptor and direction, so other tasks wait for the turn.
 	awaitR, awaitW atomic.Uint32
 	name           string     // for messages: the path or address
-	prev           *sgoHandle // the owner's open handles
+	prev           *sgoHandle // the scope's resources (sgoResList)
 	next           *sgoHandle
 }
 
@@ -65,60 +66,23 @@ type sgoIOErr struct {
 	progress int
 }
 
+// sgoHandleNew creates a handle in the current task's body list; an API entry point that names
+// another scope moves it there (sgoResAdopt).
 func sgoHandleNew(kind uint8, fd int32, name string) *sgoHandle {
 	t := sgoCurrent()
-	h := &sgoHandle{kind: kind, fd: fd, owner: t, scope: t.currentScope(), name: name}
-	h.next = t.handles
-	if t.handles != nil {
-		t.handles.prev = h
-	}
-	t.handles = h
+	h := &sgoHandle{kind: kind, fd: fd, body: t, name: name}
+	t.res.push(h)
 	return h
 }
 
-// sgoScopeOpen reports whether nursery s has not closed yet.
-func sgoScopeOpen(s *sgoScope) bool {
-	lock(&s.lock)
-	open := s.state != sgoClosed
-	unlock(&s.lock)
-	return open
-}
-
-// sgoHandleLentOpen reports whether h is lent to a nursery that has not closed: at the exit of the
-// body it was opened in it stays open for the borrowers, and is closed at the owner's end.
-func sgoHandleLentOpen(h *sgoHandle) bool {
-	for _, s := range h.lentTo {
-		if sgoScopeOpen(s) {
-			return true
-		}
-	}
-	return false
-}
-
-// sgoHandleUser reports whether task t may operate on h: its owner, or a task inside a nursery h
-// is lent to that has not closed.
-func sgoHandleUser(h *sgoHandle, t *sgoTask) bool {
-	if t == h.owner {
-		return true
-	}
-	for _, s := range h.lentTo {
-		if !sgoScopeOpen(s) {
-			continue
-		}
-		for c := t.currentScope(); c != nil; c = c.parent {
-			if c == s {
-				return true
-			}
-		}
-	}
-	return false
-}
+// sgoHandleUser reports whether task t may operate on h: it runs inside h's scope (D150).
+func sgoHandleUser(h *sgoHandle, t *sgoTask) bool { return sgoInside(t, h.nurs, h.body) }
 
 // sgoHandleBegin starts an operation of the current task on h; nil if it may proceed.
 func sgoHandleBegin(h *sgoHandle, op string) *sgoIOErr {
 	t := sgoCurrent()
 	if !sgoHandleUser(h, t) {
-		panic(error(&sgoFailure{"MissingCapability", op + ": the handle is not the task's and is not lent to its nursery", ""}))
+		panic(error(&sgoFailure{"MissingCapability", op + ": the task does not run inside the handle's scope", ""}))
 	}
 	if h.closed {
 		return &sgoIOErr{"HandleClosed", 0}
@@ -132,43 +96,24 @@ func sgoHandleBegin(h *sgoHandle, op string) *sgoIOErr {
 
 func sgoHandleEnd(h *sgoHandle) { h.ops.Add(-1) }
 
-// sgoHandleLend records that h is lent to nursery s (the sgo package checks the caller may spawn
-// into s).
-func sgoHandleLend(h *sgoHandle, s *sgoScope) {
-	if sgoCurrent() != h.owner {
-		panic(&sgoViolation{"LendTo of an I/O handle by a task that does not own it"})
-	}
-	if s.owner != h.owner {
-		// Only nurseries of the owner: they all close before it ends, so no borrower outlives it.
-		panic(&sgoViolation{"LendTo of an I/O handle to a nursery its owner does not own"})
-	}
-	h.lentTo = append(h.lentTo, s)
-}
-
-// sgoHandleClose closes h: only its owner, not while lent to an open nursery (D54).
+// sgoHandleClose releases h early (SGO-RES-002): a task inside its scope, while no other task is
+// in an operation on it; the release's error goes to the caller.
 func sgoHandleClose(h *sgoHandle) *sgoIOErr {
 	t := sgoCurrent()
-	if t != h.owner {
-		panic(&sgoViolation{"Close of an I/O handle by a task that does not own it"})
+	if !sgoHandleUser(h, t) {
+		panic(error(&sgoFailure{"MissingCapability", "Close: the task does not run inside the handle's scope", ""}))
 	}
 	if h.closed {
 		return &sgoIOErr{"HandleClosed", 0}
 	}
-	live := h.lentTo[:0]
-	for _, s := range h.lentTo {
-		if sgoScopeOpen(s) {
-			live = append(live, s)
-		}
+	if h.ops.Load() != 0 {
+		return &sgoIOErr{"ResourceBusy", 0}
 	}
-	h.lentTo = live
-	if len(live) > 0 || h.ops.Load() != 0 {
-		return &sgoIOErr{"HandleLent", 0}
-	}
-	sgoHandleFree(h)
-	return nil
+	return sgoHandleFree(h)
 }
 
-func sgoHandleFree(h *sgoHandle) {
+// sgoHandleFree closes h and removes it from its scope; the result is a failed close (IOError).
+func sgoHandleFree(h *sgoHandle) *sgoIOErr {
 	h.closed = true
 	if h.sockPath != nil {
 		sgoNetUnlinkSocket(h)
@@ -181,39 +126,15 @@ func sgoHandleFree(h *sgoHandle) {
 	if h.conn != nil {
 		sgoFakeConnClose(h)
 	}
-	if h.slot != nil {
-		sgoSlotFree(h)
-	}
+	var e *sgoIOErr
 	if h.fd >= 0 {
-		sgoCloseFD(h.fd)
+		if sgoCloseFD(h.fd) < 0 {
+			e = &sgoIOErr{"IOError", 0}
+		}
 	}
 	h.fd = -1
-	t := h.owner
-	if h.prev != nil {
-		h.prev.next = h.next
-	} else if t.handles == h {
-		t.handles = h.next
-	}
-	if h.next != nil {
-		h.next.prev = h.prev
-	}
-	h.prev, h.next = nil, nil
-}
-
-// sgoHandlesResolve closes the task's open handles opened inside scope s (all of them at task
-// end), each with a HandleAbandoned entry in the task's failure sequence (D54).
-func sgoHandlesResolve(t *sgoTask, s *sgoScope, all bool) {
-	for h := t.handles; h != nil; {
-		next := h.next
-		if all || h.scope == s && !sgoHandleLentOpen(h) {
-			t.abandoned++
-			t.seq++
-			t.entries = append(t.entries, sgoEntry{t.seq, sgoFailureInfo{"HandleAbandoned",
-				"I/O handle " + h.name + " opened by task " + sgoItoa(t.id) + " was not closed; the runtime closed it", ""}})
-			sgoHandleFree(h)
-		}
-		h = next
-	}
+	sgoResUnlink(h)
+	return e
 }
 
 // sgoSysRead and sgoSysWrite are blocking system calls with the processor handed off.

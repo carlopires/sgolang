@@ -59,7 +59,23 @@ func sgoExitMain(v any) {
 	if t == nil || t.id != 0 || len(t.nest) != 0 {
 		sgoDefect("main returned with an open nursery or outside the root task") // OWN-3
 	}
+	// The root body's resources are released before main's outcome (SGO-RES-001, D149).
+	var released []sgoFailureInfo
+	if f := sgoReleaseOutcome(t, sgoResRelease(&t.res, v == nil), v != nil); f != nil {
+		if e, ok := f.(*sgoFailure); ok && e.kind == "ReleaseError" {
+			v = error(e)
+		} else {
+			sgoWriteRecord(sgoFailureOf(f), nil, sgoOrigin{})
+			sgoProgramExit(2, sgoFailureOf(f).kind)
+		}
+	}
+	for _, e := range t.entries {
+		if e.info.kind == "ReleaseError" {
+			released = append(released, e.info)
+		}
+	}
 	leaked := sgoTestEnd(t, v != nil) // test binaries only: obligations the test left (D64)
+	leaked = append(released, leaked...)
 	if v == nil {
 		if sgoLab != nil {
 			sgoProgramExit(0, "") // a lab binary ends here, after the trace is written
@@ -110,7 +126,13 @@ func sgoUnwoundOut(p *_panic) {
 		}
 	}
 	f := sgoFailureOf(primary)
-	sgoWriteRecord(f, sgoChain(t, p), sgoPrimaryOrigin(p))
+	chain := sgoChain(t, p)
+	// The root body's resources are released, unwinding (SGO-RES-001, D155); failed releases join
+	// the chain.
+	for _, r := range sgoResRelease(&t.res, false) {
+		chain = append(chain, r.info)
+	}
+	sgoWriteRecord(f, chain, sgoPrimaryOrigin(p))
 	switch f.kind {
 	case "ChildError":
 		sgoProgramExit(1, f.kind)

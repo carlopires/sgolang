@@ -27,7 +27,7 @@ func sgoFstatat(dirfd int32, path *byte, st *sgoStatBuf, flags int32) int32   { 
 func sgoFstat(fd int32, st *sgoStatBuf) int32                                 { return -sgoENOSYS }
 func sgoMkdirat(dirfd int32, path *byte, mode int32) int32                    { return -sgoENOSYS }
 func sgoUnlinkat(dirfd int32, path *byte, flags int32) int32                  { return -sgoENOSYS }
-func sgoCloseFD(fd int32)                                                     {}
+func sgoCloseFD(fd int32) int32                                               { return 0 }
 func sgoFtruncate(fd int32) int32                                             { return -sgoENOSYS }
 func sgoOpenBeneath(dirfd int32, path *byte, flags, mode int32) (int32, bool) { return 0, false }
 

@@ -494,8 +494,7 @@ func sgoPermitUnlink(p *sgoPermit) {
 // chain if the task fails or returns an error. It runs at owner-body exit before the join and
 // before a task's outcome is published.
 func sgoPermitsResolve(t *sgoTask, s *sgoScope, all bool) {
-	sgoTokensResolve(t, s, all)  // limiter tokens are the same kind of obligation (D39)
-	sgoHandlesResolve(t, s, all) // so are open I/O handles (D54)
+	sgoTokensResolve(t, s, all) // limiter tokens are the same kind of obligation (D39)
 	for p := t.permits; p != nil; {
 		next := p.next
 		if all || p.scope == s {

@@ -22,6 +22,15 @@ func sgo_isRoot(task unsafe.Pointer) bool {
 	return t != nil && t.id == 0 && t.scope == nil
 }
 
+// sgo_currentIsRoot reports whether the calling goroutine is the root task (root-only calls on a
+// nursery's scope, SGO-RES-001).
+//
+//go:linkname sgo_currentIsRoot sgo.runtime_currentIsRoot
+func sgo_currentIsRoot() bool {
+	t := getg().sgo
+	return t != nil && t.id == 0 && t.scope == nil
+}
+
 //go:linkname sgo_isCurrent sgo.runtime_isCurrent
 func sgo_isCurrent(task unsafe.Pointer) bool {
 	return task != nil && getg().sgo == (*sgoTask)(task)

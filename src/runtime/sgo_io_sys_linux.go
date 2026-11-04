@@ -187,7 +187,13 @@ func sgoClearNonblock(fd int32) {
 }
 
 // sgoCloseFD closes fd.
-func sgoCloseFD(fd int32) { closefd(fd) }
+func sgoCloseFD(fd int32) int32 {
+	// EINTR leaves the descriptor closed on these systems: not a failed close.
+	if r := closefd(fd); r < 0 && r != -_EINTR {
+		return r
+	}
+	return 0
+}
 
 // sgoStatSize is st_size (int64 at 48 on linux/amd64 and linux/arm64).
 func sgoStatSize(b *sgoStatBuf) int64 { return *(*int64)(unsafe.Pointer(&b[48])) }

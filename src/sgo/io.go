@@ -13,7 +13,7 @@ func runtime_dirGrant(name string) (g int, ro, ok bool)
 func runtime_dirIsDir(g int, path string) error
 func runtime_dirMkdir(g int, path string) error
 func runtime_dirRemove(g int, path string) error
-func runtime_dirOpen(g int, path string, write bool) (unsafe.Pointer, error)
+func runtime_dirOpen(task, nurs unsafe.Pointer, g int, path string, write bool) (unsafe.Pointer, error)
 func runtime_dirReadFile(g int, path string) (string, error)
 func runtime_dirList(g int, path string) ([]string, error)
 func runtime_dirWriteFile(g int, path, data string) error
@@ -21,17 +21,16 @@ func runtime_read(h unsafe.Pointer, max int) (string, error)
 func runtime_ioWrite(h unsafe.Pointer, s string) (int, error)
 func runtime_fileSize(h unsafe.Pointer) (int, error)
 func runtime_close(h unsafe.Pointer, op string) error
-func runtime_lend(h, scope unsafe.Pointer)
-func runtime_dial(addr string) (unsafe.Pointer, error)
-func runtime_listen(addr string) (unsafe.Pointer, error)
-func runtime_accept(h unsafe.Pointer) (unsafe.Pointer, error)
+func runtime_resMove(h, task, nurs unsafe.Pointer) error
+func runtime_resOwn(task, nurs unsafe.Pointer, release func(bool) error)
+func runtime_currentIsRoot() bool
+func runtime_dial(task, nurs unsafe.Pointer, addr string) (unsafe.Pointer, error)
+func runtime_listen(task, nurs unsafe.Pointer, addr string) (unsafe.Pointer, error)
+func runtime_accept(h, task, nurs unsafe.Pointer) (unsafe.Pointer, error)
 func runtime_peerUID(h unsafe.Pointer) (int, error)
-func runtime_dialerNew(endpoints []string) unsafe.Pointer
-func runtime_dialerDial(h unsafe.Pointer, addr string) (unsafe.Pointer, error)
+func runtime_dialerNew(task, nurs unsafe.Pointer, endpoints []string) unsafe.Pointer
+func runtime_dialerDial(h, task, nurs unsafe.Pointer, addr string) (unsafe.Pointer, error)
 func runtime_dialerResolve(h unsafe.Pointer, host, family string) ([]string, error)
-func runtime_slotNew() unsafe.Pointer
-func runtime_slotPut(slot, conn unsafe.Pointer) error
-func runtime_slotTake(slot unsafe.Pointer) (unsafe.Pointer, bool)
 
 // Progress returns the bytes an I/O operation transferred before err (0 for other errors).
 func Progress(err error) int {
@@ -79,22 +78,25 @@ func (d *Dir) path(op, p string) string {
 	return d.sub + p
 }
 
-// Open opens path for reading.
-func (d *Dir) Open(path string) (*File, error) {
-	h, err := runtime_dirOpen(d.g, d.path("Dir.Open", path), false)
+// Open opens path for reading, as a resource of scope s (SGO-RES-001).
+func (d *Dir) Open(s Scope, path string) (*File, error) {
+	task, nurs := s.sgoScope()
+	h, err := runtime_dirOpen(task, nurs, d.g, d.path("Dir.Open", path), false)
 	if err != nil {
 		return nil, err
 	}
 	return &File{h}, nil
 }
 
-// Create creates or truncates path for writing; a read-only handle does not permit it.
-func (d *Dir) Create(path string) (*File, error) {
+// Create creates or truncates path for writing, as a resource of scope s; a read-only handle does
+// not permit it.
+func (d *Dir) Create(s Scope, path string) (*File, error) {
 	p := d.path("Dir.Create", path)
 	if d.readOnly {
 		runtime_fail("MissingCapability", "Dir.Create on a read-only handle")
 	}
-	h, err := runtime_dirOpen(d.g, p, true)
+	task, nurs := s.sgoScope()
+	h, err := runtime_dirOpen(task, nurs, d.g, p, true)
 	if err != nil {
 		return nil, err
 	}
@@ -172,12 +174,7 @@ func (l *Listing) Name(i int) string {
 // ReadOnly returns a handle that permits only Open, ReadFile, List, and Sub.
 func (d *Dir) ReadOnly() *Dir { return &Dir{l: d.l, g: d.g, sub: d.sub, readOnly: true} }
 
-// LendTo returns a copy of d that is revoked when n closes.
-func (d *Dir) LendTo(n *Nursery) *Dir {
-	return &Dir{l: d.l.to(n, "Dir.LendTo"), g: d.g, sub: d.sub, readOnly: d.readOnly}
-}
-
-// File is an open file, owned by the task that opened it (D54).
+// File is an open file, a resource of the scope it was opened in (SGO-RES-001).
 type File struct{ h unsafe.Pointer }
 
 // Read reads at most max bytes: at least one, or an error (IsEOF at the end of the file).
@@ -192,24 +189,37 @@ func (f *File) Size() (int, error) { return runtime_fileSize(f.h) }
 // Close closes the file; only its owner may, and not while it is lent to an open nursery.
 func (f *File) Close() error { return runtime_close(f.h, "File.Close") }
 
-// LendTo lets the tasks of nursery n use f until n closes; n must be a nursery of f's owner.
-func (f *File) LendTo(n *Nursery) *File { runtime_lend(f.h, n.s); return f }
+// MoveTo makes f a resource of s, a scope enclosing f's scope (SGO-RES-003).
+func (f *File) MoveTo(s Scope) error { return moveTo(f.h, s) }
 
-// Conn is a TCP connection, owned by the task that dialed or accepted it.
+// Conn is a connection, a resource of the scope its Dial or Accept named (SGO-RES-001).
 type Conn struct{ h unsafe.Pointer }
 
 // Dial connects to addr (IP:PORT, or unix:PATH for a Unix domain socket), which a connect grant
-// must name exactly (D57, D60).
+// must name exactly (D57, D60). The connection is a resource of the root task's body.
 func (c *Context) Dial(addr string) (*Conn, error) {
 	c.own()
-	if !runtime_isRoot(c.t) {
-		runtime_fail("MissingCapability", "Dial: only the root task holds the grants; children use a connection lent to them")
-	}
-	h, err := runtime_dial(addr)
+	return dial(c, "Dial", addr)
+}
+
+// Dial is c.Dial into nursery n, a nursery of the root task (SGO-RES-001).
+func (n *Nursery) Dial(addr string) (*Conn, error) { return dial(n, "Dial", addr) }
+
+func dial(s Scope, op, addr string) (*Conn, error) {
+	rootOnly(op)
+	task, nurs := s.sgoScope()
+	h, err := runtime_dial(task, nurs, addr)
 	if err != nil {
 		return nil, err
 	}
 	return &Conn{h}, nil
+}
+
+// rootOnly fails the task unless it is the root task, which alone holds the grants.
+func rootOnly(op string) {
+	if !runtime_currentIsRoot() {
+		runtime_fail("MissingCapability", op+": only the root task holds the grants; children use the resources of the scopes they run in")
+	}
 }
 
 // Read reads at most max bytes: at least one, or an error (IsEOF when the peer has closed).
@@ -222,25 +232,31 @@ func (c *Conn) Write(s string) (int, error) { return runtime_ioWrite(c.h, s) }
 // connection; on a TCP connection it returns an Unsupported error (D60).
 func (c *Conn) PeerUID() (int, error) { return runtime_peerUID(c.h) }
 
-// Close closes the connection.
+// Close releases the connection early (SGO-RES-002).
 func (c *Conn) Close() error { return runtime_close(c.h, "Conn.Close") }
 
-// LendTo lets the tasks of nursery n use c until n closes; n must be a nursery of c's owner.
-func (c *Conn) LendTo(n *Nursery) *Conn { runtime_lend(c.h, n.s); return c }
+// MoveTo makes c a resource of s, a scope enclosing c's scope (SGO-RES-003).
+func (c *Conn) MoveTo(s Scope) error { return moveTo(c.h, s) }
 
-// Dialer is delegated connect authority (D143): a capability handle for a fixed set of endpoints
-// the main module grants. The root task creates it and lends it to the nurseries whose tasks may
-// dial; each connection belongs to the task that dialed it.
+// Dialer is delegated connect authority (D143): a resource for a fixed set of endpoints the main
+// module grants. The root task creates it; every task inside its scope may dial, and each
+// connection is a resource of the scope its Dial names.
 type Dialer struct{ h unsafe.Pointer }
 
-// Dialer returns a dialer for endpoints, each of which a connect grant must name exactly. Only the
-// root task holds the grants, so only the root task may create a dialer.
+// Dialer returns a dialer for endpoints, each of which a connect grant must name exactly, as a
+// resource of the root task's body. Only the root task holds the grants.
 func (c *Context) Dialer(endpoints []string) *Dialer {
 	c.own()
-	if !runtime_isRoot(c.t) {
-		runtime_fail("MissingCapability", "Dialer: only the root task holds the grants; children use a dialer lent to them")
-	}
-	return &Dialer{runtime_dialerNew(endpoints)}
+	return dialer(c, endpoints)
+}
+
+// Dialer is c.Dialer into nursery n, a nursery of the root task.
+func (n *Nursery) Dialer(endpoints []string) *Dialer { return dialer(n, endpoints) }
+
+func dialer(s Scope, endpoints []string) *Dialer {
+	rootOnly("Dialer")
+	task, nurs := s.sgoScope()
+	return &Dialer{runtime_dialerNew(task, nurs, endpoints)}
 }
 
 // Resolve looks up host, a host name one of the dialer's endpoints names (grant connect
@@ -252,53 +268,22 @@ func (d *Dialer) Resolve(host, family string) ([]string, error) {
 }
 
 // Dial connects to addr, one of the dialer's IP or Unix endpoints or an address its Resolve
-// returned. The caller must own the dialer or run in a nursery it is lent to. Waiting for the
-// connection is a cancellation point.
-func (d *Dialer) Dial(addr string) (*Conn, error) {
-	h, err := runtime_dialerDial(d.h, addr)
+// returned; the connection is a resource of scope s. The caller runs inside the dialer's scope.
+// Waiting for the connection is a cancellation point.
+func (d *Dialer) Dial(s Scope, addr string) (*Conn, error) {
+	task, nurs := s.sgoScope()
+	h, err := runtime_dialerDial(d.h, task, nurs, addr)
 	if err != nil {
 		return nil, err
 	}
 	return &Conn{h}, nil
 }
 
-// LendTo lets the tasks of nursery n use d until n closes; n must be a nursery of d's owner.
-func (d *Dialer) LendTo(n *Nursery) *Dialer { runtime_lend(d.h, n.s); return d }
-
-// Close closes the dialer; only its owner may, and not while it is lent to an open nursery.
+// Close releases the dialer early (SGO-RES-002).
 func (d *Dialer) Close() error { return runtime_close(d.h, "Dialer.Close") }
 
-// ConnSlot receives one connection from another task (D144). The task that creates it owns it
-// and lends it to a nursery; a task there hands its connection over with Put, and only the first
-// Put succeeds, so a slot settles a race. The owner then takes the connection as its own.
-type ConnSlot struct{ h unsafe.Pointer }
-
-// NewConnSlot returns an empty slot owned by the calling task.
-func (c *Context) NewConnSlot() *ConnSlot {
-	c.own()
-	return &ConnSlot{runtime_slotNew()}
-}
-
-// Put moves conn, which the caller owns, into the slot: conn is no longer the caller's. If a
-// connection was put before, Put returns an AlreadySet error and conn stays the caller's.
-func (s *ConnSlot) Put(conn *Conn) error { return runtime_slotPut(s.h, conn.h) }
-
-// Take returns the connection put into the slot, now owned by the caller (the slot's owner), and
-// true; or nil and false if there is none (not yet put, or already taken).
-func (s *ConnSlot) Take() (*Conn, bool) {
-	h, ok := runtime_slotTake(s.h)
-	if !ok {
-		return nil, false
-	}
-	return &Conn{h}, true
-}
-
-// LendTo lets the tasks of nursery n put into s until n closes; n must be a nursery of s's owner.
-func (s *ConnSlot) LendTo(n *Nursery) *ConnSlot { runtime_lend(s.h, n.s); return s }
-
-// Close closes the slot and a connection still in it; only its owner may, and not while it is
-// lent to an open nursery.
-func (s *ConnSlot) Close() error { return runtime_close(s.h, "ConnSlot.Close") }
+// MoveTo makes d a resource of s, a scope enclosing d's scope (SGO-RES-003).
+func (d *Dialer) MoveTo(s Scope) error { return moveTo(d.h, s) }
 
 // Listener accepts TCP connections on a granted endpoint.
 type Listener struct{ h unsafe.Pointer }
@@ -307,30 +292,63 @@ type Listener struct{ h unsafe.Pointer }
 // D60). A stale socket file at PATH is removed first; any other file there is AddressInUse.
 func (c *Context) Listen(addr string) (*Listener, error) {
 	c.own()
-	if !runtime_isRoot(c.t) {
-		runtime_fail("MissingCapability", "Listen: only the root task holds the grants; children use a listener lent to them")
-	}
-	h, err := runtime_listen(addr)
+	return listen(c, addr)
+}
+
+// Listen is c.Listen into nursery n, a nursery of the root task.
+func (n *Nursery) Listen(addr string) (*Listener, error) { return listen(n, addr) }
+
+func listen(s Scope, addr string) (*Listener, error) {
+	rootOnly("Listen")
+	task, nurs := s.sgoScope()
+	h, err := runtime_listen(task, nurs, addr)
 	if err != nil {
 		return nil, err
 	}
 	return &Listener{h}, nil
 }
 
-// Accept waits for a connection; the connection is owned by the calling task.
-func (l *Listener) Accept() (*Conn, error) {
-	h, err := runtime_accept(l.h)
+// Accept waits for a connection, a resource of scope s.
+func (l *Listener) Accept(s Scope) (*Conn, error) {
+	task, nurs := s.sgoScope()
+	h, err := runtime_accept(l.h, task, nurs)
 	if err != nil {
 		return nil, err
 	}
 	return &Conn{h}, nil
 }
 
-// Close closes the listener.
+// Close releases the listener early (SGO-RES-002).
 func (l *Listener) Close() error { return runtime_close(l.h, "Listener.Close") }
 
-// LendTo lets the tasks of nursery n use l until n closes; n must be a nursery of l's owner.
-func (l *Listener) LendTo(n *Nursery) *Listener { runtime_lend(l.h, n.s); return l }
+// MoveTo makes l a resource of s, a scope enclosing l's scope (SGO-RES-003).
+func (l *Listener) MoveTo(s Scope) error { return moveTo(l.h, s) }
+
+// Scope is a scope resources are acquired into (SGO-RES-001): a task body, named by its
+// *Context, or a nursery, named by its *Nursery. The scope releases its resources when it ends.
+type Scope interface {
+	sgoScope() (task, nurs unsafe.Pointer)
+}
+
+func (c *Context) sgoScope() (task, nurs unsafe.Pointer) { return c.t, nil }
+func (n *Nursery) sgoScope() (task, nurs unsafe.Pointer) { return nil, n.s }
+
+func moveTo(h unsafe.Pointer, s Scope) error {
+	task, nurs := s.sgoScope()
+	return runtime_resMove(h, task, nurs)
+}
+
+// Releaser is a user resource (SGO-RES-004): Release(ok) runs when its scope ends, with ok true
+// when the scope ends normally and false when it unwinds (a failure or cancellation).
+type Releaser interface {
+	Release(ok bool) error
+}
+
+// Own makes r a resource of the task body of c (SGO-RES-004).
+func (c *Context) Own(r Releaser) { runtime_resOwn(c.t, nil, r.Release) }
+
+// Own makes r a resource of nursery n (SGO-RES-004).
+func (n *Nursery) Own(r Releaser) { runtime_resOwn(nil, n.s, r.Release) }
 
 func quote(s string) string {
 	if len(s) > 64 {
