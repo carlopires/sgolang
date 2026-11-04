@@ -155,6 +155,11 @@ func sgoChanReady(wake *sgoChanWait) {
 // sender that retries finds w, and they are readied only after w is parked and the locks released
 // (in the lab, before the decision that precedes the park).
 func sgoChanPark(c *sgoChan, l *sgoWaitList, w *sgoChanWait, reason waitReason, wakeSenders bool) bool {
+	if w.task == nil {
+		// Every channel wait of an S-Go program is a task's; reaching here otherwise is a defect of
+		// the caller (a service path or a test harness waiting from a plain goroutine).
+		throw("sgo: channel wait outside a task")
+	}
 	w.g, w.ch = getg(), c
 	w.state.Store(sgoWaitWaiting)
 	l.push(w)
