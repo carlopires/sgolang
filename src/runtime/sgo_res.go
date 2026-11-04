@@ -165,6 +165,9 @@ func sgo_resMove(h, task, nurs unsafe.Pointer) error {
 func sgo_resOwn(task, nurs, key unsafe.Pointer, release func(bool) error) {
 	n, b := sgoScopeOf(task, nurs)
 	l := sgoResTarget(n, b, "Own")
+	if sgoResFindUser(sgoCurrent(), key) != nil {
+		panic(error(&sgoFailure{"InvalidArgument", "Own: the value is already a resource of a scope", ""}))
+	}
 	h := &sgoHandle{kind: sgoHUser, fd: -1, name: "user resource", release: release, key: key, nurs: n, body: b}
 	l.push(h)
 }
@@ -174,7 +177,17 @@ func sgo_resOwn(task, nurs, key unsafe.Pointer, release func(bool) error) {
 //
 //go:linkname sgo_resMoveUser sgo.runtime_resMoveUser
 func sgo_resMoveUser(key, task, nurs unsafe.Pointer) error {
-	t := sgoCurrent()
+	h := sgoResFindUser(sgoCurrent(), key)
+	if h == nil {
+		panic(error(&sgoFailure{"MissingCapability", "MoveTo: the value is not a resource of a scope the task runs inside", ""}))
+	}
+	n, b := sgoScopeOf(task, nurs)
+	return sgoIOResult(sgoResMove(h, n, b), "MoveTo")
+}
+
+// sgoResFindUser returns the registration of user resource key among the resources of the scopes
+// task t runs inside, or nil.
+func sgoResFindUser(t *sgoTask, key unsafe.Pointer) *sgoHandle {
 	var h *sgoHandle
 	find := func(l *sgoResList) {
 		lock(&l.lock)
@@ -186,17 +199,16 @@ func sgo_resMoveUser(key, task, nurs unsafe.Pointer) error {
 		unlock(&l.lock)
 	}
 	find(&t.res)
+	if t.releasing != nil {
+		find(&t.releasing.res)
+	}
 	for c := t.currentScope(); c != nil && h == nil; c = c.parent {
 		find(&c.res)
 		if h == nil && c.owner != nil {
 			find(&c.owner.res)
 		}
 	}
-	if h == nil {
-		panic(error(&sgoFailure{"MissingCapability", "MoveTo: the value is not a resource of a scope the task runs inside", ""}))
-	}
-	n, b := sgoScopeOf(task, nurs)
-	return sgoIOResult(sgoResMove(h, n, b), "MoveTo")
+	return h
 }
 
 // sgoScopeOf decodes the scope argument of the sgo API: a *sgo.Context's task or a *sgo.Nursery's

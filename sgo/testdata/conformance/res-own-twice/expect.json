@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-004"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_kind": "InvalidArgument",
+ "stderr_message": "Own: the value is already a resource of a scope"
+}
