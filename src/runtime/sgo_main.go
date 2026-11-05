@@ -91,8 +91,33 @@ func sgoExitMain(v any) {
 	if !ok {
 		sgoDefect("main returned a non-error value")
 	}
+	if e, ok := err.(*sgoExitError); ok && len(leaked) == 0 {
+		// D186: the program's own message, alone, with status 1 and no record.
+		if e.msg != "" {
+			var w sgoRecordWriter
+			w.str(e.msg)
+			w.byte('\n')
+			w.flush()
+		}
+		sgoProgramExit(1, "ExitError")
+	}
 	sgoWriteRecord(sgoFailureInfo{"MainError", err.Error(), ""}, leaked, sgoOrigin{})
 	sgoProgramExit(1, "MainError")
+}
+
+// sgoExitError is the error of sgo.ExitError (D186): returned from main, it ends the process with
+// status 1 and only its message on stderr. Anywhere else it is an ordinary error value.
+type sgoExitError struct{ msg string }
+
+func (e *sgoExitError) Error() string { return e.msg }
+
+//go:linkname sgo_exitError sgo.runtime_exitError
+func sgo_exitError(msg string) error { return &sgoExitError{msg} }
+
+//go:linkname sgo_isExitError sgo.runtime_isExitError
+func sgo_isExitError(err error) bool {
+	_, ok := err.(*sgoExitError)
+	return ok
 }
 
 // sgoUnwound returns the primary failure of the unwinding that p is part of and the later failures

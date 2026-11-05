@@ -1,0 +1,14 @@
+package main
+
+import "sgo"
+
+func fail() error { return sgo.ExitError("tool: unknown flag --x") }
+
+func main(root *sgo.Context) error {
+	check root.Stdout().WriteString("before\n")
+	if !sgo.IsExitError(fail()) || sgo.IsExitError(sgo.NewError("x")) {
+		return sgo.NewError("IsExitError")
+	}
+	check fail()
+	return nil
+}

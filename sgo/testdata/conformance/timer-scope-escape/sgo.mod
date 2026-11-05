@@ -1,3 +1,3 @@
 module example.com/timer-scope-escape
 
-sgo 0.19.0
+sgo 0.19.1

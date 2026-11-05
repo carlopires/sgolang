@@ -54,6 +54,8 @@ func runtime_deadline(task unsafe.Pointer) (int, bool)
 func runtime_isDeadline(err error) bool
 
 func runtime_isInterrupted(err error) bool
+func runtime_exitError(msg string) error // sgo_main.go
+func runtime_isExitError(err error) bool
 
 // Spawn admits f as a child of n (SGO-SPAWN-001..004). A refused admission is a
 // SpawnContractViolation that unwinds the caller (SGO-SPAWN-002).
@@ -237,6 +239,15 @@ func IsDeadline(err error) bool { return runtime_isDeadline(err) }
 // program unwinds through its nurseries. IsCancelled also recognizes it. A second signal ends the
 // process at once (status 130 for SIGINT, 143 for SIGTERM).
 func IsInterrupted(err error) bool { return runtime_isInterrupted(err) }
+
+// ExitError returns an error that, returned from main, ends the process with status 1 and writes
+// only msg and a newline to stderr, with no diagnostic record (D186): the plain failure of a
+// command-line program. Returned anywhere else (by a child, or wrapped), it is an ordinary error
+// value and main's failure is reported as for any other error (SGO-PROC-002).
+func ExitError(msg string) error { return runtime_exitError(msg) }
+
+// IsExitError reports whether err is an error made by ExitError.
+func IsExitError(err error) bool { return runtime_isExitError(err) }
 
 // CancelAfter sets a deadline on n (D162, D170): ms milliseconds from now, n is cancelled with a
 // cancellation that IsDeadline recognizes. Every nested scope, task, and I/O wait under n observes

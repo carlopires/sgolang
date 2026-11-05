@@ -1,3 +1,3 @@
 module example.com/err-check-statement
 
-sgo 0.19.0
+sgo 0.19.1

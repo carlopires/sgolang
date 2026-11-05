@@ -1076,7 +1076,7 @@ SGO-PROC-003 and SGO-PROC-004 get new versions.
 
 **Amendment (user, 2026-11-07: option (a)).** Floating point stays denied (SGO-FLOAT-001): D183 ships `std/fmt` and `std/time` durations only, without `ParseFloat`/`FormatFloat`; D184's flag types are `string`, `int`, `bool`, `duration`, and lists. Admitting `float64` is D185, for a later week.
 
-## D185 — Admit float64 · APPROVED IN PRINCIPLE 2026-11-07 (user), for a later week
+## D185 — Admit float64 · APPROVED 2026-11-07 (user); designed in D187–D194 (W25)
 
 **Question.** Programs that measure or compute ratios need floating point, which SGO-FLOAT-001 denies.
 
@@ -1085,13 +1085,106 @@ SGO-PROC-003 and SGO-PROC-004 get new versions.
 **Plan (W24, after approval).** D178, D179, D182, D180, D181 (runtime, driver, lab), model first for D179 (an interrupt racing scope ends); D183 (std, with differential tests); D184 last, as the acceptance. Spec 0.19.0.
 
 
-## D186 — A plain error exit for CLIs · PROPOSED 2026-11-07
+## D186 — A plain error exit for CLIs · APPROVED 2026-11-07 (user: option b)
 
 **Question.** `main` returning an error exits 1 and writes a JSON `MainError` record to stderr (SGO-PROC-002), which suits tools reading the stream but not a person at a terminal: a CLI that writes its own message (`undisk: unknown flag --x`) is followed by the record.
 
 **Options.** (a) Keep the record: programs live with the second line. (b) A usage-error kind: `return sgo.Exit(1, msg)` (or an error for which a predicate holds) ends with status 1 and only the message on stderr; a non-zero status other than 1 stays out of the programs' hands. (c) The record in human form (`main: message`) when stderr is a terminal, JSON otherwise.
 
 **Recommendation.** (b), as the one that keeps the record for every unexpected failure and gives CLIs the conventional form. Not part of W24: the 0.19.0 example writes its own line and returns the error.
+
+**Design (0.19.1).** `sgo.ExitError(msg string) error` returns an error that, returned from `main` (directly, or by a failing `check` in `main`), ends the process with status 1 and writes exactly `msg` and a newline to stderr, with no diagnostic record. `sgo.IsExitError(err) bool` recognizes it. It is an ordinary error value everywhere else: returned by a child, it is that child's error (the nursery's `ChildError` record, as for any error, SGO-NUR-004); wrapped (`fmt.Wrapf`), it is no longer recognized, so only the program's own top level chooses the plain form. Only status 1 exists: no other status is in the program's hands (SGO-PROC-002). An empty `msg` writes nothing.
+
+## D187 — The type: `float64` only · APPROVED 2026-11-07 (user)
+
+`float64`, IEEE 754 binary64. `float32`, `complex64`, `complex128`, `real`, `imag`, and `complex`
+stay denied (SGO-FLOAT-001 keeps them). Float literals (`1.5`, `1e9`, `0x1p-2`) are admitted;
+imaginary literals are not. A user type over `float64` (`type Celsius float64`) is admitted as user
+types over `int` are (SGO-UTYPE-*).
+
+## D188 — Arithmetic: IEEE 754 with round-to-nearest-even, no traps, no fusion · APPROVED 2026-11-07 (user)
+
+`+ - * /`, unary `-`, and comparisons follow IEEE 754 with round-to-nearest-even. Division by zero
+and overflow give the infinities and NaN as values: nothing fails (unlike `int`, where overflow
+fails). `-0.0` and `+0.0` are distinct values that compare equal. `%` is denied on floats, as in Go
+(`math.Mod` instead). No operation is fused in S-Go code on any target (`useFMA` is false in S-Go
+mode): each operation rounds once. An explicit fused multiply-add is `math.FMA`.
+- Alternative: make division by zero and overflow fail, like `int`. Rejected: it breaks the IEEE
+  identities that numeric code relies on (`1/x` where x underflows to 0), and NaN or Inf from
+  parsing are values anyway.
+
+## D189 — Conversions: checked to `int`, rounded from `int` · APPROVED 2026-11-07 (user)
+
+- `int(f)` truncates toward zero and fails with `IntegerOverflow` (exit 2) if `f` is NaN, an
+  infinity, or out of range for `int`. The same holds for `byte(f)` and `rune(f)` (the ranges of
+  SGO-TYPE-007/008).
+- `float64(i)` rounds to nearest-even (exact up to 2^53): never fails.
+- Constants follow Go: an untyped float constant is exact, and is rounded when given type
+  `float64`; a constant that overflows `float64`, or a non-integral constant converted to `int`, is
+  a compile error (`SGO_E_CONST_OVERFLOW`).
+- `string(f)` is not a conversion (it is denied); text goes through `strconv`/`fmt`.
+
+## D190 — Comparison and map keys · APPROVED 2026-11-07 (user)
+
+`==`, `!=`, `<`, `<=`, `>`, `>=` are admitted with IEEE meaning (`NaN != NaN`; every ordered
+comparison with NaN is false). A map key type that is `float64`, or a struct or array containing one,
+is denied (`SGO_E_UNADMITTED`): a NaN key would make the map's deterministic iteration order
+(SGO-COMP-006) contain entries that can never be found. A struct with a float field remains
+comparable with `==`.
+
+## D191 — `std/math` gets the float functions; the integer ones are renamed · APPROVED 2026-11-07 (user)
+
+`std/math` today has `Abs`, `Min`, `Max`, `Pow` on `int`. Go's names are the float ones. Options:
+- **(a) Recommended:** the float functions take Go's names (`math.Abs(x float64)`), and the integer
+  ones move to `std/math` as `AbsInt`, `MinInt`, `MaxInt`, `PowInt`. This breaks 0.19 programs that
+  call the four integer functions, and the freeze fixes every example and fixture. 0.x permits it,
+  and Go code then ports unchanged.
+- (b) Keep the integer names and give the float ones a prefix (`math.FAbs`).
+- (c) Put the float functions in a new package `std/fmath`.
+
+## D192 — Which `math` functions, and how exact · APPROVED 2026-11-07 (user)
+
+- **Exact (correctly rounded, hardware or exact algorithm):** `Abs`, `Copysign`, `Signbit`,
+  `Floor`, `Ceil`, `Trunc`, `Round`, `RoundToEven`, `Mod`, `Remainder`, `Sqrt`, `FMA`, `Min`,
+  `Max`, `Inf`, `NaN`, `IsNaN`, `IsInf`, `Float64bits`, `Float64frombits`, `Nextafter`, `Frexp`,
+  `Ldexp`, `Modf`, `MaxFloat64`, `SmallestNonzeroFloat64`, `Pi`, `E`.
+- **Transcendental (`Exp`, `Log`, `Log2`, `Log10`, `Pow`, `Sin`, `Cos`, `Tan`, `Atan`, `Atan2`,
+  `Sinh`, `Tanh`, `Hypot`, `Cbrt`, `Exp2`, `Log1p`, `Expm1`, `Asin`, `Acos`):** written in S-Go
+  from Go's portable implementations (no assembly). The results are identical on every target, but
+  not always correctly rounded: Go's documented error bounds (≤ 1 ulp) are the specification's.
+  - Option: ship only the exact set in W25 and the transcendentals in a later week. Recommended:
+    both in W25, because without `Pow` and `Log` most numeric programs cannot be written.
+
+## D193 — Text: `strconv` and `fmt` · APPROVED 2026-11-07 (user)
+
+- `strconv.ParseFloat(s string) (float64, error)`: Go's syntax (decimal, hex `0x1p-2`, `inf`,
+  `nan`, underscores only per Go's rules) and correct rounding. There is no bitSize parameter
+  (float64 only, like `ParseInt` without bitSize). The error forms are Go's, quoted as
+  `QuoteToASCII` (SGO-STD-004).
+- `strconv.FormatFloat(f float64, fmt byte, prec int) string`: `'f'`, `'e'`, `'g'` (and `'b'`,
+  `'x'`), and `prec -1` for the shortest form that round-trips, identical to Go's.
+- `fmt`: `%f %e %g %v` with precision (`%.2f`), width, and the `-`, `0`, and `+` flags, identical to
+  Go's.
+- These are ported from Go's `strconv` (`ftoa`, Ryu shortest, `eisel_lemire`, `atof`) as S-Go source,
+  and differentially tested against Go.
+
+## D194 — Evidence: an exact oracle and differential tests · APPROVED 2026-11-07 (user)
+
+The model step of this week is an oracle rather than a scheduler model: a reference
+implementation of D188–D190 in exact rational arithmetic (Python `fractions`, independent of the
+compiler and of Go's code). It checks:
+1. arithmetic results bit for bit on generated operands (normals, subnormals, ±0, ±Inf, NaN,
+   boundary cases), including expressions of the form `a + x*y` that a fused implementation would
+   round differently;
+2. float-to-int conversion outcomes (the value, or `IntegerOverflow`);
+3. `ParseFloat`/`FormatFloat` round trips and correct rounding.
+
+The compiled programs run on all three targets in CI, and their outputs must be byte-identical
+across targets (the fused/unfused difference shows up here if `useFMA` is not disabled).
+`test-std-diff.py` gains the float functions and verbs against Go's (with Go's fusion avoided by
+explicit `float64()` roundings on the Go side).
+
+Plan and work order: `sgo/docs/w25-float-plan.md` (W25, spec 0.20.0).
 ---
 
 ## Approval record
@@ -1139,3 +1232,5 @@ SGO-PROC-003 and SGO-PROC-004 get new versions.
 - 2026-11-06: user approved D177–D184 as recommended ("looks good, approved!"): CLI programs as first-class — scoped `Listen`/`Dial`, the process interface (arguments, stdin, stderr, terminals, broken pipe), interrupts cancel the root, environment by grant, argument paths (option b), per-user application directories, std for CLIs, and a CLI library with run-time commands. Follow-up: W24, spec 0.19.0.
 - 2026-11-06: user withdrew D177 (the scoped forms `n.Listen`/`n.Dial` already exist).
 - 2026-11-07: user chose option (a) for floating point in W24 ("let's do (a), and (c) for the future"): floats stay denied; D183 without ParseFloat/FormatFloat, D184 without a float flag; D185 (admit float64) approved in principle for a later week.
+- 2026-11-07: user approved D186 option (b) ("option b works"): a plain error exit for CLIs, in a 0.19.1 freeze; then D185 (float64) planned properly.
+- 2026-11-07: user approved D187–D194 as recommended, D191 option (a) ("all looks good, all approved"): float64 in W25 (`sgo/docs/w25-float-plan.md`), spec 0.20.0.

@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PROC-002"
+ ],
+ "exit": 1,
+ "stdout": "before\n",
+ "stderr_exact": "tool: unknown flag --x\n",
+ "note": "D186: sgo.ExitError returned from main (here through check) exits 1 with only its message on stderr."
+}

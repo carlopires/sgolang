@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": "0.19.0",
+  "spec_version": "0.19.1",
   "status": "admitted_0.7.0",
   "warning": "Spec 0.7.0 admits every row marked 'admitted': its clauses are frozen, the toolchain implements and enforces them, and its acceptance cases have executed evidence (constitution §6, D83). Rows marked 'denied' stay rejected. Admission does not widen any row beyond its clauses; everything the clauses do not name is rejected.",
   "default_decision": "reject",
@@ -1698,7 +1698,7 @@
         "SGO-PROC-004",
         "SGO-PROC-005"
       ],
-      "normative_text_digest": "a4aa1c26a9bf2c92bd21d5205754f73119771211780c95156fbe2c46fa1cf795",
+      "normative_text_digest": "6ef52be4acc9a79b1bd7e16b7f0927f8e68c402ee3ceb0c77d218a772de8b92a",
       "admitted_in": [
         "0.7.0"
       ],
@@ -1716,7 +1716,7 @@
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
         "SGO-PROC-001": "2c7b704866f18ec7553f7711c048173e0ac87f597c951014fa370a5c728f169e",
-        "SGO-PROC-002": "65c4e75c10f733f0b1bc62497743d207593504bbea8b27f175d1311907ecdba8",
+        "SGO-PROC-002": "a10ab53f40d8a4f421500834baa439e046414e3b113a45f7210be2d5ef394c0a",
         "SGO-PROC-003": "b074dde0b34836f62a1542be45db86c5d16f8526b0a528f12c65248891cdffa6",
         "SGO-PROC-004": "4e27ea9875afac9c5a56f9d17e1211a912dd8a6e29bf50ee0ee4be2e6f87ccdf",
         "SGO-PROC-005": "d69cddb026927d58d99d964e4b19ab256d1c41ff4afb738eb1eb1764b435d568"
@@ -1730,7 +1730,7 @@
       },
       "clause_versions": {
         "SGO-PROC-001": 1,
-        "SGO-PROC-002": 2,
+        "SGO-PROC-002": 3,
         "SGO-PROC-003": 2,
         "SGO-PROC-004": 3,
         "SGO-PROC-005": 1
@@ -1843,5 +1843,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "b284da9da5ac55fbe4ec2501b513b81a08fb7a01eaee11a50613aaa703bc3df8"
+  "rows_digest": "22c45dbf2d4c5def13ae439222a908cd46d2a0331c75b9cf95b1dc52aec22d90"
 }

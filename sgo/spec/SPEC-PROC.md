@@ -25,12 +25,12 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §13, decisions D08, D09, D16, reso
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-PROC-002 — Exit status
-- **version:** 2
+- **version:** 3
 - **status:** frozen
-- **reference_closure:** SGO-PROC-001, SGO-PROC-005, SGO-DEF-003, SGO-NUR-004, SGO-DRAIN-002, SGO-ERR-002, SGO-ERR-003; D08, D179; R6.
-- **grammar_and_types:** n/a — process rule.
+- **reference_closure:** SGO-PROC-001, SGO-PROC-005, SGO-DEF-003, SGO-NUR-004, SGO-DRAIN-002, SGO-ERR-002, SGO-ERR-003; D08, D179, D186; R6.
+- **grammar_and_types:** `sgo.ExitError(msg string) error`; `sgo.IsExitError(err error) bool`. Otherwise a process rule.
 - **preconditions:** n/a — process rule.
-- **evaluation_and_value_semantics:** The process exit status is: 0 if `main` returns `nil`; 1 if `main` returns a non-nil error or a `ChildError` unwinds out of `main`; 2 if any other failure kind (SGO-DEF-003) unwinds out of `main`; 3 on `DrainBudgetExceeded` (SGO-DRAIN-002); 4 on resource exhaustion or `RuntimeDefect` (SGO-ERR-003). For statuses 1–4 exactly one diagnostic record is written to stderr (SGO-ERR-002); for a returned error, its kind is `MainError` and its message is `err.Error()`. Nothing is written to stderr on status 0. An interrupt (SGO-PROC-005) is a cancellation of the root: the program's status is that of its unwind. A second interrupt during the unwind ends the process at once with status 130 (SIGINT) or 143 (SIGTERM), outside S-Go's statuses, writing no record.
+- **evaluation_and_value_semantics:** The process exit status is: 0 if `main` returns `nil`; 1 if `main` returns a non-nil error or a `ChildError` unwinds out of `main`; 2 if any other failure kind (SGO-DEF-003) unwinds out of `main`; 3 on `DrainBudgetExceeded` (SGO-DRAIN-002); 4 on resource exhaustion or `RuntimeDefect` (SGO-ERR-003). For statuses 1–4 exactly one diagnostic record is written to stderr (SGO-ERR-002); for a returned error, its kind is `MainError` and its message is `err.Error()`. The one exception is an error made by `sgo.ExitError(msg)` that `main` returns itself (by `return` or a failing `check`): status 1, and stderr is exactly `msg` and a newline (nothing for an empty `msg`), with no record (D186). Anywhere else it is an ordinary error: returned by a child it is that child's error (`ChildError`, SGO-NUR-004), and wrapped it is no longer recognized. `sgo.IsExitError` reports whether an error was made by `ExitError`. No status other than 1 is in the program's hands. Nothing is written to stderr on status 0. An interrupt (SGO-PROC-005) is a cancellation of the root: the program's status is that of its unwind. A second interrupt during the unwind ends the process at once with status 130 (SIGINT) or 143 (SIGTERM), outside S-Go's statuses, writing no record.
 - **ownership_and_lifecycle:** n/a — process rule.
 - **effect_and_capability_requirements:** The exit is a runtime effect.
 - **concurrency_and_memory_order:** All tasks have completed before statuses 0–2 are produced; statuses 3–4, 130, and 143 are fail-stop.
@@ -40,10 +40,10 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §13, decisions D08, D09, D16, reso
 - **compile_link_checks:** n/a — process rule.
 - **runtime_guards:** Exit-status mapping in the runtime.
 - **tcb_assumptions:** Process exit primitive (SGO-TCB-001).
-- **positive_tests:** S08; fixture:proc-main-ok, fixture:proc-main-error-exit-1, fixture:nur-child-error-exit-1, fixture:def-panic-exit-2; `sgo/scripts/test-cli.py` (a second SIGINT or SIGTERM: 130, 143).
-- **negative_tests:** n/a — mapping rule; each status has a positive test.
-- **implementation_coverage:** W03: `src/cmd/compile/internal/noder/sgo_main.go`, `src/runtime/sgo_main.go`, `src/sgo/sgo.go`; W24: `src/runtime/sgo_interrupt.go`.
-- **executed_evidence:** conformance fixtures def-panic-exit-2, nur-child-error-exit-1, proc-main-error-exit-1, proc-main-ok (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`; `sgo/scripts/test-cli.py` (darwin/arm64, linux/amd64, linux/arm64), `sgo/evidence/w24/README.md`.
+- **positive_tests:** S08; fixture:proc-main-ok, fixture:proc-main-error-exit-1, fixture:nur-child-error-exit-1, fixture:def-panic-exit-2, fixture:proc-exit-error; `sgo/scripts/test-cli.py` (a second SIGINT or SIGTERM: 130, 143).
+- **negative_tests:** fixture:proc-exit-error-child, fixture:proc-exit-error-wrapped (an `ExitError` from a child or wrapped gets a record).
+- **implementation_coverage:** W03: `src/cmd/compile/internal/noder/sgo_main.go`, `src/runtime/sgo_main.go`, `src/sgo/sgo.go`; W24: `src/runtime/sgo_interrupt.go`; D186: `src/runtime/sgo_main.go` (`sgoExitError`), `src/sgo/sgo.go`.
+- **executed_evidence:** conformance fixtures def-panic-exit-2, nur-child-error-exit-1, proc-main-error-exit-1, proc-main-ok, proc-exit-error, proc-exit-error-child, proc-exit-error-wrapped (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`; `sgo/scripts/test-cli.py` (darwin/arm64, linux/amd64, linux/arm64), `sgo/evidence/w24/README.md`.
 - **supported_execution_configurations:** production; lab (SGO-LAB-007 injects interrupts).
 
 ### SGO-PROC-003 — Standard output and error

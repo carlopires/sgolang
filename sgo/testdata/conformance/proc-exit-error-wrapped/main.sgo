@@ -1,0 +1,10 @@
+package main
+
+import (
+	"sgo"
+	"std/fmt"
+)
+
+func main(root *sgo.Context) error {
+	return fmt.Wrapf(sgo.ExitError("inner"), "outer", []any{})
+}

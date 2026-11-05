@@ -2,6 +2,14 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.19.1 — 2026-11-07
+
+A plain error exit for command-line programs (D186). Every 0.19.0 program keeps its meaning.
+
+Amended clauses:
+
+- SGO-PROC-002 v3 — `sgo.ExitError(msg)`, returned from `main` itself, exits 1 with only `msg` and a newline on stderr and no record; `sgo.IsExitError`. From a child or wrapped, it is an ordinary error.
+
 ## 0.19.0 — 2026-11-07
 
 Command-line programs as first-class (W24; D178–D184, D177 withdrawn). Every 0.18.0 program keeps its meaning: the additions are new APIs and grants, and the one change of behavior is that SIGINT and SIGTERM now cancel the root instead of ending the process outside S-Go's outcomes (SGO-PROC-005).

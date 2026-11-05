@@ -1,3 +1,3 @@
 module example.com/iface-method-value-denied
 
-sgo 0.19.0
+sgo 0.19.1

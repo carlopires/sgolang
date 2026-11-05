@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PROC-002"
+ ],
+ "exit": 1,
+ "stdout": "",
+ "stderr_kind": "MainError",
+ "stderr_message": "outer: inner",
+ "note": "D186: wrapped, an ExitError is no longer recognized: main's failure is a MainError record."
+}

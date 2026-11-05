@@ -23,3 +23,6 @@ sgo lab sweep -seeds 0..63 -expect expected.txt .
 ```
 
 Floating-point flags wait for D185; durations are integer nanoseconds (`std/time`).
+
+A failing command line exits with status 1 and one line on stderr (`undisk: ...`), through
+`sgo.ExitError` (D186).

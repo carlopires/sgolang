@@ -1,3 +1,3 @@
 module example.com/ready-signal
 
-sgo 0.19.0
+sgo 0.19.1

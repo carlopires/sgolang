@@ -1,5 +1,5 @@
 module example.com/res-move-inward
 
-sgo 0.19.0
+sgo 0.19.1
 grant listen 127.0.0.1:47944
 grant connect 127.0.0.1:47944

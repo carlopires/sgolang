@@ -38,8 +38,7 @@ func main(root *sgo.Context) error {
 		n.Cancel()
 	}
 	if failure != nil {
-		check root.Stderr().WriteString("undisk: " + failure.Error() + "\n")
-		return failure
+		return sgo.ExitError("undisk: " + failure.Error()) // status 1, only this line on stderr (D186)
 	}
 	return nil
 }

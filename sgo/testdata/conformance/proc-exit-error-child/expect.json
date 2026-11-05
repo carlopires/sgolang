@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PROC-002"
+ ],
+ "exit": 1,
+ "stdout": "",
+ "stderr_kind": "ChildError",
+ "stderr_message": "child says no",
+ "note": "D186: returned by a child, an ExitError is that child's error: the nursery's ChildError record."
+}

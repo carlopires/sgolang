@@ -1,3 +1,3 @@
 module example.com/val-overflow-minint-div
 
-sgo 0.19.0
+sgo 0.19.1
