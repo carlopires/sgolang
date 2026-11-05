@@ -44,7 +44,7 @@ func labSetup(f *labFlags, nargs int, what string) (string, *labManifest, func()
 		cleanup()
 		return "", nil, nil, err
 	}
-	m := &labManifest{Format: labFormat, Build: id, Seed: f.seed, Policy: f.policy, K: f.k, Quota: f.quota, Epoch: f.epoch, Net: net, program: exe}
+	m := &labManifest{Format: labFormat, Build: id, Seed: f.seed, Policy: f.policy, K: f.k, Quota: f.quota, Epoch: f.epoch, Net: net, Args: f.progArgs, program: exe}
 	return f.args[nargs-1], m, cleanup, nil
 }
 
@@ -131,6 +131,11 @@ func cmdLabReplay(args []string) error {
 	if !slices.Equal(m.Net, rec.Net) {
 		return labErr("SGO_E_LAB_MANIFEST", "the trace was recorded with a different lab.net network table (D146)")
 	}
+	// D178: a replay runs with the recorded arguments; other arguments are refused.
+	if f.haveProgArgs && !slices.Equal(f.progArgs, rec.Args) {
+		return labErr("SGO_E_LAB_MANIFEST", "the trace was recorded with arguments %q; a replay cannot change them", rec.Args)
+	}
+	m.Args = rec.Args
 	picks, err := labPicks(want)
 	if err != nil {
 		return err

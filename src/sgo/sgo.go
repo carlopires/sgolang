@@ -26,6 +26,7 @@ func runtime_spawn(scope unsafe.Pointer, fn func(task unsafe.Pointer) error) err
 func runtime_isRoot(task unsafe.Pointer) bool
 func runtime_isCurrent(task unsafe.Pointer) bool
 func runtime_write(s string) (int, bool)
+func runtime_args() []string // sgo_proc.go
 func runtime_violation(msg string)
 func runtime_fail(kind, msg string) // unwinds with a checked failure of the kind (SGO-DEF-003)
 
@@ -98,6 +99,17 @@ func (c *Context) Stdout() *Writer {
 		runtime_fail("MissingCapability", "Stdout called on a context that does not hold the stdout capability")
 	}
 	return &stdout
+}
+
+// Args returns the arguments the program was started with, after the program name: a fresh copy
+// on each call (D178, SGO-PROC-004). Only the root context holds them; a child receives what the
+// root passes it. Arguments carry no authority of their own.
+func (c *Context) Args() []string {
+	c.own()
+	if !runtime_isRoot(c.t) {
+		runtime_fail("MissingCapability", "Args called on a context that is not the root's: children receive what the root passes them")
+	}
+	return runtime_args()
 }
 
 // WriteString writes all of s to standard output, unbuffered and atomically (SGO-PROC-003).

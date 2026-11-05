@@ -1,0 +1,15 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+	"std/strings"
+)
+
+// root.Args returns the arguments after the program name, a fresh copy on each call (D178).
+func main(root *sgo.Context) error {
+	args := root.Args()
+	args[0] = "changed"
+	again := root.Args()
+	return root.Stdout().WriteString(strconv.Itoa(len(again)) + ": " + strings.Join(again, "|") + "\n")
+}

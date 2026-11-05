@@ -1,0 +1,15 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PROC-004"
+ ],
+ "run_args": [
+  "serve",
+  "--port",
+  "8080",
+  "two words"
+ ],
+ "exit": 0,
+ "stdout": "4: serve|--port|8080|two words\n",
+ "note": "D178: root.Args is the arguments after the program name, a fresh copy on each call."
+}

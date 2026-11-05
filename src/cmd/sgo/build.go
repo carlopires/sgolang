@@ -38,6 +38,7 @@ func cmdBuild(args []string) error {
 }
 
 func cmdRun(args []string) error {
+	args, progArgs := splitProgramArgs(args)
 	f, err := parseBuildFlags("run", args)
 	if err != nil {
 		return err
@@ -54,7 +55,7 @@ func cmdRun(args []string) error {
 	if err != nil {
 		return err
 	}
-	cmd := exec.Command(exe)
+	cmd := exec.Command(exe, progArgs...)
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 	if err := cmd.Run(); err != nil {
 		var ee *exec.ExitError
@@ -65,6 +66,17 @@ func cmdRun(args []string) error {
 		return err
 	}
 	return nil
+}
+
+// splitProgramArgs splits a command line at the first "--": the driver's own arguments before it,
+// the program's arguments after it (D178). Without "--" the program gets no arguments.
+func splitProgramArgs(args []string) (own, prog []string) {
+	for i, a := range args {
+		if a == "--" {
+			return args[:i], args[i+1:]
+		}
+	}
+	return args, nil
 }
 
 func path_base(p string) string {

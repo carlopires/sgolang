@@ -41,6 +41,8 @@ type labFlags struct {
 	expect, save string
 	timeout      time.Duration
 	args         []string
+	progArgs     []string // the program's arguments, after "--" (D178)
+	haveProgArgs bool
 }
 
 // The manifest defaults: K of D43, a quota that bounds any run, the watchdog of D47.
@@ -52,6 +54,12 @@ const (
 
 func parseLabFlags(cmd string, args []string) (*labFlags, error) {
 	f := &labFlags{policy: "random", k: labDefaultK, quota: labDefaultQuota, timeout: labDefaultTimeout}
+	for i, a := range args {
+		if a == "--" {
+			args, f.progArgs, f.haveProgArgs = args[:i], args[i+1:], true
+			break
+		}
+	}
 	for i := 0; i < len(args); i++ {
 		a := args[i]
 		if !strings.HasPrefix(a, "-") || a == "-" {
@@ -150,7 +158,8 @@ type labManifest struct {
 	Quota   int64    `json:"quota"`
 	Epoch   int64    `json:"epoch"`
 	Replay  bool     `json:"replay,omitempty"`
-	Net     []string `json:"net,omitempty"` // the lab network table, from the package's lab.net (D146)
+	Net     []string `json:"net,omitempty"`  // the lab network table, from the package's lab.net (D146)
+	Args    []string `json:"args,omitempty"` // the program's command-line arguments (D178)
 	Picks   []int    `json:"-"`
 	program string   // the binary
 }
@@ -209,7 +218,7 @@ func labExec(m *labManifest, timeout time.Duration, stdout, stderr io.Writer) (*
 	defer tf.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, m.program)
+	cmd := exec.CommandContext(ctx, m.program, m.Args...)
 	var out, errb bytes.Buffer
 	cmd.Stdin = nil
 	cmd.Stdout = io.MultiWriter(&out, stdout)
