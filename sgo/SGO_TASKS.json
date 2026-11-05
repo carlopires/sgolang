@@ -1001,7 +1001,7 @@
         "W23"
       ],
       "risk": "high",
-      "status": "in_progress",
+      "status": "passed",
       "plan_section": "sgo/SGO_DECISIONS.md D178-D184",
       "deliverables": [
         "root.Args, Stdin, Stderr, terminals, broken pipe (D178)",
@@ -1009,14 +1009,17 @@
         "grant env (D180)",
         "grant path args (D181)",
         "per-user app directories (D182)",
-        "std/fmt subset, ParseFloat, durations (D183)",
+        "std/fmt and std/time durations, no floats (D183, amended: D185 later)",
         "sgo/examples/cli: run-time commands from a daemon profile, shell on stdin (D184); spec 0.19.0"
       ],
       "acceptance_case_ids": [],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w24/README.md",
+        "sgo-w00 run 42044978275 (linux/amd64, linux/arm64), sgo-runtime run 42044978558 and sgo-spec run 42044978567 on main at 9c9aab6271 (0.19.0 freeze)"
+      ],
       "blockers": [],
-      "commit": null,
-      "completion_note": null
+      "commit": "9c9aab6271",
+      "completion_note": "CLI programs first-class, frozen at spec 0.19.0 (D178-D184): arguments, stderr, terminals, broken pipe, stdin and ReadSecret; interrupts cancel the root (a second signal exits 130/143); env, argument paths and per-user application directories by grant; lab stdin, env and interrupts recorded and replayed; std/fmt and std/time diffed identical to Go's; the CLI library and the undisk example (commands from a daemon profile over a granted socket, shell on stdin) under sgo test and a 64-seed lab sweep. Floats stay denied (D185 later); a plain error exit for CLIs is D186, proposed."
     }
   ],
   "language_policy": "One specification-defined S-Go language; no Go compatibility path. Bare go rejected; explicit nursery capabilities; missing contracts rejected transitively. Host/reference tools are external build dependencies.",

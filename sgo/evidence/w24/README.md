@@ -40,8 +40,10 @@ SGO-NET-002 v4. CHANGELOG entry "0.19.0".
   undisk: TestCommandsFollowTheRole, TestErrors); `sgo run .` matches `expected.txt`;
   `sgo lab sweep -seeds 0..63 -expect expected.txt .`: 64 runs, 0 failed.
 
-The 0.19.0 freeze rerun (conformance and gates on the freeze commit) and the Linux results
-(sgo-w00 on linux/amd64 and linux/arm64) are recorded below when they complete.
+## Results at the 0.19.0 freeze (9c9aab6271, on main)
+
+- darwin/arm64: conformance 739/739 and all 20 gates on the freeze commit.
+- linux/amd64 and linux/arm64: sgo-w00 run 42044978275 (conformance, identity, lab, test-cli, the examples) and sgo-runtime run 42044978558 passed; sgo-spec run 42044978567 passed.
 
 ## Open
 
