@@ -96,3 +96,24 @@ Fixtures: proc-env-granted, proc-env-ungranted, proc-env-grant-bad.
   part of the build identity. In the lab every argument path is an empty in-memory directory.
 - For tools that walk the working directory, `grant dir cwd . ro|rw` (an ordinary directory
   grant) already gives `root.Dir("cwd")`.
+
+## D183 / D184 — open question: floating point (needs a decision)
+
+SGO-FLOAT-001 (frozen) denies `float32`, `float64`, floating-point literals, and every operation on
+them, in every package. D183's `strconv.ParseFloat`/`FormatFloat` and D184's `float` flag type
+therefore cannot be built without a language change. Options:
+
+- **(a) Defer floats.** D183 ships `std/fmt` (`Sprintf`, `Fprintf`, `Errorf` with `%w`; verbs on
+  the admitted types) and `std/time` (`ParseDuration`, `Duration.String`, durations as integer
+  nanoseconds); D184's flags are `string`, `int`, `bool`, `duration`, and lists. No float anywhere.
+- **(b) Fixed-point decimals.** A `std/decimal` value type (integer mantissa and scale) with
+  `Parse` and `String`, enough for CLI values such as `--ratio 0.75` or sizes, and a `decimal` flag
+  type. No language change; exact, deterministic arithmetic.
+- **(c) Admit float64.** A new SPEC-FLOAT clause set: IEEE 754 binary64 with round-to-nearest-even,
+  NaN and infinities as values, comparison and conversion rules, integer conversion that fails on
+  out-of-range or NaN (as integer overflow does), literals, `math` functions, and `ParseFloat` and
+  shortest `FormatFloat` (needing unsigned 64-bit arithmetic in std, or a runtime helper). This is a
+  language change on the scale of W13 (model, admission, conformance) and belongs in its own week.
+
+Recommendation: (a) now, with (b) if a decimal flag is needed for the CLI acceptance; (c) as a
+separate decision when a program needs measurement arithmetic.
