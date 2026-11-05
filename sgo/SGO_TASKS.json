@@ -976,7 +976,7 @@
         "W22"
       ],
       "risk": "medium",
-      "status": "planned",
+      "status": "passed",
       "plan_section": "sgo/docs/w22-w23-plan.md",
       "deliverables": [
         "ReadAll, ReadLine (D164)",
@@ -986,10 +986,13 @@
         "HTTP/1.1 server example; spec 0.18.0"
       ],
       "acceptance_case_ids": [],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w23/README.md",
+        "sgo-w00 run 41938348712 (linux/amd64, linux/arm64) and sgo-runtime run 41938348649 on main at 22599be98c (0.18.0 freeze, httpserver example)"
+      ],
       "blockers": [],
-      "commit": null,
-      "completion_note": null
+      "commit": "22599be98c",
+      "completion_note": "Concurrency library frozen at spec 0.18.0 (D173-D176): whole-message reads with one read turn per handle, request/reply calls, pools with leases, resource interfaces and std/io; 0.17.0 review errata (SGO17-01 to -07) and W23 review M1-M4 folded in; HTTP/1.1 server example (one task per connection, per-request read limit and handler deadline, client errors kept per connection, shutdown by one Cancel). Review of 0.18.0 and the example: no findings."
     }
   ],
   "language_policy": "One specification-defined S-Go language; no Go compatibility path. Bare go rejected; explicit nursery capabilities; missing contracts rejected transitively. Host/reference tools are external build dependencies.",

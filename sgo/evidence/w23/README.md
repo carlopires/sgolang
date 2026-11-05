@@ -35,8 +35,10 @@ review errata SGO17-01 to SGO17-07, W22 review G1–G3 and H1–H3, W23 review M
 
 ## Linux
 
-Pending: sgo-w00 run 41938348712 and sgo-runtime run 41938348649 on main at 22599be98c (sgo-spec
-run 41938348657: success).
+sgo-w00 run 41938348712 (linux/amd64, linux/arm64) on main at 22599be98c: success on both runners
+(conformance, runtime lane, lab, examples including httpserver, identity, TCB, mutations, std).
+sgo-runtime run 41938348649 and sgo-spec run 41938348657 on the same commit: success. The
+independent review re-ran conformance (719/719) and the example on linux/amd64 at 2db9b64aef.
 
 ## Models
 
