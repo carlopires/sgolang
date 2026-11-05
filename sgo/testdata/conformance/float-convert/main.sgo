@@ -1,0 +1,20 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	fs := []float64{2.9, -2.9, 0.5, -0.5, 1e18, -9.223372036854775808e18}
+	for _, f := range fs {
+		check out.WriteString(strconv.Itoa(int(f)) + "\n")
+	}
+	i := 1<<53 + 1
+	j := 1<<53 + 3
+	check out.WriteString(strconv.FormatFloat(float64(i), 'f', -1) + " " + strconv.FormatFloat(float64(j), 'f', -1) + "\n")
+	g := 255.7
+	h := 0x10FFFF.8p0
+	return out.WriteString(strconv.Itoa(int(byte(g))) + " " + strconv.Itoa(int(rune(h))) + "\n")
+}

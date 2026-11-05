@@ -4,7 +4,7 @@
 
 package math
 
-// FMA returns x * y + z, computed with only one rounding (SGO-STD-011, D188): the exact value is
+// FMA returns x * y + z, computed with only one rounding (SGO-STD-007, D188): the exact value is
 // formed as an integer times a power of two, in 30-bit limbs so that no step overflows int, and
 // rounded once to nearest, ties to even. S-Go never fuses an expression (SGO-FLOAT-002): this is
 // the only fused operation.

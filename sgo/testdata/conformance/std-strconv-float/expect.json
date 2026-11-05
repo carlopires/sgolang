@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-004",
+  "SGO-FLOAT-002"
+ ],
+ "exit": 0,
+ "stdout": "3.14159 ok\n1e+23 ok\n3 ok\n-0 ok\n+Inf ok\n-Inf ok\nNaN ok\n1000.5 ok\n5e-324 ok\n0 ok\n+Inf strconv.ParseFloat: parsing \"1e400\": value out of range\n0 strconv.ParseFloat: parsing \"1.5x\": invalid syntax\n0 strconv.ParseFloat: parsing \"1__0\": invalid syntax\n0 strconv.ParseFloat: parsing \"\": invalid syntax\n1.2345678e+03 1.23e+03\n1.2345678E+03 1.23E+03\n1234.5678 1234.57\n1234.5678 1.2e+03\n1234.5678 1.2E+03\n5429686605511341p-42 5429686605511341p-42\n0x1.34a456d5cfaadp+10 0x1.35p+10\n0X1.34A456D5CFAADP+10 0X1.35P+10\n0.100000000000000005551115123126 2 4\n",
+ "note": "Output identical to Go 1.26 (math: the portable implementation, amd64 v1, no fusion) on the same program."
+}

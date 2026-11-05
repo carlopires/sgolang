@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-FLOAT-002",
+  "SGO-UTYPE-001",
+  "SGO-STD-009"
+ ],
+ "exit": 0,
+ "stdout": " -40.0 C = -40.00 F\n   0.0 C =  32.00 F\n  36.6 C =  97.88 F\n 100.0 C = 212.00 F\n"
+}

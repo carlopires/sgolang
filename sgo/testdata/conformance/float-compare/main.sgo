@@ -1,0 +1,25 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+type point struct {
+	x, y float64
+}
+
+func b(v bool) string { return strconv.FormatBool(v) }
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	zero := 0.0
+	nan := zero / zero
+	negzero := -zero
+	check out.WriteString(b(nan == nan) + " " + b(nan != nan) + " " + b(nan < 1) + " " + b(nan >= 1) + "\n")
+	check out.WriteString(b(negzero == zero) + " " + b(negzero < zero) + "\n")
+	check out.WriteString(b(1.5 < 2.5) + " " + b(2.5 <= 2.5) + " " + b(-1e308 > 1e-308) + "\n")
+	p, q := point{1, 2}, point{1, 2}
+	r := point{nan, 2}
+	return out.WriteString(b(p == q) + " " + b(r == r) + "\n")
+}

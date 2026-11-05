@@ -1,0 +1,11 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	f := 256.0
+	_ = out.WriteString("before\n")
+	_ = byte(f)
+	return out.WriteString("after\n")
+}

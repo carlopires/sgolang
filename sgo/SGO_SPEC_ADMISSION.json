@@ -63,7 +63,7 @@
         "SGO-LEX-003",
         "SGO-LEX-004"
       ],
-      "normative_text_digest": "dd4671dce13b4b1a95794c47c09e9d079bd8306f02cd178a2e7dd07f4305a59e",
+      "normative_text_digest": "996727cf1b8b6a54501b01fcc0e021bd1b4d5f1bd053433b1a3133caf07ecd29",
       "admitted_in": [
         "0.7.0"
       ],
@@ -85,19 +85,19 @@
         "SGO-LEX-001": "2235bd8f9312d1c7757421ad5275d263515361e10ce67d1e559891ae5088aa14",
         "SGO-LEX-002": "c3ef519a47f11778482f02765a96f83144bb575c08ac294f922446a8bf41d53c",
         "SGO-LEX-003": "de0c10ea4eefa57fb11133c1967be5b7a029f845eede2f13e233495b9f582d81",
-        "SGO-LEX-004": "f05b7b72c8de23c8fe2d1646fb294f36e643840ee5d312da9693e588ad7b7ed1"
+        "SGO-LEX-004": "3600d81a99014a5fe1c4e512d7139ddd9bb0a2941f8b99c8ff1cebcebd0d6dc3"
       },
       "clause_status": {
         "SGO-LEX-001": "frozen",
         "SGO-LEX-002": "frozen",
         "SGO-LEX-003": "frozen",
-        "SGO-LEX-004": "frozen"
+        "SGO-LEX-004": "draft"
       },
       "clause_versions": {
         "SGO-LEX-001": 1,
         "SGO-LEX-002": 2,
         "SGO-LEX-003": 2,
-        "SGO-LEX-004": 2
+        "SGO-LEX-004": 3
       }
     },
     {
@@ -167,7 +167,7 @@
         "SGO-TYPE-007",
         "SGO-TYPE-008"
       ],
-      "normative_text_digest": "a1e43141fb6a0c493e24916f404e63dc8df5d5a9d1465b2d9946251128e2db3f",
+      "normative_text_digest": "f1dc32b732ae1291c29efddd9948136fd532d1aef5cad0d43d407d558abb36ea",
       "admitted_in": [
         "0.7.0"
       ],
@@ -183,7 +183,7 @@
       ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-TYPE-001": "c70ab3cc2b713c38b4c1aaeac10ca399aba4c817288f50fe8d9dfe57b58f2e7f",
+        "SGO-TYPE-001": "a298c422ba52e560f2ef8e7ca2e460a011362fc3f8c249ab6497b4c51dc091ff",
         "SGO-TYPE-002": "e481cecacd6eb940825227acbb9d9e7f9acd8e916f4ef27039785caf16f63045",
         "SGO-TYPE-003": "a1e06f6a06fccd6bc4d5a83ecf208d1a612639b582bf70abef98331e8b841343",
         "SGO-TYPE-004": "ed7f04b19e34d997c1d626f4056021977c51e644d9adc52207ca5a149f9d4819",
@@ -193,7 +193,7 @@
         "SGO-TYPE-008": "260f9ec87ffcdfd4c08f4fef0f42965105383cc2c0986a5d48a70ce18a5c1618"
       },
       "clause_status": {
-        "SGO-TYPE-001": "frozen",
+        "SGO-TYPE-001": "draft",
         "SGO-TYPE-002": "frozen",
         "SGO-TYPE-003": "frozen",
         "SGO-TYPE-004": "frozen",
@@ -203,7 +203,7 @@
         "SGO-TYPE-008": "frozen"
       },
       "clause_versions": {
-        "SGO-TYPE-001": 9,
+        "SGO-TYPE-001": 10,
         "SGO-TYPE-002": 3,
         "SGO-TYPE-003": 1,
         "SGO-TYPE-004": 1,
@@ -226,7 +226,7 @@
         "SGO-VAL-004",
         "SGO-VAL-005"
       ],
-      "normative_text_digest": "49eb8be545e13eb9f51e4376fcc15358f9f5d97743757b2dd4c9bf0d402cdfc3",
+      "normative_text_digest": "bc826ff6e3e69fd1bb4658c33f0e0c5832159be95912e5f9906b97bf0480dfa1",
       "admitted_in": [
         "0.7.0"
       ],
@@ -244,21 +244,21 @@
         "SGO-VAL-001": "34e8f53afd2b5480eb3c70c1f87bc89e215a73ae3d0ba2a8f175cf061a29ac1a",
         "SGO-VAL-002": "cf2a4b95374a98a273385c278d1e30dea53e69fb227444c3f26d8a7ffe98fc8f",
         "SGO-VAL-003": "6d1cc38c5611fdc49961cc541f8e5c82d7ffd6e7b991f534f15f4c21ed83b368",
-        "SGO-VAL-004": "0d96e3242a9b2d098219415e02cc6eca78917f7fa9dfbc7aaecd7c13201805a8",
+        "SGO-VAL-004": "04253b9d3a555ab9b8971e00010334d9093516fee00cd7f9ceadd8488fa14066",
         "SGO-VAL-005": "22ac1d498ce3c0394968e13e118f121233ee6bcf5176c1f1b50d38e87afb3f9c"
       },
       "clause_status": {
         "SGO-VAL-001": "frozen",
         "SGO-VAL-002": "frozen",
         "SGO-VAL-003": "frozen",
-        "SGO-VAL-004": "frozen",
+        "SGO-VAL-004": "draft",
         "SGO-VAL-005": "frozen"
       },
       "clause_versions": {
         "SGO-VAL-001": 1,
         "SGO-VAL-002": 3,
         "SGO-VAL-003": 1,
-        "SGO-VAL-004": 1,
+        "SGO-VAL-004": 2,
         "SGO-VAL-005": 1
       }
     },
@@ -1391,9 +1391,11 @@
       "implementation_owner_work_package": "W03",
       "status": "denied",
       "clause_ids": [
-        "SGO-FLOAT-001"
+        "SGO-FLOAT-001",
+        "SGO-FLOAT-002",
+        "SGO-FLOAT-003"
       ],
-      "normative_text_digest": "d72c54096c1829b93945ce8de54fade8bb1beca55ecffa4d78d7261be8905818",
+      "normative_text_digest": "d54e16c21ca5bd943bf882a54d65fbeb7b9fe346e20fa983d7cfc872648f1588",
       "admitted_in": [],
       "acceptance_case_ids": [
         "S16",
@@ -1403,13 +1405,19 @@
       "decision_refs": "D03",
       "subset0": "denied",
       "clause_digests": {
-        "SGO-FLOAT-001": "071159cfff4dfc6e4b67886f4e7f40376bdc6c086105982b34ed2b7cc70aca56"
+        "SGO-FLOAT-001": "6850321b05df2349df293f69a3cbf0b5180288643b77133ff99f1c0d0e4d7daf",
+        "SGO-FLOAT-002": "8f6ab3f88b00a72fd23e34694f097f16ef3a8731995f4a8ab67b4fbf44e22852",
+        "SGO-FLOAT-003": "b4e6e5c615603f9a065433074404239d4fdae5c7dede9bc7847d075552bd348b"
       },
       "clause_status": {
-        "SGO-FLOAT-001": "frozen"
+        "SGO-FLOAT-001": "draft",
+        "SGO-FLOAT-002": "draft",
+        "SGO-FLOAT-003": "draft"
       },
       "clause_versions": {
-        "SGO-FLOAT-001": 1
+        "SGO-FLOAT-001": 2,
+        "SGO-FLOAT-002": 1,
+        "SGO-FLOAT-003": 1
       }
     },
     {
@@ -1429,7 +1437,7 @@
         "SGO-COMP-008",
         "SGO-COMP-009"
       ],
-      "normative_text_digest": "261679f9535b713c7af676b56deba868422fcdd48ea02324589d6d3bbe1a0a73",
+      "normative_text_digest": "1e1336c8fbc6207a118d1f5ebaf7c620a375973e04e6a60270194069a9847148",
       "admitted_in": [
         "0.8.0"
       ],
@@ -1446,33 +1454,33 @@
       "subset0": "denied",
       "clause_digests": {
         "SGO-COMP-001": "23b0b3fec15a1844fa302b89249ac9c02bc006fe6642f4b94510dc6b7b05fb1a",
-        "SGO-COMP-002": "2f7e59d06a512a54f3e1b2b7cbfecfad412881de43b56807430d0ace484a555d",
+        "SGO-COMP-002": "ab0e49d37273bfb4ab530cbedbe4db74b65098b1c05f379fa92aa1394d19285e",
         "SGO-COMP-003": "98bedebc77160c333f08581a2e187e0ace614d2d7ebc0673f0479752825b3447",
         "SGO-COMP-004": "f6b5dd38cb412e111cf7449b53a164d619a8007225ecca624e2eddaea5db17a1",
         "SGO-COMP-005": "30285f70fc95e3bd0a9dbca34df4d7556398ca3afceb7d51cbd07b53edb6650e",
-        "SGO-COMP-006": "bb39567d75a84983104484d7081fdc346f6ca963323d4514118f31751cd5ecbe",
+        "SGO-COMP-006": "95a2d66796687dbba2ff847cf0f9114b8d7b39bbb1c2a016347308cebdc3a90c",
         "SGO-COMP-007": "013c1cd59f2c1d46057f00ad158a3f7522ff0611f5aeb9909c5c7164ec1c37f5",
         "SGO-COMP-008": "cca8bb919334b87b58a94ca91321e4789a9d6fbba748e0de10558b61089ba4b0",
         "SGO-COMP-009": "2612e22abf457cedb90aa643d62f6efaa2404fe33867223a8e71dfe9bc4ad93d"
       },
       "clause_status": {
         "SGO-COMP-001": "frozen",
-        "SGO-COMP-002": "frozen",
+        "SGO-COMP-002": "draft",
         "SGO-COMP-003": "frozen",
         "SGO-COMP-004": "frozen",
         "SGO-COMP-005": "frozen",
-        "SGO-COMP-006": "frozen",
+        "SGO-COMP-006": "draft",
         "SGO-COMP-007": "frozen",
         "SGO-COMP-008": "frozen",
         "SGO-COMP-009": "frozen"
       },
       "clause_versions": {
         "SGO-COMP-001": 5,
-        "SGO-COMP-002": 2,
+        "SGO-COMP-002": 3,
         "SGO-COMP-003": 1,
         "SGO-COMP-004": 5,
         "SGO-COMP-005": 2,
-        "SGO-COMP-006": 1,
+        "SGO-COMP-006": 2,
         "SGO-COMP-007": 2,
         "SGO-COMP-008": 1,
         "SGO-COMP-009": 1
@@ -1795,7 +1803,7 @@
         "SGO-STD-009",
         "SGO-STD-010"
       ],
-      "normative_text_digest": "afe470c48d2b1fa0544f0b3a6cb2ed6402eb51ce3cd808f686e850140f7114f1",
+      "normative_text_digest": "aed74df9aeb635a910fa3091f72d121be8e1c066557b59e984b779dc125a0b14",
       "admitted_in": [
         "0.13.0"
       ],
@@ -1808,40 +1816,40 @@
         "SGO-STD-001": "bad1618814fd934c9f3e480cfc490a6dbc9b1dc18152994f5562db742cfee5a2",
         "SGO-STD-002": "ae36faebefabe35416de54a21b821fab6341b039ffe05f85819b9712d1470d49",
         "SGO-STD-003": "d6dcda1731d7d0a34656b71581ad31368f1bd1d3aebbd1c55c110c8af08031dc",
-        "SGO-STD-004": "fc48784da91533f216a151cdd1d1b67f36c5a3e9b10ee51091e12891dc01cee9",
+        "SGO-STD-004": "a281d23b80c19f43f8b13b3481d46c709b90647bf3e5131d4dd4da5732d8ba04",
         "SGO-STD-005": "48e4ffb537df21c0774ddf50c897beb75e250e18b40df33838a4f9f2922969ef",
         "SGO-STD-006": "38cdc25df6ae73744496c06a6c17a5ffde477bd98e4eef5c1672dc561dfdcccf",
-        "SGO-STD-007": "6d6a9a8955d6cc046c70eae9f1d698f1d8f47992860ebf75cb187e4128035d7c",
+        "SGO-STD-007": "068bee53610cf2f2d0881df3817df386a36e65c0e3d25529aa75402ea29a8a4d",
         "SGO-STD-008": "a006f7077ffeda553b296875b211828a1b1cf1f96f7d6d9fbda3a3f1653076e2",
-        "SGO-STD-009": "9602c2ce7e67ea7adf65ea60f06e9fc30393e7e6d5dc1be64779466a7ed67d58",
+        "SGO-STD-009": "231e7ea7324eca8102b002392c984f9486fd483479a0b7ddfe037b403f748f6a",
         "SGO-STD-010": "037f8730ee4cb75a01866255538d3072335acd792b7888f18cb6a6e2d26f4973"
       },
       "clause_status": {
         "SGO-STD-001": "frozen",
         "SGO-STD-002": "frozen",
         "SGO-STD-003": "frozen",
-        "SGO-STD-004": "frozen",
+        "SGO-STD-004": "draft",
         "SGO-STD-005": "frozen",
         "SGO-STD-006": "frozen",
-        "SGO-STD-007": "frozen",
+        "SGO-STD-007": "draft",
         "SGO-STD-008": "frozen",
-        "SGO-STD-009": "frozen",
+        "SGO-STD-009": "draft",
         "SGO-STD-010": "frozen"
       },
       "clause_versions": {
         "SGO-STD-001": 2,
         "SGO-STD-002": 1,
         "SGO-STD-003": 1,
-        "SGO-STD-004": 1,
+        "SGO-STD-004": 2,
         "SGO-STD-005": 1,
         "SGO-STD-006": 2,
-        "SGO-STD-007": 1,
+        "SGO-STD-007": 2,
         "SGO-STD-008": 1,
-        "SGO-STD-009": 1,
+        "SGO-STD-009": 2,
         "SGO-STD-010": 1
       }
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "22c45dbf2d4c5def13ae439222a908cd46d2a0331c75b9cf95b1dc52aec22d90"
+  "rows_digest": "8d7da77a60ffa82bbb9c1f72e6a6ecb7438cacd9bcdfb016d7f3eb84d9b0be93"
 }

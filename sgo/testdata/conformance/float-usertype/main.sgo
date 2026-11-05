@@ -1,0 +1,19 @@
+package main
+
+import (
+	"sgo"
+	"std/fmt"
+)
+
+type Celsius float64
+
+func (c Celsius) Fahrenheit() float64 { return float64(c)*9/5 + 32 }
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	temps := []Celsius{-40, 0, 36.6, 100}
+	for _, c := range temps {
+		check out.WriteString(fmt.Sprintf("%6.1f C = %6.2f F\n", []any{float64(c), c.Fahrenheit()}))
+	}
+	return nil
+}

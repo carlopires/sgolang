@@ -11,7 +11,7 @@ const reduceThreshold = 1 << 29
 // trigReduce is Go's Payne-Hanek reduction by Pi/4 (src/math/trig_reduce.go) for x >= 2^29,
 // computed step for step with each uint64 held as four 16-bit limbs (least significant first), so
 // that every intermediate product fits int and the result is bit-identical to Go's portable code
-// (SGO-STD-011, D192). It returns the octant j (mod 8) and the reduced argument z.
+// (SGO-STD-007, D192). It returns the octant j (mod 8) and the reduced argument z.
 func trigReduce(x float64) (int, float64) {
 	const PI4 = Pi / 4
 	if x < PI4 {

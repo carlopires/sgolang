@@ -1,13 +1,10 @@
 {
- "kind": "reject",
+ "kind": "run",
  "clauses": [
   "SGO-LEX-004",
-  "SGO-FLOAT-001"
+  "SGO-FLOAT-002"
  ],
- "diagnostics": [
-  {
-   "code": "SGO_E_UNADMITTED",
-   "at": "1.5"
-  }
- ]
+ "exit": 0,
+ "stdout": "",
+ "note": "Rejected until 0.19 (SGO-FLOAT-001 v1); float64 and its literals are admitted from 0.20.0 (D185, D187)."
 }

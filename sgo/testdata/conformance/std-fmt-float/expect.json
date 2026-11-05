@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-009",
+  "SGO-FLOAT-002"
+ ],
+ "exit": 0,
+ "stdout": "|3.14159|3.14|3.142e+00|3.14159   |+3.1|000003.142|3.14159|0x1.921f9f01b866ep+01|\n|-2.5|-2.50|-2.500e+00|-2.5      |-2.5|-00002.500|-2.5|-0x1.4p+01|\n|1e+21|1000000000000000000000.00|1.000e+21|1e+21     |+1000000000000000000000.0|1000000000000000000000.000|1E+21|0x1.b1ae4d6e2ef5p+69|\n|1e-07|0.00|1.000e-07|1e-07     |+0.0|000000.000|1E-07|0x1.ad7f29abcaf48p-24|\n|NaN|NaN|     NaN|NaN       |+NaN|       NaN|NaN|NaN|\n|+Inf|+Inf|    +Inf|+Inf      |+Inf|      +Inf|+Inf|+Inf|\n|-0|-0.00|-0.000e+00|-0        |-0.0|-00000.000|-0|-0x0p+00|\n+7 -0042 005 |he|\"a\"|%!d(float64=1.5) %!s(float64=2.5)\n3.5 3.500000\n",
+ "note": "Output identical to Go 1.26 (math: the portable implementation, amd64 v1, no fusion) on the same program."
+}

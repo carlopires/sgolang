@@ -1,0 +1,25 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	texts := []string{"3.14159", "1e23", "0x1.8p1", "-0", "inf", "-Infinity", "nan", "1_000.5", "4.9e-324", "2.4703282292062327e-324", "1e400", "1.5x", "1__0", ""}
+	for _, t := range texts {
+		f, err := strconv.ParseFloat(t)
+		e := "ok"
+		if err != nil {
+			e = err.Error()
+		}
+		check out.WriteString(strconv.FormatFloat(f, 'g', -1) + " " + e + "\n")
+	}
+	f := 1234.5678
+	formats := []byte{'e', 'E', 'f', 'g', 'G', 'b', 'x', 'X'}
+	for _, c := range formats {
+		check out.WriteString(strconv.FormatFloat(f, c, -1) + " " + strconv.FormatFloat(f, c, 2) + "\n")
+	}
+	return out.WriteString(strconv.FormatFloat(0.1, 'f', 30) + " " + strconv.FormatFloat(2.5, 'f', 0) + " " + strconv.FormatFloat(3.5, 'f', 0) + "\n")
+}

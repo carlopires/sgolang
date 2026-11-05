@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package math provides the float64 functions under Go's names (SGO-STD-011, D191, D192) and the
+// Package math provides the float64 functions under Go's names (SGO-STD-007, D191, D192) and the
 // integer helpers IntAbs, IntMin, IntMax, IntPow (SGO-STD-007 v2).
 package math
 

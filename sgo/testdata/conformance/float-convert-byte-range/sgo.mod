@@ -1,0 +1,3 @@
+module example.com/float-convert-byte-range
+
+sgo 0.19.1

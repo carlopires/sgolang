@@ -46,7 +46,7 @@ Floating point, anonymous struct types, pointers to handles, interface forms out
 
 - **Scope:** admission, tested
 - **Families:** SPEC-FLOAT, SPEC-GENERIC, SPEC-REFLECT, SPEC-NATIVE, SPEC-RANDOM
-- **Clauses:** SGO-FLOAT-001, SGO-GEN-001, SGO-REFLECT-001, SGO-NATIVE-001, SGO-RANDOM-001
+- **Clauses:** SGO-FLOAT-001, SGO-FLOAT-002, SGO-FLOAT-003, SGO-GEN-001, SGO-REFLECT-001, SGO-NATIVE-001, SGO-RANDOM-001
 - **Acceptance cases:** A01, D01, S10, S11, S12, S15, S16, S17, X10
 - **Implementation:** `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`, `src/cmd/sgo/build.go`
 

@@ -1,0 +1,9 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	x := 1e309
+	_ = x
+	return nil
+}

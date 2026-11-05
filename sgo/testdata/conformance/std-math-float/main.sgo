@@ -1,0 +1,24 @@
+package main
+
+import (
+	"sgo"
+	"std/math"
+	"std/strconv"
+)
+
+func g(f float64) string { return strconv.FormatFloat(f, 'g', -1) }
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	x := 2.0
+	check out.WriteString(g(math.Sqrt(x)) + " " + g(math.Exp(1)) + " " + g(math.Log(10)) + " " + g(math.Pow(x, 0.5)) + "\n")
+	check out.WriteString(g(math.Sin(1)) + " " + g(math.Cos(1)) + " " + g(math.Tan(1)) + " " + g(math.Atan2(1, -1)) + "\n")
+	check out.WriteString(g(math.Sin(1e22)) + " " + g(math.Hypot(3, 4)) + " " + g(math.Cbrt(27)) + " " + g(math.Log1p(1e-10)) + "\n")
+	check out.WriteString(g(math.Floor(-2.5)) + " " + g(math.Ceil(-2.5)) + " " + g(math.Round(-2.5)) + " " + g(math.RoundToEven(-2.5)) + " " + g(math.Trunc(-2.5)) + "\n")
+	check out.WriteString(g(math.Mod(7.5, 2)) + " " + g(math.FMA(0.1, 10, -1)) + " " + g(math.Nextafter(1, 2)) + " " + g(math.Copysign(3, -1)) + "\n")
+	fr, e := math.Frexp(48)
+	check out.WriteString(g(fr) + " " + strconv.Itoa(e) + " " + g(math.Ldexp(0.75, 6)) + " " + strconv.FormatInt(math.Float64bits(-1.5), 16) + "\n")
+	zero := 0.0
+	check out.WriteString(g(math.Log(-1)) + " " + g(math.Log(zero)) + " " + g(math.Sqrt(-1)) + " " + g(math.Pow(zero, -1)) + " " + g(math.Exp(1000)) + "\n")
+	return out.WriteString(strconv.FormatBool(math.IsNaN(math.NaN())) + " " + strconv.FormatBool(math.IsInf(math.Inf(-1), -1)) + " " + g(math.Max(math.NaN(), 1)) + " " + g(math.Min(-zero, zero)) + "\n")
+}

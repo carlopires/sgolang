@@ -1,0 +1,18 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+const third = 1.0 / 3 // exact until it is given a type
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	fs := []float64{1.5, 1e9, .5, 0x1p-2, 0x1.8p1, 1_000.25, 2e-3, third * 3, 0.1 + 0.2}
+	for _, f := range fs {
+		check out.WriteString(strconv.FormatFloat(f, 'g', -1) + "\n")
+	}
+	a, b := 0.1, 0.2
+	return out.WriteString(strconv.FormatFloat(a+b, 'g', -1) + "\n")
+}

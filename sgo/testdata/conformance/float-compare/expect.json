@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-FLOAT-002",
+  "SGO-COMP-002"
+ ],
+ "exit": 0,
+ "stdout": "false true false false\ntrue false\ntrue true false\ntrue false\n"
+}

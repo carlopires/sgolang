@@ -1,0 +1,9 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	f := 65.0
+	_ = string(f)
+	return nil
+}

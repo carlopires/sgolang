@@ -1,0 +1,20 @@
+package main
+
+import (
+	"sgo"
+	"std/fmt"
+	"std/math"
+)
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	zero := 0.0
+	vals := []any{3.14159, -2.5, 1e21, 1e-7, zero / zero, math.Inf(1), -zero}
+	for _, v := range vals {
+		check out.WriteString(fmt.Sprintf("|%v|%.2f|%8.3e|%-10g|%+.1f|%010.3f|%G|%x|\n", []any{v, v, v, v, v, v, v, v}))
+	}
+	check out.WriteString(fmt.Sprintf("%+d %05d %.3d %.0d|%.2s|%.1q|%d %s\n", []any{7, -42, 5, 0, "hello", "abc", 1.5, 2.5}))
+	seven := 7
+	half := float64(seven) / 2
+	return out.WriteString(fmt.Sprintf("%v %f\n", []any{half, half}))
+}

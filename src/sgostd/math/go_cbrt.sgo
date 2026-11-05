@@ -4,7 +4,7 @@
 
 package math
 
-// Ported from Go's portable implementation (src/math/cbrt.go) for S-Go (SGO-STD-011, D192):
+// Ported from Go's portable implementation (src/math/cbrt.go) for S-Go (SGO-STD-007, D192):
 // the same algorithm without assembly or fused operations, so the results are identical on every
 // target.
 

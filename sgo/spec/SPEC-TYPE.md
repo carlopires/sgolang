@@ -3,23 +3,23 @@
 Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 
 ### SGO-TYPE-001 — Admitted types
-- **version:** 9
-- **status:** frozen
-- **reference_closure:** SGO-TYPE-003, SGO-TYPE-005, SGO-TYPE-006, SGO-PERMIT-002, SGO-READY-002, SGO-AUTH-003, SGO-FILE-002, SGO-FILE-003, SGO-NET-002, SGO-TYPE-007, SGO-TYPE-008, SGO-IFACE-002; D04, D05, D06, D28, D29.
-- **grammar_and_types:** The admitted types are exactly: `bool`; `byte` (SGO-TYPE-007, spec 0.9.0); `rune` (SGO-TYPE-008, spec 0.12.0); pointer, slice, and map types (SGO-COMP-005, SGO-COMP-006, SGO-COMP-007, spec 0.9.0); `sgo.Frozen[T]` (SGO-COMP-009, spec 0.10.0); `int`, a 64-bit two's-complement signed integer on every target; `string`, an immutable sequence of bytes; function types `func(P1, …, Pn) R` or `func(P1, …, Pn) (R1, …, Rm)` whose parameter and result types are admitted (SGO-TYPE-003); `error` (SGO-TYPE-006); named interface types and `any` (SGO-IFACE-002, spec 0.14.0); and the pointer types of the capability types of SGO-TYPE-005 (`*sgo.Context`, `*sgo.Nursery`, `*sgo.Writer`, `*sgo.Ready`, `*sgo.Clock`, `*sgo.WallClock`, `*sgo.Random`, `*sgo.Entropy`, `*sgo.SimStore`, and `*sgo.Channel[T]`, `*sgo.SendPermit[T]` for the element types of SGO-PERMIT-002; spec 0.3.0 adds `*sgo.Event`, `*sgo.CapacityLimiter`, `*sgo.Token` of SGO-SYNC-002; spec 0.5.0 adds `*sgo.Dir`, `*sgo.Listing`, and `*sgo.File` of SGO-FILE-002 and SGO-FILE-003 and `*sgo.Conn` and `*sgo.Listener` of SGO-NET-002; spec 0.6.0 adds `*sgo.T` of SGO-TEST-002); and the channel types `chan T`, `<-chan T`, `chan<- T` of SGO-CHAN-002. Any other type name, type literal (array, slice, map, struct, pointer, interface; channel types other than those of SGO-CHAN-002), type parameter, or type declaration is denied. Other integer widths (including `int32` and `uint8`), floating-point, complex, and `uintptr` are denied; interface type literals outside a type declaration are denied (SGO-IFACE-001).
+- **version:** 10
+- **status:** draft
+- **reference_closure:** SGO-TYPE-003, SGO-TYPE-005, SGO-TYPE-006, SGO-PERMIT-002, SGO-READY-002, SGO-AUTH-003, SGO-FILE-002, SGO-FILE-003, SGO-NET-002, SGO-TYPE-007, SGO-TYPE-008, SGO-IFACE-002, SGO-FLOAT-002; D04, D05, D06, D28, D29, D187.
+- **grammar_and_types:** The admitted types are exactly: `bool`; `byte` (SGO-TYPE-007, spec 0.9.0); `rune` (SGO-TYPE-008, spec 0.12.0); pointer, slice, and map types (SGO-COMP-005, SGO-COMP-006, SGO-COMP-007, spec 0.9.0); `sgo.Frozen[T]` (SGO-COMP-009, spec 0.10.0); `int`, a 64-bit two's-complement signed integer on every target; `float64`, an IEEE 754 binary64 number (SGO-FLOAT-002, spec 0.20.0); `string`, an immutable sequence of bytes; function types `func(P1, …, Pn) R` or `func(P1, …, Pn) (R1, …, Rm)` whose parameter and result types are admitted (SGO-TYPE-003); `error` (SGO-TYPE-006); named interface types and `any` (SGO-IFACE-002, spec 0.14.0); and the pointer types of the capability types of SGO-TYPE-005 (`*sgo.Context`, `*sgo.Nursery`, `*sgo.Writer`, `*sgo.Ready`, `*sgo.Clock`, `*sgo.WallClock`, `*sgo.Random`, `*sgo.Entropy`, `*sgo.SimStore`, and `*sgo.Channel[T]`, `*sgo.SendPermit[T]` for the element types of SGO-PERMIT-002; spec 0.3.0 adds `*sgo.Event`, `*sgo.CapacityLimiter`, `*sgo.Token` of SGO-SYNC-002; spec 0.5.0 adds `*sgo.Dir`, `*sgo.Listing`, and `*sgo.File` of SGO-FILE-002 and SGO-FILE-003 and `*sgo.Conn` and `*sgo.Listener` of SGO-NET-002; spec 0.6.0 adds `*sgo.T` of SGO-TEST-002); and the channel types `chan T`, `<-chan T`, `chan<- T` of SGO-CHAN-002. Any other type name, type literal (array, slice, map, struct, pointer, interface; channel types other than those of SGO-CHAN-002), type parameter, or type declaration is denied. Other integer widths (including `int32` and `uint8`), `float32`, the complex types (SGO-FLOAT-001), and `uintptr` are denied; interface type literals outside a type declaration are denied (SGO-IFACE-001).
 - **preconditions:** n/a — static rule.
-- **evaluation_and_value_semantics:** `int` arithmetic is defined by SGO-VAL-001, strings by SGO-VAL-002, booleans by SGO-VAL-003.
+- **evaluation_and_value_semantics:** `int` arithmetic is defined by SGO-VAL-001, strings by SGO-VAL-002, booleans by SGO-VAL-003, `float64` by SGO-FLOAT-002 and SGO-FLOAT-003.
 - **ownership_and_lifecycle:** Values of all admitted types are copied by assignment; `string` and function values may share immutable backing storage, which is never observable.
 - **effect_and_capability_requirements:** Only the capability types carry authority (SGO-CAP-001).
 - **concurrency_and_memory_order:** All admitted types are sendable (SGO-TYPE-004).
-- **allowed_nondeterminism:** None. `int` has the same size and behavior on darwin/arm64, linux/amd64, and linux/arm64 (D22).
+- **allowed_nondeterminism:** None. `int` and `float64` have the same size and behavior on darwin/arm64, linux/amd64, and linux/arm64 (D22, D188).
 - **failure_and_partial_progress:** Use of a denied type is a compile error.
 - **cancellation_and_cleanup:** n/a — static rule.
 - **compile_link_checks:** `SGO_E_UNADMITTED` naming the denied type or type form.
 - **runtime_guards:** n/a — static rule.
 - **tcb_assumptions:** The runtime represents `int` as 64 bits on every admitted target.
-- **positive_tests:** S16; fixture:type-admitted, fixture:type-slice, fixture:type-pointer.
-- **negative_tests:** S16, S17; fixture:type-float, fixture:type-struct, fixture:type-interface, fixture:type-generic, fixture:type-int32-denied.
+- **positive_tests:** S16; fixture:type-admitted, fixture:type-slice, fixture:type-pointer, fixture:type-float.
+- **negative_tests:** S16, S17; fixture:float32-denied, fixture:type-struct, fixture:type-interface, fixture:type-generic, fixture:type-int32-denied.
 - **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`.
 - **executed_evidence:** conformance fixtures type-admitted, type-float, type-generic, type-interface, type-slice, type-struct (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

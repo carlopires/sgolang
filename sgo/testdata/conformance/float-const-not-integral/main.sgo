@@ -1,0 +1,9 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	const half = 0.5
+	_ = int(half)
+	return nil
+}

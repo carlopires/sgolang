@@ -1,0 +1,20 @@
+package main
+
+import (
+	"sgo"
+	"std/math"
+	"std/strconv"
+)
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	zero := 0.0
+	one := 1.0
+	big := 1e308
+	tiny := 5e-324 // the smallest subnormal: tiny/2 is a tie, rounded to even (0)
+	vals := []float64{one / zero, -one / zero, zero / zero, big * 10, -big * 10, -zero, 1 / (-one / zero), tiny / 2, tiny * 1.5}
+	for _, v := range vals {
+		check out.WriteString(strconv.FormatFloat(v, 'g', -1) + " " + strconv.FormatBool(math.Signbit(v)) + "\n")
+	}
+	return nil
+}

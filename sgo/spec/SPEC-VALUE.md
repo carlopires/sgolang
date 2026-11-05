@@ -69,23 +69,23 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §4 and decisions D02–D04.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-VAL-004 — Constants
-- **version:** 1
-- **status:** frozen
-- **reference_closure:** SGO-LEX-004, SGO-TYPE-002, SGO-VAL-001; R3.
+- **version:** 2
+- **status:** draft
+- **reference_closure:** SGO-LEX-004, SGO-TYPE-002, SGO-VAL-001, SGO-FLOAT-002, SGO-FLOAT-003; D189; R3.
 - **grammar_and_types:** A constant expression consists of literals, constant names, `true`, `false`, the operators of SGO-VAL-001..003 applied to constant operands, and `len` of a constant string. Constants are untyped unless declared with a type (`const c int = 3`).
 - **preconditions:** n/a — compile-time evaluation.
-- **evaluation_and_value_semantics:** Untyped integer constants are evaluated exactly with unbounded precision; typed `int` constants must stay in the `int` range at every step. Division truncates toward zero. String and boolean constants follow SGO-VAL-002 and SGO-VAL-003.
+- **evaluation_and_value_semantics:** Untyped integer constants are evaluated exactly with unbounded precision; typed `int` constants must stay in the `int` range at every step. Integer division truncates toward zero. Untyped floating-point constants (spec 0.20.0) are evaluated exactly, as rational numbers: an operation with an integer and a floating-point operand is a floating-point constant, and `/` of floating-point constants is exact division. A floating-point constant given type `float64` is rounded once to the nearest binary64 value, ties to even; one given an integer type must be an integer in that type's range. String and boolean constants follow SGO-VAL-002 and SGO-VAL-003.
 - **ownership_and_lifecycle:** n/a — compile-time values.
 - **effect_and_capability_requirements:** n/a — compile-time.
 - **concurrency_and_memory_order:** n/a — compile-time.
 - **allowed_nondeterminism:** None.
-- **failure_and_partial_progress:** Division by zero, a shift count outside 0..63 (or negative), a typed-constant overflow, or converting an unrepresentable untyped constant to `int` is a compile error.
+- **failure_and_partial_progress:** Division by zero, a shift count outside 0..63 (or negative), a typed-constant overflow, a floating-point constant whose rounded value overflows `float64`, or converting an unrepresentable untyped constant to `int` (including a non-integer) is a compile error.
 - **cancellation_and_cleanup:** n/a — compile-time.
-- **compile_link_checks:** `SGO_E_CONST_OVERFLOW`, `SGO_E_CONST_DIV_ZERO`, `SGO_E_CONST_SHIFT`, `SGO_E_UNADMITTED` (`iota`).
+- **compile_link_checks:** `SGO_E_CONST_OVERFLOW`, `SGO_E_CONST_DIV_ZERO`, `SGO_E_CONST_SHIFT`, `SGO_E_TYPE_MISMATCH` (a non-integer constant converted to an integer type), `SGO_E_UNADMITTED` (`iota`).
 - **runtime_guards:** n/a — compile-time.
 - **tcb_assumptions:** n/a — compiler only.
-- **positive_tests:** S16; fixture:val-constants.
-- **negative_tests:** S16; fixture:val-const-overflow, fixture:val-const-div-zero.
+- **positive_tests:** S16; fixture:val-constants, fixture:float-literals.
+- **negative_tests:** S16; fixture:val-const-overflow, fixture:val-const-div-zero, fixture:float-const-overflow, fixture:float-const-not-integral.
 - **implementation_coverage:** W03: `src/cmd/compile/internal/ssagen/sgo.go`, `src/runtime/sgo_api.go`, `src/cmd/compile/internal/types2/sgo.go`.
 - **executed_evidence:** conformance fixtures val-const-div-zero, val-const-overflow, val-constants (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

@@ -4,7 +4,7 @@
 
 package math
 
-// The correctly rounded float64 functions (SGO-STD-011, D192), in S-Go: the algorithms are Go's
+// The correctly rounded float64 functions (SGO-STD-007, D192), in S-Go: the algorithms are Go's
 // portable ones (mod.go, sqrt.go, ldexp.go), so the results are Go's, and identical on every target.
 
 // Mathematical constants and limits, as in Go.
