@@ -1024,23 +1024,55 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 
 **Why.** One rule for every acquisition: the code shows who owns a handle where it is made, and a lifetime is a block, not a call the reader must find. Cost: one more argument at each call; a mechanical migration.
 
-## D178 — Command-line arguments · PROPOSED
+## D178 — The process interface of a CLI program · PROPOSED
 
-**Question.** SGO-PROC-004 gives a program no access to its command line, so a program cannot choose what to do (`httpserver serve`, `httpserver get /hello`) and examples run fixed demos.
+**Question.** CLI programs must be first-class (user, 2026-11-06), and the planned acceptance is a port of the functionality of cobra/pflag and of `undisk-cli` (commands defined at run time from the program's state). SGO-PROC-004 gives a program no arguments, no stdin, and no stderr; a write to a closed pipe kills it with SIGPIPE.
 
-**Recommendation.** `root.Args() []string` returns a fresh copy of the arguments after the program name. Only the root context has it (it is input to the program, given by whoever started it; children receive what the root passes them). Arguments are not authority: grants stay in `sgo.mod`, and no argument can widen them. The driver passes them as `sgo run PKG -- ARGS...` and `sgo test` passes none. In the lab, the arguments are part of the run's manifest: `sgo lab run PKG -- ARGS` records them in the trace, and replay with different arguments is refused, as a different build is today. Environment variables stay ignored (SGO-PROC-004, which gets a new version).
+**Recommendation.**
+1. **Arguments.** `root.Args() []string`: a fresh copy of the arguments after the program name, for an installed binary and for `sgo run PKG -- ARGS...` alike (`sgo test` passes none). Only the root context has it; children receive what the root passes. Arguments carry no authority except as D181 grants. In the lab they are part of the run's manifest: recorded in the trace, and a replay with other arguments is refused.
+2. **Standard streams.** `root.Stdin()` (an `io.LineReader` and `io.Reader`, D176) and `root.Stderr()` (an `io.Writer`, untied like stdout). `ReadSecret(max)` on stdin reads a line with echo off when stdin is a terminal; `IsTerminal()` on each stream; `TerminalWidth()` on stdout (0 when not a terminal). In the lab, stdin comes from the scenario (recorded), and the streams are never terminals.
+3. **Broken pipe.** SIGPIPE is ignored; a write to a closed pipe or socket returns an error (`sgo.IsBrokenPipe`), which the program handles or returns, and the run ends with the status that return gives.
+4. **Exit statuses** stay as SGO-PROC-002 defines them (user, 2026-11-06: not changed for now).
 
-**Why.** Arguments are the smallest input a program needs to be a tool rather than a demo. They are deterministic per run, so the lab keeps exact replay by recording them. A slice copy keeps the task-local rules unchanged.
+SGO-PROC-003 and SGO-PROC-004 get new versions.
 
 ## D179 — Interrupts cancel the root · PROPOSED
 
-**Question.** OS signals are denied (SGO-PROC-001): SIGINT or SIGTERM ends a program outside S-Go's outcomes, with no release of its scopes. A server run until interrupted cannot shut down through its scopes.
+**Question.** OS signals are denied (SGO-PROC-001): SIGINT or SIGTERM ends a program outside S-Go's outcomes, with no release of its scopes.
 
-**Recommendation.** The first SIGINT or SIGTERM cancels the root scope, with a cancellation that `sgo.IsInterrupted` recognizes (and `sgo.IsCancelled`); the program then unwinds through its nurseries, releasing every resource, and exits with the outcome of that unwind (status 1 if `main` returns the cancellation). A second signal during the unwind ends the process at once with a fixed status (130 / 143). Other signals keep their default actions. In the lab, no signal is delivered; a scenario may inject an interrupt at a virtual time, recorded in the trace.
+**Recommendation.** The first SIGINT or SIGTERM cancels the root scope with a cancellation `sgo.IsInterrupted` recognizes (and `sgo.IsCancelled`); the program unwinds through its nurseries, releasing every resource, and exits with the status of that unwind. A second signal during the unwind ends the process at once (status 130 for SIGINT, 143 for SIGTERM, outside S-Go's own statuses). Other signals keep their default actions, SIGPIPE excepted (D178). In the lab, a scenario may inject an interrupt at a virtual time, recorded in the trace.
 
-**Why.** Graceful shutdown then needs no new construct: it is the cancellation every S-Go program already handles, and the release order is the one the scopes already guarantee. Cost: a runtime signal handler, which the runtime already installs for other purposes; a new cause of cancellation in SGO-CANCEL.
+**Why.** Graceful shutdown needs no new construct: it is the cancellation every S-Go program already handles, with the release order the scopes already guarantee.
 
-**Plan (W24, after approval).** D177 first (mechanical migration, simplest examples). Then D178 and D179 together: `httpserver` becomes `serve` / `get PATH`, with the demo kept as `demo`. Model first for D179 (an interrupt racing scope ends). Spec 0.19.0.
+## D180 — Environment variables by grant · PROPOSED
+
+**Question.** Environment variables are ignored (SGO-PROC-004), but CLI conventions use them (`NO_COLOR`, `PAGER`, application settings such as `UNDISK_PROFILE`).
+
+**Recommendation.** `grant env NAME` and `grant env PREFIX_*` in `sgo.mod`; `root.Getenv(name) (string, bool)` returns only granted names (an ungranted name is `MissingCapability`, so the gap is found in testing, not silently empty). The grant list is part of the build identity like every grant. `HOME` and the `XDG_*` variables are not needed for per-user files (D182). In the lab, the environment comes from the scenario and is recorded.
+
+## D181 — Paths named on the command line · PROPOSED
+
+**Question.** `tool convert ./in.csv ./out.json` must open paths chosen when it runs, but every directory grant is fixed in `sgo.mod` (default deny).
+
+**Recommendation** (user, 2026-11-06: option b). `grant path args ro` (or `rw`) in `sgo.mod` lets the program open exactly the paths the user typed as arguments: `root.ArgPath(i)` (or by value) returns a `*sgo.Dir` or file handle confined to that path. A file argument gives the file; a directory argument gives a `Dir` confined to it, as a `grant dir` would; `..` and symlinks out are refused as for every `Dir`. The program cannot reach a path it builds from strings, so the user's own command line is the authority. `rw` allows creating a path the user named (an output file). Optionally `grant dir cwd ro|rw` gives a `Dir` for the working directory, for tools that walk it (`tool lint` with no arguments).
+
+## D182 — Per-user application directories · PROPOSED
+
+**Question.** A user tool keeps its configuration, state, and daemon socket in per-user directories located through `HOME` and `XDG_*` (`undisk-go-cli/userpaths`), which `sgo.mod` cannot name.
+
+**Recommendation.** `grant dir config rw`, `grant dir state rw`, `grant dir cache rw`, and `grant connect unix:runtime/NAME.sock` / `grant listen unix:runtime/NAME.sock`. The runtime resolves each to the application's own directory under the platform convention (Linux: `$XDG_CONFIG_HOME/APP`, `$XDG_STATE_HOME/APP`, `$XDG_CACHE_HOME/APP`, `$XDG_RUNTIME_DIR/APP`, with the XDG defaults; macOS: `~/Library/Application Support/APP`, `~/Library/Caches/APP`, and a per-user runtime directory), where `APP` is the last element of the module path or an `app NAME` line in `sgo.mod`. `root.Dir("config")` gives a `Dir` confined there, created on first use with mode 0700. The program never sees `HOME` and cannot reach another application's directories.
+
+## D183 — Standard library for CLI programs · PROPOSED
+
+**Recommendation.** `std/fmt`: `Sprintf`, `Fprintf(io.Writer, ...)`, and `Errorf` (with `%w` wrapping through `std/errors`) for the verbs `%s %q %d %x %t %v %%`, widths and `-` alignment, on admitted types, by type switch (no reflection); `std/strconv`: `ParseFloat`, `FormatFloat`; `std/time`: `ParseDuration`, `Duration.String` (values only, no clock). Each with its SGO-STD clause and the differential tests against Go's packages (D125).
+
+## D184 — A CLI library with commands defined at run time · PROPOSED
+
+**Question.** The planned use is cobra's functionality the S-Go way, including the `undisk-cli` pattern: the command tree depends on the program's state (logged in or not, roles, a profile fetched from a daemon).
+
+**Recommendation.** No language feature: commands are values. A library (first as `sgo/examples/cli`, promoted to `std/cli` once its API settles) with `cli.Command{Name, Summary, Description, Examples, Group, Hidden, Flags, Args}`, subcommands added at run time (`parent.Add(child)`, found and extended by name), typed flags and positional arguments (`string`, `int`, `bool`, `float`, `duration`, lists; required, defaults, variadic), a handler interface (`type Runner interface { Run(c *cli.Call) error }`, no function fields, user 2026-11-06), grouped help and usage rendered by plain code, `--help`, `--version`, and errors that name the command. Acceptance: `sgo/examples/cli` reproduces the `undisk-cli` shape: static commands, plus commands built from a profile read over a granted runtime socket from a fake daemon, with a `shell` loop on stdin over the same tree, all under `sgo test` and the lab.
+
+**Plan (W24, after approval).** D177 (migration); then D178, D179, D182, D180, D181 (runtime, driver, lab), model first for D179 (an interrupt racing scope ends); D183 (std, with differential tests); D184 last, as the acceptance. Spec 0.19.0.
 
 ---
 
