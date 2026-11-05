@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-009"
+ ],
+ "exit": 0,
+ "stdout": "n=42|   ab|7   |-0003|ff|true|(1,2)|%\n\"\\u00e9\\n\" 'a' Z 6869\n%!d(string=x)|1 %!d(MISSING)|%!t(MISSING)\nextra 1\n%!(EXTRA string=two)write log: disk full|code 3|disk full\n"
+}

@@ -1,0 +1,26 @@
+package main
+
+import (
+	"sgo"
+	"std/errors"
+	"std/fmt"
+)
+
+type point struct {
+	x int
+	y int
+}
+
+func (p point) String() string { return fmt.Sprintf("(%d,%d)", []any{p.x, p.y}) }
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	check fmt.Fprintf(out, "%s=%d|%5s|%-4d|%05d|%x|%t|%v|%%\n", []any{"n", 42, "ab", 7, -3, 255, true, point{1, 2}})
+	check fmt.Fprintf(out, "%q %q %c %x\n", []any{"é\n", 'a', 'Z', "hi"})
+	check fmt.Fprintf(out, "%d|%d %d|%t\n", []any{"x", 1})
+	check fmt.Fprintf(out, "extra %d\n", []any{1, "two"})
+	inner := errors.New("disk full")
+	e := fmt.Wrapf(inner, "write %s", []any{"log"})
+	check fmt.Fprintf(out, "%v|%s|%v\n", []any{e, fmt.Errorf("code %d", []any{3}), errors.Unwrap(e)})
+	return nil
+}

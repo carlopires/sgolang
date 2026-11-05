@@ -1,0 +1,20 @@
+package main
+
+import (
+	"sgo"
+	"std/time"
+)
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	for _, s := range []string{"300ms", "-1.5h", "2h45m", "1h2m3.5s", ".5s", "3µs", "0", "", "5", "1x", "9223372036854775808ns"} {
+		d, err := time.ParseDuration(s)
+		if err != nil {
+			check out.WriteString(err.Error() + "\n")
+		} else {
+			check out.WriteString(d.String() + "\n")
+		}
+	}
+	d := 90*time.Second + 250*time.Millisecond
+	return out.WriteString(d.String() + " " + time.Duration(1500).String() + " " + time.Duration(0).String() + "\n")
+}

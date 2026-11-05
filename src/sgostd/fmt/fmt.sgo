@@ -13,7 +13,7 @@
 // and %w is not a verb here.
 //
 // Verbs: %s %q %d %x %c %t %v and %%, with the flags '-' (left-align) and '0' (zero padding of
-// numbers) and a width. %q quotes as strconv.QuoteToASCII. Errors in the format are reported in
+// everything, after the sign of a number) and a width. %q quotes as strconv.QuoteToASCII. Errors in the format are reported in
 // the output as Go's fmt does: %!d(string=x) for a wrong type, %!d(MISSING) for a missing
 // argument, %!(EXTRA int=1) for extra ones, %!(NOVERB) for a trailing '%'.
 package fmt
@@ -21,6 +21,7 @@ package fmt
 import (
 	"std/io"
 	"std/strconv"
+	"std/strings"
 	"std/utf8"
 )
 
@@ -116,10 +117,10 @@ func format1(format string, args []any) string {
 		next++
 		text, num, ok := formatArg(arg, verb)
 		if !ok {
-			buf = append(buf, badVerb(arg, verb)...)
+			buf = append(buf, badVerb(arg, verb, width, minus, zero && !minus)...)
 			continue
 		}
-		buf = append(buf, pad(text, width, minus, zero && num && !minus)...)
+		buf = append(buf, pad(text, width, minus, zero && !minus, num)...)
 	}
 	if next < len(args) {
 		buf = append(buf, "%!(EXTRA "...)
@@ -191,9 +192,22 @@ func formatInt(v int, verb byte) (string, bool, bool) {
 	case 'c':
 		return string(rune(v)), false, true
 	case 'q':
-		return strconv.QuoteToASCII(string(rune(v))), false, true
+		return quoteRune(v), false, true
 	}
 	return "", false, false
+}
+
+// quoteRune is a single-quoted, ASCII-only literal of the rune v, as Go's %+q of an integer
+// (strconv.QuoteRuneToASCII): an invalid rune is '\ufffd'.
+func quoteRune(v int) string {
+	q := strconv.QuoteToASCII(string(rune(v)))
+	inner := q[1 : len(q)-1]
+	if inner == "\\\"" {
+		inner = "\""
+	} else if inner == "'" {
+		inner = "\\'"
+	}
+	return "'" + inner + "'"
 }
 
 func hexString(s string) string {
@@ -205,9 +219,9 @@ func hexString(s string) string {
 	return string(b)
 }
 
-// pad pads s to width runes: on the right with '-', with zeros after any sign with zero, else on
-// the left with spaces.
-func pad(s string, width int, minus, zero bool) string {
+// pad pads s to width runes: on the right with '-', else on the left, with zeros if zero (after
+// the sign of a number, num) and spaces otherwise, as Go's fmt.
+func pad(s string, width int, minus, zero, num bool) string {
 	n := width - utf8.RuneCountInString(s)
 	if n <= 0 {
 		return s
@@ -222,18 +236,24 @@ func pad(s string, width int, minus, zero bool) string {
 	if minus {
 		return s + string(fill)
 	}
-	if zero && len(s) > 0 && s[0] == '-' {
+	if zero && num && len(s) > 0 && s[0] == '-' {
 		return "-" + string(fill) + s[1:]
 	}
 	return string(fill) + s
 }
 
 // badVerb reports a verb its argument's type does not accept, as Go's fmt does.
-func badVerb(arg any, verb byte) string {
+// The value is formatted as %v with the verb's flags and width.
+func badVerb(arg any, verb byte, width int, minus, zero bool) string {
 	if arg == nil {
 		return "%!" + string(rune(verb)) + "(<nil>)"
 	}
-	return "%!" + string(rune(verb)) + "(" + typed(arg) + ")"
+	name, _, _ := strings.Cut(typed(arg), "=")
+	text, num, ok := formatArg(arg, 'v')
+	if !ok {
+		return "%!" + string(rune(verb)) + "(?)"
+	}
+	return "%!" + string(rune(verb)) + "(" + name + "=" + pad(text, width, minus, zero, num) + ")"
 }
 
 // typed is TYPE=VALUE for the error reports; types without a name here print as "?".

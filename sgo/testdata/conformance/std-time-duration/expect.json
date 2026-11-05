@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-010"
+ ],
+ "exit": 0,
+ "stdout": "300ms\n-1h30m0s\n2h45m0s\n1h2m3.5s\n500ms\n3µs\n0s\ntime: invalid duration \"\"\ntime: missing unit in duration \"5\"\ntime: unknown unit \"x\" in duration \"1x\"\ntime: invalid duration \"9223372036854775808ns\"\n1m30.25s 1.5µs 0s\n"
+}

@@ -139,6 +139,70 @@ def snippets(rng, strs):
         both(f"x := {il}; sort.Ints(x); y := {sl}; sort.Strings(y); ln(IL(x) + QL(y) + I(sort.SearchInts(x, 1)) + I(sort.SearchStrings(y, \"b\")))")
         k = rng.randint(1, 5)
         T.append((f"ln(IL(goPerm({n}, {k})))", f"ln(IL(sort.Perm({n}, func(i, j int) bool {{ return i%{k} < j%{k} }})))"))
+    # std/fmt (SGO-STD-009): random formats over int, string, and bool arguments. %q is S-Go's
+    # QuoteToASCII form, which is Go's %+q; %c and %q of an int use printable ASCII.
+    for _ in range(300):
+        gof, sgf, gargs, sargs = "", "", [], []
+        for _ in range(rng.randint(0, 4)):
+            pre = rng.choice(["", "x=", " ", "|", "é"])
+            gof += pre
+            sgf += pre
+            kind = rng.choice(["int", "int", "str", "bool", "chr"])
+            if kind == "int":
+                v = rng.choice([0, 7, -3, 255, -255, 2**63 - 1, rng.randint(-10**6, 10**6)])
+                verb = rng.choice("dvx")
+                ga = str(v)
+            elif kind == "chr":
+                v = rng.randint(32, 126)
+                verb = rng.choice("cq")
+                ga = str(v)
+            elif kind == "str":
+                ga = lit(rng.choice(strs[:40]))
+                verb = rng.choice("svqx")
+            else:
+                ga = rng.choice(["true", "false"])
+                verb = rng.choice("tv")
+            if rng.random() < 0.1:
+                verb = rng.choice("dst")  # possibly a verb the type does not take
+            flags = rng.choice(["", "", "-", "0"])
+            width = rng.choice(["", "", "3", "8"])
+            gof += "%" + flags + ("+" if verb == "q" else "") + width + verb
+            sgf += "%" + flags + width + verb
+            gargs.append(ga)
+            sargs.append(ga)
+        if rng.random() < 0.1:
+            gof += " 100%%"; sgf += " 100%%"
+        r = rng.random()
+        if r < 0.05:
+            gof += " %d"; sgf += " %d"  # MISSING
+        elif r < 0.1:
+            gargs.append("1"); sargs.append("1")  # EXTRA
+        elif r < 0.12:
+            gof += " %"; sgf += " %"  # NOVERB
+        gsep = ", " if gargs else ""
+        T.append((f"ln(Q(fmt.Sprintf({lit(gof.encode())}{gsep}{', '.join(gargs)})))",
+                  f"ln(Q(fmt.Sprintf({lit(sgf.encode())}, []any{{{', '.join(sargs)}}})))"))
+    # std/time (SGO-STD-010): durations formatted, and texts parsed. Error texts quote the input:
+    # Go's time quotes non-ASCII and control bytes as \xNN, S-Go as QuoteToASCII, so the parsed
+    # texts are printable ASCII (the two agree there); the µs spellings are parsed in valid texts.
+    for _ in range(200):
+        v = rng.choice([0, 1, -1, 999, 1000, 1500, 10**6, 10**9, 90 * 10**9, 2**63 - 1, -2**63 + 1,
+                        rng.randint(-2**63 + 1, 2**63 - 1), rng.randint(-10**12, 10**12)])
+        T.append((f"ln(Q(time.Duration({v}).String()) + I(int(time.Duration({v}).Milliseconds())))",
+                  f"ln(Q(time.Duration({v}).String()) + I(time.Duration({v}).Milliseconds()))"))
+    units = ["ns", "us", "µs", "μs", "ms", "s", "m", "h"]
+    for _ in range(300):
+        t = rng.choice(["", "-", "+"])
+        for _ in range(rng.randint(1, 3)):
+            t += str(rng.randint(0, 999)) + rng.choice(["", "", "." + str(rng.randint(0, 999))]) + rng.choice(units)
+        both(f"d, err := time.ParseDuration({lit(t.encode())}); ln(Q(d.String()) + E(err))")
+    alpha = "0123456789.+-hmsunx "
+    for _ in range(300):
+        t = "".join(rng.choice(alpha) for _ in range(rng.randint(0, 8)))
+        both(f"d, err := time.ParseDuration({lit(t.encode())}); ln(Q(d.String()) + E(err))")
+    for t in ["0", "", "5", ".", ".s", "1.s", ".5s", "9223372036854775807ns", "9223372036854775808ns",
+              "2562047h47m16.854775807s", "2562047h47m16.854775808s", "-0", "+0", "1h-1m"]:
+        both(f"d, err := time.ParseDuration({lit(t.encode())}); ln(Q(d.String()) + E(err))")
     return T
 
 
@@ -147,10 +211,12 @@ GO_PRELUDE = r'''package main
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 )
 
@@ -231,9 +297,11 @@ SGO_PRELUDE = r'''package main
 import (
 	"sgo"
 	"std/bytes"
+	"std/fmt"
 	"std/sort"
 	"std/strconv"
 	"std/strings"
+	"std/time"
 	"std/utf8"
 )
 
