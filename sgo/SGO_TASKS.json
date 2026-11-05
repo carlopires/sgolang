@@ -1020,6 +1020,29 @@
       "blockers": [],
       "commit": "9c9aab6271",
       "completion_note": "CLI programs first-class, frozen at spec 0.19.0 (D178-D184): arguments, stderr, terminals, broken pipe, stdin and ReadSecret; interrupts cancel the root (a second signal exits 130/143); env, argument paths and per-user application directories by grant; lab stdin, env and interrupts recorded and replayed; std/fmt and std/time diffed identical to Go's; the CLI library and the undisk example (commands from a daemon profile over a granted socket, shell on stdin) under sgo test and a 64-seed lab sweep. Floats stay denied (D185 later); a plain error exit for CLIs is D186, proposed."
+    },
+    {
+      "id": "W25",
+      "title": "float64: IEEE 754 binary64 without contraction, checked conversion to integers, float std/math, strconv and fmt floats, a Float flag kind",
+      "depends_on": [
+        "W24"
+      ],
+      "risk": "high",
+      "status": "in_progress",
+      "plan_section": "sgo/docs/w25-float-plan.md; sgo/SGO_DECISIONS.md D185, D187-D194",
+      "deliverables": [
+        "exact oracle sgo/scripts/float-oracle.py (D194)",
+        "admission of float64, literals, comparisons; no float map keys (D187, D190)",
+        "no fused multiply-add in S-Go code; checked float-to-int conversion (D188, D189)",
+        "std/math float functions, integer ones renamed AbsInt/MinInt/MaxInt/PowInt (D191, D192)",
+        "strconv ParseFloat/FormatFloat, fmt %f %e %g (D193)",
+        "cli Float flag kind; spec 0.20.0"
+      ],
+      "acceptance_case_ids": [],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": null
     }
   ],
   "language_policy": "One specification-defined S-Go language; no Go compatibility path. Bare go rejected; explicit nursery capabilities; missing contracts rejected transitively. Host/reference tools are external build dependencies.",
