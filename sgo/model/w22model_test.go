@@ -169,3 +169,37 @@ func TestPoolMutations(t *testing.T) {
 		t.Logf("%s: %v", c.name, err)
 	}
 }
+
+func TestInterrupt(t *testing.T) {
+	n, err := InterruptExplore()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("interrupt: %d states", n)
+}
+
+func TestInterruptMutations(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		flag *bool
+		want string
+	}{
+		{"check and park outside the sleep lock", &inSplitPark, "I1"},
+		{"second signal queued to the watcher", &inCoalesce, "I3"},
+		{"nursery opened after the interrupt misses it", &inNewNursery, "I1"},
+		{"root checks miss the virtual root scope", &inNoRootCheck, "I5"},
+	} {
+		*c.flag = true
+		_, err := InterruptExplore()
+		*c.flag = false
+		if err == nil {
+			t.Errorf("%s: not caught", c.name)
+			continue
+		}
+		if got := err.Error()[:2]; got != c.want {
+			t.Errorf("%s: caught as %v, want %s", c.name, err, c.want)
+			continue
+		}
+		t.Logf("%s: %v", c.name, err)
+	}
+}
