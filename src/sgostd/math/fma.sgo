@@ -1,0 +1,245 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package math
+
+// FMA returns x * y + z, computed with only one rounding (SGO-STD-011, D188): the exact value is
+// formed as an integer times a power of two, in 30-bit limbs so that no step overflows int, and
+// rounded once to nearest, ties to even. S-Go never fuses an expression (SGO-FLOAT-002): this is
+// the only fused operation.
+func FMA(x, y, z float64) float64 {
+	if x == 0 || y == 0 || z == 0 || IsInf(x, 0) || IsInf(y, 0) || x != x || y != y {
+		// Zeros, infinities, and NaN: at most one rounding happens in x*y + z (Go's rule).
+		return x*y + z
+	}
+	if IsInf(z, 0) || z != z {
+		return z
+	}
+	sx, mx, ex := split(x)
+	sy, my, ey := split(y)
+	sz, mz, ez := split(z)
+	sp := sx != sy
+	ep := ex + ey
+	e := ep
+	if ez < e {
+		e = ez
+	}
+	p := bnShl(bnMul(bnFrom(mx), bnFrom(my)), ep-e)
+	q := bnShl(bnFrom(mz), ez-e)
+	mag := []int{}
+	neg := false
+	if sp == sz {
+		mag = bnAdd(p, q)
+		neg = sp
+	} else {
+		switch c := bnCmp(p, q); {
+		case c == 0:
+			return 0 // exact cancellation: +0 under round-to-nearest
+		case c > 0:
+			mag = bnSub(p, q)
+			neg = sp
+		default:
+			mag = bnSub(q, p)
+			neg = sz
+		}
+	}
+	r := roundScaled(mag, e)
+	if neg {
+		return -r
+	}
+	return r
+}
+
+// split returns the sign, the integer mantissa m < 2^53, and the exponent of a finite nonzero f:
+// |f| = m * 2^e.
+func split(f float64) (bool, int, int) {
+	neg := f < 0
+	fr, exp := Frexp(Abs(f))
+	return neg, int(fr * two53), exp - 53
+}
+
+// roundScaled returns n * 2^e rounded once to binary64 (n > 0).
+func roundScaled(n []int, e int) float64 {
+	bl := bnBitLen(n)
+	low := e + bl - 53 // the exponent of the lowest kept bit of a normal result
+	if low < -1074 {
+		low = -1074 // subnormal: fewer bits are kept
+	}
+	shift := low - e
+	m := 0
+	if shift <= 0 {
+		m = bnToInt(bnShl(n, -shift)) // exact: at most 53 bits
+	} else {
+		top, half, sticky := bnShrBits(n, shift)
+		m = top
+		if half && (sticky || m&1 == 1) {
+			m++
+		}
+	}
+	if m == 1<<53 {
+		m = 1 << 52
+		low++
+	}
+	if m == 0 {
+		return 0
+	}
+	if low+bnBitLen(bnFrom(m))-1 > 1023 {
+		return Inf(1)
+	}
+	return float64(m) * pow2(low) // exact: m * 2^low is a binary64 value
+}
+
+// Nonnegative integers as little-endian slices of 30-bit limbs, without leading zero limbs.
+
+const limbBits = 30
+const limbMask = 1<<limbBits - 1
+
+func bnFrom(v int) []int {
+	n := []int{}
+	for v > 0 {
+		n = append(n, v&limbMask)
+		v >>= limbBits
+	}
+	return n
+}
+
+func bnTrim(n []int) []int {
+	for len(n) > 0 && n[len(n)-1] == 0 {
+		n = n[:len(n)-1]
+	}
+	return n
+}
+
+func bnToInt(n []int) int {
+	v := 0
+	for i := len(n) - 1; i >= 0; i-- {
+		v = v<<limbBits | n[i]
+	}
+	return v
+}
+
+func bnMul(a, b []int) []int {
+	r := make([]int, len(a)+len(b)+1)
+	for i, x := range a {
+		carry := 0
+		for j, y := range b {
+			t := r[i+j] + x*y + carry // < 2^61
+			r[i+j] = t & limbMask
+			carry = t >> limbBits
+		}
+		k := i + len(b)
+		for carry != 0 {
+			t := r[k] + carry
+			r[k] = t & limbMask
+			carry = t >> limbBits
+			k++
+		}
+	}
+	return bnTrim(r)
+}
+
+func bnShl(a []int, k int) []int {
+	if len(a) == 0 || k == 0 {
+		return a
+	}
+	words, bits := k/limbBits, k%limbBits
+	r := make([]int, len(a)+words+1)
+	for i, x := range a {
+		v := x << bits // < 2^59
+		r[i+words] |= v & limbMask
+		r[i+words+1] |= v >> limbBits
+	}
+	return bnTrim(r)
+}
+
+func bnAdd(a, b []int) []int {
+	if len(a) < len(b) {
+		a, b = b, a
+	}
+	r := make([]int, len(a)+1)
+	carry := 0
+	for i := range a {
+		t := a[i] + carry
+		if i < len(b) {
+			t += b[i]
+		}
+		r[i] = t & limbMask
+		carry = t >> limbBits
+	}
+	r[len(a)] = carry
+	return bnTrim(r)
+}
+
+// bnSub returns a - b for a >= b.
+func bnSub(a, b []int) []int {
+	r := make([]int, len(a))
+	borrow := 0
+	for i := range a {
+		t := a[i] - borrow
+		if i < len(b) {
+			t -= b[i]
+		}
+		borrow = 0
+		if t < 0 {
+			t += 1 << limbBits
+			borrow = 1
+		}
+		r[i] = t
+	}
+	return bnTrim(r)
+}
+
+func bnCmp(a, b []int) int {
+	if len(a) != len(b) {
+		if len(a) < len(b) {
+			return -1
+		}
+		return 1
+	}
+	for i := len(a) - 1; i >= 0; i-- {
+		if a[i] != b[i] {
+			if a[i] < b[i] {
+				return -1
+			}
+			return 1
+		}
+	}
+	return 0
+}
+
+func bnBitLen(a []int) int {
+	if len(a) == 0 {
+		return 0
+	}
+	top, n := a[len(a)-1], 0
+	for top > 0 {
+		top >>= 1
+		n++
+	}
+	return (len(a)-1)*limbBits + n
+}
+
+// bnBit reports bit i of a.
+func bnBit(a []int, i int) bool {
+	w := i / limbBits
+	return w < len(a) && a[w]>>(i%limbBits)&1 == 1
+}
+
+// bnShrBits returns a >> k (at most 54 bits here), whether bit k-1 is set (half), and whether
+// any bit below k-1 is set (sticky), for k >= 1.
+func bnShrBits(a []int, k int) (int, bool, bool) {
+	top := 0
+	for i := bnBitLen(a) - 1; i >= k; i-- {
+		top <<= 1
+		if bnBit(a, i) {
+			top |= 1
+		}
+	}
+	half := bnBit(a, k-1)
+	sticky := false
+	for i := 0; i < k-1 && !sticky; i++ {
+		sticky = bnBit(a, i)
+	}
+	return top, half, sticky
+}
