@@ -1,0 +1,26 @@
+package main
+
+import "sgo"
+
+type counter struct {
+	n int
+}
+
+func (c *counter) Release(ok bool) error { return nil }
+
+// A user resource is task-local (SGO-RES-002 v4): even within its own nursery, sending the pointer
+// on a channel to a sibling is refused, as capturing it is (res-user-capture-denied).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		c := &counter{}
+		n.Own(c)
+		ch := make(chan *counter, 1)
+		ch <- c
+		n.Spawn(func(t *sgo.Context) error {
+			x := <-ch
+			x.n++
+			return nil
+		})
+	}
+	return nil
+}

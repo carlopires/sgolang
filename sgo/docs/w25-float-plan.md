@@ -120,3 +120,19 @@ explicit `float64()` roundings on the Go side).
 
 Risk: high (a new value kind through the compiler and std). The largest items are the `strconv`
 port and the transcendentals, both of them mechanical ports with differential tests.
+
+## Also at the 0.20.0 freeze: W24 review P1 (resource text) and P2 (library composition)
+
+From the note2 review of `d868fdc459` (message 1348):
+
+- **SGO-RES-002 v4** (P1): the sharing sentence is restricted to built-in resource handles. Added:
+  "A user resource (SGO-RES-004) is task-local (SGO-COMP-004): only the task that owns it, or the
+  task its result was moved to (SGO-SPAWN-006), uses it; it reaches another task only by a move.
+  Shared mutable state between tasks is a server task with request/reply calls (SGO-SPAWN-008) or
+  channels of copied values." The implementation is unchanged: it already refuses capture
+  (`res-user-capture-denied`), a same-nursery send (`res-user-send-in-scope`), and `sgo.Copy`.
+- **SGO-RES-004 v6** (P1): `ownership_and_lifecycle` states the same exception instead of only
+  referring to SGO-RES-001. New run case `res-user-via-call` shows the recommended pattern.
+- **SGO-RES-005** (P2, option 1): `compile_link_checks` keeps the refusal; a guide note says that
+  helpers return resources and the caller sends them in the scope that owns both. Option 2
+  (parameter-relation summaries in export data) is D195, proposed.

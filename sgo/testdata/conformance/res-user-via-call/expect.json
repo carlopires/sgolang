@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-RES-002",
+  "SGO-RES-004",
+  "SGO-SPAWN-008"
+ ],
+ "exit": 0,
+ "stdout": "total: 12\n",
+ "note": "W24 review P1: shared mutable state between tasks is a server task owning the user resource, reached by request/reply calls."
+}

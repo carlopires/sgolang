@@ -1,0 +1,50 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+type counter struct {
+	n int
+}
+
+func (c *counter) Release(ok bool) error { return nil }
+
+// Shared mutable state between tasks, the S-Go way (SGO-RES-002 v4): one server task owns the user
+// resource and the others reach it with request/reply calls (SGO-SPAWN-008).
+func main(root *sgo.Context) error {
+	total := 0
+	nursery (n) {
+		calls := sgo.NewCall[int, int](n)
+		n.Spawn(func(t *sgo.Context) error {
+			nursery (m) {
+				c := &counter{}
+				m.Own(c) // the server's own resource: released when the server ends
+				for i := 0; i < 7; i++ { // six increments, then the final read
+					r := calls.Accept(t)
+					c.n += r.Value()
+					r.Reply(c.n, nil)
+				}
+			}
+			return nil
+		})
+		g := sgo.NewGroup[int](n, 3)
+		for _, k := range []int{1, 2, 3} {
+			g.Go(root, func(t *sgo.Context) (int, error) {
+				a := check calls.Call(t, k)
+				b := check calls.Call(t, k)
+				return b - a, nil // depends on the interleaving; not printed
+			})
+		}
+		for i := 0; i < 3; i++ {
+			r := <-g.Next()
+			if r.Err != nil {
+				return r.Err
+			}
+			_ = r.Value
+		}
+		total = check calls.Call(root, 0) // every increment has been applied: 2*(1+2+3)
+	}
+	return root.Stdout().WriteString("total: " + strconv.Itoa(total) + "\n")
+}

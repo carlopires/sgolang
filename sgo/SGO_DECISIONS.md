@@ -1185,6 +1185,14 @@ across targets (the fused/unfused difference shows up here if `useFMA` is not di
 explicit `float64()` roundings on the Go side).
 
 Plan and work order: `sgo/docs/w25-float-plan.md` (W25, spec 0.20.0).
+
+## D195 — Parameter-relation summaries for library helpers · PROPOSED 2026-11-07
+
+**Question (W24 review P2).** A helper cannot forward a resource parameter onto a channel parameter (`func fwd(c *sgo.Conn, ch chan *sgo.Conn) { ch <- c }` is `SGO_E_RESOURCE_ESCAPES`, SGO-RES-005), though the same send written in the nursery body is admitted; protocol libraries must leave every such send to the call site.
+
+**Options.** (1) Keep the refusal and document the composition rule (done at 0.20.0). (2) Per-function summaries of flows from parameter i into parameter j's memory or channel (send, store, `Commit`, `append`), recorded in export data and folded into the contract digest (SGO-IMP-002), checked at each call site as `within(tie(arg_i), tie(arg_j))`: the callee-summary approach deferred in D176 (C1). Needs a model case (a helper forwarding across two nurseries with the outer channel) and mutants (summary dropped, direction swapped); the reviewer offers to review the summary and its digest handling first.
+
+**Recommendation.** (2), as its own week when library work resumes; (1) until then.
 ---
 
 ## Approval record

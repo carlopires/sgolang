@@ -1,0 +1,15 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-RES-002",
+  "SGO-RES-004",
+  "SGO-COMP-004"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_UNCOPIED_SEND",
+   "position": "main.sgo:18:9"
+  }
+ ],
+ "note": "W24 review P1: a user resource is task-local even inside its own nursery: a same-nursery channel send of the pointer is refused (SGO-RES-002 v4)."
+}
