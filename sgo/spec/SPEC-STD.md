@@ -178,3 +178,47 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **executed_evidence:** conformance fixtures (darwin/arm64); Linux at the W23 merge.
 - **supported_execution_configurations:** production, lab.
 
+
+### SGO-STD-009 — `std/fmt`: Formatted text
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-STD-001, SGO-STD-004, SGO-STD-008, SGO-IFACE-004, SGO-TYPE-003; D125, D183.
+- **grammar_and_types:** The package `std/fmt` exports exactly: `func Errorf(format string, args []any) error`; `func Fprintf(w io.Writer, format string, args []any) error`; `func Sprintf(format string, args []any) string`; `func Wrapf(err error, format string, args []any) error`; `type Stringer`. `Stringer` is an interface with `String() string`. The arguments are an explicit `[]any`, since variadic functions are denied (SGO-TYPE-003).
+- **preconditions:** None.
+- **evaluation_and_value_semantics:** The verbs are `%s %q %d %x %c %t %v` and `%%`, each with the flags `-` (left-align) and `0` (zero padding of a number, after its sign) and a decimal width counted in runes; there is no precision. By type switch, never reflection: `string` takes `s v q x`; `int`, `byte`, `rune` take `d v x c q`; `bool` takes `t v`; a value with an `Error() string` method, then one with `String() string`, takes `s v q x` on that text; `nil` takes `v` (`<nil>`). `%q` quotes as `strconv.QuoteToASCII`; `%x` of text is the lower-case hex of its bytes. A format error is reported in the text as Go's fmt does: `%!d(string=x)` for a verb the type does not take, `%!d(MISSING)`, `%!(EXTRA int=1, ...)`, `%!(NOVERB)`; a value of another type prints its type as `?`. `Fprintf` writes the text with `io.WriteString`. `Errorf` returns an error with the text; `Wrapf(err, format, args)` returns an error whose text is the formatted text, `": "`, and `err.Error()`, and which wraps err (`errors.Unwrap`). Both are value types, so they may cross tasks.
+- **ownership_and_lifecycle:** None: the results are values.
+- **effect_and_capability_requirements:** None of its own; `Fprintf` writes through w.
+- **concurrency_and_memory_order:** n/a: the package has no state (D109).
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** `Fprintf` returns w's error; the formatting functions do not fail.
+- **cancellation_and_cleanup:** As w's methods.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export. An argument in `[]any` never becomes an `error` again (SGO-IFACE-004), so there is no `%w` verb: `Wrapf` takes the wrapped error as a parameter.
+- **runtime_guards:** As SGO-ERR-003.
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code: S-Go source under the same rules as user code (SGO-IMP-004).
+- **positive_tests:** fixture:std-fmt-basic; `sgo/scripts/test-std-diff.py` (against Go's fmt).
+- **negative_tests:** fixture:std-fmt-basic (format errors in the text).
+- **implementation_coverage:** `src/sgostd/fmt/`.
+- **executed_evidence:** n/a: draft; recorded at the 0.19.0 freeze.
+- **supported_execution_configurations:** production, lab.
+
+### SGO-STD-010 — `std/time`: Durations
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-STD-001, SGO-STD-004, SGO-UTYPE-001, SGO-AUTH-002; D125, D183.
+- **grammar_and_types:** The package `std/time` exports exactly: `const Hour`; `const Microsecond`; `const Millisecond`; `const Minute`; `const Nanosecond`; `const Second`; `func (Duration) Milliseconds() int`; `func (Duration) Nanoseconds() int`; `func (Duration) String() string`; `func ParseDuration(s string) (Duration, error)`; `type Duration`. `Duration` is `int`, nanoseconds; the constants are `Duration`.
+- **preconditions:** None.
+- **evaluation_and_value_semantics:** `ParseDuration` accepts an optional sign and a sequence of decimal numbers, each with an optional fraction and a unit (`ns`, `us`, `µs`, `μs`, `ms`, `s`, `m`, `h`), as Go's does, with its error texts (`time: invalid duration "x"`, `time: missing unit in duration "x"`, `time: unknown unit "u" in duration "x"`), quoting as `strconv.QuoteToASCII`. A fraction is applied exactly in integer arithmetic (Go multiplies in float64; the results agree except where float64 rounding changes the last nanosecond), and a magnitude above 1<<63-1 nanoseconds is invalid. `String` formats as Go's (`72h3m0.5s`, `1.5µs`, `0s`). The package has no clock: the current time comes only from the clock capabilities (SGO-AUTH-002).
+- **ownership_and_lifecycle:** None: values.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a: the package has no state (D109).
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** `ParseDuration` returns an error and 0 for invalid text.
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003.
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-time-duration; `sgo/scripts/test-std-diff.py` (against Go's time).
+- **negative_tests:** fixture:std-time-duration (invalid texts).
+- **implementation_coverage:** `src/sgostd/time/`.
+- **executed_evidence:** n/a: draft; recorded at the 0.19.0 freeze.
+- **supported_execution_configurations:** production, lab.

@@ -1,0 +1,260 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package fmt formats text (SGO-STD-009, D183). S-Go has no variadic functions (SGO-TYPE-003), so
+// the arguments are an explicit slice: fmt.Sprintf("%s=%d", []any{name, n}). Formatting is by type
+// switch, never by reflection: the verbs apply to string, int, bool, byte, rune, error, and any
+// value with a String() string method (Stringer); other values print as unsupported.
+//
+// Errors: Errorf formats an error's text; Wrapf returns an error that wraps another (errors.Unwrap
+// returns it). An argument in []any is never converted back to an error, since only an error
+// value may become one (SGO-IFACE-004): %v and %s format any value with an Error() string method,
+// and %w is not a verb here.
+//
+// Verbs: %s %q %d %x %c %t %v and %%, with the flags '-' (left-align) and '0' (zero padding of
+// numbers) and a width. %q quotes as strconv.QuoteToASCII. Errors in the format are reported in
+// the output as Go's fmt does: %!d(string=x) for a wrong type, %!d(MISSING) for a missing
+// argument, %!(EXTRA int=1) for extra ones, %!(NOVERB) for a trailing '%'.
+package fmt
+
+import (
+	"std/io"
+	"std/strconv"
+	"std/utf8"
+)
+
+// Stringer is a value that formats itself for %s and %v.
+type Stringer interface {
+	String() string
+}
+
+// Sprintf formats args according to format and returns the text.
+func Sprintf(format string, args []any) string {
+	return format1(format, args)
+}
+
+// Fprintf formats args according to format and writes the text to w.
+func Fprintf(w io.Writer, format string, args []any) error {
+	return io.WriteString(w, format1(format, args))
+}
+
+// Errorf formats args according to format and returns an error with that text; it wraps nothing.
+func Errorf(format string, args []any) error {
+	return wrapError{msg: Sprintf(format, args), err: nil}
+}
+
+// Wrapf returns an error whose text is the formatted text, ": ", and err's text, and which wraps
+// err: errors.Unwrap returns it. It is Go's fmt.Errorf("...: %w", ..., err).
+func Wrapf(err error, format string, args []any) error {
+	return wrapError{msg: Sprintf(format, args) + ": " + err.Error(), err: err}
+}
+
+// errorText is a value with an Error method; %v and %s format it by that method. It is not error:
+// a value in []any never becomes an error again (SGO-IFACE-004).
+type errorText interface {
+	Error() string
+}
+
+// wrapError is the error Errorf returns: a value type, so it may cross tasks (SGO-COMP-004).
+type wrapError struct {
+	msg string
+	err error
+}
+
+func (e wrapError) Error() string { return e.msg }
+
+func (e wrapError) Unwrap() error { return e.err }
+
+// format1 formats args according to format.
+func format1(format string, args []any) string {
+	buf := []byte{}
+	next := 0
+	i := 0
+	for i < len(format) {
+		c := format[i]
+		if c != '%' {
+			buf = append(buf, c)
+			i++
+			continue
+		}
+		i++
+		if i == len(format) {
+			buf = append(buf, "%!(NOVERB)"...)
+			break
+		}
+		minus, zero := false, false
+		for i < len(format) && (format[i] == '-' || format[i] == '0') {
+			if format[i] == '-' {
+				minus = true
+			} else {
+				zero = true
+			}
+			i++
+		}
+		width := 0
+		for i < len(format) && format[i] >= '0' && format[i] <= '9' {
+			width = width*10 + int(format[i]-'0')
+			i++
+		}
+		if i == len(format) {
+			buf = append(buf, "%!(NOVERB)"...)
+			break
+		}
+		verb := format[i]
+		i++
+		if verb == '%' {
+			buf = append(buf, '%')
+			continue
+		}
+		if next >= len(args) {
+			buf = append(buf, '%', '!', verb)
+			buf = append(buf, "(MISSING)"...)
+			continue
+		}
+		arg := args[next]
+		next++
+		text, num, ok := formatArg(arg, verb)
+		if !ok {
+			buf = append(buf, badVerb(arg, verb)...)
+			continue
+		}
+		buf = append(buf, pad(text, width, minus, zero && num && !minus)...)
+	}
+	if next < len(args) {
+		buf = append(buf, "%!(EXTRA "...)
+		for k := next; k < len(args); k++ {
+			if k > next {
+				buf = append(buf, ", "...)
+			}
+			buf = append(buf, typed(args[k])...)
+		}
+		buf = append(buf, ')')
+	}
+	return string(buf)
+}
+
+// formatArg formats one argument for verb; num reports a number (for zero padding); ok is false
+// for a verb the argument's type does not accept.
+func formatArg(arg any, verb byte) (string, bool, bool) {
+	switch v := arg.(type) {
+	case nil:
+		if verb == 'v' {
+			return "<nil>", false, true
+		}
+		return "", false, false
+	case string:
+		switch verb {
+		case 's', 'v':
+			return v, false, true
+		case 'q':
+			return strconv.QuoteToASCII(v), false, true
+		case 'x':
+			return hexString(v), false, true
+		}
+	case int:
+		return formatInt(v, verb)
+	case byte:
+		return formatInt(int(v), verb)
+	case rune:
+		return formatInt(int(v), verb)
+	case bool:
+		if verb == 't' || verb == 'v' {
+			return strconv.FormatBool(v), false, true
+		}
+	case errorText:
+		return formatText(v.Error(), verb)
+	case Stringer:
+		return formatText(v.String(), verb)
+	}
+	return "", false, false
+}
+
+func formatText(s string, verb byte) (string, bool, bool) {
+	switch verb {
+	case 's', 'v':
+		return s, false, true
+	case 'q':
+		return strconv.QuoteToASCII(s), false, true
+	case 'x':
+		return hexString(s), false, true
+	}
+	return "", false, false
+}
+
+func formatInt(v int, verb byte) (string, bool, bool) {
+	switch verb {
+	case 'd', 'v':
+		return strconv.Itoa(v), true, true
+	case 'x':
+		return strconv.FormatInt(v, 16), true, true
+	case 'c':
+		return string(rune(v)), false, true
+	case 'q':
+		return strconv.QuoteToASCII(string(rune(v))), false, true
+	}
+	return "", false, false
+}
+
+func hexString(s string) string {
+	const digits = "0123456789abcdef"
+	b := make([]byte, 0, 2*len(s))
+	for i := 0; i < len(s); i++ {
+		b = append(b, digits[s[i]>>4], digits[s[i]&15])
+	}
+	return string(b)
+}
+
+// pad pads s to width runes: on the right with '-', with zeros after any sign with zero, else on
+// the left with spaces.
+func pad(s string, width int, minus, zero bool) string {
+	n := width - utf8.RuneCountInString(s)
+	if n <= 0 {
+		return s
+	}
+	fill := make([]byte, n)
+	for k := range fill {
+		fill[k] = ' '
+		if zero {
+			fill[k] = '0'
+		}
+	}
+	if minus {
+		return s + string(fill)
+	}
+	if zero && len(s) > 0 && s[0] == '-' {
+		return "-" + string(fill) + s[1:]
+	}
+	return string(fill) + s
+}
+
+// badVerb reports a verb its argument's type does not accept, as Go's fmt does.
+func badVerb(arg any, verb byte) string {
+	if arg == nil {
+		return "%!" + string(rune(verb)) + "(<nil>)"
+	}
+	return "%!" + string(rune(verb)) + "(" + typed(arg) + ")"
+}
+
+// typed is TYPE=VALUE for the error reports; types without a name here print as "?".
+func typed(arg any) string {
+	switch v := arg.(type) {
+	case nil:
+		return "<nil>"
+	case string:
+		return "string=" + v
+	case int:
+		return "int=" + strconv.Itoa(v)
+	case byte:
+		return "uint8=" + strconv.Itoa(int(v))
+	case rune:
+		return "int32=" + strconv.Itoa(int(v))
+	case bool:
+		return "bool=" + strconv.FormatBool(v)
+	case errorText:
+		return "error=" + v.Error()
+	case Stringer:
+		return "?=" + v.String()
+	}
+	return "?"
+}

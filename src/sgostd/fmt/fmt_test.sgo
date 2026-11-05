@@ -1,0 +1,29 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package fmt
+
+import (
+	"sgo"
+	"std/errors"
+)
+
+func TestSprintf(t *sgo.T) error {
+	if Sprintf("%d|%5s|%-3d|%05d|%q|%x|%t|%%", []any{42, "ab", 7, -3, "h\n", 255, true}) != "42|   ab|7  |-0003|\"h\\n\"|ff|true|%" {
+		return sgo.NewError("verbs")
+	}
+	if Sprintf("%d %d", []any{1}) != "1 %!d(MISSING)" || Sprintf("%d", []any{"x"}) != "%!d(string=x)" {
+		return sgo.NewError("format errors")
+	}
+	return nil
+}
+
+func TestWrapf(t *sgo.T) error {
+	inner := errors.New("inner")
+	e := Wrapf(inner, "op %d", []any{3})
+	if e.Error() != "op 3: inner" || errors.Unwrap(e) == nil || errors.Unwrap(e).Error() != "inner" {
+		return sgo.NewError("Wrapf")
+	}
+	return nil
+}

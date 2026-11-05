@@ -1,0 +1,261 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package time provides durations as values (SGO-STD-010, D183): parsing and formatting, with no
+// clock. The current time comes only from the clock capabilities (SGO-AUTH-002).
+//
+// Deviations from Go's package time: a fraction ("1.5h") is applied exactly, in integer arithmetic,
+// where Go multiplies in float64 (the results agree except where float64 rounding changes the last
+// nanosecond); the magnitude of a parsed duration is at most 1<<63-1 nanoseconds, so
+// "-9223372036854775808ns" is out of range here.
+package time
+
+import (
+	"std/errors"
+	"std/strconv"
+)
+
+// A Duration is an elapsed time in nanoseconds.
+type Duration int
+
+// Common durations.
+const (
+	Nanosecond  Duration = 1
+	Microsecond Duration = 1000 * Nanosecond
+	Millisecond Duration = 1000 * Microsecond
+	Second      Duration = 1000 * Millisecond
+	Minute      Duration = 60 * Second
+	Hour        Duration = 60 * Minute
+)
+
+const maxInt = 1<<63 - 1
+
+// Milliseconds returns d as an integer number of milliseconds, truncated toward zero.
+func (d Duration) Milliseconds() int {
+	return int(d / Millisecond)
+}
+
+// Nanoseconds returns d as an integer number of nanoseconds.
+func (d Duration) Nanoseconds() int {
+	return int(d)
+}
+
+// String returns d in the form "72h3m0.5s": leading zero units omitted, a fraction of a second
+// without trailing zeros, and a duration under one second in "ms", "µs", or "ns". Zero is "0s".
+func (d Duration) String() string {
+	if d == -maxInt-1 {
+		return "-2562047h47m16.854775808s"
+	}
+	u := int(d)
+	neg := u < 0
+	if neg {
+		u = -u
+	}
+	s := ""
+	if u < int(Second) {
+		prec, unit := 0, "ns"
+		switch {
+		case u == 0:
+			return "0s"
+		case u < int(Microsecond):
+			prec, unit = 0, "ns"
+		case u < int(Millisecond):
+			prec, unit = 3, "µs"
+		default:
+			prec, unit = 6, "ms"
+		}
+		frac, rest := fmtFrac(u, prec)
+		s = strconv.Itoa(rest) + frac + unit
+	} else {
+		frac, rest := fmtFrac(u, 9)
+		s = strconv.Itoa(rest%60) + frac + "s"
+		rest /= 60
+		if rest > 0 {
+			s = strconv.Itoa(rest%60) + "m" + s
+			rest /= 60
+			if rest > 0 {
+				s = strconv.Itoa(rest) + "h" + s
+			}
+		}
+	}
+	if neg {
+		return "-" + s
+	}
+	return s
+}
+
+// fmtFrac formats the low prec decimal digits of v as a fraction without trailing zeros (with its
+// '.'), and returns it with v divided by 10^prec.
+func fmtFrac(v int, prec int) (string, int) {
+	const digits = "0123456789"
+	b := []byte{}
+	seen := false
+	for i := 0; i < prec; i++ {
+		digit := v % 10
+		seen = seen || digit != 0
+		if seen {
+			b = append(b, digits[digit])
+		}
+		v /= 10
+	}
+	if !seen {
+		return "", v
+	}
+	out := make([]byte, 0, len(b)+1)
+	out = append(out, '.')
+	for i := len(b) - 1; i >= 0; i-- {
+		out = append(out, b[i])
+	}
+	return string(out), v
+}
+
+func unitOf(u string) (int, bool) {
+	switch u {
+	case "ns":
+		return int(Nanosecond), true
+	case "us", "µs", "μs":
+		return int(Microsecond), true
+	case "ms":
+		return int(Millisecond), true
+	case "s":
+		return int(Second), true
+	case "m":
+		return int(Minute), true
+	case "h":
+		return int(Hour), true
+	}
+	return 0, false
+}
+
+// leadingInt consumes the leading [0-9]* of s; ok is false on overflow.
+func leadingInt(s string) (int, string, bool) {
+	x, i := 0, 0
+	for ; i < len(s); i++ {
+		c := s[i]
+		if c < '0' || c > '9' {
+			break
+		}
+		digit := int(c - '0')
+		if x > maxInt/10 || x == maxInt/10 && digit > maxInt%10 {
+			return 0, "", false
+		}
+		x = x*10 + digit
+	}
+	return x, s[i:], true
+}
+
+// leadingFraction consumes the leading [0-9]* of s as a fraction x/scale; digits beyond what x
+// can hold are consumed and ignored.
+func leadingFraction(s string) (int, int, string) {
+	x, scale, i := 0, 1, 0
+	full := false
+	for ; i < len(s); i++ {
+		c := s[i]
+		if c < '0' || c > '9' {
+			break
+		}
+		if full || x > (maxInt-9)/10 || scale > maxInt/10 {
+			full = true
+			continue
+		}
+		x = x*10 + int(c-'0')
+		scale *= 10
+	}
+	return x, scale, s[i:]
+}
+
+func gcd(a, b int) int {
+	for b != 0 {
+		a, b = b, a%b
+	}
+	return a
+}
+
+// fracUnits is f/scale of unit, truncated, computed exactly.
+func fracUnits(f, scale, unit int) int {
+	g := gcd(unit, scale)
+	u, sc := unit/g, scale/g
+	return (f/sc)*u + (f%sc)*u/sc
+}
+
+func invalid(orig string) error {
+	return errors.New("time: invalid duration " + strconv.QuoteToASCII(orig))
+}
+
+// ParseDuration parses a duration: an optional sign and a sequence of decimal numbers, each with
+// an optional fraction and a unit, such as "300ms", "-1.5h", or "2h45m". The units are "ns", "us"
+// (or "µs"), "ms", "s", "m", and "h".
+func ParseDuration(s string) (Duration, error) {
+	orig := s
+	d := 0
+	neg := false
+	if s != "" && (s[0] == '-' || s[0] == '+') {
+		neg = s[0] == '-'
+		s = s[1:]
+	}
+	if s == "0" {
+		return 0, nil
+	}
+	if s == "" {
+		return 0, invalid(orig)
+	}
+	for s != "" {
+		if !(s[0] == '.' || s[0] >= '0' && s[0] <= '9') {
+			return 0, invalid(orig)
+		}
+		pl := len(s)
+		v, rest, ok := leadingInt(s)
+		if !ok {
+			return 0, invalid(orig)
+		}
+		s = rest
+		pre := pl != len(s)
+		post := false
+		f, scale := 0, 1
+		if s != "" && s[0] == '.' {
+			s = s[1:]
+			pl2 := len(s)
+			f, scale, s = leadingFraction(s)
+			post = pl2 != len(s)
+		}
+		if !pre && !post {
+			return 0, invalid(orig)
+		}
+		i := 0
+		for ; i < len(s); i++ {
+			c := s[i]
+			if c == '.' || c >= '0' && c <= '9' {
+				break
+			}
+		}
+		if i == 0 {
+			return 0, errors.New("time: missing unit in duration " + strconv.QuoteToASCII(orig))
+		}
+		u := s[:i]
+		s = s[i:]
+		unit, known := unitOf(u)
+		if !known {
+			return 0, errors.New("time: unknown unit " + strconv.QuoteToASCII(u) + " in duration " + strconv.QuoteToASCII(orig))
+		}
+		if v > maxInt/unit {
+			return 0, invalid(orig)
+		}
+		v *= unit
+		if f > 0 {
+			add := fracUnits(f, scale, unit)
+			if v > maxInt-add {
+				return 0, invalid(orig)
+			}
+			v += add
+		}
+		if d > maxInt-v {
+			return 0, invalid(orig)
+		}
+		d += v
+	}
+	if neg {
+		return Duration(-d), nil
+	}
+	return Duration(d), nil
+}

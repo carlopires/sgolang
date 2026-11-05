@@ -1787,9 +1787,11 @@
         "SGO-STD-005",
         "SGO-STD-006",
         "SGO-STD-007",
-        "SGO-STD-008"
+        "SGO-STD-008",
+        "SGO-STD-009",
+        "SGO-STD-010"
       ],
-      "normative_text_digest": "6454756747aa7cda9aee0959290e2aa834c2a63ae5294407ca8a2b52401e4c85",
+      "normative_text_digest": "a8960e46c17bc357db64bc1b65f65281c33cfa6c18e28a42bbd4b21199e48f4e",
       "admitted_in": [
         "0.13.0"
       ],
@@ -1806,7 +1808,9 @@
         "SGO-STD-005": "48e4ffb537df21c0774ddf50c897beb75e250e18b40df33838a4f9f2922969ef",
         "SGO-STD-006": "38cdc25df6ae73744496c06a6c17a5ffde477bd98e4eef5c1672dc561dfdcccf",
         "SGO-STD-007": "6d6a9a8955d6cc046c70eae9f1d698f1d8f47992860ebf75cb187e4128035d7c",
-        "SGO-STD-008": "a006f7077ffeda553b296875b211828a1b1cf1f96f7d6d9fbda3a3f1653076e2"
+        "SGO-STD-008": "a006f7077ffeda553b296875b211828a1b1cf1f96f7d6d9fbda3a3f1653076e2",
+        "SGO-STD-009": "94418aa7da36a8876d4a20fc9ac512e0a697336d6ceefdb573b866028ffd2d1d",
+        "SGO-STD-010": "037f8730ee4cb75a01866255538d3072335acd792b7888f18cb6a6e2d26f4973"
       },
       "clause_status": {
         "SGO-STD-001": "frozen",
@@ -1816,7 +1820,9 @@
         "SGO-STD-005": "frozen",
         "SGO-STD-006": "frozen",
         "SGO-STD-007": "frozen",
-        "SGO-STD-008": "frozen"
+        "SGO-STD-008": "frozen",
+        "SGO-STD-009": "draft",
+        "SGO-STD-010": "draft"
       },
       "clause_versions": {
         "SGO-STD-001": 2,
@@ -1826,10 +1832,12 @@
         "SGO-STD-005": 1,
         "SGO-STD-006": 2,
         "SGO-STD-007": 1,
-        "SGO-STD-008": 1
+        "SGO-STD-008": 1,
+        "SGO-STD-009": 1,
+        "SGO-STD-010": 1
       }
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "bcc808247fb7bfe8a35be6817a4408af0e62a54a5a3ce84c749aeadb543eb9c8"
+  "rows_digest": "0ad312fc822c51dd04f17ad9e4858b3348b0e662574509630df9dedf716d0755"
 }

@@ -1,0 +1,21 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package time
+
+import "sgo"
+
+func TestParseDuration(t *sgo.T) error {
+	d, err := ParseDuration("-1.5h")
+	if err != nil || d != -90*Minute || d.String() != "-1h30m0s" {
+		return sgo.NewError("-1.5h")
+	}
+	if _, err2 := ParseDuration("5"); err2 == nil {
+		return sgo.NewError("missing unit accepted")
+	}
+	if Duration(1500).String() != "1.5µs" || Duration(0).String() != "0s" || (2*Second).Milliseconds() != 2000 {
+		return sgo.NewError("String")
+	}
+	return nil
+}
