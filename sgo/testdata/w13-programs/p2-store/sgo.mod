@@ -1,3 +1,3 @@
 module example.com/p2-store
 
-sgo 0.19.1
+sgo 0.20.0

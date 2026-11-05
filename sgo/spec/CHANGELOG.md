@@ -2,6 +2,30 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.20.0 — 2026-11-07
+
+`float64` (W25; D185, D187–D194). The arithmetic is IEEE 754 binary64, rounded once per operation and never fused, so a program computes the same bits on every target; one NaN is observable; conversions to integers are checked. Not every 0.19 program keeps its meaning: `std/math`'s `Abs`, `Max`, `Min`, and `Pow` now take `float64`, and the integer versions are `IntAbs`, `IntMax`, `IntMin`, `IntPow` (D191). Every other 0.19 program keeps its meaning.
+
+New clauses:
+
+- SGO-FLOAT-002 — the `float64` type: literals, `+ - * /`, comparisons, IEEE 754 values with round-to-nearest-even and no contraction (the one fused operation is `math.FMA`), no float operation fails, one observable NaN, no float map keys (D187, D188, D190).
+- SGO-FLOAT-003 — conversions: `float64(i)` rounds to nearest-even; `int(f)`, `byte(f)`, `rune(f)` truncate toward zero and fail with `IntegerOverflow` for NaN, infinities, and out-of-range values; `string(f)` is denied (D189).
+
+Amended clauses:
+
+- SGO-FLOAT-001 v2 — only `float32`, the complex types, imaginary literals, `real`, `imag`, and `complex` stay denied.
+- SGO-LEX-004 v3 — decimal and hexadecimal floating-point literals.
+- SGO-TYPE-001 v10 — `float64` is an admitted type.
+- SGO-VAL-004 v2 — untyped floating-point constants are exact and rounded once when given type `float64`.
+- SGO-COMP-002 v3 — `float64` is a value type.
+- SGO-COMP-006 v2 — a map key type may not contain `float64`.
+- SGO-STD-004 v2 — `strconv.ParseFloat` and `strconv.FormatFloat`.
+- SGO-STD-007 v2 — `std/math` float functions: the exact set and Go's portable transcendentals, identical on every target; the integer functions renamed `Int*` (D191, D192).
+- SGO-STD-009 v2 — `fmt` float verbs `%v %f %F %e %E %g %G %b %x %X`, the `+` flag, and precision for every verb (D193).
+- SGO-RES-002 v4 — the tasks of a scope share its built-in resources; a user resource stays task-local and crosses tasks only by a move (W24 review P1).
+- SGO-RES-004 v6 — the same exception stated in the user-resource clause (W24 review P1).
+- SGO-RES-005 v2 — how helpers compose with sends: return the resource, send it from the scope that owns both (W24 review P2; parameter-lifetime summaries are D195, proposed).
+
 ## 0.19.1 — 2026-11-07
 
 A plain error exit for command-line programs (D186). Every 0.19.0 program keeps its meaning.

@@ -1,4 +1,4 @@
 module example.com/mod-version-malformed
 
-sgo 0.19.1
+sgo 0.20.0
 require example.com/lib 1.0

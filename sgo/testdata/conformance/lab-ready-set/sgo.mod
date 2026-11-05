@@ -1,3 +1,3 @@
 module example.com/lab-ready-set
 
-sgo 0.19.1
+sgo 0.20.0

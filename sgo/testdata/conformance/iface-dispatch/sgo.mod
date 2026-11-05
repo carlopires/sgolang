@@ -1,3 +1,3 @@
 module example.com/iface-dispatch
 
-sgo 0.19.1
+sgo 0.20.0

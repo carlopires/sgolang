@@ -1,3 +1,3 @@
 module example.com/spawn-unrelated-task
 
-sgo 0.19.1
+sgo 0.20.0

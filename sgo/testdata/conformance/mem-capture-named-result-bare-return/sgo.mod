@@ -1,3 +1,3 @@
 module example.com/mem-capture-named-result-bare-return
 
-sgo 0.19.1
+sgo 0.20.0

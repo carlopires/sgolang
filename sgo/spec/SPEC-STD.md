@@ -70,7 +70,7 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 
 ### SGO-STD-004 — `std/strconv`: Integer, boolean, and quoted text
 - **version:** 2
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-TYPE-001, SGO-COMP-004, SGO-ERR-003, SGO-FLOAT-002; D103, D109, D125, D126, D121, D124, D193.
 - **grammar_and_types:** The package `std/strconv` exports exactly: `func Atoi(s string) (int, error)`; `func FormatBool(b bool) string`; `func FormatFloat(f float64, fmt byte, prec int) string`; `func FormatInt(v int, base int) string`; `func Itoa(v int) string`; `func ParseBool(s string) (bool, error)`; `func ParseFloat(s string) (float64, error)`; `func ParseInt(s string, base int) (int, error)`; `func QuoteToASCII(s string) string`; `func Unquote(s string) (string, error)`.
 - **preconditions:** For `FormatInt`: 2 ≤ base ≤ 36.
@@ -87,7 +87,7 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **positive_tests:** fixture:std-import, fixture:std-strconv-parse, fixture:std-strconv-float; the `sgo test` suite of `std/strconv`; test-std-diff; W25 differential runs against Go's strconv: 45600 FormatFloat and 4073 ParseFloat cases identical (sgo/evidence/w25/README.md).
 - **negative_tests:** fixture:std-strconv-parse, fixture:std-strconv-float (out of range and invalid syntax).
 - **implementation_coverage:** `src/sgostd/strconv/` (W25: `decimal.sgo`, `atof.sgo`, `ftoa.sgo`).
-- **executed_evidence:** W16: its `sgo test` suite (`sgo/scripts/test-std.py`), `sgo/scripts/test-std-diff.py`, `sgo/scripts/std-api-check.py`, conformance (sgo/evidence/w16/README.md); W25: recorded at the 0.20.0 freeze (sgo/evidence/w25/README.md).
+- **executed_evidence:** W16: its `sgo test` suite (`sgo/scripts/test-std.py`), `sgo/scripts/test-std-diff.py`, `sgo/scripts/std-api-check.py`, conformance (sgo/evidence/w16/README.md); W25: conformance and the differential tests against Go (sgo/evidence/w25/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-005 — `std/utf8`: UTF-8
@@ -136,7 +136,7 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 
 ### SGO-STD-007 — `std/math`: Floating-point and integer math
 - **version:** 2
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-TYPE-001, SGO-COMP-004, SGO-ERR-003, SGO-FLOAT-002, SGO-FLOAT-003; D103, D109, D125, D126, D124, D188, D191, D192.
 - **grammar_and_types:** The package `std/math` exports exactly: `const E`; `const Ln10`; `const Ln2`; `const Log10E`; `const Log2E`; `const MaxFloat64`; `const MaxInt`; `const MinInt`; `const Phi`; `const Pi`; `const SmallestNonzeroFloat64`; `const Sqrt2`; `const SqrtE`; `const SqrtPhi`; `const SqrtPi`; `func Abs(x float64) float64`; `func Acos(x float64) float64`; `func Acosh(x float64) float64`; `func Asin(x float64) float64`; `func Asinh(x float64) float64`; `func Atan(x float64) float64`; `func Atan2(y, x float64) float64`; `func Atanh(x float64) float64`; `func Cbrt(x float64) float64`; `func Ceil(x float64) float64`; `func Copysign(f, sign float64) float64`; `func Cos(x float64) float64`; `func Cosh(x float64) float64`; `func Exp(x float64) float64`; `func Exp2(x float64) float64`; `func Expm1(x float64) float64`; `func FMA(x, y, z float64) float64`; `func Float64bits(f float64) int`; `func Float64frombits(b int) float64`; `func Floor(x float64) float64`; `func Frexp(f float64) (float64, int)`; `func Hypot(p, q float64) float64`; `func Inf(sign int) float64`; `func IntAbs(x int) int`; `func IntMax(a, b int) int`; `func IntMin(a, b int) int`; `func IntPow(x, n int) int`; `func IsInf(f float64, sign int) bool`; `func Ldexp(frac float64, e2 int) float64`; `func Log(x float64) float64`; `func Log10(x float64) float64`; `func Log1p(x float64) float64`; `func Log2(x float64) float64`; `func Max(x, y float64) float64`; `func Min(x, y float64) float64`; `func Mod(x, y float64) float64`; `func Modf(f float64) (float64, float64)`; `func NaN() float64`; `func Nextafter(x, y float64) float64`; `func Pow(x, y float64) float64`; `func Round(x float64) float64`; `func RoundToEven(x float64) float64`; `func Signbit(x float64) bool`; `func Sin(x float64) float64`; `func Sincos(x float64) (sn, cs float64)`; `func Sinh(x float64) float64`; `func Sqrt(x float64) float64`; `func Tan(x float64) float64`; `func Tanh(x float64) float64`; `func Trunc(x float64) float64`. `MaxInt` and `MinInt` are the untyped integer constants 2^63-1 and -2^63; `MaxFloat64` is (2-2^-52)·2^1023 and `SmallestNonzeroFloat64` 2^-1074; `E`, `Pi`, `Phi`, `Sqrt2`, `SqrtE`, `SqrtPi`, `SqrtPhi`, `Ln2`, `Log2E`, `Ln10`, `Log10E` are untyped floating-point constants with at least 60 significant decimal digits (e, π, φ, √2, √e, √π, √φ, ln 2, 1/ln 2, ln 10, 1/ln 10). In spec 0.19 and earlier, `Abs`, `Max`, `Min`, and `Pow` took `int`: those are now `IntAbs`, `IntMax`, `IntMin`, `IntPow` (D191).
 - **preconditions:** For `IntPow`: n ≥ 0. None for the float functions: every argument, including NaN and the infinities, has a defined result.
@@ -153,7 +153,7 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **positive_tests:** fixture:std-math-basic, fixture:std-math-float, fixture:float-special; the `sgo test` suite of `std/math`; `sgo/scripts/test-std-diff.py`; W25 differential runs against Go's portable math (amd64 v1, no fusion): 1433 arguments × 25 transcendental results and 419 × 16 exact functions bit-identical (sgo/evidence/w25/README.md).
 - **negative_tests:** fixture:std-math-abs-overflow, fixture:std-math-pow-negative.
 - **implementation_coverage:** `src/sgostd/math/` (W16; W25: `float.sgo`, `bits.sgo`, `fma.sgo`, and the `go_*.sgo` ports of Go's portable transcendentals, including `go_trig_reduce.sgo`).
-- **executed_evidence:** W16: its `sgo test` suite (`sgo/scripts/test-std.py`), `sgo/scripts/test-std-diff.py`, `sgo/scripts/std-api-check.py`, conformance (sgo/evidence/w16/README.md); W25: recorded at the 0.20.0 freeze (sgo/evidence/w25/README.md).
+- **executed_evidence:** W16: its `sgo test` suite (`sgo/scripts/test-std.py`), `sgo/scripts/test-std-diff.py`, `sgo/scripts/std-api-check.py`, conformance (sgo/evidence/w16/README.md); W25: conformance and the differential tests against Go (sgo/evidence/w25/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-008 — `std/io`: Stream interfaces
@@ -181,7 +181,7 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 
 ### SGO-STD-009 — `std/fmt`: Formatted text
 - **version:** 2
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-001, SGO-STD-004, SGO-STD-008, SGO-IFACE-004, SGO-TYPE-003, SGO-FLOAT-002; D125, D183, D193.
 - **grammar_and_types:** The package `std/fmt` exports exactly: `func Errorf(format string, args []any) error`; `func Fprintf(w io.Writer, format string, args []any) error`; `func Sprintf(format string, args []any) string`; `func Wrapf(err error, format string, args []any) error`; `type Stringer`. `Stringer` is an interface with `String() string`. The arguments are an explicit `[]any`, since variadic functions are denied (SGO-TYPE-003).
 - **preconditions:** None.
@@ -198,7 +198,7 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **positive_tests:** fixture:std-fmt-basic, fixture:std-fmt-float, fixture:float-usertype; `sgo/scripts/test-std-diff.py` (against Go's fmt, with float arguments, `+`, and precisions).
 - **negative_tests:** fixture:std-fmt-basic, fixture:std-fmt-float (format errors in the text).
 - **implementation_coverage:** `src/sgostd/fmt/`.
-- **executed_evidence:** conformance fixture std-fmt-basic (darwin/arm64, linux/amd64, linux/arm64); `sgo/scripts/test-std-diff.py` (seeds 1 and 7, identical to Go's); `src/sgostd` package tests; `sgo/evidence/w24/README.md`; W25: `sgo/scripts/test-std-diff.py` seeds 1-6, 11698 checks identical to Go's, recorded at the 0.20.0 freeze (sgo/evidence/w25/README.md).
+- **executed_evidence:** conformance fixture std-fmt-basic (darwin/arm64, linux/amd64, linux/arm64); `sgo/scripts/test-std-diff.py` (seeds 1 and 7, identical to Go's); `src/sgostd` package tests; `sgo/evidence/w24/README.md`; W25: `sgo/scripts/test-std-diff.py` seeds 1-6, 11698 checks identical to Go's (sgo/evidence/w25/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-010 — `std/time`: Durations

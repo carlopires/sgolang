@@ -26,7 +26,7 @@ Value structs and arrays are admitted from spec 0.8.0 (SGO-COMP-002, SGO-COMP-00
 
 ### SGO-COMP-002 — Value structs and arrays
 - **version:** 3
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-COMP-001, SGO-TYPE-001, SGO-BIND-003, SGO-VAL-005, SGO-MEM-002, SGO-CHAN-002, SGO-UTYPE-002, SGO-COMP-003; D86, D87, D89.
 - **grammar_and_types:** From spec 0.9.0, struct fields and array elements may also have channel types and the task-local types of SGO-COMP-004 (pointers, slices, maps); a struct or array with such a field or element is not a value type, and one holding a channel has no `==` (D95). A *value type* is `int`, `float64` (spec 0.20.0), `bool`, `string`, a struct type all of whose fields have value types, an array type `[N]T` whose element type T is a value type (N a non-negative constant of type int), or a named type (SGO-UTYPE-002) whose underlying type is a value type. Admitted: struct types `struct { F T; ... }` with value-type fields (exported or not, by the case of the name); array types as above; composite literals of these types, keyed (`T{F: v}`, `[N]T{i: v}`) or positional (`T{v1, v2}`, `[N]T{v1, v2}`, `[...]T{...}`), with omitted fields and elements set to their zero value; field selection `x.F` and field assignment `x.F = v`; element indexing `a[i]` and element assignment `a[i] = v` (SGO-COMP-003); `len(a)` of an array (a constant); `for i, v := range a` over an array (index then a copy of the element, in increasing index order); `==` and `!=` on values of the same struct or array type (fieldwise, elementwise, in declaration and index order; every value type is comparable). A struct or array is a *value*: assignment, passing as an argument, returning, sending, and capture copy the whole value. Value types are admitted as channel element types and as `sgo.Channel[T]` and permit payloads (amending SGO-CHAN-002, SGO-PERMIT-002). Still denied (SGO-COMP-001): fields or elements of any other type (function, channel, error, handle types), pointers, `&`, `new`, embedded fields, struct tags, anonymous struct types in type positions other than a named type's definition, blank (`_`) fields, slicing an array, and arrays used through a pointer.
 - **preconditions:** n/a — static rules; dynamic indexing preconditions are in SGO-COMP-003.
@@ -114,7 +114,7 @@ Value structs and arrays are admitted from spec 0.8.0 (SGO-COMP-002, SGO-COMP-00
 
 ### SGO-COMP-006 — Maps with insertion order
 - **version:** 2
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-COMP-002, SGO-COMP-004, SGO-COMP-008, SGO-LAB-001, SGO-FLOAT-002; D88, D91, D190.
 - **grammar_and_types:** Map types `map[K]V` where K is a value type (SGO-COMP-002; comparable) that is not `float64` and contains no `float64` at any depth (a NaN key could be inserted any number of times and never be found, D190), and V any admitted type other than a handle type. Constructors: map literals `map[K]V{k: v, ...}` and `make(map[K]V)` (an optional size hint `make(map[K]V, n)`, n of type int). Operations: `m[k]`, `v, ok := m[k]`, `m[k] = v` (and `op=`, `++`, `--`), `delete(m, k)`, `len(m)`, `clear(m)`, `for k := range m`, `for k, v := range m`, `m == nil`, `m != nil`. Maps are not comparable except to nil. A duplicate constant key in a literal is a compile error.
 - **preconditions:** For a write (`m[k] = v`, `op=`, `++`, `--`): m is not nil. For `make` with a hint: n ≥ 0.

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": "0.19.1",
+  "spec_version": "0.20.0",
   "status": "admitted_0.7.0",
   "warning": "Spec 0.7.0 admits every row marked 'admitted': its clauses are frozen, the toolchain implements and enforces them, and its acceptance cases have executed evidence (constitution §6, D83). Rows marked 'denied' stay rejected. Admission does not widen any row beyond its clauses; everything the clauses do not name is rejected.",
   "default_decision": "reject",
@@ -91,7 +91,7 @@
         "SGO-LEX-001": "frozen",
         "SGO-LEX-002": "frozen",
         "SGO-LEX-003": "frozen",
-        "SGO-LEX-004": "draft"
+        "SGO-LEX-004": "frozen"
       },
       "clause_versions": {
         "SGO-LEX-001": 1,
@@ -193,7 +193,7 @@
         "SGO-TYPE-008": "260f9ec87ffcdfd4c08f4fef0f42965105383cc2c0986a5d48a70ce18a5c1618"
       },
       "clause_status": {
-        "SGO-TYPE-001": "draft",
+        "SGO-TYPE-001": "frozen",
         "SGO-TYPE-002": "frozen",
         "SGO-TYPE-003": "frozen",
         "SGO-TYPE-004": "frozen",
@@ -251,7 +251,7 @@
         "SGO-VAL-001": "frozen",
         "SGO-VAL-002": "frozen",
         "SGO-VAL-003": "frozen",
-        "SGO-VAL-004": "draft",
+        "SGO-VAL-004": "frozen",
         "SGO-VAL-005": "frozen"
       },
       "clause_versions": {
@@ -1131,7 +1131,7 @@
         "SGO-RES-005",
         "SGO-RES-006"
       ],
-      "normative_text_digest": "5b76a6d524b16afc52636d45795a4ef61176afd793119af72fc74ce91b33c3ef",
+      "normative_text_digest": "a583553e1510f7d84309daefabab10ab5886fb33d7276442eb0aaa68cee21d85",
       "admitted_in": [
         "0.16.0"
       ],
@@ -1143,10 +1143,10 @@
       "subset0": "denied",
       "clause_digests": {
         "SGO-RES-001": "e8999c162ee9df395636ae52d38738e0d88132c73559a0bdaca68640787b3c5c",
-        "SGO-RES-002": "57b541653622be24186045263e9038d3188a729e8962d5fd926468f32a1c0b7e",
+        "SGO-RES-002": "7d83230fe256ed3a62c4c1413be5625d8878c940f307b2d74118abfa1b58e51d",
         "SGO-RES-003": "d1ddf9057d29151afa4533cc5506d3d1896a3d8f3a1883d01f13a9d4fc0bfaca",
-        "SGO-RES-004": "42c0aa30c0377da9ce7ba5f771f04803f7336c5fc8957e6f95ddbd81202d326f",
-        "SGO-RES-005": "cfee81d4f351ae84987d25c09433c6d0d7958a1e18abc350faef0009f71164d8",
+        "SGO-RES-004": "0736aef37e40c17ac6cd2a69dc1576abf621709c0e768c59467f53ca9c458c22",
+        "SGO-RES-005": "45c6cf46c1ca5035b1c98756193348128631befbf222e8e2b3d2b24db7be450a",
         "SGO-RES-006": "b0410de41238231bfdddc0fab1ffc30340dcdf5734becab14e5ed1c507966a6f"
       },
       "clause_status": {
@@ -1159,10 +1159,10 @@
       },
       "clause_versions": {
         "SGO-RES-001": 3,
-        "SGO-RES-002": 3,
+        "SGO-RES-002": 4,
         "SGO-RES-003": 4,
-        "SGO-RES-004": 5,
-        "SGO-RES-005": 1,
+        "SGO-RES-004": 6,
+        "SGO-RES-005": 2,
         "SGO-RES-006": 1
       }
     },
@@ -1388,21 +1388,25 @@
       "id": "SPEC-FLOAT",
       "surface_family": "Floating-point types, IEEE 754 rounding, NaN and conversion outcomes",
       "specification_work_package": "W01",
-      "implementation_owner_work_package": "W03",
-      "status": "denied",
+      "implementation_owner_work_package": "W25",
+      "status": "admitted",
       "clause_ids": [
         "SGO-FLOAT-001",
         "SGO-FLOAT-002",
         "SGO-FLOAT-003"
       ],
       "normative_text_digest": "d54e16c21ca5bd943bf882a54d65fbeb7b9fe346e20fa983d7cfc872648f1588",
-      "admitted_in": [],
+      "admitted_in": [
+        "0.20.0"
+      ],
       "acceptance_case_ids": [
         "S16",
         "S17"
       ],
-      "evidence": [],
-      "decision_refs": "D03",
+      "evidence": [
+        "sgo/evidence/w25/README.md"
+      ],
+      "decision_refs": "D03,D185,D187,D188,D189,D190",
       "subset0": "denied",
       "clause_digests": {
         "SGO-FLOAT-001": "6850321b05df2349df293f69a3cbf0b5180288643b77133ff99f1c0d0e4d7daf",
@@ -1410,9 +1414,9 @@
         "SGO-FLOAT-003": "b4e6e5c615603f9a065433074404239d4fdae5c7dede9bc7847d075552bd348b"
       },
       "clause_status": {
-        "SGO-FLOAT-001": "draft",
-        "SGO-FLOAT-002": "draft",
-        "SGO-FLOAT-003": "draft"
+        "SGO-FLOAT-001": "frozen",
+        "SGO-FLOAT-002": "frozen",
+        "SGO-FLOAT-003": "frozen"
       },
       "clause_versions": {
         "SGO-FLOAT-001": 2,
@@ -1465,11 +1469,11 @@
       },
       "clause_status": {
         "SGO-COMP-001": "frozen",
-        "SGO-COMP-002": "draft",
+        "SGO-COMP-002": "frozen",
         "SGO-COMP-003": "frozen",
         "SGO-COMP-004": "frozen",
         "SGO-COMP-005": "frozen",
-        "SGO-COMP-006": "draft",
+        "SGO-COMP-006": "frozen",
         "SGO-COMP-007": "frozen",
         "SGO-COMP-008": "frozen",
         "SGO-COMP-009": "frozen"
@@ -1828,12 +1832,12 @@
         "SGO-STD-001": "frozen",
         "SGO-STD-002": "frozen",
         "SGO-STD-003": "frozen",
-        "SGO-STD-004": "draft",
+        "SGO-STD-004": "frozen",
         "SGO-STD-005": "frozen",
         "SGO-STD-006": "frozen",
-        "SGO-STD-007": "draft",
+        "SGO-STD-007": "frozen",
         "SGO-STD-008": "frozen",
-        "SGO-STD-009": "draft",
+        "SGO-STD-009": "frozen",
         "SGO-STD-010": "frozen"
       },
       "clause_versions": {
@@ -1851,5 +1855,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "8d7da77a60ffa82bbb9c1f72e6a6ecb7438cacd9bcdfb016d7f3eb84d9b0be93"
+  "rows_digest": "b705684f0fdc8e8191eff4ca20555e7eb9432d759df213f3b16c08955d260daf"
 }

@@ -27,12 +27,12 @@ API at 0.16.0: a method on a scope acquires into that scope (`root.Listen`, `n.D
 - **supported_execution_configurations:** production; lab (releases are lab boundaries, as closes are).
 
 ### SGO-RES-002 — Sharing a resource within its scope
-- **version:** 3
+- **version:** 4
 - **status:** frozen
 - **reference_closure:** SGO-RES-001, SGO-NET-002, SGO-FILE-003, SGO-CANCEL-002; D150.
 - **grammar_and_types:** There is no `LendTo` on resources: the methods are removed from every resource handle type and from `*sgo.Dir`. Effect handles (SPEC-AUTH) have no `LendTo` either: they are shareable authority tokens, never revoked (D169).
 - **preconditions:** The caller runs inside the resource's scope.
-- **evaluation_and_value_semantics:** Every task running inside a resource's scope may use it: the task that acquired it, and every task spawned, at any depth, into a nursery inside the scope. Concurrent operations on a socket admit one waiting reader and one waiting writer; other tasks wait their turn. Operations on a file are serialized. `Close` by any task inside the scope releases the resource early, unless another task is waiting in an operation on it.
+- **evaluation_and_value_semantics:** Every task running inside a built-in resource's scope (`*sgo.File`, `*sgo.Listener`, `*sgo.Conn`, `*sgo.Dialer`; SGO-RES-001) may use it: the task that acquired it, and every task spawned, at any depth, into a nursery inside the scope. A user resource (SGO-RES-004) is task-local (SGO-COMP-004): only the task that owns it, or the task its result was moved to (SGO-SPAWN-006), uses it; it reaches another task only by a move. Shared mutable state between tasks is a server task with request/reply calls (SGO-SPAWN-008) or channels of copied values. Concurrent operations on a socket admit one waiting reader and one waiting writer; other tasks wait their turn. Operations on a file are serialized. `Close` by any task inside the scope releases the resource early, unless another task is waiting in an operation on it.
 - **ownership_and_lifecycle:** as SGO-RES-001.
 - **effect_and_capability_requirements:** Using a resource needs no grant beyond the one it was acquired with.
 - **concurrency_and_memory_order:** Each operation is atomic with respect to `Close`. A `Close` that succeeds happens before every later operation on the resource, and each of those fails with `HandleClosed`.
@@ -42,8 +42,8 @@ API at 0.16.0: a method on a scope acquires into that scope (`root.Listen`, `n.D
 - **compile_link_checks:** `LendTo` is undefined (a type error).
 - **runtime_guards:** the scope check on every operation; the busy check on `Close`.
 - **tcb_assumptions:** `src/runtime/sgo_io.go`, `sgo_net.go`.
-- **positive_tests:** fixture:res-share-child-uses, fixture:res-share-nested-nursery, fixture:res-share-two-readers.
-- **negative_tests:** fixture:res-close-busy, fixture:res-use-after-close.
+- **positive_tests:** fixture:res-share-child-uses, fixture:res-share-nested-nursery, fixture:res-share-two-readers, fixture:res-user-via-call.
+- **negative_tests:** fixture:res-close-busy, fixture:res-use-after-close, fixture:res-user-send-in-scope, fixture:res-user-capture-denied.
 - **implementation_coverage:** W21: runtime `src/runtime/sgo_io.go`, `sgo_net.go`.
 - **executed_evidence:** `sgo/evidence/w21/README.md`.
 - **supported_execution_configurations:** production; lab.
@@ -71,13 +71,13 @@ API at 0.16.0: a method on a scope acquires into that scope (`root.Listen`, `n.D
 - **supported_execution_configurations:** production; lab.
 
 ### SGO-RES-004 — User resources: `Own` and `Release`
-- **version:** 5
+- **version:** 6
 - **status:** frozen
 - **reference_closure:** SGO-RES-001, SGO-RES-003, SGO-DEF-004, SGO-IFACE-002, SGO-COMP-004; D152, D155, D158.
 - **grammar_and_types:** `sgo.Releaser` is the interface `Release(ok bool) error`. `s.Own(r)` takes a value implementing it and ties `r` to `s`. A user resource is found by identity, so it is a pointer.
 - **preconditions:** The caller runs inside `s`; `r` is not a resource of any scope. The operand of `s.Own(x)` was made inside the extent of `s`: an allocation there, a call of a declared function or method (outside package `sgo`) whose arguments and receiver carry no reference — no pointer, slice, map, channel, interface, function value, or handle — and which therefore returns only memory it allocated (W23 review M4), or a local assigned only such values; `Own` of a value named outside the scope, or reachable from outer memory, is `SGO_E_RESOURCE_ESCAPES` at the operand (W21 review Z2).
 - **evaluation_and_value_semantics:** `Own` appends `r` to `s`'s list as an acquisition. When `s` releases it, `r.Release(ok)` runs in the task ending the scope, with `ok` true when the scope ends normally and false when it is unwinding (a failed child, a failure, or cancellation), as known after the join. Strict reverse order means that resources acquired after `r` are released before it, and those acquired before it after it, so a `Release` finds the resources acquired before its `Own` still open, and may use them: the releasing task counts as inside the scope until its release step ends. A user resource has no `Close` of its own; a method that releases early must make `Release` a no-op afterwards.
-- **ownership_and_lifecycle:** as SGO-RES-001. A user resource's fields may hold built-in resources, which their own scopes release, or refer to resources of enclosing scopes (a lease).
+- **ownership_and_lifecycle:** as SGO-RES-001, except for sharing: a user resource is task-local (SGO-COMP-004), so unlike a built-in resource (SGO-RES-002) the tasks inside its scope do not share it; only its owning task, or the task its result was moved to (SGO-SPAWN-006), uses it, and it crosses tasks only by a move. A user resource's fields may hold built-in resources, which their own scopes release, or refer to resources of enclosing scopes (a lease).
 - **effect_and_capability_requirements:** those of the `Release` body.
 - **concurrency_and_memory_order:** `Release` runs after the join; no other task inside the scope runs. A pointer to a user resource is task-local (SGO-COMP-004): only the task that holds it, and the scope's release, use it. Registration with `Own` gives lifetime, not sharing or synchronization, and implementing `Release` grants no exception to the capture rules; the runtime adds no lock.
 - **allowed_nondeterminism:** none.
@@ -86,14 +86,14 @@ API at 0.16.0: a method on a scope acquires into that scope (`root.Listen`, `n.D
 - **compile_link_checks:** `Own` of a value whose type lacks `Release(bool) error`, or is not a pointer type, is a type error (`SGO_E_TYPE_MISMATCH`); `SGO_E_RESOURCE_ESCAPES` applies to user resource types from their `Own` on.
 - **runtime_guards:** the identity check against double registration; the scope check of SGO-RES-001.
 - **tcb_assumptions:** `src/runtime/sgo_res.go`.
-- **positive_tests:** fixture:res-user-commit-rollback, fixture:res-own-order, fixture:res-user-move, fixture:res-pool-lease. Also fixture:res-own-fresh, fixture:res-own-constructor.
-- **negative_tests:** fixture:res-own-no-release, fixture:res-own-twice, fixture:res-release-error-nursery, fixture:res-own-release-panic. Also fixture:res-own-outer-var, fixture:res-own-outer-field, fixture:res-own-value-type, fixture:res-user-capture-denied, fixture:res-own-constructor-alias.
+- **positive_tests:** fixture:res-user-commit-rollback, fixture:res-own-order, fixture:res-user-move, fixture:res-pool-lease, fixture:res-user-via-call. Also fixture:res-own-fresh, fixture:res-own-constructor.
+- **negative_tests:** fixture:res-own-no-release, fixture:res-own-twice, fixture:res-release-error-nursery, fixture:res-own-release-panic. Also fixture:res-own-outer-var, fixture:res-own-outer-field, fixture:res-own-value-type, fixture:res-user-capture-denied, fixture:res-own-constructor-alias, fixture:res-user-send-in-scope.
 - **implementation_coverage:** W21: runtime `src/runtime/sgo_res.go`; API `src/sgo/io.go`.
 - **executed_evidence:** `sgo/evidence/w21/README.md`.
 - **supported_execution_configurations:** production; lab.
 
 ### SGO-RES-005 — Hand-off within a scope: channels and the deciding scope
-- **version:** 1
+- **version:** 2
 - **status:** frozen
 - **reference_closure:** SGO-RES-001, SGO-RES-002, SGO-RES-003, SGO-CHAN-001, SGO-PERMIT-001, SGO-NET-003; D158.
 - **grammar_and_types:** A native channel, `*sgo.Channel[E]`, or `*sgo.SendPermit[E]` whose element type `E` holds a resource is a resource type: it is tied to the extent where it was made (`make` or `sgo.NewChannel`), and a permit is tied as its channel is.
@@ -105,7 +105,7 @@ API at 0.16.0: a method on a scope acquires into that scope (`root.Listen`, `n.D
 - **allowed_nondeterminism:** which candidate reports first.
 - **failure_and_partial_progress:** as the channel operations.
 - **cancellation_and_cleanup:** Candidates that lose are released when the deciding scope ends, also when it is cancelled.
-- **compile_link_checks:** `SGO_E_RESOURCE_ESCAPES` for a send on a channel that may outlive the value's scope. A channel parameter's lifetime is not comparable with another parameter's, so a helper cannot forward a resource from one parameter to a channel received as another.
+- **compile_link_checks:** `SGO_E_RESOURCE_ESCAPES` for a send on a channel that may outlive the value's scope. A channel parameter's lifetime is not comparable with another parameter's, so a helper cannot forward a resource from one parameter to a channel received as another. The supported composition: a helper returns the resource (SGO-RES-001 ties the result to its scope), and the caller, in the scope that owns both the resource and the channel, sends it (fixture:res-pipeline-files). Summaries of parameter lifetimes in export data, which would admit such helpers across packages, are proposed as D195.
 - **runtime_guards:** none (static).
 - **tcb_assumptions:** the flow pass `src/cmd/compile/internal/types2/sgo_resflow.go`.
 - **positive_tests:** fixture:res-send-within-scope, fixture:res-pipeline-files, fixture:net-dialer-race; examples/happyeyeballs (real run and every lab scenario).

@@ -70,7 +70,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §4 and decisions D02–D04.
 
 ### SGO-VAL-004 — Constants
 - **version:** 2
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-LEX-004, SGO-TYPE-002, SGO-VAL-001, SGO-FLOAT-002, SGO-FLOAT-003; D189; R3.
 - **grammar_and_types:** A constant expression consists of literals, constant names, `true`, `false`, the operators of SGO-VAL-001..003 applied to constant operands, and `len` of a constant string. Constants are untyped unless declared with a type (`const c int = 3`).
 - **preconditions:** n/a — compile-time evaluation.

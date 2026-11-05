@@ -1,3 +1,3 @@
 module example.com/call-accept-per-iteration
 
-sgo 0.19.1
+sgo 0.20.0

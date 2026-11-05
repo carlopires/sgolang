@@ -1,3 +1,3 @@
 module example.com/native-cancel-child-failure-primary
 
-sgo 0.19.1
+sgo 0.20.0

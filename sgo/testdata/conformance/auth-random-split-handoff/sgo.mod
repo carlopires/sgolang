@@ -1,5 +1,5 @@
 module example.com/auth-random-split-handoff
 
-sgo 0.19.1
+sgo 0.20.0
 
 grant random

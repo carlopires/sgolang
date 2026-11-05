@@ -42,9 +42,10 @@
         "SPEC-CONTROL",
         "SPEC-COMPOSITE",
         "SPEC-USERTYPE",
-        "SPEC-IFACE"
+        "SPEC-IFACE",
+        "SPEC-FLOAT"
       ],
-      "statement": "A program compiles only if every construct it uses is in the closed S-Go subset (spec 0.14.0): .sgo sources, int/byte/bool/string/error, value structs and arrays, named types with value- and pointer-receiver methods, named interface types and any with dynamic dispatch, comma-ok assertions and type switches, slices, insertion-ordered maps, pointers, frozen values (sgo.Frozen[T]), function values, the admitted statements. Task-local data (slices, maps, pointers, and interface values other than error) never crosses tasks except as a deep copy made by sgo.Copy, or frozen by sgo.Freeze, which no task can write (D85, D98–D101). Integer and byte overflow, division by zero, an out-of-range index or slice, a nil dereference (including a method call on a nil interface: there is no typed nil), and a write to a nil map are checked failures with a specified record, never wraparound or undefined behavior; map iteration order is insertion order, the same in production and in the lab.",
+      "statement": "A program compiles only if every construct it uses is in the closed S-Go subset (spec 0.20.0): .sgo sources, int/float64/byte/bool/string/error, value structs and arrays, named types with value- and pointer-receiver methods, named interface types and any with dynamic dispatch, comma-ok assertions and type switches, slices, insertion-ordered maps, pointers, frozen values (sgo.Frozen[T]), function values, the admitted statements. Task-local data (slices, maps, pointers, and interface values other than error) never crosses tasks except as a deep copy made by sgo.Copy, or frozen by sgo.Freeze, which no task can write (D85, D98–D101). Integer and byte overflow, division by zero, an out-of-range index or slice, a nil dereference (including a method call on a nil interface: there is no typed nil), and a write to a nil map are checked failures with a specified record, never wraparound or undefined behavior; map iteration order is insertion order, the same in production and in the lab. float64 arithmetic is IEEE 754 binary64 rounded once per operation and never fused (the one fused operation is math.FMA), so it gives the same bits on every target; one NaN is observable; a float map key is refused; a conversion of NaN, an infinity, or an out-of-range value to an integer type is a checked failure (IntegerOverflow).",
       "scope": [
         "admission",
         "runtime_enforced",
@@ -64,19 +65,19 @@
         "src/cmd/compile/internal/sgoadmit/admit.go",
         "src/cmd/compile/internal/sgoadmit/admit_expr.go",
         "src/cmd/compile/internal/ssagen/sgo.go",
-        "src/cmd/compile/internal/walk/convert.go"
+        "src/cmd/compile/internal/walk/convert.go",
+        "src/cmd/compile/internal/ssa/func.go"
       ]
     },
     {
       "id": "G-DENY",
       "families": [
-        "SPEC-FLOAT",
         "SPEC-GENERIC",
         "SPEC-REFLECT",
         "SPEC-NATIVE",
         "SPEC-RANDOM"
       ],
-      "statement": "Floating point, anonymous struct types, pointers to handles, interface forms outside SGO-IFACE-002..004 (interface literals, type sets, comparison of interface values, single-value assertions), generics, reflection, math/rand, unsafe, cgo, assembly, go:linkname, plugins and raw system calls are rejected at compile time with SGO_E_UNADMITTED; there is no flag, build mode or environment setting that admits them. (Value structs, arrays, and named types are admitted from spec 0.8.0, slices, maps, and pointers from 0.9.0, range over strings from 0.12.0, and interfaces from 0.14.0: G-LANG.)",
+      "statement": "float32, complex numbers, anonymous struct types, pointers to handles, interface forms outside SGO-IFACE-002..004 (interface literals, type sets, comparison of interface values, single-value assertions), generics, reflection, math/rand, unsafe, cgo, assembly, go:linkname, plugins and raw system calls are rejected at compile time with SGO_E_UNADMITTED; there is no flag, build mode or environment setting that admits them. (Value structs, arrays, and named types are admitted from spec 0.8.0, slices, maps, and pointers from 0.9.0, range over strings from 0.12.0, interfaces from 0.14.0, and float64 from 0.20.0: G-LANG.)",
       "scope": [
         "admission",
         "tested"
@@ -354,7 +355,7 @@
       "families": [
         "SPEC-STD"
       ],
-      "statement": "The standard library (std/errors, strings, bytes, strconv, utf8, sort, math; spec 0.13.0, with errors.Unwrap and sort.Sort from 0.14.0) is S-Go source compiled under the same admission and sharing rules as user code, verified against its MANIFEST before use; it holds no package state and no capability. Each package exports exactly the declarations its SGO-STD clause lists, and each function with a Go counterpart gives that function's results on generated inputs, apart from the deviations its clause lists (no bitSize in ParseInt, ASCII-only case mapping, error inputs quoted by QuoteToASCII). Every sort is stable and the same on every platform.",
+      "statement": "The standard library (std/errors, strings, bytes, strconv, utf8, sort, math; spec 0.13.0, with errors.Unwrap and sort.Sort from 0.14.0, io from 0.18.0, fmt and time from 0.19.0, and float64 in math, strconv, and fmt from 0.20.0) is S-Go source compiled under the same admission and sharing rules as user code, verified against its MANIFEST before use; it holds no package state and no capability. Each package exports exactly the declarations its SGO-STD clause lists, and each function with a Go counterpart gives that function's results on generated inputs, apart from the deviations its clause lists (no bitSize in ParseInt, ParseFloat, or FormatFloat; math's integer functions named IntAbs, IntMin, IntMax, IntPow; ASCII-only case mapping, error inputs quoted by QuoteToASCII). math's transcendental functions are Go's portable algorithms in S-Go source, never fused: their results are within 1 ulp and identical on every target, but not always correctly rounded. Every sort is stable and the same on every platform.",
       "scope": [
         "admission",
         "tested"

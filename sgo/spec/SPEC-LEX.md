@@ -70,7 +70,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §1, decisions D14/D19, and resolut
 
 ### SGO-LEX-004 — Literals
 - **version:** 3
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-VAL-004, SGO-ERR-001, SGO-TYPE-008, SGO-FLOAT-001, SGO-FLOAT-002; D03, D04, D119, D187; R2.
 - **grammar_and_types:** Integer literals: decimal (`0` or a non-zero digit followed by digits), hexadecimal (`0x`/`0X`), octal (`0o`/`0O`), binary (`0b`/`0B`), with optional single `_` between digits or after the base prefix. A leading-zero form such as `012` is a compile error (no legacy octal). String literals: interpreted (`"…"`, escapes exactly `\n \t \r \\ \" \xHH \uHHHH \UHHHHHHHH`, no raw newline) and raw (backquoted, no escapes, carriage returns removed). Rune literals (spec 0.12.0): one character other than `'`, newline, or `\` between single quotes, or one escape `\n \t \r \\ \' \xHH \uHHHH \UHHHHHHHH`. Floating-point literals (spec 0.20.0): decimal, digits with a `.` and/or an exponent `e`/`E` with an optional sign (`1.5`, `1.`, `.5`, `1e9`, `2.5E-3`), and hexadecimal, `0x`/`0X` then hex digits with an optional `.` and a mandatory binary exponent `p`/`P` (`0x1p-2`, `0x1.8p1`), with optional single `_` between digits or after the base prefix. Imaginary literals and the escapes `\a \b \f \v \NNN` are denied; `\'` is not an escape of string literals nor `\"` of rune literals.
 - **preconditions:** SGO-LEX-001 holds.

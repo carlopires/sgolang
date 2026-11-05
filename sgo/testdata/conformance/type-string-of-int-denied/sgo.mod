@@ -1,3 +1,3 @@
 module example.com/type-string-of-int-denied
 
-sgo 0.19.1
+sgo 0.20.0

@@ -4,7 +4,7 @@
 
 ### SGO-FLOAT-001 — float32, complex numbers, and imaginary literals are denied
 - **version:** 2
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-ERR-001, SGO-FLOAT-002; D03, D187.
 - **grammar_and_types:** Denied: `float32`, `complex64`, `complex128`, imaginary literals (`2i`), the built-in functions `real`, `imag`, and `complex`, and every operation on them. No form of these constructs is admitted in any package compiled for the target, including dependencies and unreachable code. (`float64` and floating-point literals are admitted by SGO-FLOAT-002; spec 0.19 and earlier denied them here.)
 - **preconditions:** n/a — denial clause; there is nothing to use.
@@ -21,12 +21,12 @@
 - **positive_tests:** n/a — denial clause.
 - **negative_tests:** S16; fixture:float32-denied, fixture:float-complex-denied.
 - **implementation_coverage:** `src/cmd/compile/internal/sgoadmit` (types and imaginary literals), W03; narrowed in W25.
-- **executed_evidence:** W03 compiler-level denial; W25: conformance on darwin/arm64 (sgo/evidence/w25/README.md, recorded at the 0.20.0 freeze).
+- **executed_evidence:** W03 compiler-level denial; W25: conformance (sgo/evidence/w25/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-FLOAT-002 — The float64 type
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-FLOAT-001, SGO-FLOAT-003, SGO-TYPE-001, SGO-TYPE-002, SGO-VAL-004, SGO-COMP-002, SGO-COMP-006, SGO-UTYPE-001, SGO-STD-007; D185, D187, D188, D190.
 - **grammar_and_types:** The predeclared type `float64` and user types whose underlying type is `float64` (`type Celsius float64`, SGO-UTYPE-001); floating-point literals: decimal (`1.5`, `1e9`, `.5`) and hexadecimal (`0x1p-2`, `0x1.8p1`), with `_` allowed only between digits, or between the `0x` prefix and a digit; the operators `+ - * /`, unary `+` and `-`, `== != < <= > >=`, and the assignment forms `= += -= *= /=` and `++ --`, on operands of identical type. There is no `%` on floats, no bitwise or shift operator on them, and no implicit conversion between `int` and `float64`: a mixed operation needs an explicit conversion (SGO-FLOAT-003). A `float64` may be a struct field, an array or slice element, a map value, a parameter, a result, and an element of a channel. A map key type that is `float64`, a user type over it, or a struct or array containing one at any depth, is denied.
 - **preconditions:** None.
@@ -43,12 +43,12 @@
 - **positive_tests:** fixture:float-arith, fixture:float-special, fixture:float-compare, fixture:float-literals, fixture:float-usertype, fixture:type-float, fixture:lex-float-literal; `sgo/scripts/float-oracle.py` (the exact reference of D194).
 - **negative_tests:** fixture:float-map-key-denied, fixture:float-struct-key-denied, fixture:float-mod-denied, fixture:float-bitwise-denied, fixture:float-mixed-denied, fixture:float-const-overflow.
 - **implementation_coverage:** W25: `src/cmd/compile/internal/sgoadmit` (admission), `types2` (map keys), `ssa` (`useFMA`).
-- **executed_evidence:** n/a — draft; recorded at the 0.20.0 freeze (sgo/evidence/w25/README.md).
+- **executed_evidence:** W25: conformance and the differential tests against Go (sgo/evidence/w25/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-FLOAT-003 — Conversions between float64 and integers
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-FLOAT-002, SGO-TYPE-002, SGO-TYPE-007, SGO-TYPE-008, SGO-VAL-001, SGO-VAL-004, SGO-DEF-003; D189.
 - **grammar_and_types:** `float64(e)` where `e` is of type `int`, `byte`, or `rune` (or a user type over one); `int(f)`, `byte(f)`, and `rune(f)` where `f` is of type `float64` (or a user type over it); conversions between `float64` and user types over `float64`. `string(f)` is denied (text is `strconv.FormatFloat` and `fmt`).
 - **preconditions:** None.
@@ -65,5 +65,5 @@
 - **positive_tests:** fixture:float-convert.
 - **negative_tests:** fixture:float-convert-nan, fixture:float-convert-inf, fixture:float-convert-range, fixture:float-convert-byte-range, fixture:float-const-not-integral, fixture:float-string-denied.
 - **implementation_coverage:** W25: `src/cmd/compile/internal/ssagen/sgo.go` (`sgoFloatConvCheck`), `sgoadmit`.
-- **executed_evidence:** n/a — draft; recorded at the 0.20.0 freeze (sgo/evidence/w25/README.md).
+- **executed_evidence:** W25: conformance and the differential tests against Go (sgo/evidence/w25/README.md).
 - **supported_execution_configurations:** production, lab.
