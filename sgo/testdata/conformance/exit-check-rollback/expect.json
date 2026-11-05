@@ -1,0 +1,6 @@
+{
+ "kind": "run",
+ "clauses": ["SGO-CTL-004", "SGO-ERR-004", "SGO-RES-004"],
+ "exit": 0,
+ "stdout": "rollback;boom\n"
+}

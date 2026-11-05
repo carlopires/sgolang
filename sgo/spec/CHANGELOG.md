@@ -2,6 +2,29 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.18.0 — 2026-11-06
+
+The concurrency library and resource interfaces (W23; D173–D176) and the errata of the 0.17.0 review. Not every 0.17.0 program keeps its meaning: an error exit (a `return` with a non-nil error, a failing `check`) cancels each nursery it crosses, as implemented since W22 (SGO-CTL-004 v2); `Own` of a non-pointer value is refused; a start into a cancelling nursery publishes the cancellation instead of deadlocking.
+
+New clauses:
+
+- SGO-FILE-004 — whole-message reads: `ReadLine`, `ReadAll`, `sgo.IsTooLong`; one read turn per handle (D164, D173).
+- SGO-SPAWN-008 — request/reply calls: `sgo.NewCall[Req, Resp](n)`, `Call`, `Accept`, `Request.Reply`, `sgo.IsNoReply` (D167, D174).
+- SGO-SPAWN-009 — pools with leases: `sgo.NewPool[T](n)`, `Put`, `Acquire(s)`, `Lease.Value`, `Return`, `Drop` (D175).
+- SGO-RES-006 — resource interfaces: an interface embedding `sgo.Resource` holds resources, is tied as what it holds, and is task-local (D176).
+- SGO-STD-008 — `std/io`: `Reader`, `LineReader`, `Writer` and helpers over resource interfaces (D176).
+
+Amended clauses:
+
+- SGO-SPAWN-006 v2 — `Result()` channels are edge-triggered, one per call; a start into a cancelling nursery resolves to the cancellation; resources inside an aggregate result move into the nursery; a `Go` child's body is released with `Release(true)`.
+- SGO-SPAWN-007 v2 — `g.Go` into a cancelling nursery publishes the cancellation and frees its slot.
+- SGO-CTL-004 v2 — an error exit cancels each nursery it crosses; resources there see `Release(false)`; a normal exit joins without cancelling (D159).
+- SGO-ERR-004 v3 — a failing `check` is such an error exit.
+- SGO-RES-001 v3 — a resource may be converted to a resource interface, which is tied as its source.
+- SGO-RES-004 v5 — a pointer to a user resource is task-local (`Own` gives lifetime, not sharing); `Own` takes a pointer (`SGO_E_TYPE_MISMATCH`); `Own` accepts the result of a constructor handed no reference.
+- SGO-FILE-003 v3 — reads of one handle run one at a time (the read turn of SGO-FILE-004).
+- SGO-IFACE-002 v2 — a handle may be the dynamic value of a resource interface.
+
 ## 0.17.0 — 2026-11-05
 
 The language core for structured concurrency (W22; D159–D172). Not every 0.16.2 program keeps its meaning: `LendTo` is removed from effect handles (D169); `sgo.Go` refuses a task-local result type (a slice, map, or pointer result is returned as `sgo.Frozen`); a task or group handle delivering a resource may not leave the nursery the child started in.

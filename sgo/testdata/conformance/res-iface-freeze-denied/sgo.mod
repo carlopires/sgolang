@@ -1,3 +1,3 @@
 module example.com/res-iface-freeze-denied
 
-sgo 0.17.0
+sgo 0.18.0

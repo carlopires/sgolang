@@ -47,7 +47,7 @@ Ambient file-system access stays denied (SGO-FILE-001). Spec 0.5.0 admits confin
 - **supported_execution_configurations:** production; lab (an in-memory tree per grant, empty at the start of the run, with the same contracts and errors; every operation is a choice point; no host file is reached, D58).
 
 ### SGO-FILE-003 — I/O handles: ownership, progress, and closing (subset 3)
-- **version:** 2
+- **version:** 3
 - **status:** frozen
 - **reference_closure:** SGO-FILE-002, SGO-NET-002, SGO-SYNC-002, SGO-PERMIT-002, SGO-CANCEL-002, SGO-DEF-003, SGO-TYPE-005, SGO-RES-001, SGO-RES-002, SGO-RES-003; D54, D55, D56, D150, D153.
 - **grammar_and_types:** `*sgo.File` with `Read(max int) (string, error)`, `Write(s string) (int, error)`, `Size() (int, error)`, `Close() error`, `MoveTo(s sgo.Scope) error`; the same contract applies to `*sgo.Conn` and `*sgo.Listener` (SGO-NET-002). `sgo.Progress(err error) int`, `sgo.NoEffect(err error) bool`, `sgo.IsEOF(err error) bool`. The handles are capability handle types (SGO-TYPE-005).
@@ -55,7 +55,7 @@ Ambient file-system access stays denied (SGO-FILE-001). Spec 0.5.0 admits confin
 - **evaluation_and_value_semantics:** `Read(max)` returns at least 1 and at most `max` bytes, or an error with progress 0 (end of file: `sgo.IsEOF`); `max == 0` returns `""` and nil. `Write(s)` writes all of `s`, or returns an error and the bytes written (`sgo.Progress(err)`). File system calls are bounded to 1 MiB each.
 - **ownership_and_lifecycle:** A handle is a resource of the scope its acquiring call named (SGO-RES-001): every task inside that scope may use it (SGO-RES-002), and the scope releases it when it ends unless a `Close` released it earlier. `Close` by any task inside the scope fails with `ResourceBusy` and no effect while another task waits in an operation on the handle. A handle never outlives its scope (SGO-RES-003).
 - **effect_and_capability_requirements:** The handle itself; no ambient authority.
-- **concurrency_and_memory_order:** Operations through one handle by different tasks of its scope are serialized by the host per call; S-Go adds no ordering between them. `Close` happens after every operation on the handle (it fails with `HandleLent` while one may still run).
+- **concurrency_and_memory_order:** Reads of one handle run one at a time: a read holds the handle's read turn until it ends, so a `ReadLine` or `ReadAll` is never interleaved with another read (SGO-FILE-004). Writes are serialized by the host per call; S-Go adds no ordering between them. `Close` happens after every operation on the handle (it fails with `HandleLent` while one may still run).
 - **allowed_nondeterminism:** Short reads; the split of a write into system calls; which of several tasks' operations on a shared handle runs first. Each history is one admitted by the model `sgo/model/iohandle.go`.
 - **failure_and_partial_progress:** Every I/O error carries its progress; `sgo.NoEffect(err)` is true only when nothing was transferred and the operation may be retried safely (false for `IOError`, whose effect is unknown). A cancellation after partial progress returns both the bytes and the cancellation error (`sgo.IsCancelled`). Closing by a non-owner, and lending to a nursery the owner does not own, are `SpawnContractViolation`.
 - **cancellation_and_cleanup:** Socket waits are cancellation points (SGO-NET-002). A file system call is not interruptible: cancellation is observed before it starts and between the bounded calls of one `Write`, never inside one; nothing reports a running call as stopped (D55). No handle outlives its owner task.
@@ -70,22 +70,22 @@ Ambient file-system access stays denied (SGO-FILE-001). Spec 0.5.0 admits confin
 
 ### SGO-FILE-004 — Whole-message reads (subset 3)
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-FILE-003, SGO-NET-002, SGO-CANCEL-002, SGO-RES-002; D164, D173.
 - **grammar_and_types:** `*sgo.File` and `*sgo.Conn` with `ReadLine(max int) (string, error)` and `ReadAll(max int) (string, error)`; `sgo.IsTooLong(err error) bool`.
 - **preconditions:** As for `Read` (SGO-FILE-003): the caller runs inside the handle's scope.
 - **evaluation_and_value_semantics:** `ReadLine(max)` returns the next line without its `\n` and one `\r` before it. The line with its terminator is at most `max` bytes, else the error is `TooLong`. A last line without `\n` is returned at end of stream, and `EOF` comes only when nothing is left. `ReadAll(max)` returns the rest of the stream (a connection: until the peer closes its side), at most `max` bytes, else `TooLong`. A handle keeps the bytes it read and has not returned; every read (`Read`, `ReadLine`, `ReadAll`) returns them first, and `Read` returns buffered bytes without a system call.
 - **ownership_and_lifecycle:** The read buffer is part of the handle: it moves with it (`MoveTo`) and ends with it.
 - **effect_and_capability_requirements:** The handle itself.
-- **concurrency_and_memory_order:** Every read takes the handle's read turn for its duration: one read at a time per handle, and the buffered bytes are never reordered between readers. Writes are not ordered against reads (SGO-FILE-003). A file is opened for reading or for writing, never both, so read-ahead never moves a write position.
+- **concurrency_and_memory_order:** Every read takes the handle's read turn for its duration: one read at a time per handle, and the buffered bytes are never reordered between readers. A task holding the read turn, or waiting for it, is waiting on the handle, so a `Close` while a `ReadLine` or `ReadAll` runs fails with `ResourceBusy` (SGO-FILE-003). Writes are not ordered against reads (SGO-FILE-003). A file is opened for reading or for writing, never both, so read-ahead never moves a write position.
 - **allowed_nondeterminism:** Which task's read takes the turn first; the system calls a whole-message read is split into.
 - **failure_and_partial_progress:** A `ReadLine` or `ReadAll` that fails (`TooLong`, cancellation, an I/O error) consumes nothing: the bytes it read stay buffered for the next read, and its error has progress 0.
 - **cancellation_and_cleanup:** Waiting for the read turn, and every wait of the underlying reads, are cancellation points (SGO-CANCEL-002).
 - **compile_link_checks:** `SGO_E_DISCARDED_ERROR` for unused errors.
 - **runtime_guards:** The scope check of SGO-FILE-003 before every read and after the read turn is taken.
 - **tcb_assumptions:** `src/runtime/sgo_readbuf.go`.
-- **positive_tests:** fixture:file-read-lines, fixture:lab-net-read-line.
+- **positive_tests:** fixture:file-read-lines, fixture:lab-net-read-line, fixture:lab-net-readline-close.
 - **negative_tests:** fixture:file-read-lines (`TooLong` consumes nothing).
 - **implementation_coverage:** W23: runtime `src/runtime/sgo_readbuf.go`, `sgo_ioapi.go`; API `src/sgo/io.go`.
-- **executed_evidence:** pending (W23).
+- **executed_evidence:** conformance fixtures (darwin/arm64); runtime lane TestSGoReadLineClose; Linux at the W23 merge.
 - **supported_execution_configurations:** production; lab.

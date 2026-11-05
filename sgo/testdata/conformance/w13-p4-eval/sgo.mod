@@ -1,3 +1,3 @@
 module example.com/w13-p4-eval
 
-sgo 0.17.0
+sgo 0.18.0

@@ -67,7 +67,7 @@ Every task is started in a nursery through its explicit *sgo.Nursery handle and 
 - **Scope:** admission, runtime_enforced, model_explored, tested
 - **Model bounds:** sgo/model (model.go, explore.go): all interleavings of the 18 W01 scenarios (sgo/evidence/w01/README.md)
 - **Families:** SPEC-NURSERY, SPEC-SPAWN, SPEC-WAIT
-- **Clauses:** SGO-NUR-001, SGO-NUR-002, SGO-NUR-003, SGO-NUR-004, SGO-NUR-005, SGO-SPAWN-001, SGO-SPAWN-002, SGO-SPAWN-003, SGO-SPAWN-004, SGO-SPAWN-005, SGO-SPAWN-006, SGO-SPAWN-007, SGO-SPAWN-008, SGO-WAIT-001, SGO-WAIT-002, SGO-WAIT-003, SGO-WAIT-004
+- **Clauses:** SGO-NUR-001, SGO-NUR-002, SGO-NUR-003, SGO-NUR-004, SGO-NUR-005, SGO-SPAWN-001, SGO-SPAWN-002, SGO-SPAWN-003, SGO-SPAWN-004, SGO-SPAWN-005, SGO-SPAWN-006, SGO-SPAWN-007, SGO-SPAWN-008, SGO-SPAWN-009, SGO-WAIT-001, SGO-WAIT-002, SGO-WAIT-003, SGO-WAIT-004
 - **Acceptance cases:** C02, C03, C04, O01, O02, O03, O04, O05, S05, S06, S07, S08, X04
 - **Implementation:** `src/runtime/sgo_nursery.go`, `src/runtime/sgo_scope.go`, `src/runtime/sgo_record.go`, `src/runtime/sgo_api.go`, `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/noder/sgo_main.go`, `src/sgo/task.go`, `src/sgo/group.go`, `src/runtime/sgo_taskres.go`, `src/runtime/sgo_group.go`
 
@@ -134,7 +134,7 @@ Every file, connection, listener, dialer, and registered user resource belongs t
 - **Scope:** admission, runtime_enforced, model_explored, tested
 - **Model bounds:** sgo/model scoperes: 416 programs, 77,736 states, 9 seeded protocol bugs each caught (sgo/evidence/w21/README.md)
 - **Families:** SPEC-RES
-- **Clauses:** SGO-RES-001, SGO-RES-002, SGO-RES-003, SGO-RES-004, SGO-RES-005
+- **Clauses:** SGO-RES-001, SGO-RES-002, SGO-RES-003, SGO-RES-004, SGO-RES-005, SGO-RES-006
 - **Acceptance cases:** 
 - **Implementation:** `src/cmd/compile/internal/types2/sgo_resflow.go`, `src/runtime/sgo_res.go`, `src/runtime/sgo_nursery.go`, `src/runtime/sgo_scope.go`, `src/sgo/io.go`, `src/sgo/task.go`
 - **Limitation:** The escape analysis is conservative and intraprocedural: it refuses some safe programs (a resource sent through a helper whose channel and value are separate parameters).
@@ -177,7 +177,7 @@ The standard library (std/errors, strings, bytes, strconv, utf8, sort, math; spe
 
 - **Scope:** admission, tested
 - **Families:** SPEC-STD
-- **Clauses:** SGO-STD-001, SGO-STD-002, SGO-STD-003, SGO-STD-004, SGO-STD-005, SGO-STD-006, SGO-STD-007
+- **Clauses:** SGO-STD-001, SGO-STD-002, SGO-STD-003, SGO-STD-004, SGO-STD-005, SGO-STD-006, SGO-STD-007, SGO-STD-008
 - **Acceptance cases:** 
 - **Implementation:** `src/sgostd/`, `sgo/scripts/std-api-check.py`, `sgo/scripts/std-manifest.py`, `sgo/scripts/test-std-diff.py`
 - **Limitation:** Behavior equal to Go's packages is tested on seeded generated inputs (test-std-diff), not proven.

@@ -1,0 +1,41 @@
+package main
+
+import "sgo"
+
+type Log struct {
+	s string
+}
+
+type Tx struct {
+	log *Log
+}
+
+func (t *Tx) Release(ok bool) error {
+	if ok {
+		t.log.s += "commit;"
+	} else {
+		t.log.s += "rollback;"
+	}
+	return nil
+}
+
+func fail() error { return sgo.NewError("boom") }
+
+// A failing check crosses the nursery: it cancels the nursery (SGO-CTL-004 v2), whose user
+// resource sees Release(false), and the error propagates unchanged.
+func work(log *Log) error {
+	nursery (n) {
+		n.Own(&Tx{log: log})
+		check fail()
+	}
+	return nil
+}
+
+func main(root *sgo.Context) error {
+	log := &Log{}
+	err := work(log)
+	if err == nil || err.Error() != "boom" {
+		return sgo.NewError("the error did not propagate unchanged")
+	}
+	return root.Stdout().WriteString(log.s + err.Error() + "\n")
+}

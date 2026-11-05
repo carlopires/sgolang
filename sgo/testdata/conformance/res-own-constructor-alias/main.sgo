@@ -1,0 +1,24 @@
+package main
+
+import "sgo"
+
+type Tx struct {
+	done bool
+}
+
+func (t *Tx) Release(ok bool) error {
+	t.done = true
+	return nil
+}
+
+func wrap(p *Tx) *Tx { return p }
+
+// W23 review M4: a call handed a pointer may return outer memory, so its result keeps the
+// refusal of Own of a value named outside the scope (Z2).
+func main(root *sgo.Context) error {
+	p := &Tx{}
+	nursery (n) {
+		n.Own(wrap(p))
+	}
+	return nil
+}

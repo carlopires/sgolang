@@ -158,7 +158,7 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 
 ### SGO-STD-008 — `std/io`: Stream interfaces
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-RES-006, SGO-FILE-001, SGO-NET-001, SGO-PROC-003; D134, D176.
 - **grammar_and_types:** The package `std/io` exports exactly: `func WriteString(w Writer, s string) error`; `type LineReadWriter`; `type LineReader`; `type ReadWriter`; `type Reader`; `type Writer`. `Reader` is `sgo.Resource` with `Read(max int) (string, error)`; `LineReader` is `sgo.Resource` with `ReadLine(max int) (string, error)`; `Writer` is `sgo.Resource` with `Write(s string) (int, error)`; `ReadWriter` embeds `Reader` and `Writer`; `LineReadWriter` embeds `LineReader` and `Writer`. All are resource interfaces (SGO-RES-006), declared in S-Go source by embedding `sgo.Resource` exactly as user code may.
 - **preconditions:** As the methods of the dynamic value.
@@ -175,6 +175,6 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **positive_tests:** fixture:std-io-streams.
 - **negative_tests:** fixture:std-io-escape.
 - **implementation_coverage:** `src/sgostd/io/`.
-- **executed_evidence:** pending (W23).
+- **executed_evidence:** conformance fixtures (darwin/arm64); Linux at the W23 merge.
 - **supported_execution_configurations:** production, lab.
 

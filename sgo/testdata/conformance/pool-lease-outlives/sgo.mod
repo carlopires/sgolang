@@ -1,3 +1,3 @@
 module example.com/pool-lease-outlives
 
-sgo 0.17.0
+sgo 0.18.0

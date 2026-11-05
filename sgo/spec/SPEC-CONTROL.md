@@ -69,22 +69,22 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §6, decision D14, resolutions R3/R
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-CTL-004 — Exits that cross nurseries
-- **version:** 1
+- **version:** 2
 - **status:** frozen
-- **reference_closure:** SGO-NUR-003, SGO-NUR-004, SGO-VAL-005, SGO-DEF-001; plan §4.4.
+- **reference_closure:** SGO-NUR-003, SGO-NUR-004, SGO-VAL-005, SGO-DEF-001, SGO-ERR-004, SGO-CANCEL-004, SGO-RES-004; D159; plan §4.4.
 - **grammar_and_types:** `return`, `break`, and `continue` may leave one or more enclosing `nursery` statements of the same function. Labels may not be used to jump into a nursery (no `goto` exists).
 - **preconditions:** n/a — applies to every such exit.
-- **evaluation_and_value_semantics:** For `return e1, …, en`: evaluate the operands once, left to right, and hold the values; then complete each crossed nursery from the innermost outward exactly as if its block had ended normally (SGO-NUR-003, SGO-NUR-004); then run the function's deferred calls (SGO-DEF-001); then return the held values. For `break`/`continue` that leave nurseries: complete each crossed nursery innermost first, then transfer control. A `break` or `continue` whose target is inside the nursery does not complete it. A normal exit joins; it never cancels. Each execution of a nursery statement (for example in each loop iteration) is a distinct scope with its own identity.
+- **evaluation_and_value_semantics:** For `return e1, …, en`: evaluate the operands once, left to right, and hold the values; then complete each crossed nursery from the innermost outward (SGO-NUR-003, SGO-NUR-004) — an error exit first cancels it (below); then run the function's deferred calls (SGO-DEF-001); then return the held values. For `break`/`continue` that leave nurseries: complete each crossed nursery innermost first, then transfer control. A `break` or `continue` whose target is inside the nursery does not complete it. An *error exit* is a `return` whose error result is not nil, or a failing `check` (SGO-ERR-004): it cancels each nursery it crosses before joining it; the cancellation is consumed at that nursery's boundary (SGO-CANCEL-004), the held return values are returned unchanged, and resources of a crossed nursery are released with `Release(false)` (SGO-RES-004). A normal exit — the end of a body, a `return` with a nil error or no error result, `break`, `continue` — joins without cancelling. Each execution of a nursery statement (for example in each loop iteration) is a distinct scope with its own identity.
 - **ownership_and_lifecycle:** The nursery is CLOSED before control reaches the target of the exit (OWN-3).
 - **effect_and_capability_requirements:** n/a — no effects of its own.
 - **concurrency_and_memory_order:** All children of each crossed nursery have completed before control transfers (OWN-4).
 - **allowed_nondeterminism:** None in the ordering of joins; children's own completion order is scheduler-dependent but not observable here.
 - **failure_and_partial_progress:** If completing a crossed nursery unwinds (SGO-NUR-004 rules 1–3), the exit is replaced by that unwind; held return values are discarded and outer crossed nurseries are completed by the unwind (SGO-DEF-005).
-- **cancellation_and_cleanup:** Exits do not cancel. Children still running keep the owner waiting in JOINING.
+- **cancellation_and_cleanup:** An error exit cancels each crossed nursery (D159); a normal exit does not. Either way, children still running keep the owner waiting in JOINING.
 - **compile_link_checks:** The compiler lowers each exit edge through the crossed nurseries' barriers; IR verification (W03) rejects code where an exit edge skips a barrier.
 - **runtime_guards:** n/a — enforced by generated code and the runtime join.
 - **tcb_assumptions:** Nursery join primitive (SGO-TCB-001).
-- **positive_tests:** X04, X05, X06, X07, X12; fixture:ctl-return-from-nursery, fixture:ctl-break-out-of-nursery, fixture:ctl-nursery-in-loop.
+- **positive_tests:** X04, X05, X06, X07, X12; fixture:ctl-return-from-nursery, fixture:ctl-break-out-of-nursery, fixture:ctl-nursery-in-loop, fixture:exit-check-cancels, fixture:exit-return-error-cancels, fixture:exit-bare-return-cancels, fixture:exit-nil-return-joins, fixture:exit-check-rollback.
 - **negative_tests:** X08; fixture:ctl-goto.
 - **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/types2/sgo_flow.go`, `src/runtime/sgo_nursery.go`.
 - **executed_evidence:** conformance fixtures ctl-break-out-of-nursery, ctl-goto, ctl-nursery-in-loop, ctl-return-from-nursery (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.

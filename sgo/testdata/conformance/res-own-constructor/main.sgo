@@ -1,0 +1,26 @@
+package main
+
+import "sgo"
+
+type Tx struct {
+	id   int
+	done bool
+}
+
+func (t *Tx) Release(ok bool) error {
+	t.done = true
+	return nil
+}
+
+func NewTx(id int) *Tx { return &Tx{id: id} }
+
+// W23 review M4: a constructor handed no reference can reach no existing memory, so its result is
+// fresh, and Own of it (or of a local assigned only such results) is as safe as Own of &Tx{}.
+func main(root *sgo.Context) error {
+	nursery (n) {
+		t := NewTx(42)
+		n.Own(t)
+		n.Own(NewTx(7))
+	}
+	return root.Stdout().WriteString("owned\n")
+}

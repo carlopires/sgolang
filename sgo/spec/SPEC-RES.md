@@ -5,10 +5,10 @@ Resources belong to scopes, not to tasks or variables (D147–D158). A scope is 
 API at 0.16.0: a method on a scope acquires into that scope (`root.Listen`, `n.Dial`, `n.Dialer`); every other acquiring call takes the scope first (`l.Accept(s)`, `d.Dial(s, addr)`, `dir.Open(s, path)`, `dir.Create(s, path)`). `sgo.Scope` is implemented by `*sgo.Context` and `*sgo.Nursery`. `LendTo`, `HandleAbandoned`, and `sgo.ConnSlot` are removed. `Dir` is a capability, not a resource: it is never released, and every task that can name it may use it.
 
 ### SGO-RES-001 — Scopes own resources
-- **version:** 2
+- **version:** 3
 - **status:** frozen
-- **reference_closure:** SGO-NUR-001, SGO-NUR-004, SGO-SPAWN-004, SGO-FILE-003, SGO-NET-002, SGO-NET-003, SGO-RES-002, SGO-RES-003, SGO-RES-004; D148, D149, D153, D155; model `sgo/model/scoperes.go`.
-- **grammar_and_types:** A *scope* is the body of a nursery statement, named by its nursery `n`, or the body of a task, named by its context (`root`, or the parameter of a spawned callback). `sgo.Scope` is the interface both implement. A *resource* is a value of a built-in resource type (`*sgo.File`, `*sgo.Listener`, `*sgo.Conn`, `*sgo.Dialer`) or a user resource (SGO-RES-004). A *resource type* is one of these; a struct, array, or slice type holding one; or a channel, `sgo.Channel`, or `sgo.SendPermit` type whose element holds one (SGO-RES-005). A pointer to, or a map whose keys or values are, a value of a resource type is itself a resource type. A value of a resource type is never converted to an interface type (`SGO_E_RESOURCE_ESCAPES` at the conversion), except as an argument of package `sgo` (`Own`, `MoveTo`): an interface value is not tied to a scope (W21 review Z1).
+- **reference_closure:** SGO-NUR-001, SGO-NUR-004, SGO-SPAWN-004, SGO-FILE-003, SGO-NET-002, SGO-NET-003, SGO-RES-002, SGO-RES-003, SGO-RES-004, SGO-RES-006; D148, D149, D153, D155; model `sgo/model/scoperes.go`.
+- **grammar_and_types:** A *scope* is the body of a nursery statement, named by its nursery `n`, or the body of a task, named by its context (`root`, or the parameter of a spawned callback). `sgo.Scope` is the interface both implement. A *resource* is a value of a built-in resource type (`*sgo.File`, `*sgo.Listener`, `*sgo.Conn`, `*sgo.Dialer`) or a user resource (SGO-RES-004); a value of a resource interface type (SGO-RES-006) holds one. A *resource type* is one of these; a struct, array, or slice type holding one; or a channel, `sgo.Channel`, or `sgo.SendPermit` type whose element holds one (SGO-RES-005). A pointer to, or a map whose keys or values are, a value of a resource type is itself a resource type. A value of a resource type is never converted to an interface type that is not a resource interface (`SGO_E_RESOURCE_ESCAPES` at the conversion), except as an argument of package `sgo` (`Own`, `MoveTo`): such an interface value is not tied to a scope (W21 review Z1). A conversion to a resource interface ties the interface value as its source (SGO-RES-006).
 - **preconditions:** An acquiring call runs in a task inside the named scope (the scope or a scope nested in it), and the scope has not ended.
 - **evaluation_and_value_semantics:** Every resource is acquired into exactly one scope, named by the call: a method of a scope acquires into it, and every other acquiring call takes the scope as its first argument. Scopes are nested lexically: a nursery statement's body is inside the scope its statement runs in, and a spawned task's body is inside the nursery it was spawned into. A nursery statement ends in three steps: (1) join its children (SGO-NUR-001); (2) release its resources, in the reverse order of their acquisition or of their `MoveTo` into it; (3) complete with the outcome of SGO-NUR-004. A task body releases its resources in the same order after its function returns or unwinds, and before its outcome exists. Releasing a built-in resource closes it; releasing a user resource calls its `Release` (SGO-RES-004). An explicit `Close` releases a resource early and removes it from its scope.
 - **ownership_and_lifecycle:** A resource belongs to its scope, not to a task or a variable: copies of a resource value name the same resource. It is released exactly once, by `Close` or by its scope's end.
@@ -71,23 +71,23 @@ API at 0.16.0: a method on a scope acquires into that scope (`root.Listen`, `n.D
 - **supported_execution_configurations:** production; lab.
 
 ### SGO-RES-004 — User resources: `Own` and `Release`
-- **version:** 4
+- **version:** 5
 - **status:** frozen
-- **reference_closure:** SGO-RES-001, SGO-RES-003, SGO-DEF-004, SGO-IFACE-002; D152, D155, D158.
+- **reference_closure:** SGO-RES-001, SGO-RES-003, SGO-DEF-004, SGO-IFACE-002, SGO-COMP-004; D152, D155, D158.
 - **grammar_and_types:** `sgo.Releaser` is the interface `Release(ok bool) error`. `s.Own(r)` takes a value implementing it and ties `r` to `s`. A user resource is found by identity, so it is a pointer.
-- **preconditions:** The caller runs inside `s`; `r` is not a resource of any scope. The operand of `s.Own(x)` was made inside the extent of `s`: an allocation there, or a local assigned only such values; `Own` of a value named outside the scope, or reachable from outer memory, is `SGO_E_RESOURCE_ESCAPES` at the operand (W21 review Z2).
+- **preconditions:** The caller runs inside `s`; `r` is not a resource of any scope. The operand of `s.Own(x)` was made inside the extent of `s`: an allocation there, a call of a declared function or method (outside package `sgo`) whose arguments and receiver carry no reference — no pointer, slice, map, channel, interface, function value, or handle — and which therefore returns only memory it allocated (W23 review M4), or a local assigned only such values; `Own` of a value named outside the scope, or reachable from outer memory, is `SGO_E_RESOURCE_ESCAPES` at the operand (W21 review Z2).
 - **evaluation_and_value_semantics:** `Own` appends `r` to `s`'s list as an acquisition. When `s` releases it, `r.Release(ok)` runs in the task ending the scope, with `ok` true when the scope ends normally and false when it is unwinding (a failed child, a failure, or cancellation), as known after the join. Strict reverse order means that resources acquired after `r` are released before it, and those acquired before it after it, so a `Release` finds the resources acquired before its `Own` still open, and may use them: the releasing task counts as inside the scope until its release step ends. A user resource has no `Close` of its own; a method that releases early must make `Release` a no-op afterwards.
 - **ownership_and_lifecycle:** as SGO-RES-001. A user resource's fields may hold built-in resources, which their own scopes release, or refer to resources of enclosing scopes (a lease).
 - **effect_and_capability_requirements:** those of the `Release` body.
-- **concurrency_and_memory_order:** `Release` runs after the join; no other task inside the scope runs. Tasks sharing a scope share its user resources, and a user resource serializes its own methods (D158): the runtime adds no lock.
+- **concurrency_and_memory_order:** `Release` runs after the join; no other task inside the scope runs. A pointer to a user resource is task-local (SGO-COMP-004): only the task that holds it, and the scope's release, use it. Registration with `Own` gives lifetime, not sharing or synchronization, and implementing `Release` grants no exception to the capture rules; the runtime adds no lock.
 - **allowed_nondeterminism:** none.
 - **failure_and_partial_progress:** An error returned by `Release` is a failed release (SGO-RES-001). A panic in `Release` is a failure (SGO-DEF-004). A second `Own` of a value that is a resource of a scope fails the task with `InvalidArgument`.
 - **cancellation_and_cleanup:** `Release` is not cancellable; it is bounded by the drain budget (D155). `ok` is false whenever the scope is cancelled, including by an ancestor's cancellation or a deadline (SGO-CANCEL-005), even if its body and every child end normally.
-- **compile_link_checks:** `Own` of a value whose type lacks `Release(bool) error` is a type error (`SGO_E_TYPE_MISMATCH`); `SGO_E_RESOURCE_ESCAPES` applies to user resource types from their `Own` on.
+- **compile_link_checks:** `Own` of a value whose type lacks `Release(bool) error`, or is not a pointer type, is a type error (`SGO_E_TYPE_MISMATCH`); `SGO_E_RESOURCE_ESCAPES` applies to user resource types from their `Own` on.
 - **runtime_guards:** the identity check against double registration; the scope check of SGO-RES-001.
 - **tcb_assumptions:** `src/runtime/sgo_res.go`.
-- **positive_tests:** fixture:res-user-commit-rollback, fixture:res-own-order, fixture:res-user-move, fixture:res-pool-lease. Also fixture:res-own-fresh.
-- **negative_tests:** fixture:res-own-no-release, fixture:res-own-twice, fixture:res-release-error-nursery, fixture:res-own-release-panic. Also fixture:res-own-outer-var, fixture:res-own-outer-field.
+- **positive_tests:** fixture:res-user-commit-rollback, fixture:res-own-order, fixture:res-user-move, fixture:res-pool-lease. Also fixture:res-own-fresh, fixture:res-own-constructor.
+- **negative_tests:** fixture:res-own-no-release, fixture:res-own-twice, fixture:res-release-error-nursery, fixture:res-own-release-panic. Also fixture:res-own-outer-var, fixture:res-own-outer-field, fixture:res-own-value-type, fixture:res-user-capture-denied, fixture:res-own-constructor-alias.
 - **implementation_coverage:** W21: runtime `src/runtime/sgo_res.go`; API `src/sgo/io.go`.
 - **executed_evidence:** `sgo/evidence/w21/README.md`.
 - **supported_execution_configurations:** production; lab.
@@ -116,7 +116,7 @@ API at 0.16.0: a method on a scope acquires into that scope (`root.Listen`, `n.D
 
 ### SGO-RES-006 — Resource interfaces (subset 3)
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-RES-001, SGO-RES-002, SGO-RES-003, SGO-RES-005, SGO-IFACE-001, SGO-IFACE-002, SGO-COMP-004; D132, D176.
 - **grammar_and_types:** `sgo.Resource` is an interface type with no methods. An interface type is a *resource interface* when it embeds `sgo.Resource`, directly or through an embedded resource interface. A resource interface is a resource type (SGO-RES-001). Every other interface, `any` and `error` included, is not, and never holds a resource.
 - **preconditions:** n/a: static rules.
@@ -133,5 +133,5 @@ API at 0.16.0: a method on a scope acquires into that scope (`root.Listen`, `n.D
 - **positive_tests:** fixture:std-io-streams, fixture:res-iface-basic, fixture:res-iface-wrapper-outlives-inner, fixture:res-iface-narrow-assert, fixture:res-iface-nil-call.
 - **negative_tests:** fixture:res-iface-escape, fixture:res-iface-to-any-denied, fixture:res-iface-assert-to-error-denied, fixture:res-iface-copy-denied, fixture:res-iface-capture-denied, fixture:res-iface-closure-callee, fixture:res-iface-wrapper-escape, fixture:res-iface-compare-denied, fixture:res-iface-freeze-denied, fixture:res-iface-map-key-denied, fixture:std-io-escape.
 - **implementation_coverage:** W23: `src/sgo/io.go` (`Resource`); compiler `sgoadmit/admit_expr.go`, `types2/sgo_resflow.go`, `types2/sgo_local.go`.
-- **executed_evidence:** pending (W23).
+- **executed_evidence:** conformance fixtures (darwin/arm64); Linux at the W23 merge.
 - **supported_execution_configurations:** production; lab.

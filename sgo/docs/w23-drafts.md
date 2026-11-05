@@ -113,10 +113,14 @@ as D172 in W22), D167.
   `std-io-stdout-through-helper`; negatives `res-iface-closure-callee`, `std-io-escape` kept; the
   mutant "untied even with a function argument" builds `res-iface-closure-callee`, so the guard is
   necessary.
-- **M2 — SGO-RES-004 amendment at 0.18.0 (v2):** `compile_link_checks` gains "`Own` of a value
+- **M2 — SGO-RES-004 amendment at 0.18.0 (in v5, with SGO17-06):** `compile_link_checks` gains "`Own` of a value
   whose type is not a pointer type is a type error (`SGO_E_TYPE_MISMATCH`)", making explicit the
   grammar's "a user resource is found by identity, so it is a pointer". Reject case
   `res-own-value-type`.
 - **M3:** one predicate for "user resource": a pointer type whose method set has
   `Release(bool) error` — used by `Own`, resource flow, and the frozen rule, so they cannot drift.
   Run case `frozen-value-with-release-ok`; `res-iface-freeze-denied` kept.
+- **M4 — SGO-RES-004 v5 (constructors feed `Own`):** the origin rule treats a call of a declared
+  function or method outside package `sgo`, whose arguments and receiver carry no reference
+  (pointer, slice, map, channel, interface, function value, handle), as an allocation. Run case
+  `res-own-constructor`; reject `res-own-constructor-alias`.

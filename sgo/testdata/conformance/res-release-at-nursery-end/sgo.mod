@@ -1,3 +1,3 @@
 module example.com/res-release-at-nursery-end
 
-sgo 0.17.0
+sgo 0.18.0

@@ -1,3 +1,3 @@
 module example.com/bind-unexported-not-inlined
 
-sgo 0.17.0
+sgo 0.18.0

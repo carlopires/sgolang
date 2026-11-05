@@ -113,34 +113,34 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-SPAWN-006 — Value-returning tasks
-- **version:** 1
+- **version:** 2
 - **status:** frozen
 - **reference_closure:** SGO-SPAWN-003, SGO-SPAWN-004, SGO-CHAN-002, SGO-COMP-004, SGO-RES-003, SGO-WAIT-003; D161, D168.
 - **grammar_and_types:** `sgo.Go(n *sgo.Nursery, f func(*sgo.Context) (T, error)) *sgo.Task[T]`, with `T` inferred or written; `h.Wait(t *sgo.Context) (T, error)`; `h.Result() <-chan sgo.Result[T]`, where `sgo.Result[T]` has fields `Value T` and `Err error`. `T` must be a channel element type (SGO-CHAN-002, SGO-COMP-004) that is not task-local (SGO-COMP-004): the result passes from the child to its readers with no send site to copy at, so a slice, map, or pointer result is returned as `sgo.Frozen[T]` (SGO-COMP-009) or copied into a value type (D172). Resource handles are not task-local and are moved into `n` (D158).
 - **preconditions:** As `n.Spawn` (SGO-SPAWN-003): the caller can spawn into `n`; `f` is not nil.
-- **evaluation_and_value_semantics:** `sgo.Go` starts `f` as a child of `n` exactly as `n.Spawn` does and returns its handle. When `f` returns `(v, err)`, the result is published once. If `err` is nil and `v` is a resource, `v` is first moved into `n` (SGO-RES-003); a failed move becomes the result's error. `h.Wait(t)` waits for the result and returns it. Each `h.Result()` call returns a new channel that receives the result once it is published, for a select arm. Any number of reads, by any task of the nursery, see the same result.
+- **evaluation_and_value_semantics:** `sgo.Go` starts `f` as a child of `n` exactly as `n.Spawn` does and returns its handle. When `f` returns `(v, err)`, the result is published once. If `err` is nil, every resource of the child's body that `v` holds is first moved into `n` (SGO-RES-003): `v` itself, or the fields and elements of a struct or array result, at any depth. The walk follows the result's type and stays inside the value: a pointer is recognized (a built-in handle by its type, a user resource by its registration) and never followed. Each resource moves once, in acquisition order; a resource not in the child's body (already in `n`, in an enclosing scope, or released) stays where it is. A failed move becomes the result's error, and resources already moved stay in `n`. A start into a nursery that is cancelling, itself or through an ancestor, admits no child and never runs `f`: its handle resolves at once, exactly once, to the scope's cancellation error (`sgo.IsCancelled`; `sgo.IsDeadline` when the cause is a deadline). Admission and that outcome are one step, so a start racing a `Cancel` either runs `f` or resolves to the cancellation. `h.Wait(t)` waits for the result and returns it. Each `h.Result()` call returns its own channel, which delivers the result once (edge-triggered): a select loop that keeps one channel takes that arm once and then waits on its other arms; after its value the channel never becomes ready again, and a further receive on it is an ordinary wait. A call registers nothing: a result channel is listed on its task only while a receiver is parked on it. Any number of reads, by any task of the nursery, see the same result.
 - **ownership_and_lifecycle:** The child is a registered child of `n`: the nursery joins it like any other. The handle `*sgo.Task[T]` is not task-local (SGO-COMP-004): any task may capture it, and a reader may wait on it after the nursery has ended. When `T` is a resource type (SGO-RES-001), the handle and every result read from it (`Wait`, `Result`) are tied to `n`'s extent like the resource, which `Go` moved into `n` (SGO-RES-003); a child that ended without returning delivers its cancellation or failure as the result's error.
 - **effect_and_capability_requirements:** n/a — as `n.Spawn`.
 - **concurrency_and_memory_order:** Publishing the result happens-before every read that returns it.
 - **allowed_nondeterminism:** As `n.Spawn`.
-- **failure_and_partial_progress:** The child's error is data: a child that returns a non-nil error through `sgo.Go` ends normally and does not fail the nursery. A child that ends without returning (it is cancelled, or it fails) publishes a result whose error is its cancellation error (`sgo.IsCancelled` holds) or a `TaskFailed` error; a failure still fails the nursery as SGO-SPAWN-004 says.
+- **failure_and_partial_progress:** The child's error is data: a child that returns a non-nil error through `sgo.Go` ends normally and does not fail the nursery, and the resources of its body are released with `Release(true)`; a body that needs rollback on its error owns the resource in an inner nursery, which the failing exit cancels (SGO-CTL-004). A child that ends without returning (it is cancelled, or it fails) publishes a result whose error is its cancellation error (`sgo.IsCancelled` holds) or a `TaskFailed` error; a failure still fails the nursery as SGO-SPAWN-004 says.
 - **cancellation_and_cleanup:** `Wait` and a receive from `Result()` are channel receives: a cancellation of a scope linked to the reader unwinds it (SGO-NATIVE).
 - **compile_link_checks:** `SGO_E_TASK_LOCAL_CAPTURE` if `f` captures a task-local variable; `SGO_E_UNADMITTED` if `T` is not a channel element type, or is task-local; `SGO_E_RESOURCE_ESCAPES` if a handle with a resource `T`, or a result read from it, flows beyond `n`'s extent.
 - **runtime_guards:** Spawn contract checks; the result is published once.
 - **tcb_assumptions:** As SGO-SPAWN-003; the native channel send protocol (SGO-CHAN-002).
-- **positive_tests:** fixture:task-value-wait, fixture:task-error-is-data, fixture:task-select-arm, fixture:task-cancelled-result, fixture:task-handle-shared, fixture:task-result-reader-cancelled.
-- **negative_tests:** fixture:task-local-capture-denied, fixture:group-slice-result-denied, fixture:task-resource-result-escape.
+- **positive_tests:** fixture:task-value-wait, fixture:task-error-is-data, fixture:task-select-arm, fixture:task-cancelled-result, fixture:task-handle-shared, fixture:task-result-reader-cancelled, fixture:lab-task-result-once, fixture:spawn-task-param, fixture:spawn-go-not-admitted, fixture:task-aggregate-resource-result, fixture:task-error-rollback-inner-nursery.
+- **negative_tests:** fixture:task-local-capture-denied, fixture:group-slice-result-denied, fixture:task-resource-result-escape, fixture:spawn-task-param-escape.
 - **implementation_coverage:** W22: `src/sgo/task.go`, `src/runtime/sgo_taskres.go`, `src/cmd/compile/internal/types2/sgo_check.go`, `src/cmd/compile/internal/types2/sgo_local.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`.
 - **executed_evidence:** conformance fixtures (darwin/arm64); Linux pending.
 - **supported_execution_configurations:** production and lab.
 
 ### SGO-SPAWN-007 — Groups
-- **version:** 1
+- **version:** 2
 - **status:** frozen
 - **reference_closure:** SGO-SPAWN-006, SGO-SPAWN-001, SGO-NUR-004, SGO-CHAN-002, SGO-COMP-004, SGO-COMP-009, SGO-CANCEL-002, SGO-LAB-004, SGO-DEF-003; D172.
 - **grammar_and_types:** `sgo.NewGroup[T](n *sgo.Nursery, limit int) *sgo.Group[T]`; `g.Go(t *sgo.Context, f func(*sgo.Context) (T, error))`; `g.Next() <-chan sgo.Result[T]`. `T` is restricted as in SGO-SPAWN-006: a channel element type that is not task-local. A slice result is returned as `sgo.Frozen[[]E]`.
 - **preconditions:** `n` is non-nil and `limit ≥ 0` (0: no limit). For `g.Go`, `t` is the calling task's own context (as SGO-CANCEL-002), the calling task runs inside `n` (as `n.Spawn`, SGO-SPAWN-001), and `f` is non-nil.
-- **evaluation_and_value_semantics:** `g.Go` first waits while `limit` children started by `g` are running, then starts `f` as a child of `n` exactly as `sgo.Go` does (SGO-SPAWN-006): a resource result with a nil error is moved into `n`; a child that ends without returning yields a result whose error is its cancellation or failure. A child of the group counts as running until it has published its result. `g.Next()` returns the group's one result channel: each receive on it, in a select arm or alone, takes the oldest result not yet received, in the order the children ended. Each result is received exactly once.
+- **evaluation_and_value_semantics:** `g.Go` first waits while `limit` children started by `g` are running, then starts `f` as a child of `n` exactly as `sgo.Go` does (SGO-SPAWN-006), including the start into a cancelling nursery, which runs no child, publishes the cancellation as the result, and frees the slot at once: a resource result with a nil error is moved into `n`; a child that ends without returning yields a result whose error is its cancellation or failure. A child of the group counts as running until it has published its result. `g.Next()` returns the group's one result channel: each receive on it, in a select arm or alone, takes the oldest result not yet received, in the order the children ended. Each result is received exactly once.
 - **ownership_and_lifecycle:** The group's children are children of `n`: joined and cancelled with it, and a child's error result is data, not a failure of `n` (as SGO-SPAWN-006). Results are queued without bound until received; results never received are discarded when the group is no longer reachable. The group handle `*sgo.Group[T]` holds no runtime resource and is not task-local (SGO-COMP-004): any task inside `n` may capture it and call `g.Go` or receive on `g.Next()`.
 - **effect_and_capability_requirements:** n/a — no external effect; the children's own effects need their own grants.
 - **concurrency_and_memory_order:** A child's publication of its result happens before the receive that takes it. A child never waits to publish: an owner that stops reading cannot hold up its children or the nursery's join. At most `limit` children of the group run at once.
@@ -150,7 +150,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 - **compile_link_checks:** `SGO_E_UNADMITTED` if `T` is not a channel element type, or is task-local; `SGO_E_TASK_LOCAL_CAPTURE` if `f` captures a task-local variable (as SGO-SPAWN-006).
 - **runtime_guards:** Argument and ownership checks; result delivery and refill under the result channel's lock; the limit counted by a native channel used as a semaphore.
 - **tcb_assumptions:** The native channel wait protocol (SGO-NATIVE) and task spawning (SGO-SPAWN-001).
-- **positive_tests:** fixture:lab-group-order, fixture:group-unread-results, fixture:group-select-next, fixture:group-frozen-slice.
+- **positive_tests:** fixture:lab-group-order, fixture:group-unread-results, fixture:group-select-next, fixture:group-frozen-slice, fixture:spawn-go-not-admitted.
 - **negative_tests:** fixture:group-slice-result-denied, fixture:group-negative-limit, fixture:group-go-wait-cancelled.
 - **implementation_coverage:** W22: `src/sgo/group.go`, `src/sgo/task.go`, `src/runtime/sgo_group.go`, `src/runtime/sgo_native_ops.go`, `src/runtime/sgo_chan.go`, `src/cmd/compile/internal/types2/sgo_check.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`.
 - **executed_evidence:** conformance fixtures (darwin/arm64); Linux pending.
@@ -158,7 +158,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 
 ### SGO-SPAWN-008 — Request/reply calls (subset 3)
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-SPAWN-006, SGO-NATIVE-001, SGO-RES-001, SGO-RES-002, SGO-RES-003, SGO-CANCEL-002; D167, D174.
 - **grammar_and_types:** `sgo.NewCall[Req, Resp](n *sgo.Nursery) *sgo.Call[Req, Resp]`; `(*sgo.Call[Req, Resp]).Call(t *sgo.Context, req Req) (Resp, error)`; `(*sgo.Call[Req, Resp]).Accept(s sgo.Scope) *sgo.Request[Req, Resp]`; `(*sgo.Request[Req, Resp]).Value() Req`; `(*sgo.Request[Req, Resp]).Reply(resp Resp, err error)`; `sgo.IsNoReply(err error) bool`. `*sgo.Call[Req, Resp]` is a shareable handle (D169); `*sgo.Request[Req, Resp]` is a resource handle (SGO-RES-001). `Req` and `Resp` follow the rule of `sgo.Go` results (SGO-SPAWN-006): no task-local types; and neither may hold a resource.
 - **preconditions:** `Call` and `Accept` run in a task inside the nursery `n` of `NewCall`; else `MissingCapability`. The call point handle is shareable: using it from a task outside `n`'s scope, including after `n` ended, is `MissingCapability` (a runtime check, not a compile-time one). `Accept`'s scope `s` is one the calling task runs inside (SGO-RES-001). `n` is not nil.
@@ -175,12 +175,12 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 - **positive_tests:** fixture:call-basic, fixture:lab-call-withdraw, fixture:call-accept-per-iteration; the model `sgo/model/callmodel.go` (CallExplore); TestSGoTaskResultOnce (runtime lane, under -race).
 - **negative_tests:** fixture:call-request-escape, fixture:call-accept-escape-iteration, fixture:call-resource-denied, fixture:call-double-reply, fixture:lab-call-no-server; the model's seeded bugs (no NoReply release, late withdrawal, misrouted reply, a second Reply delivering).
 - **implementation_coverage:** W23: runtime `src/runtime/sgo_call.go`; API `src/sgo/call.go`; compiler `sgoadmit/admit_expr.go`, `types2/sgo_check.go`, `sgo.go`, `sgo_values.go`, `sgo_resflow.go`.
-- **executed_evidence:** pending (W23).
+- **executed_evidence:** conformance fixtures (darwin/arm64); Linux at the W23 merge.
 - **supported_execution_configurations:** production; lab.
 
 ### SGO-SPAWN-009 — Pools with leases (subset 3)
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-SPAWN-006, SGO-NATIVE-001, SGO-RES-001, SGO-RES-002, SGO-RES-003, SGO-CANCEL-002; D158, D175.
 - **grammar_and_types:** `sgo.NewPool[T](n *sgo.Nursery) *sgo.Pool[T]`; `(*sgo.Pool[T]).Put(v T)`; `(*sgo.Pool[T]).Acquire(s sgo.Scope) *sgo.Lease[T]`; `(*sgo.Lease[T]).Value() T`; `(*sgo.Lease[T]).Return()`; `(*sgo.Lease[T]).Drop()`. `*sgo.Pool[T]` is a shareable handle (as `*sgo.Task[T]`), tied to `n` when `T` holds resources; `*sgo.Lease[T]` is a resource handle (SGO-RES-001). `T` follows the rule of `sgo.Go` results (SGO-SPAWN-006): no task-local types; it may hold resources.
 - **preconditions:** `Put` and `Acquire` run in a task inside `n`; else `MissingCapability` (a runtime check). The caller of `Acquire` runs inside `s`, and `s` is `n` or lies inside it; for a pool whose `T` holds resources this is a compile-time check, otherwise a runtime `MissingCapability`. `n` is not nil.
@@ -197,5 +197,5 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §9, decisions D11, resolution R5, 
 - **positive_tests:** fixture:pool-leases, fixture:pool-resource-items; the model `sgo/model/poolmodel.go` (PoolExplore).
 - **negative_tests:** fixture:pool-item-task-local, fixture:pool-lease-outlives, fixture:pool-put-outlives, fixture:pool-value-escape, fixture:pool-lease-after-return, fixture:pool-acquire-outside; the model's seeded bugs (a returned item put back twice, a dropped item put back, a cancelled waiter taking an item, a put-back that wakes no waiter).
 - **implementation_coverage:** W23: runtime `src/runtime/sgo_pool.go`; API `src/sgo/pool.go`; compiler `sgoadmit/admit_expr.go`, `types2/sgo_check.go`, `sgo.go`, `sgo_values.go`, `sgo_resflow.go`.
-- **executed_evidence:** pending (W23).
+- **executed_evidence:** conformance fixtures (darwin/arm64); Linux at the W23 merge.
 - **supported_execution_configurations:** production; lab.

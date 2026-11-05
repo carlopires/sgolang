@@ -1086,8 +1086,79 @@ func (f *sgoResFlow) origin(e syntax.Expr) syntax.Node {
 				return f.cur()
 			}
 		}
+		if f.freshCall(x) {
+			return f.cur() // a constructor that can reach no existing memory (W23 review M4)
+		}
 	}
 	return f.ptr(e, false)
+}
+
+// freshCall reports whether call c returns only memory it allocated (W23 review M4): its callee
+// is a declared function or method outside package sgo, and no argument, nor the receiver,
+// carries a reference. Such a callee is handed no existing memory, and there are no package
+// variables, so whatever it returns it allocated: Own of it is as safe as Own of &T{}.
+func (f *sgoResFlow) freshCall(c *syntax.CallExpr) bool {
+	fun := syntax.Unparen(c.Fun)
+	if ix, _ := fun.(*syntax.IndexExpr); ix != nil {
+		fun = ix.X
+	}
+	var fn *Func
+	var recv syntax.Expr
+	switch x := fun.(type) {
+	case *syntax.Name:
+		fn, _ = f.check.Uses[x].(*Func)
+	case *syntax.SelectorExpr:
+		fn, _ = f.check.Uses[x.Sel].(*Func)
+		if fn != nil {
+			if sig, _ := fn.typ.(*Signature); sig != nil && sig.recv != nil {
+				recv = x.X
+			}
+		}
+	}
+	if fn == nil || fn.pkg == nil || fn.pkg.path == "sgo" {
+		return false
+	}
+	args := c.ArgList
+	if recv != nil {
+		args = append([]syntax.Expr{recv}, args...)
+	}
+	for _, a := range args {
+		tv, ok := f.check.Types[a]
+		if !ok || tv.Type == nil || sgoCarriesRef(tv.Type, map[Type]bool{}) {
+			return false
+		}
+	}
+	return true
+}
+
+// sgoCarriesRef reports whether a value of type T may refer to existing memory: a pointer,
+// slice, map, channel, interface, function value, or handle, or an aggregate holding one.
+func sgoCarriesRef(T Type, seen map[Type]bool) bool {
+	if T == nil {
+		return true
+	}
+	if seen[T] {
+		return false
+	}
+	seen[T] = true
+	if isSgoHandle(T) {
+		return true
+	}
+	switch u := Unalias(T).Underlying().(type) {
+	case *Pointer, *Slice, *Map, *Chan, *Interface, *Signature:
+		return true
+	case *Struct:
+		for _, fl := range u.fields {
+			if sgoCarriesRef(fl.typ, seen) {
+				return true
+			}
+		}
+	case *Array:
+		return sgoCarriesRef(u.elem, seen)
+	case *Tuple:
+		return true
+	}
+	return false
 }
 
 // sgoRecvNamed reports whether fn is a method of *sgo.<name>[...].

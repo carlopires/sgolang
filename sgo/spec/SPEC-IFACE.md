@@ -25,14 +25,14 @@ Named interface types, `any`, implicit implementation, dynamic dispatch, comma-o
 - **supported_execution_configurations:** production and lab.
 
 ### SGO-IFACE-002 — Interface types and implementation
-- **version:** 1
+- **version:** 2
 - **status:** frozen
-- **reference_closure:** SGO-IFACE-001, SGO-IFACE-003, SGO-COMP-004, SGO-COMP-007, SGO-TYPE-006, SGO-BIND-004, SGO-UTYPE-002; D107, D127, D131, D132.
+- **reference_closure:** SGO-IFACE-001, SGO-IFACE-003, SGO-COMP-004, SGO-COMP-007, SGO-TYPE-006, SGO-BIND-004, SGO-UTYPE-002, SGO-RES-006; D107, D127, D131, D132, D176.
 - **grammar_and_types:** A package-level type declaration `type I interface { M(params) results; ...; J }` declares a named interface type: methods with admitted parameter and result types, and embedded named interface types J. `any` is the empty interface. A type implements I when its method set includes every method of I: the method set of a named type `T` is its value-receiver methods, and that of `*T` adds the pointer-receiver methods (D131). Assignment, variable initialization, argument passing, return, send, and composite-literal elements convert a value implicitly to an interface type it implements; explicit conversions to interface types are denied (SGO-UTYPE-002). Two methods of one name with different signatures, through embedding, are a compile error. Interface types may be the types of struct fields, slice and array elements, map values, channel elements, parameters, and results; they are never value types (SGO-COMP-002), so never map keys.
 - **preconditions:** n/a — static rule.
 - **evaluation_and_value_semantics:** An interface value is nil, or a pair of a dynamic type and a dynamic value. Converting a value copies it into the interface value, as an assignment would; converting a pointer stores the pointer, so the interface value refers to the pointed-to variable. Converting a nil pointer gives the nil interface value: S-Go has no typed nil (D130). `nil` is a value of every interface type.
 - **ownership_and_lifecycle:** The dynamic value of an interface value is owned by the task that holds the interface value.
-- **effect_and_capability_requirements:** n/a — interface values carry no authority of their own; a capability handle is never an interface's dynamic value through an implicit conversion (SGO-TYPE-005 denies the conversions).
+- **effect_and_capability_requirements:** n/a — interface values carry no authority of their own; a capability handle is never an interface's dynamic value through an implicit conversion, except a handle converted to a resource interface (SGO-RES-006), whose value is tied as the handle and task-local, so it carries the handle's authority no further than the handle itself.
 - **concurrency_and_memory_order:** Every interface type other than `error` is task-local whatever its dynamic value (D132): it is sent only as `sgo.Copy(x)`, never moved, captured by a spawned task, frozen, or converted to `error`, and SGO-COMP-004's rules for task-local types apply. `sgo.Copy` of an interface value deep-copies its dynamic value; `sgo.Copy` of nil is nil. `error` stays shareable (SGO-TYPE-006); a struct with an `error` field stays shareable, and one with another interface field is task-local. The sharing model checks this rule over every interleaving (`sgo/model/sharemodel.go`, kind `SIface`).
 - **allowed_nondeterminism:** None.
 - **failure_and_partial_progress:** n/a — static rule; a violation is a compile error.
