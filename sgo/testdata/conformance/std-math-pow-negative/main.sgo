@@ -8,6 +8,6 @@ import (
 func main(root *sgo.Context) error {
 	n := -1
 	_ = root.Stdout().WriteString("before\n")
-	_ = math.Pow(2, n)
+	_ = math.IntPow(2, n)
 	return nil
 }

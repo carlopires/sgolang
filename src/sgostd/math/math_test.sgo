@@ -7,10 +7,10 @@ package math
 import "sgo"
 
 func TestMath(t *sgo.T) error {
-	if Abs(-5) != 5 || Abs(MaxInt) != MaxInt || Min(2, -3) != -3 || Max(2, -3) != 2 {
+	if IntAbs(-5) != 5 || IntAbs(MaxInt) != MaxInt || IntMin(2, -3) != -3 || IntMax(2, -3) != 2 {
 		return sgo.NewError("Abs/Min/Max")
 	}
-	if Pow(2, 10) != 1024 || Pow(7, 0) != 1 || Pow(0, 0) != 1 || Pow(-2, 63) != MinInt || Pow(-3, 3) != -27 || Pow(1, 1000000000000) != 1 {
+	if IntPow(2, 10) != 1024 || IntPow(7, 0) != 1 || IntPow(0, 0) != 1 || IntPow(-2, 63) != MinInt || IntPow(-3, 3) != -27 || IntPow(1, 1000000000000) != 1 {
 		return sgo.NewError("Pow")
 	}
 	return nil

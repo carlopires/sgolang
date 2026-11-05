@@ -1,0 +1,157 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package math
+
+// The bits of a float64 as an int, in two's complement: the sign bit is MinInt (S-Go has no
+// unsigned integers). Float64bits and Float64frombits are written with exact IEEE operations only
+// (scaling by powers of two, conversions of integers below 2^53), so they need no unsafe code and
+// give the same result on every target (SGO-FLOAT-002).
+
+const (
+	fracMask = 1<<52 - 1
+	expShift = 52
+	expBias  = 1023
+	nanBits  = 0x7FF8000000000000 // the one NaN a program sees (SGO-FLOAT-002)
+	two52    = 4503599627370496.0 // 2^52
+	two53    = 9007199254740992.0 // 2^53
+)
+
+// pow2 returns 2^e for -1074 <= e <= 1023, exactly: every partial product is a power of two
+// between 1 and the result, so none rounds.
+func pow2(e int) float64 {
+	r := 1.0
+	if e >= 0 {
+		b := 2.0
+		for e > 0 {
+			if e&1 == 1 {
+				r *= b
+			}
+			e >>= 1
+			if e > 0 {
+				b *= b
+			}
+		}
+		return r
+	}
+	e = -e
+	steps := []float64{0x1p-1, 0x1p-2, 0x1p-4, 0x1p-8, 0x1p-16, 0x1p-32, 0x1p-64, 0x1p-128, 0x1p-256, 0x1p-512, 0x1p-1024}
+	for i := len(steps) - 1; i >= 0; i-- {
+		if e >= 1<<i {
+			r *= steps[i]
+			e -= 1 << i
+		}
+	}
+	return r
+}
+
+// Inf returns positive infinity if sign >= 0, negative infinity if sign < 0.
+func Inf(sign int) float64 {
+	z := 0.0
+	if sign < 0 {
+		return -1 / z
+	}
+	return 1 / z
+}
+
+// NaN returns the NaN.
+func NaN() float64 {
+	z := 0.0
+	return z / z
+}
+
+// IsNaN reports whether f is a NaN.
+func IsNaN(f float64) bool { return f != f }
+
+// IsInf reports whether f is an infinity, according to sign: sign > 0 asks for +Inf, sign < 0 for
+// -Inf, sign == 0 for either.
+func IsInf(f float64, sign int) bool {
+	return sign >= 0 && f > MaxFloat64 || sign <= 0 && f < -MaxFloat64
+}
+
+// Signbit reports whether x is negative or negative zero; false for the NaN (SGO-FLOAT-002).
+func Signbit(x float64) bool {
+	if x != x {
+		return false
+	}
+	return x < 0 || x == 0 && 1/x < 0
+}
+
+// Float64bits returns the IEEE 754 binary representation of f, as an int in two's complement
+// (the sign bit is MinInt). A NaN gives 0x7FF8000000000000.
+func Float64bits(f float64) int {
+	if f != f {
+		return nanBits
+	}
+	neg := Signbit(f)
+	a := f
+	if neg {
+		a = -f
+	}
+	rest := 0
+	switch {
+	case a == 0:
+		rest = 0
+	case a > MaxFloat64:
+		rest = 0x7FF << expShift
+	default:
+		// Scale a into [2^52, 2^53) by exact powers of two; k counts the scaling, so that
+		// f = m * 2^k with m an integer. A subnormal stops at k = -1074 with m < 2^52.
+		k := 0
+		for a >= two53 {
+			if a >= 0x1p117 {
+				a *= 0x1p-64
+				k += 64
+			} else {
+				a *= 0.5
+				k++
+			}
+		}
+		for a < two52 && k > -1074 {
+			if a < 0x1p-12 && k-64 >= -1074 {
+				a *= 0x1p64
+				k -= 64
+			} else {
+				a *= 2
+				k--
+			}
+		}
+		m := int(a)
+		if m < 1<<52 {
+			rest = m // subnormal: biased exponent 0
+		} else {
+			rest = (k+1075)<<expShift | (m - 1<<52)
+		}
+	}
+	if neg {
+		return MinInt + rest
+	}
+	return rest
+}
+
+// Float64frombits returns the float64 whose IEEE 754 representation is b (in Float64bits' form).
+func Float64frombits(b int) float64 {
+	neg := b < 0
+	rest := b
+	if neg {
+		rest = b - MinInt
+	}
+	e := rest >> expShift
+	frac := rest & fracMask
+	r := 0.0
+	switch {
+	case e == 0x7FF && frac != 0:
+		return NaN()
+	case e == 0x7FF:
+		r = Inf(1)
+	case e == 0:
+		r = float64(frac) * pow2(-1074)
+	default:
+		r = float64(frac+1<<52) * pow2(e-1075)
+	}
+	if neg {
+		return -r
+	}
+	return r
+}

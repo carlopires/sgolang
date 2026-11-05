@@ -1136,7 +1136,7 @@ comparable with `==`.
 
 `std/math` today has `Abs`, `Min`, `Max`, `Pow` on `int`. Go's names are the float ones. Options:
 - **(a) Recommended:** the float functions take Go's names (`math.Abs(x float64)`), and the integer
-  ones move to `std/math` as `AbsInt`, `MinInt`, `MaxInt`, `PowInt`. This breaks 0.19 programs that
+  ones move to `std/math` as `AbsInt`, `MinInt`, `MaxInt`, `PowInt`. **Amended at implementation (2026-11-07):** named `IntAbs`, `IntMin`, `IntMax`, `IntPow` instead, because `MinInt` and `MaxInt` are already `std/math`'s integer-limit constants (Go's names). This breaks 0.19 programs that
   call the four integer functions, and the freeze fixes every example and fixture. 0.x permits it,
   and Go code then ports unchanged.
 - (b) Keep the integer names and give the float ones a prefix (`math.FAbs`).

@@ -8,6 +8,6 @@ import (
 func main(root *sgo.Context) error {
 	x := math.MinInt
 	_ = root.Stdout().WriteString("before\n")
-	_ = math.Abs(x)
+	_ = math.IntAbs(x)
 	return nil
 }
