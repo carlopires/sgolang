@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.18.0",
- "allowlist_digest": "d09d75fe895f340ec56ba15824c53ab396d439dabc7bca41b50964ce02b9756e",
+ "allowlist_digest": "87bc475ed775da25cfe0c8ea4aa2c6309d030b7ef36b25dcfc9934bfb52e6203",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -431,7 +431,7 @@
   {
    "callee": "sgoStdinPump",
    "file": "src/runtime/sgo_stdin.go",
-   "line": 82,
+   "line": 85,
    "status": "active",
    "purpose": "stdin: one blocking read of fd 0 per reader demand, started by a read of root.Stdin() that finds nothing buffered; never in the lab (D178)"
   },
@@ -4685,7 +4685,7 @@
   },
   {
    "path": "src/runtime/sgo_stdin.go",
-   "sha256": "9e5eaf677f33f760f391cd0625ecec8c4efb69b778842a3bf03cbbe2417fae4e",
+   "sha256": "41c4cb1c1d4bc19a9d531ad4a5263f76d4ff4d3f1c140bbd81665b79fd1e6970",
    "upstream_identical": false
   },
   {

@@ -147,7 +147,7 @@ A lab build (sgo lab) runs on a deterministic scheduler with virtual time and si
 - **Scope:** admission, runtime_enforced, model_explored, tested
 - **Model bounds:** sgo/model labmodel: pinned stream goldens and bounded scenarios (sgo/evidence/w08/README.md)
 - **Families:** SPEC-LAB
-- **Clauses:** SGO-LAB-001, SGO-LAB-002, SGO-LAB-003, SGO-LAB-004, SGO-LAB-005, SGO-LAB-006
+- **Clauses:** SGO-LAB-001, SGO-LAB-002, SGO-LAB-003, SGO-LAB-004, SGO-LAB-005, SGO-LAB-006, SGO-LAB-007
 - **Acceptance cases:** D02, D03, D04, D05, D09, S14
 - **Implementation:** `src/runtime/sgo_lab.go`, `src/runtime/sgo_lab_run.go`, `src/runtime/sgo_lab_sched.go`, `src/runtime/sgo_lab_boot.go`, `src/runtime/sgo_iofake.go`, `src/runtime/sgo_netfake.go`, `src/cmd/compile/internal/walk/sgo_lab.go`, `src/cmd/sgo/lab.go`, `src/cmd/sgo/lab_cmds.go`
 

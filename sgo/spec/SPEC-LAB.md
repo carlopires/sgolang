@@ -133,3 +133,25 @@ Denied in subsets 0 to 2 (spec 0.1.0 to 0.3.0, SGO-LAB-001). Spec 0.4.0 admits t
 - **implementation_coverage:** runtime `sgo_lab_sched.go`, `sgo_lab_boot.go`.
 - **executed_evidence:** `sgo/evidence/w08/README.md`.
 - **supported_execution_configurations:** lab.
+
+### SGO-LAB-007 — Lab standard input
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-LAB-004, SGO-LAB-005; D178.
+- **grammar_and_types:** `sgo lab run [-stdin FILE] … pkg [-- ARGS]` and `sgo lab sweep [-stdin FILE] … pkg [-- ARGS]`; the program reads it through `root.Stdin()` (an `*sgo.Input`).
+- **preconditions:** FILE is readable by the driver; it is host input, not a grant of the program.
+- **evaluation_and_value_semantics:** The driver reads FILE once and records its text in the manifest; the program's standard input is exactly that text followed by end of input, and without `-stdin` it is empty. Reads return the text in order with no host timing, so a read never waits on the host. Replay takes the text from the trace, never from a file, and a sweep gives every seed the same text.
+- **ownership_and_lifecycle:** n/a — the text is part of the run's manifest; it is not a resource of the program.
+- **effect_and_capability_requirements:** n/a — the stdin capability is held by the root context as in production; the lab only replaces its source.
+- **concurrency_and_memory_order:** n/a — the run is one interleaving (SGO-LAB-003).
+- **allowed_nondeterminism:** None: the input is fixed by the manifest.
+- **failure_and_partial_progress:** An unreadable FILE is refused before the run (`SGO_E_USAGE`). A replay of a trace whose text differs from a given `-stdin` is refused (`SGO_E_LAB_MANIFEST`).
+- **cancellation_and_cleanup:** n/a — a read of lab input never blocks, so cancellation is observed at the program's next checkpoint.
+- **compile_link_checks:** n/a — no source construct.
+- **runtime_guards:** n/a — the input is supplied by the boot sequence (SGO-LAB-002).
+- **tcb_assumptions:** The driver is host code (SGO-TOOL-001).
+- **positive_tests:** D02, D13; `sgo/scripts/test-cli.py` (lab stdin is read and replayed).
+- **negative_tests:** n/a — draft; refusal fixtures are added at the freeze.
+- **implementation_coverage:** driver `cmd/sgo/lab.go`, `lab_cmds.go`; runtime `sgo_lab_boot.go`, `sgo_stdin.go`.
+- **executed_evidence:** n/a — draft; recorded at the 0.19.0 freeze.
+- **supported_execution_configurations:** lab.

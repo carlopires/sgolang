@@ -32,9 +32,12 @@ var sgoLabStdin string
 //
 //go:linkname sgo_stdin sgo.runtime_stdin
 func sgo_stdin() unsafe.Pointer {
+	// Allocate before taking the lock (no allocation under a runtime lock); a racing first use
+	// keeps the handle published first.
+	fresh := &sgoHandle{kind: sgoHStdin, fd: 0, body: sgoCurrent(), name: "stdin"}
 	lock(&sgoStdin.lock)
 	if sgoStdin.h == nil {
-		sgoStdin.h = &sgoHandle{kind: sgoHStdin, fd: 0, body: sgoCurrent(), name: "stdin"}
+		sgoStdin.h = fresh
 	}
 	h := sgoStdin.h
 	unlock(&sgoStdin.lock)
@@ -103,14 +106,23 @@ func sgoStdinPump() {
 			usleep(5000)
 			continue
 		}
-		lock(&sgoStdin.lock)
+		// Build the result before taking the lock (no allocation under a runtime lock).
+		var end *sgoIOErr
+		chunk := ""
 		switch {
 		case n < 0:
-			sgoStdin.end = &sgoIOErr{"IOError", 0}
+			end = &sgoIOErr{"IOError", 0}
 		case n == 0:
-			sgoStdin.end = &sgoIOErr{"EOF", 0}
+			end = &sgoIOErr{"EOF", 0}
 		default:
-			sgoStdin.data += string(buf[:n])
+			chunk = string(buf[:n])
+		}
+		lock(&sgoStdin.lock)
+		// The pump starts only when data is empty and delivers one chunk, so data is empty here.
+		if end != nil {
+			sgoStdin.end = end
+		} else {
+			sgoStdin.data = chunk
 		}
 		sgoStdin.pumping = false
 		unlock(&sgoStdin.lock)

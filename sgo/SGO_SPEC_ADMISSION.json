@@ -1178,9 +1178,10 @@
         "SGO-LAB-003",
         "SGO-LAB-004",
         "SGO-LAB-005",
-        "SGO-LAB-006"
+        "SGO-LAB-006",
+        "SGO-LAB-007"
       ],
-      "normative_text_digest": "e0de5b31f595ca7a9cbc1c431ebd336c6708056334cf3490e0d9fae3c659f6c1",
+      "normative_text_digest": "deb5e7cbe3eb94507355cf2a117633e350eb8e942e936027d3c95ee1854a8b61",
       "admitted_in": [
         "0.7.0"
       ],
@@ -1203,7 +1204,8 @@
         "SGO-LAB-003": "d2af64340f6ef33bb8a4b803473b90b113f0981af65c7ff183caf993d04ac9ee",
         "SGO-LAB-004": "09015a09199440e44854f5fdc2de85cbbde08a044757714255104f4b1c6575a4",
         "SGO-LAB-005": "1bcc0e2f98d0b55163d0d09596e80a31a083c7d64e2a5800d16390cbb1510565",
-        "SGO-LAB-006": "7d97996148c73681e69088d25bb7619f4f4f4fc6eb26ceff76b4e014310070c2"
+        "SGO-LAB-006": "7d97996148c73681e69088d25bb7619f4f4f4fc6eb26ceff76b4e014310070c2",
+        "SGO-LAB-007": "cbe38e12c4e73dcccd914ca1b9c50a991b4bf2654e7d69414091cb8666ca5bb0"
       },
       "clause_status": {
         "SGO-LAB-001": "superseded",
@@ -1211,7 +1213,8 @@
         "SGO-LAB-003": "frozen",
         "SGO-LAB-004": "frozen",
         "SGO-LAB-005": "frozen",
-        "SGO-LAB-006": "frozen"
+        "SGO-LAB-006": "frozen",
+        "SGO-LAB-007": "draft"
       },
       "clause_versions": {
         "SGO-LAB-001": 2,
@@ -1219,7 +1222,8 @@
         "SGO-LAB-003": 1,
         "SGO-LAB-004": 1,
         "SGO-LAB-005": 1,
-        "SGO-LAB-006": 1
+        "SGO-LAB-006": 1,
+        "SGO-LAB-007": 1
       }
     },
     {
@@ -1827,5 +1831,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "b1fe8f1d162ab9327742b9935089c8f7dfcb1a698559d7f4675d8e95783eb6b9"
+  "rows_digest": "14dbed171c33ca307e19e39d4b7dbaa8d1e096ae8915f4420da4ce328449b2db"
 }

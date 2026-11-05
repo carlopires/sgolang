@@ -375,6 +375,7 @@
       "quota",
       "epoch",
       "trace",
+      "stdin",
       "expect",
       "save",
       "timeout"
