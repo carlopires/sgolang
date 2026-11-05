@@ -1,0 +1,163 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package math
+
+// reduceThreshold is the argument above which Sin, Cos, Tan, and Sincos use trigReduce: below it
+// the Cody-Waite reduction by three parts of Pi/4 is exact enough (Go's value).
+const reduceThreshold = 1 << 29
+
+// trigReduce is Go's Payne-Hanek reduction by Pi/4 (src/math/trig_reduce.go) for x >= 2^29,
+// computed step for step with each uint64 held as four 16-bit limbs (least significant first), so
+// that every intermediate product fits int and the result is bit-identical to Go's portable code
+// (SGO-STD-011, D192). It returns the octant j (mod 8) and the reduced argument z.
+func trigReduce(x float64) (int, float64) {
+	const PI4 = Pi / 4
+	if x < PI4 {
+		return 0, x
+	}
+	// 4/pi as 20 uint64 digits: 4/pi = Sum mPi4[i]*2^(-64*i), each digit as four 16-bit limbs.
+	mPi4 := [80]int{
+		1, 0, 0, 0, // 0x0000000000000001
+		10835, 40072, 1756, 17907, // 0x45f306dc9c882a53
+		48001, 60009, 44963, 63566, // 0xf84eafa3ea69bb81
+		8323, 30855, 11058, 46789, // 0xb6c52b3278872083
+		35523, 48503, 51031, 64674, // 0xfca2c757bd778ac3
+		42432, 33947, 56436, 28232, // 0x6e48dc74849ba5c0
+		9273, 5027, 24020, 3218, // 0x0c925dd413a32439
+		20093, 25171, 54841, 64571, // 0xfc3bd63962534e7d
+		35081, 23926, 27626, 53508, // 0xd1046bea5d768909
+		64642, 26814, 57421, 54072, // 0xd338e04d68befc82
+		29673, 1702, 44147, 29475, // 0x7323ac7306a673e9
+		20598, 31730, 48919, 14600, // 0x3908bf177bf25076
+		12319, 48139, 12287, 16369, // 0x3ff12fffbc0b301f
+		55870, 46100, 8982, 56926, // 0xde5e2316b414da3e
+		4974, 20374, 64926, 55916, // 0xda6cfd9e4f96136e
+		54362, 15551, 32461, 40588, // 0x9e8c7ecd3cbfd45a
+		58102, 55243, 30095, 59983, // 0xea4f758fd7cbe2f6
+		9684, 5285, 29679, 31246, // 0x7a0e73ef14a525d4
+		47632, 16154, 48994, 55286, // 0xd7f6bf623f1aba10
+		55127, 63734, 24717, 44038, // 0xac06608df8f6d757
+	}
+	digitAt := func(i int) [4]int {
+		return [4]int{mPi4[4*i], mPi4[4*i+1], mPi4[4*i+2], mPi4[4*i+3]}
+	}
+	b := Float64bits(x)
+	e := (b>>52)&0x7ff - 1023 - 52
+	ix := u64From(b&(1<<52-1) | 1<<52)
+	digit, bitshift := (e+61)/64, (e+61)%64
+	z0 := u64Or(u64Shl(digitAt(digit), bitshift), u64Shr(digitAt(digit+1), 64-bitshift))
+	z1 := u64Or(u64Shl(digitAt(digit+1), bitshift), u64Shr(digitAt(digit+2), 64-bitshift))
+	z2 := u64Or(u64Shl(digitAt(digit+2), bitshift), u64Shr(digitAt(digit+3), 64-bitshift))
+	z2hi, _ := u64Mul(z2, ix)
+	z1hi, z1lo := u64Mul(z1, ix)
+	_, z0lo := u64Mul(z0, ix)
+	lo, c := u64Add(z1lo, z2hi, 0)
+	hi, _ := u64Add(z0lo, z1hi, c)
+	j := hi[3] >> 13 // the top 3 bits
+	hi = u64Or(u64Shl(hi, 3), u64Shr(lo, 61))
+	lz := u64LeadingZeros(hi)
+	ex := 1023 - (lz + 1)
+	hi = u64Or(u64Shl(hi, lz+1), u64Shr(lo, 64-(lz+1)))
+	hi = u64Shr(hi, 64-52)
+	z := Float64frombits(u64Int(hi) + ex<<52)
+	if j&1 == 1 {
+		j++
+		j &= 7
+		z--
+	}
+	return j, z * PI4
+}
+
+// u64From returns the limbs of a nonnegative int.
+func u64From(v int) [4]int {
+	return [4]int{v & 0xffff, (v >> 16) & 0xffff, (v >> 32) & 0xffff, (v >> 48) & 0xffff}
+}
+
+// u64Int returns the limbs as an int, two's complement for values of 2^63 and above.
+func u64Int(a [4]int) int {
+	top := a[3]
+	if top >= 0x8000 {
+		top -= 0x10000
+	}
+	return top*(1<<48) + a[2]<<32 + a[1]<<16 + a[0]
+}
+
+func u64Or(a, b [4]int) [4]int {
+	return [4]int{a[0] | b[0], a[1] | b[1], a[2] | b[2], a[3] | b[3]}
+}
+
+// u64Shl is a << n; as in Go, a shift of 64 or more (or a wrapped negative count) yields 0.
+func u64Shl(a [4]int, n int) [4]int {
+	r := [4]int{}
+	if n < 0 || n >= 64 {
+		return r
+	}
+	w, s := n/16, n%16
+	for i := 3; i >= w; i-- {
+		v := (a[i-w] << s) & 0xffff
+		if i-w-1 >= 0 {
+			v |= a[i-w-1] >> (16 - s)
+		}
+		r[i] = v
+	}
+	return r
+}
+
+// u64Shr is a >> n; as in Go, a shift of 64 or more (or a wrapped negative count) yields 0.
+func u64Shr(a [4]int, n int) [4]int {
+	r := [4]int{}
+	if n < 0 || n >= 64 {
+		return r
+	}
+	w, s := n/16, n%16
+	for i := 0; i+w <= 3; i++ {
+		v := a[i+w] >> s
+		if i+w+1 <= 3 {
+			v |= (a[i+w+1] << (16 - s)) & 0xffff
+		}
+		r[i] = v
+	}
+	return r
+}
+
+// u64Mul returns the high and low 64 bits of the 128-bit product a*b (Go's bits.Mul64).
+func u64Mul(a, b [4]int) ([4]int, [4]int) {
+	t := [8]int{}
+	for i := 0; i < 4; i++ {
+		carry := 0
+		for k := 0; k < 4; k++ {
+			v := t[i+k] + a[i]*b[k] + carry // < 2^33
+			t[i+k] = v & 0xffff
+			carry = v >> 16
+		}
+		t[i+4] += carry
+	}
+	return [4]int{t[4], t[5], t[6], t[7]}, [4]int{t[0], t[1], t[2], t[3]}
+}
+
+// u64Add returns a + b + carry and the carry out (Go's bits.Add64).
+func u64Add(a, b [4]int, carry int) ([4]int, int) {
+	r := [4]int{}
+	for i := 0; i < 4; i++ {
+		v := a[i] + b[i] + carry
+		r[i] = v & 0xffff
+		carry = v >> 16
+	}
+	return r, carry
+}
+
+// u64LeadingZeros is Go's bits.LeadingZeros64.
+func u64LeadingZeros(a [4]int) int {
+	for i := 3; i >= 0; i-- {
+		if a[i] != 0 {
+			n := 0
+			for v := a[i]; v < 0x8000; v <<= 1 {
+				n++
+			}
+			return (3-i)*16 + n
+		}
+	}
+	return 64
+}
