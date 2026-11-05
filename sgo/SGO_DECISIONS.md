@@ -1016,13 +1016,15 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 
 **Why.** The marker keeps the analysis type-based: code that never touches resources (every `any`, `error`, and unmarked interface) keeps exactly today's rules, the checker reuses the existing flow pass instead of inferring provenance per value across packages, and a reader of the code sees from a declaration whether a value may hold a connection. Cost: one embedded line in interfaces that carry I/O, usually inherited from `sgo.Reader`/`sgo.Writer`. Amends SGO-RES-003 (Z1 holds for non-resource interfaces) and SGO-IFACE at 0.18.0; new draft clause for resource interfaces.
 
-## D177 — `Listen` and `Dial` take the scope that owns the handle · APPROVED 2026-11-06 (user)
+## D177 — `Listen` and `Dial` take the scope that owns the handle · WITHDRAWN 2026-11-06 (user)
 
 **Question.** `root.Listen(addr)` and `root.Dial(addr)` take no scope: the handle belongs to the scope of the calling task, so a function that listens for a nursery's lifetime must close the listener by hand after the nursery (`check l.Close()` in `sgo/examples/httpserver`). `l.MoveTo(n)` cannot hand it to the nursery, because ownership only moves outward (D158). Every other acquisition already names its scope: `l.Accept(s)`, `d.Dial(s, addr)`, `dir.Open(s, name)`, `n.NewTimer`.
 
 **Recommendation.** `c.Listen(s sgo.Scope, addr string)` and `c.Dial(s sgo.Scope, addr string)`: `c` is the context holding the grant (as today), `s` is the scope that owns the handle, the caller's current scope or one enclosing it (as `Dir.Open`). The handle is released when `s` ends, so `Run`-style functions listen into their nursery and need no `Close`. No one-argument form is kept (no compatibility mode). Every call site changes (32 programs in the corpus); SGO-NET-002 and SGO-NET-003 get new versions.
 
 **Why.** One rule for every acquisition: the code shows who owns a handle where it is made, and a lifetime is a block, not a call the reader must find. Cost: one more argument at each call; a mechanical migration.
+
+**Withdrawn (user, 2026-11-06).** The scoped forms already exist: `n.Listen(addr)` and `n.Dial(addr)` make the handle a resource of nursery `n`, and `root.Listen`/`root.Dial` of the root task's body; only the root task holds network grants, so every scope that can own a socket is named. A uniform `c.Listen(s, addr)` would only align the signature with `Dir.Open(s, …)` at the cost of a breaking migration. `sgo/examples/httpserver` now listens with `n.Listen` and needs no `Close` (d29b272303).
 
 ## D178 — The process interface of a CLI program · APPROVED 2026-11-06 (user)
 
@@ -1072,7 +1074,7 @@ SGO-PROC-003 and SGO-PROC-004 get new versions.
 
 **Recommendation.** No language feature: commands are values. A library (first as `sgo/examples/cli`, promoted to `std/cli` once its API settles) with `cli.Command{Name, Summary, Description, Examples, Group, Hidden, Flags, Args}`, subcommands added at run time (`parent.Add(child)`, found and extended by name), typed flags and positional arguments (`string`, `int`, `bool`, `float`, `duration`, lists; required, defaults, variadic), a handler interface (`type Runner interface { Run(c *cli.Call) error }`, no function fields, user 2026-11-06), grouped help and usage rendered by plain code, `--help`, `--version`, and errors that name the command. Acceptance: `sgo/examples/cli` reproduces the `undisk-cli` shape: static commands, plus commands built from a profile read over a granted runtime socket from a fake daemon, with a `shell` loop on stdin over the same tree, all under `sgo test` and the lab.
 
-**Plan (W24, after approval).** D177 (migration); then D178, D179, D182, D180, D181 (runtime, driver, lab), model first for D179 (an interrupt racing scope ends); D183 (std, with differential tests); D184 last, as the acceptance. Spec 0.19.0.
+**Plan (W24, after approval).** D178, D179, D182, D180, D181 (runtime, driver, lab), model first for D179 (an interrupt racing scope ends); D183 (std, with differential tests); D184 last, as the acceptance. Spec 0.19.0.
 
 ---
 
@@ -1119,3 +1121,4 @@ SGO-PROC-003 and SGO-PROC-004 get new versions.
 - 2026-11-06: user approved D176 option (a) with the opt-in marker only ("I agree ... let's stick with the marker mechanism only"), after rejecting generic functions (b) and the inferred all-interfaces design of `.work/sgo-scoped-interfaces.md`; `any`, `error`, and unmarked interfaces never hold resources.
 
 - 2026-11-06: user approved D177–D184 as recommended ("looks good, approved!"): CLI programs as first-class — scoped `Listen`/`Dial`, the process interface (arguments, stdin, stderr, terminals, broken pipe), interrupts cancel the root, environment by grant, argument paths (option b), per-user application directories, std for CLIs, and a CLI library with run-time commands. Follow-up: W24, spec 0.19.0.
+- 2026-11-06: user withdrew D177 (the scoped forms `n.Listen`/`n.Dial` already exist).

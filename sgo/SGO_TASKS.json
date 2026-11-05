@@ -1002,9 +1002,8 @@
       ],
       "risk": "high",
       "status": "in_progress",
-      "plan_section": "sgo/SGO_DECISIONS.md D177-D184",
+      "plan_section": "sgo/SGO_DECISIONS.md D178-D184",
       "deliverables": [
-        "Listen/Dial name their scope (D177)",
         "root.Args, Stdin, Stderr, terminals, broken pipe (D178)",
         "interrupts cancel the root (D179)",
         "grant env (D180)",
