@@ -66,6 +66,10 @@ message 1348) SGO-RES-002 v4, SGO-RES-004 v6 (P1) and SGO-RES-005 v2 (P2). CHANG
   tries, but select chooses at random (1 in 32). The test now takes the result with the
   result arm alone (9da365995c); the runtime was not at fault.
 
+- 0.20.1 (W25 review P3, SGO-RES-001 v4 and SGO-RES-002 v5, a1ff5f9b31): darwin/arm64 conformance
+  768/768 and the 22 gates (now with license-audit) all 0; sgo-spec run 42084573165 and sgo-w00
+  run 42084573352 (linux/amd64, linux/arm64) green.
+
 ## Open
 
 - D195 (proposed): parameter-lifetime summaries in export data, so a helper may forward a resource
