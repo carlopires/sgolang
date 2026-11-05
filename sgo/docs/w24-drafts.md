@@ -76,3 +76,23 @@ override on Linux, a socket round trip and its directory).
   lab the environment is the run's `-env` entries (SGO-LAB-007).
 
 Fixtures: proc-env-granted, proc-env-ungranted, proc-env-grant-bad.
+
+## D181 — paths named on the command line (for the 0.19.0 freeze)
+
+- **SGO-FILE-002 v3 (argument paths).** `grant path args ro|rw` in sgo.mod lets the root use the
+  paths the user typed as arguments, and nothing else: the user's own command line is the
+  authority, and the program cannot reach a path it builds from strings.
+  - `root.ArgDir(i) (*sgo.Dir, error)`: a `Dir` confined to argument i, which must name a
+    directory, with the grant's mode; `..` and symlinks out are refused as for every `Dir`.
+  - `root.OpenArg(s, i) (*sgo.File, error)`: the file argument i names, opened for reading as a
+    resource of scope s.
+  - `root.CreateArg(s, i) (*sgo.File, error)`: creates or truncates the file argument i names,
+    for writing; only with `rw` (otherwise MissingCapability).
+  The file is opened through its parent directory by its last name only, without following a
+  symlink in that name; no handle on the parent reaches the program. An argument whose last
+  element is empty, `.` or `..` is refused for OpenArg and CreateArg (`PathRejected`), as is an
+  index beyond the arguments. Each argument is opened on first use, never at start. A child
+  context is refused (MissingCapability). The grant is a canonical I/O grant line (`args MODE`),
+  part of the build identity. In the lab every argument path is an empty in-memory directory.
+- For tools that walk the working directory, `grant dir cwd . ro|rw` (an ordinary directory
+  grant) already gives `root.Dir("cwd")`.

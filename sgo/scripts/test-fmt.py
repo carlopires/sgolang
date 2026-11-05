@@ -69,7 +69,7 @@ def main():
                 problems.append(f"{name}: formatted case no longer builds: {b.stderr.strip()[:200]}")
                 continue
             try:
-                r = subprocess.run([exe] + e.get("run_args", []), cwd=d, env=env, input=e.get("run_stdin", ""), capture_output=True, text=True, timeout=e.get("timeout_ms", 10000) / 1000)
+                r = subprocess.run([exe] + e.get("run_args", []), cwd=d, env=dict(env, **e.get("run_env", {})), input=e.get("run_stdin", ""), capture_output=True, text=True, timeout=e.get("timeout_ms", 10000) / 1000)
             except subprocess.TimeoutExpired:
                 problems.append(f"{name}: formatted case timed out")
                 continue
