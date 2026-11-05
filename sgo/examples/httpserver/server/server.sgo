@@ -17,9 +17,13 @@ import (
 // SlowLimitMs is the deadline of a request to /slow; its handler would take far longer.
 const SlowLimitMs = 30
 
-// Run serves on addr, sends paths over one keep-alive connection, then shuts the server down while
-// that connection is still open. It returns one transcript line per request.
-func Run(root *sgo.Context, addr string, paths []string) (string, error) {
+// ReadLimitMs bounds the time a connection may take to send its next request: an idle or
+// trickling client is closed after it, while the server keeps serving the others.
+const ReadLimitMs = 500
+
+// Run serves on addr while client runs, then shuts the server down with one Cancel of its scope,
+// whatever connections client left open. It returns what client returned.
+func Run(root *sgo.Context, addr string, client func(*sgo.Context, string) (string, error)) (string, error) {
 	l := check root.Listen(addr)
 	out := ""
 	nursery (n) {
@@ -27,17 +31,32 @@ func Run(root *sgo.Context, addr string, paths []string) (string, error) {
 		check n.Start(func(task *sgo.Context, ready *sgo.Ready) error {
 			return serve(task, ll, ready)
 		})
-		c := check root.Dial(addr)
-		for _, p := range paths {
-			check http.WriteRequest(c, "GET", p, "")
-			r := check http.ReadResponse(c)
-			out += p + " -> " + http.StatusText(r.Status) + ": " + r.Body + "\n"
-		}
-		n.Cancel() // shutdown: the server's Accept and the open connection's read both end
-		check c.Close()
+		out = check client(root, addr)
+		n.Cancel() // shutdown: the server's Accept and every connection's read end
 	}
 	check l.Close()
 	return out, nil
+}
+
+// Get sends a GET request for path over c and reads the response.
+func Get(c *sgo.Conn, path string) (http.Response, error) {
+	check http.WriteRequest(c, "GET", path, "")
+	return http.ReadResponse(c)
+}
+
+// Transcript sends each path over c, one keep-alive connection, and returns a line per response.
+func Transcript(c *sgo.Conn, paths []string) (string, error) {
+	out := ""
+	for _, p := range paths {
+		r := check Get(c, p)
+		out += Line(p, r)
+	}
+	return out, nil
+}
+
+// Line is the transcript line of the response r to a request for what.
+func Line(what string, r http.Response) string {
+	return what + " -> " + http.StatusText(r.Status) + ": " + r.Body + "\n"
 }
 
 // serve accepts connections into its own nursery and gives each one a task.
@@ -53,16 +72,39 @@ func serve(task *sgo.Context, ll *sgo.Listener, ready *sgo.Ready) error {
 	}
 }
 
-// serveConn answers requests on c until the client closes it.
+// serveConn answers requests on c until the client closes it, misbehaves, or goes quiet. A child
+// error would cancel its siblings (SGO-SPAWN-004), so a connection's failure stays the
+// connection's: it ends the connection, never the server.
 func serveConn(w *sgo.Context, c *sgo.Conn) error {
 	for {
-		req, ok := check http.NextRequest(c)
-		if !ok {
-			return c.Close()
+		req, ok, err := nextRequest(w, c)
+		if err != nil || !ok {
+			return hangUp(c, err)
 		}
 		status, body := route(w, req)
-		check http.WriteResponse(c, status, body)
+		if werr := http.WriteResponse(c, status, body); werr != nil {
+			return hangUp(c, nil)
+		}
 	}
+}
+
+// nextRequest reads the next request of c within ReadLimitMs.
+func nextRequest(w *sgo.Context, c *sgo.Conn) (http.Request, bool, error) {
+	nursery (h) {
+		h.CancelAfter(ReadLimitMs)
+		return http.NextRequest(c)
+	}
+}
+
+// hangUp ends a connection: a request the parser refused is answered first, best effort, with
+// the status it calls for. Errors of one client (a refused request, an I/O error, the read limit,
+// shutdown) are not failures of the server.
+func hangUp(c *sgo.Conn, err error) error {
+	if e, ok := err.(http.Error); ok {
+		_ = http.WriteResponse(c, e.Status, e.Msg)
+	}
+	_ = c.Close()
+	return nil
 }
 
 // route runs the handler for req.

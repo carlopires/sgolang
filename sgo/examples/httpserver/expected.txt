@@ -1,5 +1,7 @@
+GARBAGE -> Bad Request: malformed request line: GARBAGE
 /hello -> OK: hello
 /echo/sgo -> OK: sgo
 /slow -> Gateway Timeout: deadline
 /missing -> Not Found: /missing
+idle connection closed after 500 ms
 shut down with a keep-alive connection open

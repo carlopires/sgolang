@@ -2,8 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package http reads and writes HTTP/1.1 messages over any stream (a subset: requests with a
-// Content-Length body, keep-alive connections). It is written once against std/io resource
+// Package http reads and writes HTTP/1.1 messages over any stream. It implements a subset:
+// keep-alive connections and bodies framed by one Content-Length of at most MaxBody bytes. A
+// request outside the subset (Transfer-Encoding, a repeated or invalid Content-Length) is refused
+// with an Error, never misparsed. It is written once against std/io resource
 // interfaces (D176), so the same code serves a *sgo.Conn, a *sgo.File, or an in-memory stream in a
 // test, and the compiler keeps a stream tied to the scope that owns its connection.
 package http
@@ -36,13 +38,26 @@ type Response struct {
 
 const maxLine = 4096
 
+// MaxBody is the largest body this package reads.
+const MaxBody = 1 << 20
+
+// Error is a request this package refuses: Status is the response it calls for.
+type Error struct {
+	Status int
+	Msg    string
+}
+
+func (e Error) Error() string { return "http: " + e.Msg }
+
+func badRequest(msg string) error { return Error{Status: 400, Msg: msg} }
+
 // ReadRequest reads one request from r. At the end of the stream, before a request line, it
 // returns an error for which sgo.IsEOF holds.
 func ReadRequest(r Stream) (Request, error) {
 	line := check r.ReadLine(maxLine)
 	f := strings.Fields(line)
 	if len(f) != 3 || !strings.HasPrefix(f[2], "HTTP/1.") {
-		return Request{}, sgo.NewError("http: malformed request line: " + line)
+		return Request{}, badRequest("malformed request line: " + line)
 	}
 	n := check readHeaders(r)
 	body := check readBody(r, n)
@@ -67,7 +82,7 @@ func ReadResponse(r Stream) (Response, error) {
 	line := check r.ReadLine(maxLine)
 	f := strings.Fields(line)
 	if len(f) < 2 || !strings.HasPrefix(f[0], "HTTP/1.") {
-		return Response{}, sgo.NewError("http: malformed status line: " + line)
+		return Response{}, badRequest("malformed status line: " + line)
 	}
 	status := check strconv.Atoi(f[1])
 	n := check readHeaders(r)
@@ -75,20 +90,37 @@ func ReadResponse(r Stream) (Response, error) {
 	return Response{Status: status, Body: body}, nil
 }
 
-// readHeaders reads header lines up to the blank line and returns the Content-Length (0 if none).
+// readHeaders reads header lines up to the blank line and returns the body length (0 if none).
 func readHeaders(r Stream) (int, error) {
-	length := 0
+	length := -1
 	for {
 		line := check r.ReadLine(maxLine)
 		if line == "" {
+			if length < 0 {
+				return 0, nil
+			}
 			return length, nil
 		}
 		name, value, ok := strings.Cut(line, ":")
 		if !ok {
-			return 0, sgo.NewError("http: malformed header: " + line)
+			return 0, badRequest("malformed header: " + line)
 		}
-		if strings.EqualFoldASCII(strings.TrimSpace(name), "Content-Length") {
-			length = check strconv.Atoi(strings.TrimSpace(value))
+		name = strings.TrimSpace(name)
+		switch {
+		case strings.EqualFoldASCII(name, "Transfer-Encoding"):
+			return 0, badRequest("Transfer-Encoding is not supported")
+		case strings.EqualFoldASCII(name, "Content-Length"):
+			if length >= 0 {
+				return 0, badRequest("repeated Content-Length")
+			}
+			n, err := strconv.Atoi(strings.TrimSpace(value))
+			if err != nil || n < 0 {
+				return 0, badRequest("invalid Content-Length: " + value)
+			}
+			if n > MaxBody {
+				return 0, Error{Status: 413, Msg: "body of " + strconv.Itoa(n) + " bytes"}
+			}
+			length = n
 		}
 	}
 }
@@ -118,8 +150,12 @@ func StatusText(status int) string {
 	switch status {
 	case 200:
 		return "OK"
+	case 400:
+		return "Bad Request"
 	case 404:
 		return "Not Found"
+	case 413:
+		return "Payload Too Large"
 	case 500:
 		return "Internal Server Error"
 	case 504:

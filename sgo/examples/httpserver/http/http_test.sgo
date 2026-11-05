@@ -70,3 +70,27 @@ func TestMalformed(t *sgo.T) error {
 	}
 	return nil
 }
+
+func refusal(data string) int {
+	_, err := ReadRequest(&memory{data: data})
+	if e, ok := err.(Error); ok {
+		return e.Status
+	}
+	return 0
+}
+
+func TestRefusals(t *sgo.T) error {
+	cases := []string{
+		"POST / HTTP/1.1\r\nContent-Length: 2\r\nContent-Length: 2\r\n\r\nok",
+		"POST / HTTP/1.1\r\nContent-Length: -1\r\n\r\n",
+		"POST / HTTP/1.1\r\ntransfer-encoding: chunked\r\n\r\n",
+		"POST / HTTP/1.1\r\nContent-Length: 1048577\r\n\r\n",
+	}
+	want := []int{400, 400, 400, 413}
+	for i, c := range cases {
+		if got := refusal(c); got != want[i] {
+			return sgo.NewError("case " + c)
+		}
+	}
+	return nil
+}

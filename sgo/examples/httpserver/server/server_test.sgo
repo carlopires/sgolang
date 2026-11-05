@@ -4,10 +4,21 @@
 
 package server
 
-import "sgo"
+import (
+	"sgo"
+
+	"example.com/httpserver/http"
+)
+
+const sock = "unix:http.sock"
+
+func keepAlive(r *sgo.Context, a string) (string, error) {
+	c := check r.Dial(a)
+	return Transcript(c, []string{"/slow", "/hello", "/slow"})
+}
 
 func TestKeepAliveAndDeadline(t *sgo.T) error {
-	out := check Run(t.Context(), "unix:http.sock", []string{"/slow", "/hello", "/slow"})
+	out := check Run(t.Context(), sock, keepAlive)
 	want := "/slow -> Gateway Timeout: deadline\n/hello -> OK: hello\n/slow -> Gateway Timeout: deadline\n"
 	if out != want {
 		return sgo.NewError("transcript: " + out)
@@ -15,17 +26,80 @@ func TestKeepAliveAndDeadline(t *sgo.T) error {
 	return nil
 }
 
+func idleOnly(r *sgo.Context, a string) (string, error) {
+	_ = check r.Dial(a) // accepted, then left idle: the shutdown does not wait for it
+	return "", nil
+}
+
 func TestShutdownIdle(t *sgo.T) error {
-	// No request at all: the server is cancelled with an accepted, idle connection.
-	out := check Run(t.Context(), "unix:http.sock", []string{})
-	if out != "" {
-		return sgo.NewError("transcript: " + out)
+	_, err := Run(t.Context(), sock, idleOnly)
+	return err
+}
+
+func hello(r *sgo.Context, a string) (string, error) {
+	c := check r.Dial(a)
+	return Transcript(c, []string{"/hello"})
+}
+
+func TestRestart(t *sgo.T) error {
+	check Run(t.Context(), sock, hello)
+	_, err := Run(t.Context(), sock, hello)
+	return err
+}
+
+// rawThenHello sends raw on one connection, reads its response, then makes a normal request on
+// another: a bad client must not take the server down (W23 review E1).
+func rawThenHello(r *sgo.Context, a string, raw string) (string, error) {
+	bad := check r.Dial(a)
+	check bad.Write(raw)
+	refused := check http.ReadResponse(bad)
+	if refused.Status != 400 {
+		return "", sgo.NewError("a malformed request was not refused")
+	}
+	good := check r.Dial(a)
+	served := check Transcript(good, []string{"/hello"})
+	return served, nil
+}
+
+func badLine(r *sgo.Context, a string) (string, error) {
+	return rawThenHello(r, a, "GARBAGE\r\n\r\n")
+}
+
+func TestBadClient(t *sgo.T) error {
+	out := check Run(t.Context(), sock, badLine)
+	if out != "/hello -> OK: hello\n" {
+		return sgo.NewError("after a bad client: " + out)
 	}
 	return nil
 }
 
-func TestRestart(t *sgo.T) error {
-	check Run(t.Context(), "unix:http.sock", []string{"/hello"})
-	_, err := Run(t.Context(), "unix:http.sock", []string{"/hello"})
-	return err
+func statusOf(r *sgo.Context, a string, raw string) (string, error) {
+	c := check r.Dial(a)
+	check c.Write(raw)
+	resp := check http.ReadResponse(c)
+	return Line("raw", resp), nil
+}
+
+func tooLarge(r *sgo.Context, a string) (string, error) {
+	return statusOf(r, a, "POST /x HTTP/1.1\r\nContent-Length: 99999999999\r\n\r\n")
+}
+
+func TestBodyTooLarge(t *sgo.T) error {
+	out := check Run(t.Context(), sock, tooLarge)
+	if out != "raw -> Payload Too Large: body of 99999999999 bytes\n" {
+		return sgo.NewError("got " + out)
+	}
+	return nil
+}
+
+func chunked(r *sgo.Context, a string) (string, error) {
+	return statusOf(r, a, "POST /x HTTP/1.1\r\nTransfer-Encoding: chunked\r\n\r\n")
+}
+
+func TestChunkedRefused(t *sgo.T) error {
+	out := check Run(t.Context(), sock, chunked)
+	if out != "raw -> Bad Request: Transfer-Encoding is not supported\n" {
+		return sgo.NewError("got " + out)
+	}
+	return nil
 }
