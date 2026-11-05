@@ -31,7 +31,7 @@ before the freeze, with the W21 errata.
 
 ## Linux
 
-Pending: sgo-w00 run 41884028104 (linux/amd64, linux/arm64) on main at ba71ee9d4f. The first run on the freeze (41880232544) passed 670 of 671 on linux/arm64; the failure was a race in the `task-cancelled-result` fixture itself, fixed in 1a18d09d1b.
+sgo-w00 run 41884028104 (linux/amd64, linux/arm64) on main at ba71ee9d4f: success on both runners (conformance, runtime lane, lab, examples including the two new Happy Eyeballs scenarios, identity, TCB). The first run on the freeze (41880232544) passed 670 of 671 on linux/arm64; the failure was a race in the `task-cancelled-result` fixture itself, fixed in 1a18d09d1b.
 
 ## Model (`sgo/model/w22model.go`, `w22model_test.go`)
 
