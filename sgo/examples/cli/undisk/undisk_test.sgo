@@ -1,0 +1,61 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package undisk
+
+import (
+	"sgo"
+	"std/strconv"
+
+	"example.com/cli/daemon"
+)
+
+// withDaemon runs the fake daemon while each line of script runs as an invocation, and returns
+// the outputs, an error as "error: ..." on its line.
+func withDaemon(ctx *sgo.Context, script [][]string) (string, error) {
+	got := ""
+	nursery (n) {
+		l := check n.Listen(Addr)
+		check n.Start(func(task *sgo.Context, ready *sgo.Ready) error {
+			return daemon.Serve(task, l, ready)
+		})
+		for _, line := range script {
+			out, err := Session(ctx, line)
+			got += out
+			if err != nil {
+				got += "error: " + err.Error() + "\n"
+			}
+		}
+		n.Cancel()
+	}
+	return got, nil
+}
+
+func expect(t *sgo.T, script [][]string, want string) error {
+	got := check withDaemon(t.Context(), script)
+	if got != want {
+		return sgo.NewError("got " + strconv.QuoteToASCII(got) + "\nwant " + strconv.QuoteToASCII(want))
+	}
+	return nil
+}
+
+// The commands a user may run come from the daemon's profile: a viewer has no put, an admin has.
+func TestCommandsFollowTheRole(t *sgo.T) error {
+	check expect(t, [][]string{{"--user", "bob", "files", "put", "a", "--size", "1"}},
+		"error: undisk files: unknown command \"put\" (see undisk files --help)\n")
+	check expect(t, [][]string{{"--user", "alice", "files", "put", "a", "--size", "1"}, {"--user", "bob", "files", "ls"}},
+		"stored a (1 bytes)\na\nnotes.txt\nphoto.jpg\n")
+	check expect(t, [][]string{{"--user", "carol", "files", "ls"}, {"--user", "carol", "whoami"}},
+		"error: undisk: unknown command \"files\" (see undisk --help)\nnot logged in\n")
+	return nil
+}
+
+// Values are checked before the daemon sees them, and the daemon's errors come back as errors.
+func TestErrors(t *sgo.T) error {
+	check expect(t, [][]string{{"--user", "alice", "users", "quota", "bob", "--limit", "1", "--ttl", "soon"}},
+		"error: undisk users quota: --ttl: \"soon\" is not a duration (such as 300ms, 1.5h, 2h45m)\n")
+	check expect(t, [][]string{{"--user", "alice", "users", "quota", "dave", "--limit", "1"}},
+		"error: no user \"dave\"\n")
+	return nil
+}

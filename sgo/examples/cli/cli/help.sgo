@@ -1,0 +1,165 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package cli
+
+import (
+	"std/strings"
+	"std/utf8"
+)
+
+// Help returns the help of c: its description, usage, subcommands grouped by Group (in the order
+// the groups first appear; "Commands" for the ungrouped), flags, and examples.
+func (c *Command) Help() string {
+	b := strings.Builder{}
+	about := c.Description
+	if about == "" {
+		about = c.Summary
+	}
+	if about != "" {
+		write(&b, about+"\n\n")
+	}
+	write(&b, "Usage:\n")
+	if c.Run != nil {
+		write(&b, "  "+c.Usage()+"\n")
+	}
+	visible := c.visible()
+	if len(visible) > 0 {
+		write(&b, "  "+c.Path()+" [command]\n")
+	}
+	groups := []string{}
+	for _, s := range visible {
+		if !contains(groups, s.Group) {
+			groups = append(groups, s.Group)
+		}
+	}
+	width := 0
+	for _, s := range visible {
+		if n := utf8.RuneCountInString(s.Name); n > width {
+			width = n
+		}
+	}
+	for _, g := range groups {
+		title := g
+		if title == "" {
+			title = "Commands"
+		}
+		write(&b, "\n"+title+":\n")
+		for _, s := range visible {
+			if s.Group == g {
+				write(&b, "  "+padRight(s.Name, width)+"   "+s.Summary+"\n")
+			}
+		}
+	}
+	if len(c.Args) > 0 {
+		write(&b, "\nArguments:\n")
+		rows := [][]string{}
+		for _, a := range c.Args {
+			rows = append(rows, []string{"<" + a.Name + ">", a.Help + required(a.Required)})
+		}
+		table(&b, rows)
+	}
+	write(&b, "\nFlags:\n")
+	rows := [][]string{}
+	for _, f := range c.Flags {
+		left := "    "
+		if f.Short != "" {
+			left = "-" + f.Short + ", "
+		}
+		left += "--" + f.Name
+		if f.Kind != Bool {
+			left += " " + kindName(f.Kind)
+		}
+		help := f.Help
+		if f.Default != "" && f.Kind != Bool {
+			help += " (default " + f.Default + ")"
+		}
+		rows = append(rows, []string{left, help + required(f.Required)})
+	}
+	rows = append(rows, []string{"-h, --help", "help for " + c.Name})
+	if c.parent == nil && c.Version != "" {
+		rows = append(rows, []string{"    --version", "version of " + c.Name})
+	}
+	table(&b, rows)
+	if len(c.Examples) > 0 {
+		write(&b, "\nExamples:\n")
+		for _, e := range c.Examples {
+			write(&b, "  "+e+"\n")
+		}
+	}
+	if len(visible) > 0 {
+		write(&b, "\nUse \""+c.Path()+" [command] --help\" for more about a command.\n")
+	}
+	return b.String()
+}
+
+// Usage is the command's synopsis: its path, [flags], and its arguments (<required>,
+// [optional], and a list as <name>... or [name...]).
+func (c *Command) Usage() string {
+	u := c.Path()
+	if len(c.Flags) > 0 {
+		u += " [flags]"
+	}
+	for _, a := range c.Args {
+		dots := ""
+		if isList(a.Kind) {
+			dots = "..."
+		}
+		if a.Required {
+			u += " <" + a.Name + ">" + dots
+		} else {
+			u += " [" + a.Name + dots + "]"
+		}
+	}
+	return u
+}
+
+func (c *Command) visible() []*Command {
+	out := []*Command{}
+	for _, s := range c.subs {
+		if !s.Hidden {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+func required(r bool) string {
+	if r {
+		return " (required)"
+	}
+	return ""
+}
+
+// table writes two-column rows, the second column aligned.
+func table(b *strings.Builder, rows [][]string) {
+	width := 0
+	for _, r := range rows {
+		if n := utf8.RuneCountInString(r[0]); n > width {
+			width = n
+		}
+	}
+	for _, r := range rows {
+		line := "  " + padRight(r[0], width)
+		if r[1] != "" {
+			line += "   " + r[1]
+		}
+		write(b, strings.TrimRight(line, " ")+"\n")
+	}
+}
+
+func padRight(s string, width int) string {
+	return s + strings.Repeat(" ", width-utf8.RuneCountInString(s))
+}
+
+func contains(list []string, s string) bool {
+	for _, x := range list {
+		if x == s {
+			return true
+		}
+	}
+	return false
+}
+
+func write(b *strings.Builder, s string) { _, _ = b.WriteString(s) }

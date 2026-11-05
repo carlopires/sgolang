@@ -1,0 +1,150 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package daemon is a fake undisk daemon: it serves, over a socket, a profile that depends on the
+// user (the commands their role may run), and runs those commands against an in-memory store.
+//
+// The protocol is lines. A request is "PROFILE user" or "CALL user\tpath\tname=value..."; a reply
+// is lines ended by ".". A profile reply is "user NAME ROLE" (or "anonymous") and a "cmd" line
+// per command: "cmd\tpath\tsummary\tgroup" followed by its flags and arguments, each
+// "F|name|kind|required|default|help" or "A|name|kind|required||help", kind one of s i b d S I.
+// A CALL reply is the command's output, or one line "!message" for an error.
+package daemon
+
+import (
+	"sgo"
+	"std/sort"
+	"std/strconv"
+	"std/strings"
+)
+
+// LineLimit is the longest request line the daemon reads.
+const LineLimit = 4096
+
+type store struct {
+	files map[string]int
+	quota map[string]string
+}
+
+// Serve answers on l, one connection at a time, until its context is cancelled.
+func Serve(task *sgo.Context, l *sgo.Listener, ready *sgo.Ready) error {
+	s := &store{files: map[string]int{"notes.txt": 120, "photo.jpg": 48213}, quota: map[string]string{}}
+	ready.Signal()
+	for {
+		nursery (k) {
+			c := check l.Accept(k)
+			serveConn(c, s)
+		}
+	}
+}
+
+// serveConn answers the requests on c until the client closes it; a broken connection ends only
+// that connection.
+func serveConn(c *sgo.Conn, s *store) {
+	for {
+		line, err := c.ReadLine(LineLimit)
+		if err != nil {
+			return
+		}
+		verb, rest, _ := strings.Cut(line, " ")
+		reply := ""
+		switch verb {
+		case "PROFILE":
+			reply = profile(rest)
+		case "CALL":
+			reply = call(s, rest)
+		default:
+			reply = "!unknown request " + strconv.QuoteToASCII(verb) + "\n"
+		}
+		if _, werr := c.Write(reply + ".\n"); werr != nil {
+			return
+		}
+	}
+}
+
+func role(user string) string {
+	switch user {
+	case "alice":
+		return "admin"
+	case "bob":
+		return "viewer"
+	}
+	return ""
+}
+
+// profile lists the commands user's role may run: a viewer lists files, an admin also changes
+// them and administers users.
+func profile(user string) string {
+	r := role(user)
+	if r == "" {
+		return "anonymous\n"
+	}
+	p := "user " + user + " " + r + "\n"
+	p += "cmd\tfiles ls\tList files\tWork with files\tF|long|b|0||show sizes\n"
+	if r != "admin" {
+		return p
+	}
+	p += "cmd\tfiles put\tStore a file\tWork with files\tA|name|s|1||file name\tF|size|i|1||size in bytes\n"
+	p += "cmd\tfiles rm\tRemove files\tWork with files\tA|names|S|1||file names\n"
+	p += "cmd\tusers ls\tList users\tAdminister users\n"
+	p += "cmd\tusers quota\tSet a user's quota\tAdminister users\tA|user|s|1||user name\tF|limit|i|1||bytes\tF|ttl|d|0|24h|how long it lasts\n"
+	return p
+}
+
+// call runs "user\tpath\tname=value..." for user.
+func call(s *store, req string) string {
+	parts := strings.Split(req, "\t")
+	if len(parts) < 2 {
+		return "!malformed call\n"
+	}
+	user, path := parts[0], parts[1]
+	v := map[string]string{}
+	for _, kv := range parts[2:] {
+		k, val, _ := strings.Cut(kv, "=")
+		v[k] = val
+	}
+	if !strings.Contains(profile(user), "cmd\t"+path+"\t") {
+		return "!" + user + " may not run " + strconv.QuoteToASCII(path) + "\n"
+	}
+	switch path {
+	case "files ls":
+		names := []string{}
+		for n := range s.files {
+			names = append(names, n)
+		}
+		sort.Strings(names)
+		out := ""
+		for _, n := range names {
+			if v["long"] == "true" {
+				out += strconv.Itoa(s.files[n]) + "\t" + n + "\n"
+			} else {
+				out += n + "\n"
+			}
+		}
+		return out
+	case "files put":
+		size, _ := strconv.Atoi(v["size"])
+		s.files[v["name"]] = size
+		return "stored " + v["name"] + " (" + strconv.Itoa(size) + " bytes)\n"
+	case "files rm":
+		for _, n := range strings.Split(v["names"], ",") {
+			if _, ok := s.files[n]; !ok {
+				return "!no file " + strconv.QuoteToASCII(n) + "\n"
+			}
+		}
+		for _, n := range strings.Split(v["names"], ",") {
+			delete(s.files, n)
+		}
+		return "removed " + v["names"] + "\n"
+	case "users ls":
+		return "alice\tadmin\nbob\tviewer\n"
+	case "users quota":
+		if role(v["user"]) == "" {
+			return "!no user " + strconv.QuoteToASCII(v["user"]) + "\n"
+		}
+		s.quota[v["user"]] = v["limit"] + " bytes for " + v["ttl"]
+		return "quota for " + v["user"] + ": " + s.quota[v["user"]] + "\n"
+	}
+	return "!" + strconv.QuoteToASCII(path) + " is not implemented\n"
+}

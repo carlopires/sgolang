@@ -1,0 +1,198 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package cli
+
+import (
+	"sgo"
+	"std/fmt"
+	"std/strings"
+)
+
+// Execute runs the command that args names (the words after the program's name) and returns what
+// it printed. The leading words that name subcommands select the command; the rest are its flags
+// and arguments, in any order, with "--" ending the flags. --help (or -h) anywhere returns the
+// command's help; --version on the root returns its version. A command with subcommands and no
+// Runner, given no subcommand, returns its help. Errors in the command line name the command.
+func (root *Command) Execute(ctx *sgo.Context, args []string) (string, error) {
+	cmd := root
+	i := 0
+	for i < len(args) && !strings.HasPrefix(args[i], "-") {
+		s := cmd.Find(args[i])
+		if s == nil {
+			break
+		}
+		cmd = s
+		i++
+	}
+	rest := args[i:]
+	for _, a := range rest {
+		if a == "--" {
+			break
+		}
+		if a == "--help" || a == "-h" {
+			return cmd.Help(), nil
+		}
+		if a == "--version" && cmd == root && root.Version != "" {
+			return root.Name + " version " + root.Version + "\n", nil
+		}
+	}
+	if cmd.Run == nil {
+		if len(rest) > 0 && !strings.HasPrefix(rest[0], "-") {
+			return "", fmt.Errorf("%s: unknown command %q (see %s --help)", []any{cmd.Path(), rest[0], cmd.Path()})
+		}
+		if len(rest) > 0 {
+			return "", fmt.Errorf("%s: unknown flag %s (see %s --help)", []any{cmd.Path(), rest[0], cmd.Path()})
+		}
+		return cmd.Help(), nil
+	}
+	call := &Call{Command: cmd}
+	if err := cmd.parse(call, rest); err != nil {
+		return "", fmt.Wrapf(err, "%s", []any{cmd.Path()})
+	}
+	err := cmd.Run.Run(ctx, call)
+	return call.Output(), err
+}
+
+// parse fills call from the flags and arguments in words.
+func (cmd *Command) parse(call *Call, words []string) error {
+	for _, f := range cmd.Flags {
+		v := value{name: f.Name, kind: f.Kind, text: f.Default}
+		if f.Kind == Bool && v.text == "" {
+			v.text = "false"
+		}
+		if isList(f.Kind) && f.Default != "" {
+			v.list = strings.Split(f.Default, ",")
+		}
+		call.values = append(call.values, v)
+	}
+	for _, a := range cmd.Args {
+		call.values = append(call.values, value{name: a.Name, kind: a.Kind})
+	}
+	pos := []string{}
+	for i := 0; i < len(words); i++ {
+		w := words[i]
+		if w == "--" {
+			pos = append(pos, words[i+1:]...)
+			break
+		}
+		long := strings.HasPrefix(w, "--")
+		if !long && (len(w) < 2 || w[0] != '-' || isNumber(w)) {
+			pos = append(pos, w)
+			continue
+		}
+		name, val, has := "", "", false
+		f, ok := Flag{}, false
+		if long {
+			name, val, has = strings.Cut(w[2:], "=")
+			f, ok = cmd.flag(name)
+		} else {
+			name, val, has = strings.Cut(w[1:], "=")
+			f, ok = cmd.short(name)
+		}
+		if !ok {
+			return fmt.Errorf("unknown flag %s", []any{w})
+		}
+		if f.Kind == Bool && !has {
+			val = "true"
+		} else if !has {
+			if i+1 == len(words) {
+				return fmt.Errorf("flag --%s needs a %s value", []any{f.Name, kindName(f.Kind)})
+			}
+			i++
+			val = words[i]
+		}
+		if err := call.setFlag(f, val); err != nil {
+			return err
+		}
+	}
+	return cmd.assign(call, pos)
+}
+
+func (call *Call) index(name string) int {
+	for k, v := range call.values {
+		if v.name == name {
+			return k
+		}
+	}
+	return -1
+}
+
+// setFlag records val for the flag f: a list flag appends, given more than once or with commas.
+func (call *Call) setFlag(f Flag, val string) error {
+	k := call.index(f.Name)
+	v := call.values[k]
+	if isList(f.Kind) {
+		if !v.set {
+			v.list = []string{}
+		}
+		for _, e := range strings.Split(val, ",") {
+			if err := validate(f.Kind, e); err != nil {
+				return fmt.Wrapf(err, "--%s", []any{f.Name})
+			}
+			v.list = append(v.list, e)
+		}
+	} else {
+		if err := validate(f.Kind, val); err != nil {
+			return fmt.Wrapf(err, "--%s", []any{f.Name})
+		}
+		v.text = val
+	}
+	v.set = true
+	call.values[k] = v
+	return nil
+}
+
+// assign gives the positional words to the arguments in order; a list argument takes the rest.
+func (cmd *Command) assign(call *Call, pos []string) error {
+	next := 0
+	for _, a := range cmd.Args {
+		k := call.index(a.Name)
+		v := call.values[k]
+		if isList(a.Kind) {
+			v.list = []string{}
+			for next < len(pos) {
+				if err := validate(a.Kind, pos[next]); err != nil {
+					return fmt.Wrapf(err, "<%s>", []any{a.Name})
+				}
+				v.list = append(v.list, pos[next])
+				next++
+				v.set = true
+			}
+		} else if next < len(pos) {
+			if err := validate(a.Kind, pos[next]); err != nil {
+				return fmt.Wrapf(err, "<%s>", []any{a.Name})
+			}
+			v.text = pos[next]
+			v.set = true
+			next++
+		}
+		if a.Required && !v.set {
+			return fmt.Errorf("missing argument <%s>", []any{a.Name})
+		}
+		call.values[k] = v
+	}
+	if next < len(pos) {
+		return fmt.Errorf("unexpected argument %q", []any{pos[next]})
+	}
+	for _, f := range cmd.Flags {
+		if f.Required && !call.values[call.index(f.Name)].set {
+			return fmt.Errorf("required flag --%s not set", []any{f.Name})
+		}
+	}
+	return nil
+}
+
+// isNumber reports whether w is a negative number, a positional word rather than a flag.
+func isNumber(w string) bool {
+	if len(w) < 2 || w[0] != '-' {
+		return false
+	}
+	for i := 1; i < len(w); i++ {
+		if w[i] < '0' || w[i] > '9' {
+			return false
+		}
+	}
+	return true
+}

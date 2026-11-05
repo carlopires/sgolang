@@ -1,0 +1,134 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package undisk
+
+import (
+	"sgo"
+	"std/strings"
+
+	"example.com/cli/cli"
+	"example.com/cli/daemon"
+)
+
+// Addr is the daemon's socket, granted in sgo.mod.
+const Addr = "unix:undiskd.sock"
+
+// request sends one request to the daemon and returns its reply, without the closing ".".
+func request(req string) (string, error) {
+	nursery (n) {
+		c := check n.Dial(Addr) // released when the nursery ends, so the daemon serves the next one
+		check c.Write(req + "\n")
+		out := ""
+		for {
+			line := check c.ReadLine(daemon.LineLimit)
+			if line == "." {
+				return out, nil
+			}
+			out += line + "\n"
+		}
+	}
+}
+
+// remote runs a command the daemon defined: it forwards the call's values by name and prints the
+// daemon's reply. It holds only text, the command's path and the names of its values.
+type remote struct {
+	user  string
+	path  string
+	names string
+}
+
+func (r remote) Run(ctx *sgo.Context, c *cli.Call) error {
+	req := "CALL " + r.user + "\t" + r.path
+	if r.names != "" {
+		for _, n := range strings.Split(r.names, ",") {
+			req += "\t" + n + "=" + c.Text(n)
+		}
+	}
+	out := check request(req)
+	if msg, failed := strings.CutPrefix(out, "!"); failed {
+		return sgo.NewError(strings.TrimSuffix(msg, "\n"))
+	}
+	c.Print(out)
+	return nil
+}
+
+// addProfile fetches user's profile and adds the commands it lists to root, under the section
+// "Server commands". It returns the user's role, "" if the daemon does not know the user.
+func addProfile(root *cli.Command, user string) (string, error) {
+	reply := check request("PROFILE " + user)
+	lines := strings.Split(strings.TrimSuffix(reply, "\n"), "\n")
+	if lines[0] == "anonymous" {
+		return "", nil
+	}
+	head := strings.Fields(lines[0])
+	if len(head) != 3 || head[0] != "user" {
+		return "", sgo.NewError("daemon: malformed profile " + lines[0])
+	}
+	section := "Server commands (" + head[1] + ", " + head[2] + ")"
+	for _, line := range lines[1:] {
+		check addCommand(root, user, section, line)
+	}
+	return head[2], nil
+}
+
+// addCommand adds the command described by line, "cmd\tpath\tsummary\tgroup\titem...", creating
+// the group commands on its path as needed: the tree grows at run time from the server's data.
+func addCommand(root *cli.Command, user, section, line string) error {
+	f := strings.Split(line, "\t")
+	if len(f) < 4 || f[0] != "cmd" {
+		return sgo.NewError("daemon: malformed command " + line)
+	}
+	words := strings.Fields(f[1])
+	if len(words) == 0 {
+		return sgo.NewError("daemon: command without a name")
+	}
+	parent := root
+	for k, w := range words[:len(words)-1] {
+		g := parent.Ensure(w, f[3])
+		if k == 0 {
+			g.Group = section
+		}
+		parent = g
+	}
+	cmd := &cli.Command{Name: words[len(words)-1], Summary: f[2]}
+	names := []string{}
+	for _, item := range f[4:] {
+		p := strings.Split(item, "|")
+		if len(p) != 6 {
+			return sgo.NewError("daemon: malformed item " + item)
+		}
+		kind, ok := kinds(p[2])
+		if !ok {
+			return sgo.NewError("daemon: unknown kind " + p[2])
+		}
+		if p[0] == "F" {
+			cmd.Flags = append(cmd.Flags, cli.Flag{Name: p[1], Kind: kind, Required: p[3] == "1", Default: p[4], Help: p[5]})
+		} else {
+			cmd.Args = append(cmd.Args, cli.Arg{Name: p[1], Kind: kind, Required: p[3] == "1", Help: p[5]})
+		}
+		names = append(names, p[1])
+	}
+	cmd.Run = remote{user: user, path: f[1], names: strings.Join(names, ",")}
+	parent.Add(cmd)
+	return nil
+}
+
+func kinds(k string) (cli.Kind, bool) {
+	switch k {
+	case "s":
+		return cli.String, true
+	case "i":
+		return cli.Int, true
+	case "b":
+		return cli.Bool, true
+	case "d":
+		return cli.Duration, true
+	case "S":
+		return cli.Strings, true
+	case "I":
+		return cli.Ints, true
+	}
+	return cli.String, false
+}

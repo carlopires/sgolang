@@ -1,0 +1,140 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package undisk is the undisk CLI: its static commands, and the commands it builds from the
+// profile the daemon serves for the user (D184).
+package undisk
+
+import (
+	"sgo"
+	"std/strings"
+
+	"example.com/cli/cli"
+	"example.com/cli/daemon"
+)
+
+// Version is the CLI's version.
+const Version = "0.1.0"
+
+// Session runs one command line: the global flag --user NAME (first), then the command.
+func Session(ctx *sgo.Context, args []string) (string, error) {
+	user, rest := "", args
+	if len(rest) > 0 {
+		if v, ok := strings.CutPrefix(rest[0], "--user="); ok {
+			user, rest = v, rest[1:]
+		} else if rest[0] == "--user" && len(rest) > 1 {
+			user, rest = rest[1], rest[2:]
+		}
+	}
+	tree := check build(user)
+	return tree.Execute(ctx, rest)
+}
+
+// build returns the command tree for user: the static commands, and those of user's profile.
+func build(user string) (*cli.Command, error) {
+	root := cli.New("undisk", "Manage files on undisk.")
+	root.Version = Version
+	root.Flags = []cli.Flag{{Name: "user", Kind: cli.String, Help: "the user to act as (first on the line)"}}
+	root.Add(&cli.Command{Name: "version", Summary: "Print the version", Group: "Local", Run: versionCmd{}})
+	root.Add(&cli.Command{Name: "shell", Summary: "Run commands read from stdin", Group: "Local", Run: shellCmd{user: user}})
+	r := ""
+	if user != "" {
+		r = check addProfile(root, user)
+	}
+	root.Add(&cli.Command{Name: "whoami", Summary: "Print the user and role", Group: "Local", Run: whoami{user: user, role: r}})
+	if r == "" {
+		root.Description = "Manage files on undisk.\n\nNot logged in: run with --user NAME to see the server's commands."
+	}
+	return root, nil
+}
+
+type versionCmd struct{}
+
+func (versionCmd) Run(ctx *sgo.Context, c *cli.Call) error {
+	c.Print("undisk " + Version + "\n")
+	return nil
+}
+
+type whoami struct {
+	user string
+	role string
+}
+
+func (w whoami) Run(ctx *sgo.Context, c *cli.Call) error {
+	if w.role == "" {
+		c.Print("not logged in\n")
+		return nil
+	}
+	c.Printf("%s (%s)\n", []any{w.user, w.role})
+	return nil
+}
+
+// shellCmd reads command lines from stdin and runs each over the user's tree, until "exit" or the
+// end of the input. An error is printed and the shell goes on.
+type shellCmd struct {
+	user string
+}
+
+func (s shellCmd) Run(ctx *sgo.Context, c *cli.Call) error {
+	tree := check build(s.user)
+	in, out := ctx.Stdin(), ctx.Stdout()
+	for {
+		line, err := in.ReadLine(daemon.LineLimit)
+		if sgo.IsEOF(err) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		words := strings.Fields(line)
+		switch {
+		case len(words) == 0:
+			continue
+		case words[0] == "exit" || words[0] == "quit":
+			return nil
+		case words[0] == "shell":
+			check out.WriteString("already in the shell\n")
+			continue
+		}
+		o, e := tree.Execute(ctx, words)
+		check out.WriteString(o)
+		if e != nil {
+			check out.WriteString("error: " + e.Error() + "\n")
+		}
+	}
+}
+
+// Transcript runs a scripted session, a command line at a time as separate invocations would,
+// against one daemon, and returns what each printed.
+func Transcript(ctx *sgo.Context) (string, error) {
+	script := [][]string{
+		{"--help"},
+		{"whoami"},
+		{"--user", "bob", "--help"},
+		{"--user", "bob", "files", "ls", "--long"},
+		{"--user", "bob", "files", "rm", "notes.txt"},
+		{"--user", "alice", "files", "--help"},
+		{"--user", "alice", "files", "put", "report.pdf", "--size", "2048"},
+		{"--user", "alice", "files", "ls", "-h"},
+		{"--user", "alice", "files", "ls"},
+		{"--user", "alice", "files", "rm", "notes.txt", "nope.txt"},
+		{"--user", "alice", "files", "rm", "notes.txt", "photo.jpg"},
+		{"--user=alice", "files", "ls", "--long"},
+		{"--user", "alice", "users", "quota", "bob", "--limit", "1000", "--ttl", "1.5h"},
+		{"--user", "alice", "users", "quota", "bob"},
+		{"--user", "alice", "users", "quota", "bob", "--limit", "lots"},
+		{"--user", "alice", "whoami"},
+		{"--version"},
+	}
+	t := ""
+	for _, line := range script {
+		t += "$ undisk " + strings.Join(line, " ") + "\n"
+		out, err := Session(ctx, line)
+		t += out
+		if err != nil {
+			t += "undisk: " + err.Error() + "\n"
+		}
+	}
+	return t, nil
+}

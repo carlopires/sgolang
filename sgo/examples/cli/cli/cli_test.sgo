@@ -1,0 +1,101 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package cli
+
+import (
+	"sgo"
+	"std/strconv"
+	"std/strings"
+)
+
+// echo prints its flags and arguments, one per line.
+type echo struct{}
+
+func (echo) Run(ctx *sgo.Context, c *Call) error {
+	c.Printf("name=%s n=%d v=%t wait=%s tags=%s\n", []any{c.String("name"), c.Int("n"), c.Bool("verbose"), c.Duration("wait").String(), strings.Join(c.Strings("tag"), "+")})
+	c.Printf("src=%s dst=%s\n", []any{c.String("src"), strings.Join(c.Strings("dst"), "+")})
+	return nil
+}
+
+type fails struct{}
+
+func (fails) Run(ctx *sgo.Context, c *Call) error { return sgo.NewError("it failed") }
+
+func tree() *Command {
+	root := New("tool", "A test tool")
+	root.Version = "1.2.3"
+	files := root.Add(&Command{Name: "files", Summary: "Work with files", Group: "Storage"})
+	files.Add(&Command{
+		Name:    "cp",
+		Summary: "Copy files",
+		Flags: []Flag{
+			{Name: "name", Short: "n", Kind: String, Default: "x", Help: "a name"},
+			{Name: "n", Kind: Int, Default: "1", Help: "a count"},
+			{Name: "verbose", Short: "v", Kind: Bool, Help: "talk"},
+			{Name: "wait", Kind: Duration, Default: "1s", Help: "how long"},
+			{Name: "tag", Kind: Strings, Help: "tags"},
+		},
+		Args: []Arg{{Name: "src", Kind: String, Required: true, Help: "from"}, {Name: "dst", Kind: Strings, Help: "to"}},
+		Run:  echo{},
+	})
+	root.Add(&Command{Name: "fail", Summary: "Fail", Run: fails{}})
+	root.Add(&Command{Name: "secret", Summary: "Hidden", Hidden: true, Run: fails{}})
+	return root
+}
+
+func expect(t *sgo.T, args []string, want string) error {
+	got, err := tree().Execute(t.Context(), args)
+	if err != nil {
+		got = "error: " + err.Error()
+	}
+	if got != want {
+		return sgo.NewError(strings.Join(args, " ") + ":\n got " + strconv.QuoteToASCII(got) + "\nwant " + strconv.QuoteToASCII(want))
+	}
+	return nil
+}
+
+func TestParse(t *sgo.T) error {
+	check expect(t, []string{"files", "cp", "a"}, "name=x n=1 v=false wait=1s tags=\nsrc=a dst=\n")
+	check expect(t, []string{"files", "cp", "-v", "--n=3", "a", "--name", "y", "b", "c", "--wait=1.5m", "--tag", "p,q", "--tag=r"},
+		"name=y n=3 v=true wait=1m30s tags=p+q+r\nsrc=a dst=b+c\n")
+	check expect(t, []string{"files", "cp", "--", "-v", "-3"}, "name=x n=1 v=false wait=1s tags=\nsrc=-v dst=-3\n")
+	check expect(t, []string{"files", "cp", "-n", "z", "-5"}, "name=z n=1 v=false wait=1s tags=\nsrc=-5 dst=\n")
+	return nil
+}
+
+func TestErrors(t *sgo.T) error {
+	check expect(t, []string{"files", "cp"}, "error: tool files cp: missing argument <src>")
+	check expect(t, []string{"files", "cp", "a", "--bogus"}, "error: tool files cp: unknown flag --bogus")
+	check expect(t, []string{"files", "cp", "a", "--n", "many"}, "error: tool files cp: --n: \"many\" is not an integer")
+	check expect(t, []string{"files", "cp", "a", "--wait=soon"}, "error: tool files cp: --wait: \"soon\" is not a duration (such as 300ms, 1.5h, 2h45m)")
+	check expect(t, []string{"files", "cp", "a", "--name"}, "error: tool files cp: flag --name needs a string value")
+	check expect(t, []string{"files", "mv"}, "error: tool files: unknown command \"mv\" (see tool files --help)")
+	check expect(t, []string{"fail"}, "error: it failed")
+	return nil
+}
+
+func TestHelp(t *sgo.T) error {
+	check expect(t, []string{"--version"}, "tool version 1.2.3\n")
+	check expect(t, []string{}, "A test tool\n\nUsage:\n  tool [command]\n\nStorage:\n  files   Work with files\n\nCommands:\n  fail    Fail\n\nFlags:\n  -h, --help      help for tool\n      --version   version of tool\n\nUse \"tool [command] --help\" for more about a command.\n")
+	check expect(t, []string{"files", "cp", "--help"}, "Copy files\n\nUsage:\n  tool files cp [flags] <src> [dst...]\n\nArguments:\n  <src>   from (required)\n  <dst>   to\n\nFlags:\n  -n, --name string     a name (default x)\n      --n int           a count (default 1)\n  -v, --verbose         talk\n      --wait duration   how long (default 1s)\n      --tag strings     tags\n  -h, --help            help for cp\n")
+	return nil
+}
+
+func TestTreeAtRunTime(t *sgo.T) error {
+	root := tree()
+	g := root.Ensure("admin", "Administration")
+	if root.Ensure("admin", "other") != g || g.Path() != "tool admin" {
+		return sgo.NewError("Ensure")
+	}
+	g.Add(&Command{Name: "fail", Summary: "Fail too", Run: fails{}})
+	if _, err := root.Execute(t.Context(), []string{"admin", "fail"}); err == nil || err.Error() != "it failed" {
+		return sgo.NewError("added command did not run")
+	}
+	root.Add(&Command{Name: "fail", Summary: "Replaced", Run: echo{}})
+	if len(root.Subcommands()) != 4 || root.Find("fail").Summary != "Replaced" {
+		return sgo.NewError("Add did not replace in place")
+	}
+	return nil
+}

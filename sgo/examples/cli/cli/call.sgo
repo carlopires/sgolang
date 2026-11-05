@@ -1,0 +1,154 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package cli
+
+import (
+	"std/fmt"
+	"std/strconv"
+	"std/strings"
+	"std/time"
+)
+
+// A Call is one run of a command: its parsed flags and arguments, and the output it writes.
+// Values are checked when the command line is parsed, so the accessors do not fail; asking for a
+// name the command does not declare, or as the wrong kind, is a program error and panics.
+type Call struct {
+	Command *Command
+	values  []value
+	out     strings.Builder
+}
+
+type value struct {
+	name string
+	kind Kind
+	set  bool
+	text string
+	list []string
+}
+
+func (c *Call) get(name string, kind Kind) value {
+	for _, v := range c.values {
+		if v.name == name {
+			if v.kind != kind {
+				panic("cli: " + c.Command.Path() + ": " + strconv.QuoteToASCII(name) + " is a " + kindName(v.kind) + ", not a " + kindName(kind))
+			}
+			return v
+		}
+	}
+	panic("cli: " + c.Command.Path() + " declares no flag or argument " + strconv.QuoteToASCII(name))
+}
+
+// IsSet reports whether the flag or argument name was given on the command line (rather than
+// taking its default).
+func (c *Call) IsSet(name string) bool {
+	for _, v := range c.values {
+		if v.name == name {
+			return v.set
+		}
+	}
+	panic("cli: " + c.Command.Path() + " declares no flag or argument " + strconv.QuoteToASCII(name))
+}
+
+// String returns the String flag or argument name.
+func (c *Call) String(name string) string { return c.get(name, String).text }
+
+// Int returns the Int flag or argument name.
+func (c *Call) Int(name string) int {
+	n, _ := strconv.Atoi(c.get(name, Int).text)
+	return n
+}
+
+// Bool returns the Bool flag name.
+func (c *Call) Bool(name string) bool { return c.get(name, Bool).text == "true" }
+
+// Duration returns the Duration flag or argument name.
+func (c *Call) Duration(name string) time.Duration {
+	d, _ := time.ParseDuration(c.get(name, Duration).text)
+	return d
+}
+
+// Strings returns the Strings flag or argument name.
+func (c *Call) Strings(name string) []string {
+	v := c.get(name, Strings)
+	out := make([]string, 0, len(v.list))
+	return append(out, v.list...)
+}
+
+// Ints returns the Ints flag or argument name.
+func (c *Call) Ints(name string) []int {
+	v := c.get(name, Ints)
+	out := make([]int, 0, len(v.list))
+	for _, s := range v.list {
+		n, _ := strconv.Atoi(s)
+		out = append(out, n)
+	}
+	return out
+}
+
+// Text returns the flag or argument name as text, whatever its kind: a list joined with commas, a
+// duration in its canonical form ("1h30m0s"), a Bool as "true" or "false". It is the form for
+// forwarding a command's values, as a command defined by a server does.
+func (c *Call) Text(name string) string {
+	k := c.index(name)
+	if k < 0 {
+		panic("cli: " + c.Command.Path() + " declares no flag or argument " + strconv.QuoteToASCII(name))
+	}
+	v := c.values[k]
+	switch {
+	case isList(v.kind):
+		return strings.Join(v.list, ",")
+	case v.kind == Duration && v.text != "":
+		return c.Duration(name).String()
+	}
+	return v.text
+}
+
+// Print appends s to the command's output.
+func (c *Call) Print(s string) { _, _ = c.out.WriteString(s) }
+
+// Printf appends formatted text to the command's output (std/fmt).
+func (c *Call) Printf(format string, args []any) { _, _ = c.out.WriteString(fmt.Sprintf(format, args)) }
+
+// Output returns what the command has printed.
+func (c *Call) Output() string { return c.out.String() }
+
+func kindName(k Kind) string {
+	switch k {
+	case String:
+		return "string"
+	case Int:
+		return "int"
+	case Bool:
+		return "bool"
+	case Duration:
+		return "duration"
+	case Strings:
+		return "strings"
+	case Ints:
+		return "ints"
+	}
+	return "?"
+}
+
+// validate reports whether text is a valid value of kind (one element, for a list kind).
+func validate(kind Kind, text string) error {
+	switch kind {
+	case Int, Ints:
+		if _, err := strconv.Atoi(text); err != nil {
+			return fmt.Errorf("%q is not an integer", []any{text})
+		}
+	case Bool:
+		if text != "true" && text != "false" {
+			return fmt.Errorf("%q is not true or false", []any{text})
+		}
+	case Duration:
+		if _, err := time.ParseDuration(text); err != nil {
+			return fmt.Errorf("%q is not a duration (such as 300ms, 1.5h, 2h45m)", []any{text})
+		}
+	}
+	return nil
+}
+
+func isList(k Kind) bool { return k == Strings || k == Ints }

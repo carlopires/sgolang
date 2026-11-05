@@ -1,0 +1,45 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Command undisk is the D184 acceptance example: a CLI whose command tree depends on state the
+// program reads at run time. Static commands are always there; the server's commands come from a
+// profile a (fake) daemon serves over a granted socket, and differ by the user's role. "shell"
+// runs command lines read from stdin over the same tree.
+//
+//	undisk [--user NAME] COMMAND [flags] [args]
+//
+// With no arguments it runs a scripted session and prints the transcript.
+package main
+
+import (
+	"sgo"
+
+	"example.com/cli/daemon"
+	"example.com/cli/undisk"
+)
+
+func main(root *sgo.Context) error {
+	args := root.Args()
+	var failure error = nil
+	nursery (n) {
+		l := check n.Listen(undisk.Addr) // the fake daemon's socket: released when the daemon's scope ends
+		check n.Start(func(task *sgo.Context, ready *sgo.Ready) error {
+			return daemon.Serve(task, l, ready)
+		})
+		if len(args) == 0 {
+			out := check undisk.Transcript(root)
+			check root.Stdout().WriteString(out)
+		} else {
+			out, err := undisk.Session(root, args)
+			check root.Stdout().WriteString(out)
+			failure = err
+		}
+		n.Cancel()
+	}
+	if failure != nil {
+		check root.Stderr().WriteString("undisk: " + failure.Error() + "\n")
+		return failure
+	}
+	return nil
+}

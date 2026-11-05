@@ -1,0 +1,143 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package cli builds command-line interfaces whose commands are values (D184): a tree of
+// Commands, built and extended at run time, with typed flags and positional arguments, grouped
+// help, and errors that name the command. A command's handler is a Runner, an interface, so a
+// command is plain data plus a value that knows how to run it.
+//
+//	root := cli.New("undisk", "Manage files on undisk")
+//	ls := root.Add(&cli.Command{Name: "ls", Summary: "List files", Run: lister{}})
+//	ls.Flags = []cli.Flag{{Name: "long", Short: "l", Kind: cli.Bool, Help: "show sizes"}}
+//	out, err := root.Execute(ctx, args)
+package cli
+
+import "sgo"
+
+// A Kind is the type of a flag or positional argument.
+type Kind int
+
+// The kinds of flag and argument values. A list takes the flag more than once, or values
+// separated by commas; a list argument must be the last, and takes the remaining words.
+const (
+	String   Kind = 0
+	Int      Kind = 1
+	Bool     Kind = 2
+	Duration Kind = 3
+	Strings  Kind = 4
+	Ints     Kind = 5
+)
+
+// A Runner runs a command. ctx is the context Execute was given; c holds the parsed flags and
+// arguments and collects the output.
+type Runner interface {
+	Run(ctx *sgo.Context, c *Call) error
+}
+
+// A Flag is a named option: --name VALUE, --name=VALUE, or -s VALUE; a Bool flag takes no value
+// (--name, or --name=false).
+type Flag struct {
+	Name     string
+	Short    string
+	Kind     Kind
+	Default  string
+	Help     string
+	Required bool
+}
+
+// An Arg is a positional argument.
+type Arg struct {
+	Name     string
+	Kind     Kind
+	Required bool
+	Help     string
+}
+
+// A Command is a node of the tree: a group of subcommands, a runnable command, or both. Name is
+// one word; Group names the section of the parent's help it is listed in; Hidden commands run but
+// are not listed.
+type Command struct {
+	Name        string
+	Summary     string
+	Description string
+	Examples    []string
+	Group       string
+	Hidden      bool
+	Version     string
+	Flags       []Flag
+	Args        []Arg
+	Run         Runner
+	subs        []*Command
+	parent      *Command
+}
+
+// New returns a root command.
+func New(name, summary string) *Command {
+	return &Command{Name: name, Summary: summary}
+}
+
+// Add adds child as a subcommand of c and returns it. A child with the name of an existing
+// subcommand replaces it, keeping its place.
+func (c *Command) Add(child *Command) *Command {
+	child.parent = c
+	for i, s := range c.subs {
+		if s.Name == child.Name {
+			c.subs[i] = child
+			return child
+		}
+	}
+	c.subs = append(c.subs, child)
+	return child
+}
+
+// Find returns the subcommand named name, or nil.
+func (c *Command) Find(name string) *Command {
+	for _, s := range c.subs {
+		if s.Name == name {
+			return s
+		}
+	}
+	return nil
+}
+
+// Ensure returns the subcommand named name, adding an empty group command with summary if there
+// is none: the way to extend a tree by path.
+func (c *Command) Ensure(name, summary string) *Command {
+	if s := c.Find(name); s != nil {
+		return s
+	}
+	return c.Add(&Command{Name: name, Summary: summary})
+}
+
+// Subcommands returns the subcommands of c in the order they were added.
+func (c *Command) Subcommands() []*Command {
+	out := make([]*Command, 0, len(c.subs))
+	return append(out, c.subs...)
+}
+
+// Path is the command's words from the root, such as "undisk files ls".
+func (c *Command) Path() string {
+	if c.parent == nil {
+		return c.Name
+	}
+	return c.parent.Path() + " " + c.Name
+}
+
+func (c *Command) flag(name string) (Flag, bool) {
+	for _, f := range c.Flags {
+		if f.Name == name {
+			return f, true
+		}
+	}
+	return Flag{}, false
+}
+
+func (c *Command) short(s string) (Flag, bool) {
+	for _, f := range c.Flags {
+		if f.Short != "" && f.Short == s {
+			return f, true
+		}
+	}
+	return Flag{}, false
+}

@@ -1,0 +1,92 @@
+$ undisk --help
+Manage files on undisk.
+
+Not logged in: run with --user NAME to see the server's commands.
+
+Usage:
+  undisk [command]
+
+Local:
+  version   Print the version
+  shell     Run commands read from stdin
+  whoami    Print the user and role
+
+Flags:
+      --user string   the user to act as (first on the line)
+  -h, --help          help for undisk
+      --version       version of undisk
+
+Use "undisk [command] --help" for more about a command.
+$ undisk whoami
+not logged in
+$ undisk --user bob --help
+Manage files on undisk.
+
+Usage:
+  undisk [command]
+
+Local:
+  version   Print the version
+  shell     Run commands read from stdin
+  whoami    Print the user and role
+
+Server commands (bob, viewer):
+  files     Work with files
+
+Flags:
+      --user string   the user to act as (first on the line)
+  -h, --help          help for undisk
+      --version       version of undisk
+
+Use "undisk [command] --help" for more about a command.
+$ undisk --user bob files ls --long
+120	notes.txt
+48213	photo.jpg
+$ undisk --user bob files rm notes.txt
+undisk: undisk files: unknown command "rm" (see undisk files --help)
+$ undisk --user alice files --help
+Work with files
+
+Usage:
+  undisk files [command]
+
+Commands:
+  ls    List files
+  put   Store a file
+  rm    Remove files
+
+Flags:
+  -h, --help   help for files
+
+Use "undisk files [command] --help" for more about a command.
+$ undisk --user alice files put report.pdf --size 2048
+stored report.pdf (2048 bytes)
+$ undisk --user alice files ls -h
+List files
+
+Usage:
+  undisk files ls [flags]
+
+Flags:
+      --long   show sizes
+  -h, --help   help for ls
+$ undisk --user alice files ls
+notes.txt
+photo.jpg
+report.pdf
+$ undisk --user alice files rm notes.txt nope.txt
+undisk: no file "nope.txt"
+$ undisk --user alice files rm notes.txt photo.jpg
+removed notes.txt,photo.jpg
+$ undisk --user=alice files ls --long
+2048	report.pdf
+$ undisk --user alice users quota bob --limit 1000 --ttl 1.5h
+quota for bob: 1000 bytes for 1h30m0s
+$ undisk --user alice users quota bob
+undisk: undisk users quota: required flag --limit not set
+$ undisk --user alice users quota bob --limit lots
+undisk: undisk users quota: --limit: "lots" is not an integer
+$ undisk --user alice whoami
+alice (admin)
+$ undisk --version
+undisk version 0.1.0

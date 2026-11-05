@@ -29,6 +29,7 @@ EXAMPLES = {
     "replay": (["./fixed"], "0..63"),
     "happyeyeballs": (["."], "0..63"),
     "httpserver": (["."], "0..63"),
+    "cli": (["."], "0..63"),
 }
 
 # Happy Eyeballs lab scenarios (W18, D146): each main checks its own winner and RFC 8305 step, so
