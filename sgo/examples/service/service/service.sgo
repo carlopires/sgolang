@@ -21,10 +21,9 @@ func Run(root *sgo.Context, addr string, workers, clients int) error {
 	}
 	replies := sgo.NewChannel[string](clients)
 	nursery (n) {
-		ll := l
 		// Start returns once the service signals readiness: after its workers are accepting.
 		if serr := n.Start(func(task *sgo.Context, ready *sgo.Ready) error {
-			return serve(task, ll, workers, ready)
+			return serve(task, l, workers, ready)
 		}); serr != nil {
 			return serr
 		}
@@ -79,12 +78,12 @@ func runClients(root *sgo.Context, addr string, i, count int, replies *sgo.Chann
 // serve is the service: workers tasks accept connections on the lent listener and answer them
 // until the service is cancelled. It is ready once the workers are started (the listener has
 // been listening since Run opened it).
-func serve(task *sgo.Context, ll *sgo.Listener, workers int, ready *sgo.Ready) error {
+func serve(task *sgo.Context, l *sgo.Listener, workers int, ready *sgo.Ready) error {
 	nursery (m) {
 		for k := 0; k < workers; k++ {
 			m.Spawn(func(w *sgo.Context) error {
 				for {
-					c, aerr := ll.Accept(w)
+					c, aerr := l.Accept(w)
 					if aerr != nil {
 						return aerr
 					}

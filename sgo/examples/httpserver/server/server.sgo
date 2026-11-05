@@ -27,9 +27,8 @@ func Run(root *sgo.Context, addr string, client func(*sgo.Context, string) (stri
 	l := check root.Listen(addr)
 	out := ""
 	nursery (n) {
-		ll := l
 		check n.Start(func(task *sgo.Context, ready *sgo.Ready) error {
-			return serve(task, ll, ready)
+			return serve(task, l, ready)
 		})
 		out = check client(root, addr)
 		n.Cancel() // shutdown: the server's Accept and every connection's read end
@@ -60,11 +59,11 @@ func Line(what string, r http.Response) string {
 }
 
 // serve accepts connections into its own nursery and gives each one a task.
-func serve(task *sgo.Context, ll *sgo.Listener, ready *sgo.Ready) error {
+func serve(task *sgo.Context, l *sgo.Listener, ready *sgo.Ready) error {
 	nursery (m) {
 		ready.Signal()
 		for {
-			c := check ll.Accept(m)
+			c := check l.Accept(m)
 			m.Spawn(func(w *sgo.Context) error {
 				return serveConn(w, c)
 			})
