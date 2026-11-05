@@ -1,0 +1,13 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-FILE-002"
+ ],
+ "run_args": [
+  "out.txt"
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"MissingCapability\",\"message\":\"CreateArg: the argument paths are granted read-only (grant path args ro)\",\"position\":null,\"task_id\":0,\"scope_id\":null,\"chain\":[]}\n",
+ "note": "D181: argument paths granted read-only."
+}

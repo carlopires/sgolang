@@ -19,6 +19,7 @@ import (
 //	grant dir NAME PATH ro|rw
 //	grant dir config|state|cache ro|rw     (a per-user application directory, D182)
 //	grant env NAME | PREFIX*               (an environment variable or prefix, D180)
+//	grant path args ro|rw                  (the paths named as arguments, D181)
 //	grant connect IP:PORT | unix:PATH
 //	grant listen IP:PORT | unix:PATH
 //
@@ -117,6 +118,16 @@ func (m *module) parseIOGrant(fields []string, text, at string) (bool, error) {
 			}
 		}
 		m.ioGrants = append(m.ioGrants, "dir "+name+" "+fields[4]+" "+path)
+	case "path":
+		if len(fields) != 4 || fields[2] != "args" || (fields[3] != "ro" && fields[3] != "rw") {
+			return true, &toolErr{at, "SGO_E_USAGE", fmt.Sprintf("%q: an argument path grant is \"grant path args ro|rw\" (D181)", text), 2}
+		}
+		for _, g := range m.ioGrants {
+			if strings.HasPrefix(g, "args ") {
+				return true, &toolErr{at, "SGO_E_USAGE", "the argument paths are granted twice (D181)", 2}
+			}
+		}
+		m.ioGrants = append(m.ioGrants, "args "+fields[3])
 	case "env":
 		if len(fields) != 3 || !envName.MatchString(fields[2]) {
 			return true, &toolErr{at, "SGO_E_USAGE", fmt.Sprintf("%q: an environment grant is \"grant env NAME\" or \"grant env PREFIX*\", NAME of [A-Z0-9_] not starting with a digit (D180)", text), 2}

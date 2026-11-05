@@ -28,6 +28,7 @@ type sgoDirGrant struct {
 	err  string       // the error kind of the open at start, or ""
 	fake *sgoFakeNode // lab runs: the in-memory tree (sgo_iofake.go)
 	mk   []*byte      // an application directory to create on first use (sgo_appdir.go, D182)
+	lazy *byte        // an argument path, opened on first use (sgo_argpath.go, D181)
 }
 
 type sgoNetGrant struct {
@@ -105,6 +106,8 @@ func sgoIOGrantsInit() {
 				}
 			}
 			sgoNetGrants = append(sgoNetGrants, g)
+		case len(f) == 2 && f[0] == "args" && (f[1] == "ro" || f[1] == "rw"): // argument paths (D181)
+			sgoArgPathsInit(f[1] == "ro")
 		case len(f) == 2 && f[0] == "env": // an environment variable or prefix (D180)
 			sgoEnvGrants = append(sgoEnvGrants, f[1])
 		default:

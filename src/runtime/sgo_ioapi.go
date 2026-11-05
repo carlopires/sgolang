@@ -58,7 +58,7 @@ func sgo_ioInfo(err error) (progress int, noEffect, eof bool) {
 //go:linkname sgo_dirGrant sgo.runtime_dirGrant
 func sgo_dirGrant(name string) (g int, ro, ok bool) {
 	for i := range sgoDirGrants {
-		if sgoDirGrants[i].name == name {
+		if sgoDirGrants[i].name != "" && sgoDirGrants[i].name == name { // argument slots have no name (D181)
 			return i, sgoDirGrants[i].ro, true
 		}
 	}

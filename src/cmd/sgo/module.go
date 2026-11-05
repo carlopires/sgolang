@@ -114,7 +114,7 @@ func (m *module) parseMod(t *toolchain) error {
 			if fields[1] != t.specVersion {
 				return &toolErr{at, "SGO_E_SPEC_VERSION", fmt.Sprintf("module requires S-Go spec %s; this toolchain implements %s", fields[1], t.specVersion), 1}
 			}
-		case fields[0] == "grant" && len(fields) >= 2 && slices.Contains([]string{"dir", "connect", "listen", "env"}, fields[1]):
+		case fields[0] == "grant" && len(fields) >= 2 && slices.Contains([]string{"dir", "connect", "listen", "env", "path"}, fields[1]):
 			if _, err := m.parseIOGrant(fields, text, at); err != nil {
 				return err
 			}

@@ -1,0 +1,9 @@
+package main
+
+import "sgo"
+
+// Without grant path args, no argument is a path (D181).
+func main(root *sgo.Context) error {
+	_, _ = root.ArgDir(0)
+	return nil
+}

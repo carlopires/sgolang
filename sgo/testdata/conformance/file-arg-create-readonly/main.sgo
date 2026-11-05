@@ -1,0 +1,11 @@
+package main
+
+import "sgo"
+
+// CreateArg needs grant path args rw (D181).
+func main(root *sgo.Context) error {
+	nursery (n) {
+		_, _ = root.CreateArg(n, 0)
+	}
+	return nil
+}

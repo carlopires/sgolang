@@ -1,0 +1,14 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-FILE-002"
+ ],
+ "run_args": [
+  "work/in.txt",
+  "work/out.txt",
+  "work"
+ ],
+ "exit": 0,
+ "stdout": "converted: hello\nentries: in.txt out.txt\n",
+ "note": "D181: argument paths opened, created, and listed."
+}

@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-FILE-002"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_USAGE",
+   "file": "sgo.mod",
+   "at": "grant path"
+  }
+ ],
+ "note": "D181: grant path args ro|rw."
+}

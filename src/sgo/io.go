@@ -10,6 +10,7 @@ import "unsafe"
 
 func runtime_ioInfo(err error) (progress int, noEffect, eof bool)
 func runtime_dirGrant(name string) (g int, ro, ok bool)
+func runtime_argPath(i int, file bool, op string) (g int, name string, ro bool, err error, granted bool) // sgo_argpath.go
 func runtime_dirIsDir(g int, path string) error
 func runtime_dirMkdir(g int, path string) error
 func runtime_dirRemove(g int, path string) error
@@ -78,6 +79,55 @@ func (c *Context) Dir(name string) *Dir {
 		runtime_fail("MissingCapability", "Dir: no directory grant named "+quote(name))
 	}
 	return &Dir{g: g, readOnly: ro}
+}
+
+// ArgDir returns a Dir confined to the directory that argument i names (D181): only with "grant
+// path args ro|rw" in sgo.mod, whose mode it has. The user's command line is the authority: the
+// program reaches the paths the user typed, never one it builds. An index beyond the arguments,
+// or an argument that is not a directory, is an error; the argument is opened now, on first use.
+func (c *Context) ArgDir(i int) (*Dir, error) {
+	g, _, ro, err := c.argPath(i, false, "ArgDir")
+	if err != nil {
+		return nil, err
+	}
+	return &Dir{g: g, readOnly: ro}, nil
+}
+
+// OpenArg opens the file that argument i names for reading, as a resource of scope s (D181). The
+// file is opened through its directory by its last name only, without following a symlink in that
+// name; an argument that ends in '/', ".", or "..", or an index beyond the arguments, is an error.
+func (c *Context) OpenArg(s Scope, i int) (*File, error) {
+	g, name, ro, err := c.argPath(i, true, "OpenArg")
+	if err != nil {
+		return nil, err
+	}
+	return (&Dir{g: g, readOnly: ro}).Open(s, name)
+}
+
+// CreateArg creates or truncates the file that argument i names, for writing, as a resource of
+// scope s (D181): only with "grant path args rw".
+func (c *Context) CreateArg(s Scope, i int) (*File, error) {
+	g, name, ro, err := c.argPath(i, true, "CreateArg")
+	if err != nil {
+		return nil, err
+	}
+	if ro {
+		runtime_fail("MissingCapability", "CreateArg: the argument paths are granted read-only (grant path args ro)")
+	}
+	return (&Dir{g: g}).Create(s, name)
+}
+
+// argPath checks the root and the grant; it returns the slot, the name to open in it, its mode.
+func (c *Context) argPath(i int, file bool, op string) (int, string, bool, error) {
+	c.own()
+	if !runtime_isRoot(c.t) {
+		runtime_fail("MissingCapability", op+" called on a context that is not the root's: children receive what the root passes them")
+	}
+	g, name, ro, err, granted := runtime_argPath(i, file, op)
+	if !granted {
+		runtime_fail("MissingCapability", op+": the argument paths are not granted (grant path args ro|rw in sgo.mod, D181)")
+	}
+	return g, name, ro, err
 }
 
 func (d *Dir) path(op, p string) string {

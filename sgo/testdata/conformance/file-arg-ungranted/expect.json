@@ -1,0 +1,13 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-FILE-002"
+ ],
+ "run_args": [
+  "."
+ ],
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"MissingCapability\",\"message\":\"ArgDir: the argument paths are not granted (grant path args ro|rw in sgo.mod, D181)\",\"position\":null,\"task_id\":0,\"scope_id\":null,\"chain\":[]}\n",
+ "note": "D181: argument paths need a grant."
+}

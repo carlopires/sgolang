@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.18.0",
- "allowlist_digest": "9c9887291f24dbd2d05448cfc54598760a78db8036d736a27bd16bc0f5643807",
+ "allowlist_digest": "70e73d4fe4d98faa87cb54c7cf1c836a3628a0d4190e1f0904bb9551caa9639f",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -466,8 +466,8 @@
  ],
  "summary": {
   "packages": 31,
-  "files": 1090,
-  "files_changed_from_upstream": 76,
+  "files": 1091,
+  "files_changed_from_upstream": 77,
   "services": {
    "active": 7,
    "dormant": 6,
@@ -4481,6 +4481,11 @@
    "upstream_identical": false
   },
   {
+   "path": "src/runtime/sgo_argpath.go",
+   "sha256": "0d0cb43159e128f1560126ca99c5631541776f2f17ca4e8d89c714a6016b0e9e",
+   "upstream_identical": false
+  },
+  {
    "path": "src/runtime/sgo_auth.go",
    "sha256": "bebd9ccf234ec2df71136068b42e243b07eda0e8225c5e20c4d3c502e6a6dcfd",
    "upstream_identical": false
@@ -4577,12 +4582,12 @@
   },
   {
    "path": "src/runtime/sgo_ioapi.go",
-   "sha256": "a2f5996c9f02e9199883896f6e78a578e1530ae4249983049c7ee0a5a5a548f0",
+   "sha256": "06dfedb16c410928111c731b6d6fa98964c2e161cb367bf3722afb379e329e35",
    "upstream_identical": false
   },
   {
    "path": "src/runtime/sgo_iodir.go",
-   "sha256": "24062690e23887a005e8dd442d220580b924c3ecefd7cbb425df60488dd560e7",
+   "sha256": "15371cf0e859963525ba8ac920e52b3cbbd5400a48ad3a1ff5f07dcc1814b059",
    "upstream_identical": false
   },
   {
@@ -4592,7 +4597,7 @@
   },
   {
    "path": "src/runtime/sgo_iogrant.go",
-   "sha256": "16fab21967e3a33cc6dd39b7c36cbc703e232828a99aa7ec62f6c349ff52574d",
+   "sha256": "53078d529bb9b3025acdd6f44279dd98f3f89d473cdfdca22074c2d4ef250407",
    "upstream_identical": false
   },
   {
@@ -5877,7 +5882,7 @@
   },
   {
    "path": "src/sgo/io.go",
-   "sha256": "a2ab008c90988a8130df7654a2af4f8f383fdfe1aaa55ad8a330c64bdfcf21a9",
+   "sha256": "15033d4b4d56ccf8da230e7ca0e7615ae566cd94cb22ef91eeefbec8e3d7cc7e",
    "upstream_identical": false
   },
   {

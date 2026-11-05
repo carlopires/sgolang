@@ -1,0 +1,22 @@
+package main
+
+import "sgo"
+
+// A converter reaches exactly the paths its user typed (D181): it reads argument 0, writes
+// argument 1, and lists argument 2; it can name no other path.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		in := check root.OpenArg(n, 0)
+		text := check in.ReadAll(1024)
+		dst := check root.CreateArg(n, 1)
+		_ = check dst.Write("converted: " + text)
+		check dst.Close()
+		d := check root.ArgDir(2)
+		back := check d.ReadFile("out.txt")
+		check out.WriteString(back)
+		l := check d.List("")
+		check out.WriteString("entries: " + l.Name(0) + " " + l.Name(1) + "\n")
+	}
+	return nil
+}

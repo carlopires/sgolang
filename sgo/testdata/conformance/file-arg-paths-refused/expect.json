@@ -1,0 +1,14 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-FILE-002"
+ ],
+ "run_args": [
+  "work/link",
+  "work/",
+  "missing"
+ ],
+ "exit": 0,
+ "stdout": "PathRejected: Dir.Open\nPathRejected: OpenArg\nNotFound: ArgDir\n",
+ "note": "D181: a symlink, a path naming no file, a missing directory."
+}

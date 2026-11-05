@@ -112,7 +112,7 @@ func sgoSetGrants(ctxt *Link, s string) {
 // sgoSetIOGrants handles -sgoiogrants=lines: it sets runtime.sgoIOGrants, the file and network
 // grants (D52, D57). Only the driver's canonical form is accepted: sorted, unique lines
 // "dir NAME ro|rw PATH", "connect IP:PORT|unix:PATH|HOST:PORT", "listen IP:PORT|unix:PATH",
-// "env NAME|PREFIX*".
+// "env NAME|PREFIX*", "args ro|rw".
 func sgoSetIOGrants(ctxt *Link, s string) {
 	lines := strings.Split(s, "\n")
 	for i, l := range lines {
@@ -126,6 +126,8 @@ func sgoSetIOGrants(ctxt *Link, s string) {
 				m := sgoAppDirPath.FindStringSubmatch(f[3])
 				ok = m != nil && m[1] == f[1]
 			}
+		case f[0] == "args": // the paths named as arguments (D181)
+			ok = len(f) == 2 && (f[1] == "ro" || f[1] == "rw")
 		case f[0] == "env": // an environment variable or prefix (D180)
 			ok = len(f) == 2 && sgoEnvGrantName.MatchString(f[1])
 		case (f[0] == "connect" || f[0] == "listen") && len(f) == 2 && strings.HasPrefix(f[1], "unix:"):

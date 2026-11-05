@@ -15,6 +15,9 @@ func sgoDirRoot(g int) (int32, *sgoIOErr) {
 	if d.fd < 0 && d.mk != nil {
 		sgoAppDirCreate(d) // an application directory, created on first use (D182)
 	}
+	if d.fd < 0 && d.lazy != nil {
+		sgoArgPathOpen(d) // an argument path, opened on first use (D181)
+	}
 	if d.fd < 0 {
 		return -1, &sgoIOErr{kind: d.err}
 	}

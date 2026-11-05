@@ -1,0 +1,18 @@
+package main
+
+import "sgo"
+
+// Argument 0 names a symlink: the last name is opened without following it (D181). Argument 1 ends
+// in '/', so it names no file; argument 2 does not exist.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	nursery (n) {
+		_, e0 := root.OpenArg(n, 0)
+		check out.WriteString(e0.Error() + "\n")
+		_, e1 := root.OpenArg(n, 1)
+		check out.WriteString(e1.Error() + "\n")
+		_, e2 := root.ArgDir(2)
+		check out.WriteString(e2.Error() + "\n")
+	}
+	return nil
+}
