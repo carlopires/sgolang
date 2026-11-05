@@ -114,40 +114,40 @@ func Frexp(f float64) (float64, int) {
 	if f == 0 || IsInf(f, 0) || f != f {
 		return f, 0
 	}
-	exp := 0
+	e2 := 0
 	if Abs(f) < smallestNormal {
 		f *= two52
-		exp = -52
+		e2 = -52
 	}
 	b := Float64bits(f)
-	exp += (b>>expShift)&0x7FF - 1022
+	e2 += (b>>expShift)&0x7FF - 1022
 	b = b&^(0x7FF<<expShift) | 1022<<expShift
-	return Float64frombits(b), exp
+	return Float64frombits(b), e2
 }
 
 // Ldexp returns frac × 2^exp, rounded once (Go's algorithm).
-func Ldexp(frac float64, exp int) float64 {
+func Ldexp(frac float64, e2 int) float64 {
 	if frac == 0 || IsInf(frac, 0) || frac != frac {
 		return frac
 	}
 	if Abs(frac) < smallestNormal {
 		frac *= two52
-		exp -= 52
+		e2 -= 52
 	}
 	b := Float64bits(frac)
-	exp += (b>>expShift)&0x7FF - expBias
-	if exp < -1075 {
+	e2 += (b>>expShift)&0x7FF - expBias
+	if e2 < -1075 {
 		return Copysign(0, frac)
 	}
-	if exp > 1023 {
+	if e2 > 1023 {
 		return Copysign(Inf(1), frac)
 	}
 	m := 1.0
-	if exp < -1022 { // subnormal: one rounding, by the final multiplication
-		exp += 53
+	if e2 < -1022 { // subnormal: one rounding, by the final multiplication
+		e2 += 53
 		m = 0x1p-53
 	}
-	b = b&^(0x7FF<<expShift) | (exp+expBias)<<expShift
+	b = b&^(0x7FF<<expShift) | (e2+expBias)<<expShift
 	return m * Float64frombits(b)
 }
 
@@ -237,20 +237,20 @@ func Sqrt(x float64) float64 {
 		return NaN()
 	}
 	ix := Float64bits(x)
-	exp := (ix >> expShift) & 0x7FF
-	if exp == 0 { // subnormal: normalize
+	e2 := (ix >> expShift) & 0x7FF
+	if e2 == 0 { // subnormal: normalize
 		for ix&(1<<expShift) == 0 {
 			ix <<= 1
-			exp--
+			e2--
 		}
-		exp++
+		e2++
 	}
-	exp -= expBias
+	e2 -= expBias
 	ix = ix&^(0x7FF<<expShift) | 1<<expShift
-	if exp&1 == 1 {
+	if e2&1 == 1 {
 		ix <<= 1
 	}
-	exp >>= 1
+	e2 >>= 1
 	ix <<= 1
 	q, s := 0, 0
 	r := 1 << (expShift + 1)
@@ -267,5 +267,5 @@ func Sqrt(x float64) float64 {
 	if ix != 0 { // remainder: round to nearest, ties to even
 		q += q & 1
 	}
-	return Float64frombits(q>>1 + (exp-1+expBias)<<expShift)
+	return Float64frombits(q>>1 + (e2-1+expBias)<<expShift)
 }

@@ -55,8 +55,8 @@ func FMA(x, y, z float64) float64 {
 // |f| = m * 2^e.
 func split(f float64) (bool, int, int) {
 	neg := f < 0
-	fr, exp := Frexp(Abs(f))
-	return neg, int(fr * two53), exp - 53
+	fr, e2 := Frexp(Abs(f))
+	return neg, int(fr * two53), e2 - 53
 }
 
 // roundScaled returns n * 2^e rounded once to binary64 (n > 0).

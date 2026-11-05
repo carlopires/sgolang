@@ -7,7 +7,7 @@
 package math
 
 const (
-	MaxInt = 9223372036854775807    // the largest int
+	MaxInt = 9223372036854775807      // the largest int
 	MinInt = -9223372036854775807 - 1 // the smallest int
 )
 
