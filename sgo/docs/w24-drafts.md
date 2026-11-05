@@ -33,3 +33,33 @@ Decisions D178–D184 (approved 2026-11-06; D177 withdrawn). CLI programs as fir
   are now I/O errors with their kind instead of a bare message. Cases: proc-stderr,
   proc-stderr-child; `sgo/scripts/test-cli.py` (installed-binary arguments, broken pipe ending
   quietly under `| head -1`, a 97-column pseudo-terminal), run in sgo-w00.
+
+## D182 — per-user application directories (for the 0.19.0 freeze)
+
+Amendments, applied at the freeze as new clause versions:
+
+- **SGO-FILE-002 v2 (grammar).** `grant dir config|state|cache ro|rw` names a per-user
+  application directory without a path. `app NAME` in sgo.mod names the application (1 to 64 of
+  `[a-z0-9._-]`, starting with a letter or digit); without it, the last element of the module path,
+  which must then have that form. The canonical grant line is `dir KIND MODE @KIND/APP`, part of
+  the build identity; the linker accepts an `@` path only in that form, with KIND equal to the
+  grant name. A grant path of the explicit form cannot start with `@`.
+- **SGO-FILE-002 v2 (evaluation).** The runtime resolves `@KIND/APP` at start under the platform
+  convention, reading only HOME and the XDG variable of the kind (an XDG value that is not an
+  absolute path is ignored); the program never sees the environment. Linux: `$XDG_CONFIG_HOME/APP`
+  (`~/.config/APP`), `$XDG_STATE_HOME/APP` (`~/.local/state/APP`), `$XDG_CACHE_HOME/APP`
+  (`~/.cache/APP`). macOS: `~/Library/Application Support/APP`,
+  `~/Library/Application Support/APP/State`, `~/Library/Caches/APP`. An `rw` directory that does not
+  exist is created with mode 0700, with any missing parents, on the first operation through the
+  grant; an `ro` one is never created. With no HOME, every operation fails `NotFound`. The lab uses
+  its in-memory tree, unchanged.
+- **SGO-NET-002 v2.** `grant connect|listen unix:@runtime/NAME` names a socket in the application's
+  runtime directory (`$XDG_RUNTIME_DIR/APP/NAME` on Linux, no default; `$TMPDIR/APP/NAME` on
+  macOS, the per-user temporary directory). The program writes `unix:@runtime/NAME`; the canonical
+  grant is `unix:@runtime/APP/NAME`. Listen creates the directory with mode 0700. Without a
+  runtime directory the endpoint fails `NotFound`; a resolved path longer than 103 bytes fails
+  `PathRejected`.
+
+Fixtures: file-appdir-bad-form, file-appdir-path-at, file-app-name-bad, net-appsocket-bad;
+`sgo/scripts/test-cli.py` (creation, mode 0700, persistence, ro not created, no HOME, the XDG
+override on Linux, a socket round trip and its directory).

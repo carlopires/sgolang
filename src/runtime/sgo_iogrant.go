@@ -27,6 +27,7 @@ type sgoDirGrant struct {
 	fd   int32
 	err  string       // the error kind of the open at start, or ""
 	fake *sgoFakeNode // lab runs: the in-memory tree (sgo_iofake.go)
+	mk   []*byte      // an application directory to create on first use (sgo_appdir.go, D182)
 }
 
 type sgoNetGrant struct {
@@ -38,6 +39,9 @@ type sgoNetGrant struct {
 	v6     bool
 	port   uint16
 	host   string // a host name to resolve (D145): connect grants only; ip is unset
+	app    bool   // a socket in the application's runtime directory (D182)
+	name   string // its address as the program writes it: @runtime/NAME, without the application
+	err    string // why the endpoint is unusable: an application socket that cannot be placed
 }
 
 var (
@@ -63,10 +67,17 @@ func sgoIOGrantsInit() {
 			g := sgoDirGrant{name: f[1], ro: f[2] == "ro", path: f[3], fd: -1}
 			if sgoLab != nil {
 				g.fake = &sgoFakeNode{dir: true}
+			} else if p, ok := sgoAppPath(g.path); !ok {
+				g.err = "NotFound" // an application directory with no HOME or runtime directory (D182)
 			} else {
+				app := p != g.path
+				g.path = p
 				fd := sgoOpenat(sgoAT_FDCWD, sgoCString(g.path), sgoO_RDONLY|sgoO_DIRECTORY|sgoO_CLOEXEC, 0)
 				if fd < 0 {
 					g.err = sgoErrKind(fd)
+					if app && g.err == "NotFound" && !g.ro {
+						sgoAppDirPrepare(&g) // created on first use (D182)
+					}
 				} else {
 					g.fd = fd
 				}
@@ -76,6 +87,22 @@ func sgoIOGrantsInit() {
 			g := sgoNetGrant{listen: f[0] == "listen", addr: f[1]}
 			if !sgoParseEndpoint(f[1], &g) {
 				throw("sgo: corrupt network grant")
+			}
+			if g.unix && g.path[0] == '@' { // the application's runtime directory (D182)
+				// "@runtime/APP/NAME" (the linker checked the form): the program writes @runtime/NAME.
+				i := sgoIndexByte(g.path[len("@runtime/"):], '/') + len("@runtime/")
+				g.name = "@runtime" + g.path[i:]
+			}
+			if g.unix && g.path[0] == '@' && sgoLab == nil {
+				p, ok := sgoAppPath(g.path)
+				switch {
+				case !ok:
+					g.err = "NotFound"
+				case len(p) > sgoMaxUnixPath:
+					g.err = "PathRejected"
+				default:
+					g.path, g.app = p, true
+				}
 			}
 			sgoNetGrants = append(sgoNetGrants, g)
 		default:
@@ -283,7 +310,7 @@ func sgoNetGrantFor(addr string, listen bool) *sgoNetGrant {
 	}
 	for i := range sgoNetGrants {
 		ng := &sgoNetGrants[i]
-		if ng.listen == listen && ng.unix == g.unix && ng.path == g.path && ng.host == g.host && ng.ip == g.ip && ng.v6 == g.v6 && ng.port == g.port {
+		if ng.listen == listen && ng.unix == g.unix && (ng.path == g.path || ng.unix && ng.name != "" && ng.name == g.path) && ng.host == g.host && ng.ip == g.ip && ng.v6 == g.v6 && ng.port == g.port {
 			return ng
 		}
 	}

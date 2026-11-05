@@ -25,7 +25,9 @@ type module struct {
 	pathAt   string   // position of the module directive in sgo.mod
 	grants   []string // granted effect kinds, in canonical order (SGO-AUTH-002)
 	ioGrants []string // file and network grants, canonical and sorted (iogrant.go)
-	testDir  string   // sgo test: the package whose _test.sgo files are loaded ("" otherwise)
+	app      string   // the application name of per-user directories (D182): "app NAME", or the module path's last element
+	appAt    string
+	testDir  string // sgo test: the package whose _test.sgo files are loaded ("" otherwise)
 
 	requires []modReq           // require lines of sgo.mod (SGO-IMP-003)
 	replaces map[string]string  // replace lines: module path => directory relative to the root
@@ -102,6 +104,11 @@ func (m *module) parseMod(t *toolchain) error {
 		switch {
 		case fields[0] == "module" && len(fields) == 2 && m.path == "":
 			m.path, m.pathAt = fields[1], at
+		case fields[0] == "app" && len(fields) == 2 && m.app == "":
+			if !appName.MatchString(fields[1]) {
+				return &toolErr{at, "SGO_E_USAGE", fmt.Sprintf("application name %q must be 1 to 64 of [a-z0-9._-], starting with a letter or digit (D182)", fields[1]), 2}
+			}
+			m.app, m.appAt = fields[1], at
 		case fields[0] == "sgo" && len(fields) == 2 && !sawSgo:
 			sawSgo = true
 			if fields[1] != t.specVersion {
@@ -141,7 +148,7 @@ func (m *module) parseMod(t *toolchain) error {
 			}
 			m.replaces[fields[1]] = filepath.FromSlash(fields[3])
 		default:
-			return &toolErr{at, "SGO_E_UNADMITTED", fmt.Sprintf("sgo.mod directive %q is not admitted (module, sgo, grant, require, and replace only)", text), 1}
+			return &toolErr{at, "SGO_E_UNADMITTED", fmt.Sprintf("sgo.mod directive %q is not admitted (module, sgo, app, grant, require, and replace only)", text), 1}
 		}
 	}
 	for _, k := range grantKinds {
@@ -157,6 +164,9 @@ func (m *module) parseMod(t *toolchain) error {
 	}
 	if !sawSgo {
 		return &toolErr{"sgo.mod:1:1", "SGO_E_SPEC_VERSION", "sgo.mod has no sgo directive naming the spec version", 1}
+	}
+	if err := m.resolveAppDirs(); err != nil {
+		return err
 	}
 	return sc.Err()
 }

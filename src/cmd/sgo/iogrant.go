@@ -17,6 +17,7 @@ import (
 // File and network grants of the main sgo.mod (W09, D52, D57):
 //
 //	grant dir NAME PATH ro|rw
+//	grant dir config|state|cache ro|rw     (a per-user application directory, D182)
 //	grant connect IP:PORT | unix:PATH
 //	grant listen IP:PORT | unix:PATH
 //
@@ -25,6 +26,52 @@ import (
 // (-sgoiogrants), and the build ID names its digest (/io=).
 
 var grantName = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,31}$`)
+
+// appName is the form of an application name (D182): one path element, portable on every target.
+var appName = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]{0,63}$`)
+
+// appDirKinds are the per-user application directories a grant may name without a path (D182).
+var appDirKinds = []string{"config", "state", "cache"}
+
+// defaultApp sets the application name from the module path if sgo.mod has no "app" line.
+func (m *module) defaultApp() error {
+	if m.app != "" {
+		return nil
+	}
+	last := m.path[strings.LastIndex(m.path, "/")+1:]
+	if !appName.MatchString(last) {
+		return &toolErr{m.pathAt, "SGO_E_USAGE", fmt.Sprintf("module path element %q is not an application name; add \"app NAME\" to sgo.mod for its per-user directories (D182)", last), 2}
+	}
+	m.app = last
+	return nil
+}
+
+// resolveAppDirs gives each application directory grant its application: the placeholder "@KIND"
+// becomes "@KIND/APP", which the runtime resolves under the platform convention (sgo_appdir.go).
+// The application is "app NAME", else the last element of the module path.
+func (m *module) resolveAppDirs() error {
+	for i, g := range m.ioGrants {
+		f := strings.Fields(g)
+		if f[0] != "dir" || !strings.HasPrefix(f[3], "@") {
+			continue
+		}
+		if err := m.defaultApp(); err != nil {
+			return err
+		}
+		m.ioGrants[i] = g + "/" + m.app
+	}
+	for i, g := range m.ioGrants { // application sockets: unix:@runtime/NAME -> unix:@runtime/APP/NAME
+		if !strings.Contains(g, " unix:@runtime/") {
+			continue
+		}
+		if err := m.defaultApp(); err != nil {
+			return err
+		}
+		m.ioGrants[i] = strings.Replace(g, " unix:@runtime/", " unix:@runtime/"+m.app+"/", 1)
+	}
+	slices.Sort(m.ioGrants)
+	return nil
+}
 
 // maxUnixPath is the portable limit of a Unix socket path: sun_path is 104 bytes on darwin,
 // including the terminating NUL.
@@ -36,8 +83,18 @@ func (m *module) parseIOGrant(fields []string, text, at string) (bool, error) {
 	usage := func(msg string) error { return &toolErr{at, "SGO_E_USAGE", msg + " (D52)", 2} }
 	switch fields[1] {
 	case "dir":
+		if len(fields) == 4 && slices.Contains(appDirKinds, fields[2]) && (fields[3] == "ro" || fields[3] == "rw") {
+			// A per-user application directory (D182): its path is resolved by the runtime.
+			for _, g := range m.ioGrants {
+				if f := strings.Fields(g); f[0] == "dir" && f[1] == fields[2] {
+					return true, usage(fmt.Sprintf("directory grant %s is declared twice", fields[2]))
+				}
+			}
+			m.ioGrants = append(m.ioGrants, "dir "+fields[2]+" "+fields[3]+" @"+fields[2])
+			break
+		}
 		if len(fields) != 5 || (fields[4] != "ro" && fields[4] != "rw") {
-			return true, usage(fmt.Sprintf("%q: a directory grant is \"grant dir NAME PATH ro|rw\"", text))
+			return true, usage(fmt.Sprintf("%q: a directory grant is \"grant dir NAME PATH ro|rw\" or \"grant dir config|state|cache ro|rw\" (D182)", text))
 		}
 		name, path := fields[2], fields[3]
 		if !grantName.MatchString(name) {
@@ -45,6 +102,9 @@ func (m *module) parseIOGrant(fields []string, text, at string) (bool, error) {
 		}
 		if strings.ContainsRune(path, 0) {
 			return true, usage("a directory grant path contains NUL")
+		}
+		if strings.HasPrefix(path, "@") {
+			return true, usage("a directory grant path cannot start with @ (reserved for per-user application directories, D182)")
 		}
 		for _, g := range m.ioGrants {
 			if f := strings.Fields(g); f[0] == "dir" && f[1] == name {
@@ -57,6 +117,13 @@ func (m *module) parseIOGrant(fields []string, text, at string) (bool, error) {
 			return true, usage(fmt.Sprintf("%q: an endpoint grant is \"grant %s IP:PORT\" or \"grant %s unix:PATH\"", text, fields[1], fields[1]))
 		}
 		if path, ok := strings.CutPrefix(fields[2], "unix:"); ok {
+			if rest, app := strings.CutPrefix(path, "@"); app {
+				// A socket in the application's runtime directory (D182): unix:@runtime/NAME.
+				name, ok := strings.CutPrefix(rest, "runtime/")
+				if !ok || !appName.MatchString(name) {
+					return true, usage(fmt.Sprintf("%q: an application socket is unix:@runtime/NAME, with NAME one file name of [a-z0-9._-] (D182)", fields[2]))
+				}
+			}
 			// A Unix domain socket (D60): an exact path, absolute or relative to the working
 			// directory at start, within the portable sun_path limit.
 			if path == "" || len(path) > maxUnixPath || strings.ContainsRune(path, 0) {

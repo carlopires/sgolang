@@ -112,6 +112,45 @@ func main(root *sgo.Context) error {
 """
 
 
+# APP_PROBE uses the per-user directories and sockets of D182.
+APP_PROBE = """package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+func kind(err error) string {
+	return err.Error()
+}
+
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	cfg := root.Dir("config")
+	n := 0
+	old, err := cfg.ReadFile("settings")
+	if err != nil {
+		check out.WriteString("config: " + kind(err) + "\\n")
+	} else {
+		check out.WriteString("config: " + old + "\\n")
+		n = 1
+	}
+	check cfg.WriteFile("settings", "run=" + strconv.Itoa(n+1))
+	_, e := root.Dir("state").ReadFile("log")
+	check out.WriteString("state: " + kind(e) + "\\n")
+	l := check root.Listen("unix:@runtime/ctl.sock")
+	nursery (s) {
+		c := check s.Dial("unix:@runtime/ctl.sock")
+		_ = check c.Write("ping\\n")
+		a := check l.Accept(s)
+		line := check a.ReadLine(64)
+		check out.WriteString("socket: " + line + "\\n")
+	}
+	return l.Close()
+}
+"""
+
+
 def main():
     sgoargs.check(flags={"--sgo": "value"})
     args = sys.argv[1:]
@@ -182,6 +221,46 @@ def main():
         else:
             problems.append("terminal: no script command to allocate a pseudo-terminal")
 
+        # Per-user application directories and sockets (D182): resolved by the runtime under the
+        # platform convention, created with mode 0700 on first use, never visible to the program.
+        app = os.path.join(tmp, "appdirs")
+        os.makedirs(app)
+        with open(os.path.join(app, "sgo.mod"), "w") as f:
+            f.write("module example.com/tools/clitool\n\nsgo %s\n\ngrant dir config rw\ngrant dir state ro\n"
+                    "grant listen unix:@runtime/ctl.sock\ngrant connect unix:@runtime/ctl.sock\n" % open(os.path.join(ROOT, "sgo", "spec", "VERSION")).read().strip())
+        with open(os.path.join(app, "main.sgo"), "w") as f:
+            f.write(APP_PROBE)
+        r = subprocess.run([sgo, "build", "-o", "prog", "."], cwd=app, capture_output=True, text=True, timeout=300)
+        if r.returncode != 0:
+            problems.append("appdirs build: %s" % r.stderr[-400:])
+        else:
+            home, rt = os.path.join(tmp, "home"), os.path.join(tmp, "rt")
+            os.makedirs(home)
+            os.makedirs(rt)
+            env = {"PATH": "/usr/bin:/bin", "HOME": home}
+            if platform.system() == "Darwin":
+                env["TMPDIR"] = rt
+                cfg = os.path.join(home, "Library", "Application Support", "clitool")
+            else:
+                env["XDG_RUNTIME_DIR"] = rt
+                cfg = os.path.join(home, ".config", "clitool")
+            outs = [subprocess.run([os.path.join(app, "prog")], cwd=app, env=env, capture_output=True, text=True, timeout=30) for _ in range(2)]
+            want = ["config: NotFound: Dir.ReadFile\nstate: NotFound: Dir.ReadFile\nsocket: ping\n", "config: run=1\nstate: NotFound: Dir.ReadFile\nsocket: ping\n"]
+            if [o.stdout for o in outs] != want or any(o.returncode for o in outs):
+                problems.append("appdirs: %r" % [(o.returncode, o.stdout, o.stderr[-200:]) for o in outs])
+            elif not os.path.isdir(cfg) or os.stat(cfg).st_mode & 0o777 != 0o700:
+                problems.append("appdirs: %s missing or not mode 0700" % cfg)
+            elif not os.path.isdir(os.path.join(rt, "clitool")) or os.listdir(os.path.join(rt, "clitool")):
+                problems.append("appdirs: socket directory %s/clitool missing or not emptied" % rt)
+            if platform.system() != "Darwin": # an XDG variable overrides the default; a relative one is ignored
+                xdg = os.path.join(tmp, "xdg")
+                r = subprocess.run([os.path.join(app, "prog")], cwd=app, env=dict(env, XDG_CONFIG_HOME=xdg), capture_output=True, text=True, timeout=30)
+                if not os.path.isfile(os.path.join(xdg, "clitool", "settings")):
+                    problems.append("appdirs: XDG_CONFIG_HOME not used: %r" % r.stdout)
+            r = subprocess.run([os.path.join(app, "prog")], cwd=app, env={"PATH": "/usr/bin:/bin"}, capture_output=True, text=True, timeout=30)
+            if r.returncode != 1 or "NotFound" not in r.stderr:
+                problems.append("appdirs without HOME: exit %d %r" % (r.returncode, r.stderr[-200:]))
+
         # Lab interrupts (D179): -interrupt injects them at virtual times; the trace replays them.
         for times, status in [("2000", 1), ("2000,2000", 130)]:
             trace = os.path.join(tmp, "i.jsonl")
@@ -226,7 +305,7 @@ def main():
         for p in problems:
             print("test-cli: FAIL", p)
         sys.exit(1)
-    print("test-cli: ok: installed-binary arguments, broken pipe ends quietly, terminal detection and width, idle stdin ends at its deadline, ReadSecret hides the secret, lab stdin replays, an interrupt unwinds, a second one ends the process, lab interrupts replay")
+    print("test-cli: ok: installed-binary arguments, broken pipe ends quietly, terminal detection and width, idle stdin ends at its deadline, ReadSecret hides the secret, lab stdin replays, an interrupt unwinds, a second one ends the process, lab interrupts replay, application directories and sockets")
 
 
 if __name__ == "__main__":

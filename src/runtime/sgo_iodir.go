@@ -12,6 +12,9 @@ const sgoMaxReadFile = 16 << 20 // ReadFile bound (D59)
 // sgoDirRoot returns the descriptor of grant g, or the error of its open at start.
 func sgoDirRoot(g int) (int32, *sgoIOErr) {
 	d := &sgoDirGrants[g]
+	if d.fd < 0 && d.mk != nil {
+		sgoAppDirCreate(d) // an application directory, created on first use (D182)
+	}
 	if d.fd < 0 {
 		return -1, &sgoIOErr{kind: d.err}
 	}

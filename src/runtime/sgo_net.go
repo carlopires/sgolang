@@ -142,6 +142,9 @@ type sgoSockaddrBuf [112]byte
 
 // sgoNetConnect connects to the endpoint of g.
 func sgoNetConnect(g *sgoNetGrant) (*sgoHandle, *sgoIOErr) {
+	if g.err != "" {
+		return nil, &sgoIOErr{g.err, 0}
+	}
 	if err := sgoTaskCancellation(sgoCurrent()); err != nil {
 		return nil, &sgoIOErr{"Cancelled", 0}
 	}
@@ -186,8 +189,18 @@ func sgoNetConnect(g *sgoNetGrant) (*sgoHandle, *sgoIOErr) {
 // A Unix endpoint's path is freed first if it names a socket (a stale one), never any other file
 // (D60); the listener removes its socket file when it closes, if the path still names it.
 func sgoNetListen(g *sgoNetGrant) (*sgoHandle, *sgoIOErr) {
+	if g.err != "" {
+		return nil, &sgoIOErr{g.err, 0}
+	}
 	var path *byte
 	if g.unix {
+		if g.app { // the application's runtime directory, created on first listen (D182)
+			for i := 1; i < len(g.path); i++ {
+				if g.path[i] == '/' {
+					sgoMkdirat(sgoAT_FDCWD, sgoCString(g.path[:i]), 0o700)
+				}
+			}
+		}
 		path = sgoCString(g.path)
 		var st sgoStatBuf
 		if sgoFstatat(sgoAT_FDCWD, path, &st, sgoAT_SYMLINK_NOFOLLOW) == 0 {

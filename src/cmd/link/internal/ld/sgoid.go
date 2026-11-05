@@ -121,9 +121,16 @@ func sgoSetIOGrants(ctxt *Link, s string) {
 		case !ok:
 		case f[0] == "dir":
 			ok = len(f) == 4 && sgoGrantName.MatchString(f[1]) && (f[2] == "ro" || f[2] == "rw") && f[3] != "" && !strings.ContainsAny(f[3], "\n\x00")
+			if ok && strings.HasPrefix(f[3], "@") { // a per-user application directory (D182)
+				m := sgoAppDirPath.FindStringSubmatch(f[3])
+				ok = m != nil && m[1] == f[1]
+			}
 		case (f[0] == "connect" || f[0] == "listen") && len(f) == 2 && strings.HasPrefix(f[1], "unix:"):
 			p := f[1][len("unix:"):]
 			ok = p != "" && len(p) <= 103 && !strings.ContainsRune(p, 0)
+			if ok && strings.HasPrefix(p, "@") { // a socket in the application's runtime directory (D182)
+				ok = sgoAppSocketPath.MatchString(p)
+			}
 		case f[0] == "connect" && len(f) == 2 && sgoHostPort.MatchString(f[1]) && strings.ContainsAny(f[1][:strings.LastIndexByte(f[1], ':')], "abcdefghijklmnopqrstuvwxyz-"):
 			// A host name endpoint (D145), resolved through a Dialer at run time. A name has a
 			// letter or '-'; all digits and dots is an IP literal, checked below.
@@ -144,6 +151,12 @@ func sgoSetIOGrants(ctxt *Link, s string) {
 }
 
 var sgoGrantName = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,31}$`)
+
+// sgoAppSocketPath is the path of an application socket grant: "@runtime/APP/NAME" (D182).
+var sgoAppSocketPath = regexp.MustCompile(`^@runtime/[a-z0-9][a-z0-9._-]{0,63}/[a-z0-9][a-z0-9._-]{0,63}$`)
+
+// sgoAppDirPath is the path of an application directory grant: "@KIND/APP" (D182).
+var sgoAppDirPath = regexp.MustCompile(`^@(config|state|cache)/[a-z0-9][a-z0-9._-]{0,63}$`)
 
 // sgoHostPort matches NAME:PORT with NAME dot-separated labels of [a-z0-9-] (1 to 63 bytes, not
 // starting or ending with '-') and PORT without leading zeros; the caller checks the rest.
