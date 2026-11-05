@@ -49,6 +49,9 @@ func sgoEnterMain() unsafe.Pointer {
 	sgoLabBoot()      // lab binaries only (sgo_lab_boot.go)
 	sgoIOGrantsInit() // file and network grants; opens the granted directories (D52), not in lab runs
 	sgoTestBoot()     // test binaries only: the test selection and its directory (sgo_test_boot.go)
+	if sgoLab == nil {
+		sgoInterruptArm() // SIGINT and SIGTERM cancel the root (D179)
+	}
 	return unsafe.Pointer(&sgoContext{t: unsafe.Pointer(t)})
 }
 

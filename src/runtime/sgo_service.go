@@ -29,11 +29,12 @@ const (
 	sgoSvcJSEvent                      // beforeIdle; js/wasm only, not an admitted target
 	sgoSvcLabDriver                    // sgoLabDriver (sgoLabCancelAfter); lab binaries only (D170)
 	sgoSvcStdinPump                    // sgoStdinPump (sgoStdinRead); one blocking read of fd 0 per demand (D178)
+	sgoSvcInterrupt                    // sgoInterruptWatch (sgoInterruptArm); cancels the root on SIGINT or SIGTERM (D179)
 	sgoSvcCount
 )
 
 var sgoServiceNames = [sgoSvcCount]string{"none", "gc-enable", "gc-mark-worker", "force-gc", "maxprocs",
-	"finalizer", "cleanup", "signal", "trace-advancer", "trace-cpu", "js-event", "lab-driver", "stdin-pump"}
+	"finalizer", "cleanup", "signal", "trace-advancer", "trace-cpu", "js-event", "lab-driver", "stdin-pump", "interrupt"}
 
 var (
 	// sgoEnforce turns unclassified go-statement creation into a fail-stop defect. Set at start-up of
@@ -84,6 +85,8 @@ func sgoClassify(creator string, fn *funcval) sgoServiceKind {
 		return sgoSvcJSEvent
 	case "runtime.sgoStdinRead":
 		return sgoSvcStdinPump
+	case "runtime.sgoInterruptArm":
+		return sgoSvcInterrupt
 	case "runtime.sgoLabCancelAfter":
 		if sgoLab != nil { // only a lab run has a deadline driver
 			return sgoSvcLabDriver

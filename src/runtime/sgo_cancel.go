@@ -42,6 +42,7 @@ const (
 	sgoCauseUnwind                   // the owner's body unwound through the nursery
 	sgoCauseErrorExit                // the owner left the nursery with an error (D159) by task id
 	sgoCauseDeadline                 // the scope's deadline passed (D162, n.CancelAfter)
+	sgoCauseInterrupt                // SIGINT or SIGTERM, by signal number (D179; virtual root only)
 )
 
 type sgoCause struct {
@@ -82,6 +83,10 @@ func sgoCancelledFrom(s *sgoScope) *sgoScope {
 			first, firstSeq = p, q
 		}
 	}
+	// The virtual root scope of an interrupt is the last ancestor of every scope (D179).
+	if q := sgoInterruptScope.cancelSeq.Load(); q != 0 && (first == nil || q < firstSeq) {
+		first = &sgoInterruptScope
+	}
 	return first
 }
 
@@ -98,6 +103,10 @@ func sgoOuterCancelled(t *sgoTask) *sgoScope {
 		if p == t.scope {
 			break
 		}
+	}
+	// The root task is linked to the virtual root scope itself (D179).
+	if t.scope == nil && sgoInterruptScope.cancelSeq.Load() != 0 {
+		outer = &sgoInterruptScope
 	}
 	return outer
 }
@@ -124,6 +133,9 @@ func sgoScopeCancellation(s *sgoScope) error {
 	if from == s {
 		return sgoCancelError(s.cause, 0)
 	}
+	if from == &sgoInterruptScope { // an interrupt, inherited from the virtual root (D179)
+		return sgoCancelError(from.cause, 0)
+	}
 	if raceenabled {
 		raceacquire(unsafe.Pointer(&from.cancelSeq))
 	}
@@ -137,8 +149,9 @@ func sgoScopeCancellation(s *sgoScope) error {
 
 // sgoCancelErr is a cancellation error (SGO-CANCEL-003); only Checkpoint and Sleep create one.
 type sgoCancelErr struct {
-	msg      string
-	deadline bool // the cancellation is a deadline's (D162; sgo.IsDeadline)
+	msg         string
+	deadline    bool // the cancellation is a deadline's (D162; sgo.IsDeadline)
+	interrupted bool // the cancellation is an interrupt's (D179; sgo.IsInterrupted)
 }
 
 func (e *sgoCancelErr) Error() string { return e.msg }
@@ -157,11 +170,13 @@ func sgoCancelError(c sgoCause, anc uint64) error {
 		msg = "cancelled: error exit by task " + sgoItoa(c.id)
 	case c.kind == sgoCauseDeadline:
 		msg = "cancelled: deadline exceeded"
+	case c.kind == sgoCauseInterrupt:
+		msg = sgoInterruptMessage(c.id)
 
 	default:
 		msg = "cancelled: unwind"
 	}
-	return &sgoCancelErr{msg: msg, deadline: c.kind == sgoCauseDeadline}
+	return &sgoCancelErr{msg: msg, deadline: c.kind == sgoCauseDeadline, interrupted: anc == 0 && c.kind == sgoCauseInterrupt}
 }
 
 func sgoItoa(v uint64) string {

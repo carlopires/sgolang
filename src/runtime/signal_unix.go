@@ -688,6 +688,12 @@ func sighandler(sig uint32, info *siginfo, ctxt unsafe.Pointer, gp *g) {
 		return
 	}
 
+	// S-Go (D179): in a program, SIGINT and SIGTERM cancel the root; a second one ends the process.
+	if (sig == sgoSigInt || sig == sgoSigTerm) && sgoInterruptArmed.Load() {
+		sgoInterruptSignal(sig)
+		return
+	}
+
 	if sig == sigPreempt && debug.asyncpreemptoff == 0 && !delayedSignal {
 		// Might be a preemption signal.
 		doSigPreempt(gp, c)

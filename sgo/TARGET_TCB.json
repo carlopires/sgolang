@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.18.0",
- "allowlist_digest": "87bc475ed775da25cfe0c8ea4aa2c6309d030b7ef36b25dcfc9934bfb52e6203",
+ "allowlist_digest": "e09e27b3cf5b25cd8c6615a39f6aa15db333be3ca30a09f2c143918251879725",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -429,6 +429,13 @@
    "purpose": "lab only: the deadline driver, started by the first n.CancelAfter of a lab run; never in a production binary (D170)"
   },
   {
+   "callee": "sgoInterruptWatch",
+   "file": "src/runtime/sgo_interrupt.go",
+   "line": 55,
+   "status": "active",
+   "purpose": "interrupt watcher: parked until the interrupt thread hands it the first SIGINT or SIGTERM, then cancels the virtual root scope and wakes the cancelled tasks; never in the lab (D179)"
+  },
+  {
    "callee": "sgoStdinPump",
    "file": "src/runtime/sgo_stdin.go",
    "line": 85,
@@ -438,7 +445,7 @@
   {
    "callee": "<func literal>",
    "file": "src/runtime/signal_unix.go",
-   "line": 1076,
+   "line": 1082,
    "status": "dormant",
    "purpose": "ensureSigM, started only by os/signal (denied)"
   },
@@ -459,10 +466,10 @@
  ],
  "summary": {
   "packages": 31,
-  "files": 1086,
-  "files_changed_from_upstream": 71,
+  "files": 1089,
+  "files_changed_from_upstream": 75,
   "services": {
-   "active": 6,
+   "active": 7,
    "dormant": 6,
    "not-built": 1
   }
@@ -4360,7 +4367,7 @@
   },
   {
    "path": "src/runtime/runtime2.go",
-   "sha256": "0b011d3216e529a7d4fc3c96ed124567efc15db1b9e9a5f4f64f205a001017c8",
+   "sha256": "f59d44a1df8c813d2ded1e426aed73c2ced0850c1dbf9e84668c843857b8fd3b",
    "upstream_identical": false
   },
   {
@@ -4480,7 +4487,7 @@
   },
   {
    "path": "src/runtime/sgo_cancel.go",
-   "sha256": "c0737337b9ad3d987fe9eb7ee658b30f9211c9be1c0ae6867b21af7a2373f825",
+   "sha256": "7d4876c642d068e20d25b4a5407fa5a769e8f8c20c6a1a0198a806940cc7940b",
    "upstream_identical": false
   },
   {
@@ -4511,6 +4518,21 @@
   {
    "path": "src/runtime/sgo_group.go",
    "sha256": "dd2e31b737b21ba4d224e06c7d34e44013b67035a6241370524966956087c2b0",
+   "upstream_identical": false
+  },
+  {
+   "path": "src/runtime/sgo_interrupt.go",
+   "sha256": "5beecdef32494ba752371200f41e04c714abf6bd7919be43066c72c62adbedb4",
+   "upstream_identical": false
+  },
+  {
+   "path": "src/runtime/sgo_interrupt_darwin.go",
+   "sha256": "16f01fd1c4c1519d04fccf12a6b9e02b5d9ae66a0770a8880669694eac043a4d",
+   "upstream_identical": false
+  },
+  {
+   "path": "src/runtime/sgo_interrupt_note.go",
+   "sha256": "c9e98d003c53e0b52c71d797b5fabf1ed8fa08440f878b6bee594f0d3d0458a5",
    "upstream_identical": false
   },
   {
@@ -4550,7 +4572,7 @@
   },
   {
    "path": "src/runtime/sgo_ioapi.go",
-   "sha256": "d447d9aad7014d5af57d55f8af9ddee06ab5d4443d844cfeec7e96e9b76e0790",
+   "sha256": "a2f5996c9f02e9199883896f6e78a578e1530ae4249983049c7ee0a5a5a548f0",
    "upstream_identical": false
   },
   {
@@ -4590,7 +4612,7 @@
   },
   {
    "path": "src/runtime/sgo_main.go",
-   "sha256": "c2b3b80d7540a36d947648084a0fbba29e53d8d872da3a9c24084c63f471d4e0",
+   "sha256": "3b45353d3555185317c5f4f36aa937ae41d73498bd1fb5ac39434357d14ad5c0",
    "upstream_identical": false
   },
   {
@@ -4680,7 +4702,7 @@
   },
   {
    "path": "src/runtime/sgo_service.go",
-   "sha256": "f67a4dc4bf2956262bb65992c0ac921592e7650f753af48aa207c84533caccd8",
+   "sha256": "bc5d3cffa8af892e6753cf0418e73b1de13836c16be44054816e4c5150d6033c",
    "upstream_identical": false
   },
   {
@@ -4945,8 +4967,8 @@
   },
   {
    "path": "src/runtime/signal_unix.go",
-   "sha256": "a9dd82ee8b8089ec69dc90cc8a2d3553839db41b3f01807311507c7fc117a3e0",
-   "upstream_identical": true
+   "sha256": "0612784416cd11c6566591f312fb26744ead600ce2b728f5d81d1dc639889fa4",
+   "upstream_identical": false
   },
   {
    "path": "src/runtime/signal_windows.go",
@@ -5865,7 +5887,7 @@
   },
   {
    "path": "src/sgo/sgo.go",
-   "sha256": "1cd8f64afa994de7ad5364c3d07fa9eb07e7731d6fa46fad215a568ce7d330f7",
+   "sha256": "945a2246d0a398edd59c19008827d60c5aa76d6223ce113d8144b176374ea8a5",
    "upstream_identical": false
   },
   {

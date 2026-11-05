@@ -1275,6 +1275,7 @@ const (
 	waitReasonSynctestWaitGroupWait                   // "sync.WaitGroup.Wait (durable)"
 	waitReasonCleanupWait                             // "cleanup wait"
 	waitReasonSGoJoin                                 // "sgo nursery join"
+	waitReasonSGoInterrupt                            // "sgo interrupt watch"
 )
 
 var waitReasonStrings = [...]string{
@@ -1326,6 +1327,7 @@ var waitReasonStrings = [...]string{
 	waitReasonSynctestWaitGroupWait: "sync.WaitGroup.Wait (durable)",
 	waitReasonCleanupWait:           "cleanup wait",
 	waitReasonSGoJoin:               "sgo nursery join",
+	waitReasonSGoInterrupt:          "sgo interrupt watch",
 }
 
 func (w waitReason) String() string {

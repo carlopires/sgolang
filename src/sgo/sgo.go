@@ -52,6 +52,8 @@ func runtime_cancelAfter(scope unsafe.Pointer, ms int) // sgo_deadline.go
 func runtime_deadline(task unsafe.Pointer) (int, bool)
 func runtime_isDeadline(err error) bool
 
+func runtime_isInterrupted(err error) bool
+
 // Spawn admits f as a child of n (SGO-SPAWN-001..004). A refused admission is a
 // SpawnContractViolation that unwinds the caller (SGO-SPAWN-002).
 func (n *Nursery) Spawn(f func(*Context) error) {
@@ -211,6 +213,12 @@ func IsCancelled(err error) bool { return runtime_isCancelled(err) }
 // IsDeadline reports whether err is a cancellation by a deadline (D162): one set with CancelAfter
 // on the scope or on an enclosing one. Such an error is also a cancellation (IsCancelled).
 func IsDeadline(err error) bool { return runtime_isDeadline(err) }
+
+// IsInterrupted reports whether err is a cancellation by an interrupt (D179): the first SIGINT or
+// SIGTERM the program receives cancels the root, so every task and I/O wait observes it and the
+// program unwinds through its nurseries. IsCancelled also recognizes it. A second signal ends the
+// process at once (status 130 for SIGINT, 143 for SIGTERM).
+func IsInterrupted(err error) bool { return runtime_isInterrupted(err) }
 
 // CancelAfter sets a deadline on n (D162, D170): ms milliseconds from now, n is cancelled with a
 // cancellation that IsDeadline recognizes. Every nested scope, task, and I/O wait under n observes

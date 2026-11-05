@@ -36,6 +36,32 @@ func main(root *sgo.Context) error {
 	out, errw := root.Stdout(), root.Stderr()
 	args := root.Args()
 	in := root.Stdin()
+	if len(args) > 0 && args[0] == "intr" {
+		check out.WriteString("ready\\n")
+		nursery (n) {
+			n.Spawn(func(t *sgo.Context) error {
+				_, e := in.ReadLine(64)
+				_ = out.WriteString("reader interrupted=" + strconv.FormatBool(sgo.IsInterrupted(e)) + "\\n")
+				return e
+			})
+			n.Spawn(func(t *sgo.Context) error {
+				e := t.Sleep(60000)
+				_ = out.WriteString("sleeper interrupted=" + strconv.FormatBool(sgo.IsInterrupted(e)) + "\\n")
+				return e
+			})
+		}
+		_ = out.WriteString("nursery closed\\n")
+		return root.Checkpoint()
+	}
+	if len(args) > 0 && args[0] == "stuck" {
+		check out.WriteString("ready\\n")
+		_, e := in.ReadLine(64)
+		check out.WriteString("first interrupted=" + strconv.FormatBool(sgo.IsInterrupted(e)) + "\\n")
+		k := 0
+		for {
+			k++
+		}
+	}
 	if len(args) > 0 && args[0] == "idle" {
 		var err error = nil
 		nursery (n) {
@@ -151,11 +177,42 @@ def main():
         else:
             problems.append("terminal: no script command to allocate a pseudo-terminal")
 
+        # Interrupts (D179): the first SIGINT or SIGTERM cancels the root, so the program unwinds with
+        # status 1; a second one ends it at once with 128+signal. The child starts with default signal
+        # dispositions (a background job of a non-interactive shell would ignore SIGINT).
+        import signal, time
+        def interrupt(mode, sigs):
+            p = subprocess.Popen([prog, mode], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                                 preexec_fn=lambda: (signal.signal(signal.SIGINT, signal.SIG_DFL), signal.signal(signal.SIGTERM, signal.SIG_DFL)))
+            deadline = time.time() + 10
+            while p.poll() is None and time.time() < deadline:
+                line = p.stdout.readline()
+                if line == "ready\n":
+                    break
+            for s in sigs:
+                time.sleep(0.3)
+                p.send_signal(s)
+            try:
+                out, err = p.communicate(timeout=10)
+            except subprocess.TimeoutExpired:
+                p.kill()
+                out, err = p.communicate()
+                return -1, out, err
+            return p.returncode, out, err
+        for sig, name, status in [(signal.SIGINT, "SIGINT", 130), (signal.SIGTERM, "SIGTERM", 143)]:
+            code, out, err = interrupt("intr", [sig])
+            want = ["reader interrupted=true", "sleeper interrupted=true", "nursery closed"]
+            if code != 1 or sorted(out.split()) != sorted(" ".join(want).split()) or "interrupted (%s)" % name not in err:
+                problems.append("interrupt %s: exit %d, stdout %r, stderr %r" % (name, code, out, err[-300:]))
+            code, out, err = interrupt("stuck", [sig, sig])
+            if code != status or out != "first interrupted=true\n":
+                problems.append("second %s: exit %d (want %d), stdout %r, stderr %r" % (name, code, status, out, err[-300:]))
+
     if problems:
         for p in problems:
             print("test-cli: FAIL", p)
         sys.exit(1)
-    print("test-cli: ok: installed-binary arguments, broken pipe ends quietly, terminal detection and width, idle stdin ends at its deadline, ReadSecret hides the secret, lab stdin replays")
+    print("test-cli: ok: installed-binary arguments, broken pipe ends quietly, terminal detection and width, idle stdin ends at its deadline, ReadSecret hides the secret, lab stdin replays, an interrupt unwinds, a second one ends the process")
 
 
 if __name__ == "__main__":

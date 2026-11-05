@@ -11,7 +11,7 @@ import (
 )
 
 // sgoMembers are the admitted members of package sgo (SGO_SPEC_SUBSET0.md §0.2).
-var sgoMembers = map[string]bool{"Context": true, "Nursery": true, "Writer": true, "NewError": true, "IsCancelled": true, "IsDeadline": true,
+var sgoMembers = map[string]bool{"Context": true, "Nursery": true, "Writer": true, "NewError": true, "IsCancelled": true, "IsDeadline": true, "IsInterrupted": true,
 	"Channel": true, "SendPermit": true, "NewChannel": true, "Ready": true,
 	"Clock": true, "WallClock": true, "Random": true, "Entropy": true, "SimStore": true,
 	"Event": true, "NewEvent": true, "CapacityLimiter": true, "NewCapacityLimiter": true, "Token": true,

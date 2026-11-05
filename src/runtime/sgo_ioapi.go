@@ -14,6 +14,7 @@ type sgoIOError struct {
 	kind, op, msg string
 	progress      int
 	deadline      bool // a Cancelled operation ended by a deadline (D162)
+	interrupted   bool // a Cancelled operation ended by an interrupt (D179)
 }
 
 func (e *sgoIOError) Error() string {
@@ -37,6 +38,7 @@ func sgoIOResult(e *sgoIOErr, op string) error {
 		if c := sgoTaskCancellation(sgoCurrent()); c != nil {
 			r.msg = c.Error()
 			r.deadline = sgoIsDeadline(c)
+			r.interrupted = sgoIsInterrupted(c)
 		}
 	}
 	return r
