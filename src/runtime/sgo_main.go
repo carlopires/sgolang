@@ -51,6 +51,8 @@ func sgoEnterMain() unsafe.Pointer {
 	sgoTestBoot()     // test binaries only: the test selection and its directory (sgo_test_boot.go)
 	if sgoLab == nil {
 		sgoInterruptArm() // SIGINT and SIGTERM cancel the root (D179)
+	} else {
+		sgoLabArmInterrupts(sgoLab, t) // interrupts injected at virtual times (D179)
 	}
 	return unsafe.Pointer(&sgoContext{t: unsafe.Pointer(t)})
 }

@@ -110,11 +110,7 @@ func sgo_isDeadline(err error) bool { return err != nil && sgoIsDeadline(err) }
 // sgoLabCancelAfter is n.CancelAfter(ms) in the lab: the deadline is a virtual timer of scope s,
 // replacing an earlier one only if it is earlier (D165).
 func sgoLabCancelAfter(l *sgoLabState, s *sgoScope, t *sgoTask, ms int64) {
-	if l.driver == nil {
-		d := &sgoTask{labID: -1}
-		l.driver = d
-		go sgoLabDriver(l, d)
-	}
+	l.ensureDriver()
 	l.reserve()
 	if cap(l.pending) < l.deadlines+1 { // no runtime lock held: only the baton holder runs here
 		p := make([]*sgoScope, len(l.pending), 2*l.deadlines+4)
@@ -141,6 +137,42 @@ func sgoLabCancelAfter(l *sgoLabState, s *sgoScope, t *sgoTask, ms int64) {
 	l.nextTmr++
 	l.deadlines++
 	unlock(&l.lock)
+}
+
+// ensureDriver starts the deadline driver of the run on first use. Only the baton holder calls it.
+func (l *sgoLabState) ensureDriver() {
+	if l.driver == nil {
+		d := &sgoTask{labID: -1}
+		l.driver = d
+		go sgoLabDriver(l, d)
+	}
+}
+
+// sgoLabInterruptAt holds the virtual times of the interrupts the lab manifest injects (D179).
+var (
+	sgoLabInterruptAt [2]int64
+	sgoLabInterruptN  int
+)
+
+// sgoLabArmInterrupts adds a virtual timer for each injected interrupt. The driver delivers them
+// as production does: the first cancels the virtual root scope, the second ends the run with
+// status 130. The root calls it once, holding the baton, before main.
+func sgoLabArmInterrupts(l *sgoLabState, root *sgoTask) {
+	if sgoLabInterruptN == 0 {
+		return
+	}
+	l.ensureDriver()
+	for i := 0; i < sgoLabInterruptN; i++ {
+		l.reserve()
+		lock(&l.lock)
+		if cap(l.timers) == len(l.timers) {
+			throw("sgo: lab timer capacity not reserved")
+		}
+		l.timers = append(l.timers, sgoLabTimer{deadline: sgoLabInterruptAt[i], id: l.nextTmr, t: root, scope: &sgoInterruptScope}) // lock-alloc: ok (capacity reserved)
+		l.nextTmr++
+		l.deadlines++
+		unlock(&l.lock)
+	}
 }
 
 // dropDeadline removes scope s's deadline timer and any pending cancellation of s, with l.lock
@@ -196,7 +228,20 @@ func sgoLabDriver(l *sgoLabState, d *sgoTask) {
 			l.pending[len(l.pending)-1] = nil
 			l.pending = l.pending[:len(l.pending)-1]
 			unlock(&l.lock)
-			sgoCancel(s, sgoCause{kind: sgoCauseDeadline})
+			if s == &sgoInterruptScope { // an injected interrupt (D179)
+				l.interrupts++
+				if l.interrupts == 1 {
+					sgoInterruptPublish(sgoSigInt)
+				} else {
+					lock(&l.lock)
+					l.finish(128+sgoSigInt, "Interrupted")
+					unlock(&l.lock)
+					l.stop()
+					return
+				}
+			} else {
+				sgoCancel(s, sgoCause{kind: sgoCauseDeadline})
+			}
 			lock(&l.lock)
 		}
 		if l.finished {

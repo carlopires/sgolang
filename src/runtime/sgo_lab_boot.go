@@ -85,6 +85,12 @@ func sgoLabBoot() {
 			sgoLabNetLine(val)
 		case "stdin":
 			sgoLabStdin += sgoLabUnhex(val)
+		case "interrupt": // an injected interrupt at a virtual time (D179)
+			if sgoLabInterruptN == len(sgoLabInterruptAt) {
+				sgoDefect("lab manifest: more than two interrupts")
+			}
+			sgoLabInterruptAt[sgoLabInterruptN] = int64(sgoLabAtoi(val))
+			sgoLabInterruptN++
 		case "":
 		default:
 			sgoDefect("lab manifest: unknown key " + key)

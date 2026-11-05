@@ -64,7 +64,7 @@ SERVICES = {
     ("updateMaxProcsGoroutine", "src/runtime/proc.go"): ("active", "scheduler: GOMAXPROCS updates from CPU limits"),
     ("sgoStdinPump", "src/runtime/sgo_stdin.go"): ("active", "stdin: one blocking read of fd 0 per reader demand, started by a read of root.Stdin() that finds nothing buffered; never in the lab (D178)"),
     ("sgoInterruptWatch", "src/runtime/sgo_interrupt.go"): ("active", "interrupt watcher: parked until the interrupt thread hands it the first SIGINT or SIGTERM, then cancels the virtual root scope and wakes the cancelled tasks; never in the lab (D179)"),
-    ("sgoLabDriver", "src/runtime/sgo_deadline.go"): ("dormant", "lab only: the deadline driver, started by the first n.CancelAfter of a lab run; never in a production binary (D170)"),
+    ("sgoLabDriver", "src/runtime/sgo_deadline.go"): ("dormant", "lab only: the deadline driver, started by the first n.CancelAfter of a lab run or by an injected interrupt (-interrupt); never in a production binary (D170, D179)"),
     ("runFinalizers", "src/runtime/mfinal.go"): ("dormant", "started only by SetFinalizer; unreachable from subset 0 (verify in W02)"),
     ("runCleanups", "src/runtime/mcleanup.go"): ("dormant", "started only by AddCleanup; unreachable from subset 0 (verify in W02)"),
     ("<func literal>", "src/runtime/signal_unix.go"): ("dormant", "ensureSigM, started only by os/signal (denied)"),

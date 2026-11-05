@@ -376,6 +376,7 @@
       "epoch",
       "trace",
       "stdin",
+      "interrupt",
       "expect",
       "save",
       "timeout"

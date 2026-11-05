@@ -27,7 +27,7 @@ const (
 	sgoSvcTraceAdvancer                // (*traceAdvancerState).start; dormant (runtime/trace denied)
 	sgoSvcTraceCPU                     // traceStartReadCPU; dormant (runtime/trace denied)
 	sgoSvcJSEvent                      // beforeIdle; js/wasm only, not an admitted target
-	sgoSvcLabDriver                    // sgoLabDriver (sgoLabCancelAfter); lab binaries only (D170)
+	sgoSvcLabDriver                    // sgoLabDriver ((*sgoLabState).ensureDriver); lab binaries only (D170, D179)
 	sgoSvcStdinPump                    // sgoStdinPump (sgoStdinRead); one blocking read of fd 0 per demand (D178)
 	sgoSvcInterrupt                    // sgoInterruptWatch (sgoInterruptArm); cancels the root on SIGINT or SIGTERM (D179)
 	sgoSvcCount
@@ -87,7 +87,7 @@ func sgoClassify(creator string, fn *funcval) sgoServiceKind {
 		return sgoSvcStdinPump
 	case "runtime.sgoInterruptArm":
 		return sgoSvcInterrupt
-	case "runtime.sgoLabCancelAfter":
+	case "runtime.(*sgoLabState).ensureDriver":
 		if sgoLab != nil { // only a lab run has a deadline driver
 			return sgoSvcLabDriver
 		}

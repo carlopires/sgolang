@@ -1181,7 +1181,7 @@
         "SGO-LAB-006",
         "SGO-LAB-007"
       ],
-      "normative_text_digest": "deb5e7cbe3eb94507355cf2a117633e350eb8e942e936027d3c95ee1854a8b61",
+      "normative_text_digest": "88beb11382a8a511ee9009734b139830c08306cb9edd39b5903cbdaa34f3df0a",
       "admitted_in": [
         "0.7.0"
       ],
@@ -1205,7 +1205,7 @@
         "SGO-LAB-004": "09015a09199440e44854f5fdc2de85cbbde08a044757714255104f4b1c6575a4",
         "SGO-LAB-005": "1bcc0e2f98d0b55163d0d09596e80a31a083c7d64e2a5800d16390cbb1510565",
         "SGO-LAB-006": "7d97996148c73681e69088d25bb7619f4f4f4fc6eb26ceff76b4e014310070c2",
-        "SGO-LAB-007": "cbe38e12c4e73dcccd914ca1b9c50a991b4bf2654e7d69414091cb8666ca5bb0"
+        "SGO-LAB-007": "b0019e2f4079fc11adb51eaaa5ce2cf3fb15b5a444faf52af3b71a6140ba939e"
       },
       "clause_status": {
         "SGO-LAB-001": "superseded",
@@ -1831,5 +1831,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "14dbed171c33ca307e19e39d4b7dbaa8d1e096ae8915f4420da4ce328449b2db"
+  "rows_digest": "5d4a41839956e140a06b904f3c52e550adf4d5138e9cb707b56f3a5e9ef59d8b"
 }

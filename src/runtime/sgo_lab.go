@@ -73,9 +73,10 @@ type sgoLabState struct {
 	// Deadlines (sgo_deadline.go): nurseries whose deadline fired at the last advance, cancelled by
 	// the driver, a goroutine that is not a task and takes the baton for it; and the number of
 	// deadline timers, so pending's capacity is reserved before l.lock is taken.
-	pending   []*sgoScope
-	driver    *sgoTask
-	deadlines int
+	pending    []*sgoScope
+	driver     *sgoTask
+	deadlines  int
+	interrupts int // injected interrupts delivered (D179)
 }
 
 // sgoLab is nil unless the lab is enabled: only lab binaries enable it (D41), and the runtime's

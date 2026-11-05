@@ -43,6 +43,7 @@ type labFlags struct {
 	args         []string
 	progArgs     []string // the program's arguments, after "--" (D178)
 	stdin        string   // the run's standard input, from -stdin FILE (D178)
+	interrupt    []int64  // virtual times of injected interrupts, from -interrupt MS[,MS] (D179)
 	haveProgArgs bool
 }
 
@@ -118,6 +119,18 @@ func parseLabFlags(cmd string, args []string) (*labFlags, error) {
 				return nil, usage("cannot read -stdin file %s", val)
 			}
 			f.stdin = string(data)
+		case name == "interrupt" && cmd != "replay":
+			f.interrupt = nil
+			for _, part := range strings.Split(val, ",") {
+				v, perr := strconv.ParseInt(part, 10, 64)
+				if perr != nil || v < 0 || (len(f.interrupt) > 0 && v < f.interrupt[len(f.interrupt)-1]) {
+					return nil, usage("-interrupt must be one or two non-decreasing virtual times in milliseconds, not %q (D179)", val)
+				}
+				f.interrupt = append(f.interrupt, v)
+			}
+			if len(f.interrupt) > 2 {
+				return nil, usage("-interrupt takes at most two times: the second signal ends the run (D179)")
+			}
 		case name == "expect" && cmd == "sweep":
 			f.expect = val
 		case name == "save" && cmd == "sweep":
@@ -165,9 +178,10 @@ type labManifest struct {
 	Quota   int64    `json:"quota"`
 	Epoch   int64    `json:"epoch"`
 	Replay  bool     `json:"replay,omitempty"`
-	Net     []string `json:"net,omitempty"`   // the lab network table, from the package's lab.net (D146)
-	Args    []string `json:"args,omitempty"`  // the program's command-line arguments (D178)
-	Stdin   string   `json:"stdin,omitempty"` // the program's standard input (D178)
+	Net     []string `json:"net,omitempty"`       // the lab network table, from the package's lab.net (D146)
+	Args    []string `json:"args,omitempty"`      // the program's command-line arguments (D178)
+	Stdin   string   `json:"stdin,omitempty"`     // the program's standard input (D178)
+	Intr    []int64  `json:"interrupt,omitempty"` // virtual times of injected interrupts (D179)
 	Picks   []int    `json:"-"`
 	program string   // the binary
 }
@@ -207,6 +221,9 @@ func labExec(m *labManifest, timeout time.Duration, stdout, stderr io.Writer) (*
 		n := min(len(in), 4096)
 		fmt.Fprintf(&man, "stdin %x\n", in[:n])
 		in = in[n:]
+	}
+	for _, ms := range m.Intr {
+		fmt.Fprintf(&man, "interrupt %d\n", ms)
 	}
 	if m.Replay {
 		s := make([]string, len(m.Picks))

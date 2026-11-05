@@ -53,6 +53,11 @@ func main(root *sgo.Context) error {
 		_ = out.WriteString("nursery closed\\n")
 		return root.Checkpoint()
 	}
+	if len(args) > 0 && args[0] == "wait" {
+		e := root.Sleep(60000)
+		check out.WriteString("wait interrupted=" + strconv.FormatBool(sgo.IsInterrupted(e)) + "\\n")
+		return e
+	}
 	if len(args) > 0 && args[0] == "stuck" {
 		check out.WriteString("ready\\n")
 		_, e := in.ReadLine(64)
@@ -177,6 +182,15 @@ def main():
         else:
             problems.append("terminal: no script command to allocate a pseudo-terminal")
 
+        # Lab interrupts (D179): -interrupt injects them at virtual times; the trace replays them.
+        for times, status in [("2000", 1), ("2000,2000", 130)]:
+            trace = os.path.join(tmp, "i.jsonl")
+            r = subprocess.run([sgo, "lab", "run", "-interrupt", times, "-trace", trace, ".", "--", "wait"], cwd=tmp, capture_output=True, text=True, timeout=120)
+            r2 = subprocess.run([sgo, "lab", "replay", trace, "."], cwd=tmp, capture_output=True, text=True, timeout=120)
+            want = "wait interrupted=true\n" if status == 1 else ""
+            if r.returncode != status or r.stdout != want or r2.returncode != status or r2.stdout != want:
+                problems.append("lab -interrupt %s: run %d %r, replay %d %r %r" % (times, r.returncode, r.stdout, r2.returncode, r2.stdout, r2.stderr[-200:]))
+
         # Interrupts (D179): the first SIGINT or SIGTERM cancels the root, so the program unwinds with
         # status 1; a second one ends it at once with 128+signal. The child starts with default signal
         # dispositions (a background job of a non-interactive shell would ignore SIGINT).
@@ -212,7 +226,7 @@ def main():
         for p in problems:
             print("test-cli: FAIL", p)
         sys.exit(1)
-    print("test-cli: ok: installed-binary arguments, broken pipe ends quietly, terminal detection and width, idle stdin ends at its deadline, ReadSecret hides the secret, lab stdin replays, an interrupt unwinds, a second one ends the process")
+    print("test-cli: ok: installed-binary arguments, broken pipe ends quietly, terminal detection and width, idle stdin ends at its deadline, ReadSecret hides the secret, lab stdin replays, an interrupt unwinds, a second one ends the process, lab interrupts replay")
 
 
 if __name__ == "__main__":
