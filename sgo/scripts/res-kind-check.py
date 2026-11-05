@@ -10,7 +10,9 @@ builtinHandles in src/sgo/task.go, and a resource registered with runtime_resOwn
 compiler's resource kinds are those sgoResKind (types2/sgo_resflow.go) names. This check requires
 that every compiler resource kind is in builtinHandles or registered through runtime_resOwn in
 package sgo, and that builtinHandles names only compiler resource kinds: a kind added to the
-compiler but not to the list would silently stay in the child.
+compiler but not to the list would silently stay in the child. It also requires that the lists of
+built-in resource types in SGO-RES-001 and SGO-RES-002 (sgo/spec/SPEC-RES.md) name exactly the
+types in builtinHandles, so the specification cannot drift from the runtime (W25 review P3).
 
   res-kind-check.py              check the sources
   res-kind-check.py --selftest   show that a list missing a kind, or naming a non-resource, fails
@@ -22,6 +24,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 RESFLOW = "src/cmd/compile/internal/types2/sgo_resflow.go"
 TASK = "src/sgo/task.go"
 SGODIR = "src/sgo"
+SPEC = "sgo/spec/SPEC-RES.md"
+# Where each clause lists the built-in resource types: the text before the list's parenthesis.
+SPEC_LISTS = {"SGO-RES-001": "value of a built-in resource type (",
+              "SGO-RES-002": "inside a built-in resource's scope ("}
 
 
 def read(rel):
@@ -43,6 +49,21 @@ def builtin_list(src):
     return set(re.findall(r'\(\*([A-Za-z]+)\)\(nil\)', m.group(1)))
 
 
+def clause_lists(spec):
+    """The built-in resource types each clause of SPEC_LISTS names, by clause."""
+    out = {}
+    for cid, lead in SPEC_LISTS.items():
+        m = re.search(r'\n### ' + cid + r' .*?(?=\n### |\Z)', spec, re.S)
+        if not m:
+            raise SystemExit(f"res-kind-check: cannot find {cid} in {SPEC}")
+        i = m.group(0).find(lead)
+        if i < 0:
+            raise SystemExit(f"res-kind-check: cannot find the built-in type list of {cid} in {SPEC}")
+        body = m.group(0)[i + len(lead):]
+        out[cid] = set(re.findall(r'`\*sgo\.(\w+)`', body[:body.index(')')]))
+    return out
+
+
 def registered(srcs):
     """Types whose values package sgo registers with runtime_resOwn under their own pointer: the
     function returning *T that registers the value it returns, runtime_resOwn(..., unsafe.Pointer(v))."""
@@ -55,8 +76,12 @@ def registered(srcs):
     return out
 
 
-def problems(kinds, builtin, user):
+def problems(kinds, builtin, user, lists=None):
     errs = []
+    for cid, names in sorted((lists or {}).items()):
+        if names != builtin:
+            errs.append(f"{cid} ({SPEC}) lists built-in resource types {sorted(names)}, but builtinHandles "
+                        f"has {sorted(builtin)}")
     for k in sorted(kinds - builtin - user):
         errs.append(f"resource kind {k} (sgoResKind) is neither in builtinHandles ({TASK}) nor "
                     "registered with runtime_resOwn: a result holding it would not move into the nursery")
@@ -70,17 +95,19 @@ def problems(kinds, builtin, user):
 def sources():
     srcs = [read(os.path.join(SGODIR, f)) for f in sorted(os.listdir(os.path.join(ROOT, SGODIR)))
             if f.endswith(".go") and not f.endswith("_test.go")]
-    return compiler_kinds(read(RESFLOW)), builtin_list(read(TASK)), registered(srcs)
+    return compiler_kinds(read(RESFLOW)), builtin_list(read(TASK)), registered(srcs), clause_lists(read(SPEC))
 
 
 def selftest():
-    kinds, builtin, user = sources()
-    cases = {"Timer removed": (kinds, builtin - {"Timer"}, user),
-             "a new kind": (kinds | {"Pipe"}, builtin, user),
-             "a non-resource listed": (kinds, builtin | {"Writer"}, user),
-             "Request not registered": (kinds, builtin, user - {"Request"})}
+    kinds, builtin, user, lists = sources()
+    short = dict(lists, **{"SGO-RES-002": lists["SGO-RES-002"] - {"Timer"}})
+    cases = {"Timer removed": (kinds, builtin - {"Timer"}, user, lists),
+             "a new kind": (kinds | {"Pipe"}, builtin, user, lists),
+             "a non-resource listed": (kinds, builtin | {"Writer"}, user, lists),
+             "Request not registered": (kinds, builtin, user - {"Request"}, lists),
+             "a clause list without Timer": (kinds, builtin, user, short)}
     missed = [name for name, c in cases.items() if not problems(*c)]
-    if problems(kinds, builtin, user) or missed:
+    if problems(kinds, builtin, user, lists) or missed:
         print(f"res-kind-check: selftest FAIL (missed: {missed})", file=sys.stderr)
         return 1
     print(f"res-kind-check: selftest ok: {len(cases)} mutants rejected")
@@ -91,8 +118,8 @@ def main():
     sgoargs.check(flags={"--selftest": "bool"})
     if "--selftest" in sys.argv[1:]:
         return selftest()
-    kinds, builtin, user = sources()
-    errs = problems(kinds, builtin, user)
+    kinds, builtin, user, lists = sources()
+    errs = problems(kinds, builtin, user, lists)
     for e in errs:
         print("res-kind-check:", e, file=sys.stderr)
     if errs:

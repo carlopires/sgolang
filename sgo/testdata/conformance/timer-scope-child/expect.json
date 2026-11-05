@@ -2,6 +2,7 @@
  "kind": "run",
  "clauses": [
   "SGO-WAIT-004",
+  "SGO-RES-002",
   "SGO-RES-003"
  ],
  "exit": 0,

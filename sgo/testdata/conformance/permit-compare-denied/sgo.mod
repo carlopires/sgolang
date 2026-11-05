@@ -1,3 +1,3 @@
 module example.com/permit-compare-denied
 
-sgo 0.20.0
+sgo 0.20.1

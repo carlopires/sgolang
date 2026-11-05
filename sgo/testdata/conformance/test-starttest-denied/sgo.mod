@@ -1,3 +1,3 @@
 module example.com/test-starttest-denied
 
-sgo 0.20.0
+sgo 0.20.1

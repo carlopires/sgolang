@@ -6,7 +6,7 @@ introduces the language.
 
 ## Current status
 
-Spec **0.20.0** (current version: [`spec/VERSION`](spec/VERSION)). The `sgo` toolchain (`build`,
+Spec **0.20.1** (current version: [`spec/VERSION`](spec/VERSION)). The `sgo` toolchain (`build`,
 `run`, `check`, `test`, `fmt`, `mod`, `lab`) is implemented and tested on darwin/arm64,
 linux/amd64, and linux/arm64. Work packages W00–W25 are complete (W11, fixed virtual stacks, was
 investigated and not adopted). Each spec version is frozen, every clause names its conformance

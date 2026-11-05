@@ -1,3 +1,3 @@
 module example.com/call-accept-escape-iteration
 
-sgo 0.20.0
+sgo 0.20.1

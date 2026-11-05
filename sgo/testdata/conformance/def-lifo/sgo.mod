@@ -1,3 +1,3 @@
 module example.com/def-lifo
 
-sgo 0.20.0
+sgo 0.20.1

@@ -2,6 +2,15 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.20.1 — 2026-11-07
+
+Review fix (W25 review P3). Every program valid under 0.20.0 keeps its meaning: the text now names a type the compiler and runtime already treated as a built-in resource.
+
+Amended:
+
+- SGO-RES-001 v4 — the list of built-in resource types names `*sgo.Timer` (SGO-WAIT-004 already made a timer a resource of the scope it was made in).
+- SGO-RES-002 v5 — a timer is shared within its scope like the other built-in resources (fixture `timer-scope-child`); `res-kind-check` now requires both lists to name exactly the runtime's built-in handle types.
+
 ## 0.20.0 — 2026-11-07
 
 `float64` (W25; D185, D187–D194). The arithmetic is IEEE 754 binary64, rounded once per operation and never fused, so a program computes the same bits on every target; one NaN is observable; conversions to integers are checked. Not every 0.19 program keeps its meaning: `std/math`'s `Abs`, `Max`, `Min`, and `Pow` now take `float64`, and the integer versions are `IntAbs`, `IntMax`, `IntMin`, `IntPow` (D191). Every other 0.19 program keeps its meaning.

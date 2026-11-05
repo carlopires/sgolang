@@ -1,3 +1,3 @@
 module example.com/comp-map-range-mutate
 
-sgo 0.20.0
+sgo 0.20.1

@@ -1,3 +1,3 @@
 module example.com/float-arith
 
-sgo 0.20.0
+sgo 0.20.1

@@ -1,4 +1,4 @@
 module example.com/mod-sum-missing
 
-sgo 0.20.0
+sgo 0.20.1
 require example.com/lib v1.0.0

@@ -1,3 +1,3 @@
 module example.com/chan-len-denied
 
-sgo 0.20.0
+sgo 0.20.1
