@@ -1016,7 +1016,7 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 
 **Why.** The marker keeps the analysis type-based: code that never touches resources (every `any`, `error`, and unmarked interface) keeps exactly today's rules, the checker reuses the existing flow pass instead of inferring provenance per value across packages, and a reader of the code sees from a declaration whether a value may hold a connection. Cost: one embedded line in interfaces that carry I/O, usually inherited from `sgo.Reader`/`sgo.Writer`. Amends SGO-RES-003 (Z1 holds for non-resource interfaces) and SGO-IFACE at 0.18.0; new draft clause for resource interfaces.
 
-## D177 — `Listen` and `Dial` take the scope that owns the handle · PROPOSED
+## D177 — `Listen` and `Dial` take the scope that owns the handle · APPROVED 2026-11-06 (user)
 
 **Question.** `root.Listen(addr)` and `root.Dial(addr)` take no scope: the handle belongs to the scope of the calling task, so a function that listens for a nursery's lifetime must close the listener by hand after the nursery (`check l.Close()` in `sgo/examples/httpserver`). `l.MoveTo(n)` cannot hand it to the nursery, because ownership only moves outward (D158). Every other acquisition already names its scope: `l.Accept(s)`, `d.Dial(s, addr)`, `dir.Open(s, name)`, `n.NewTimer`.
 
@@ -1024,7 +1024,7 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 
 **Why.** One rule for every acquisition: the code shows who owns a handle where it is made, and a lifetime is a block, not a call the reader must find. Cost: one more argument at each call; a mechanical migration.
 
-## D178 — The process interface of a CLI program · PROPOSED
+## D178 — The process interface of a CLI program · APPROVED 2026-11-06 (user)
 
 **Question.** CLI programs must be first-class (user, 2026-11-06), and the planned acceptance is a port of the functionality of cobra/pflag and of `undisk-cli` (commands defined at run time from the program's state). SGO-PROC-004 gives a program no arguments, no stdin, and no stderr; a write to a closed pipe kills it with SIGPIPE.
 
@@ -1036,7 +1036,7 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 
 SGO-PROC-003 and SGO-PROC-004 get new versions.
 
-## D179 — Interrupts cancel the root · PROPOSED
+## D179 — Interrupts cancel the root · APPROVED 2026-11-06 (user)
 
 **Question.** OS signals are denied (SGO-PROC-001): SIGINT or SIGTERM ends a program outside S-Go's outcomes, with no release of its scopes.
 
@@ -1044,29 +1044,29 @@ SGO-PROC-003 and SGO-PROC-004 get new versions.
 
 **Why.** Graceful shutdown needs no new construct: it is the cancellation every S-Go program already handles, with the release order the scopes already guarantee.
 
-## D180 — Environment variables by grant · PROPOSED
+## D180 — Environment variables by grant · APPROVED 2026-11-06 (user)
 
 **Question.** Environment variables are ignored (SGO-PROC-004), but CLI conventions use them (`NO_COLOR`, `PAGER`, application settings such as `UNDISK_PROFILE`).
 
 **Recommendation.** `grant env NAME` and `grant env PREFIX_*` in `sgo.mod`; `root.Getenv(name) (string, bool)` returns only granted names (an ungranted name is `MissingCapability`, so the gap is found in testing, not silently empty). The grant list is part of the build identity like every grant. `HOME` and the `XDG_*` variables are not needed for per-user files (D182). In the lab, the environment comes from the scenario and is recorded.
 
-## D181 — Paths named on the command line · PROPOSED
+## D181 — Paths named on the command line · APPROVED 2026-11-06 (user)
 
 **Question.** `tool convert ./in.csv ./out.json` must open paths chosen when it runs, but every directory grant is fixed in `sgo.mod` (default deny).
 
 **Recommendation** (user, 2026-11-06: option b). `grant path args ro` (or `rw`) in `sgo.mod` lets the program open exactly the paths the user typed as arguments: `root.ArgPath(i)` (or by value) returns a `*sgo.Dir` or file handle confined to that path. A file argument gives the file; a directory argument gives a `Dir` confined to it, as a `grant dir` would; `..` and symlinks out are refused as for every `Dir`. The program cannot reach a path it builds from strings, so the user's own command line is the authority. `rw` allows creating a path the user named (an output file). Optionally `grant dir cwd ro|rw` gives a `Dir` for the working directory, for tools that walk it (`tool lint` with no arguments).
 
-## D182 — Per-user application directories · PROPOSED
+## D182 — Per-user application directories · APPROVED 2026-11-06 (user)
 
 **Question.** A user tool keeps its configuration, state, and daemon socket in per-user directories located through `HOME` and `XDG_*` (`undisk-go-cli/userpaths`), which `sgo.mod` cannot name.
 
 **Recommendation.** `grant dir config rw`, `grant dir state rw`, `grant dir cache rw`, and `grant connect unix:runtime/NAME.sock` / `grant listen unix:runtime/NAME.sock`. The runtime resolves each to the application's own directory under the platform convention (Linux: `$XDG_CONFIG_HOME/APP`, `$XDG_STATE_HOME/APP`, `$XDG_CACHE_HOME/APP`, `$XDG_RUNTIME_DIR/APP`, with the XDG defaults; macOS: `~/Library/Application Support/APP`, `~/Library/Caches/APP`, and a per-user runtime directory), where `APP` is the last element of the module path or an `app NAME` line in `sgo.mod`. `root.Dir("config")` gives a `Dir` confined there, created on first use with mode 0700. The program never sees `HOME` and cannot reach another application's directories.
 
-## D183 — Standard library for CLI programs · PROPOSED
+## D183 — Standard library for CLI programs · APPROVED 2026-11-06 (user)
 
 **Recommendation.** `std/fmt`: `Sprintf`, `Fprintf(io.Writer, ...)`, and `Errorf` (with `%w` wrapping through `std/errors`) for the verbs `%s %q %d %x %t %v %%`, widths and `-` alignment, on admitted types, by type switch (no reflection); `std/strconv`: `ParseFloat`, `FormatFloat`; `std/time`: `ParseDuration`, `Duration.String` (values only, no clock). Each with its SGO-STD clause and the differential tests against Go's packages (D125).
 
-## D184 — A CLI library with commands defined at run time · PROPOSED
+## D184 — A CLI library with commands defined at run time · APPROVED 2026-11-06 (user)
 
 **Question.** The planned use is cobra's functionality the S-Go way, including the `undisk-cli` pattern: the command tree depends on the program's state (logged in or not, roles, a profile fetched from a daemon).
 
@@ -1117,3 +1117,5 @@ SGO-PROC-003 and SGO-PROC-004 get new versions.
 - 2026-11-06: implementer recorded D174 (the shape of D167's request/reply calls) under the delegated authority.
 - 2026-11-06: implementer recorded D175 (pools with leases) under the delegated authority.
 - 2026-11-06: user approved D176 option (a) with the opt-in marker only ("I agree ... let's stick with the marker mechanism only"), after rejecting generic functions (b) and the inferred all-interfaces design of `.work/sgo-scoped-interfaces.md`; `any`, `error`, and unmarked interfaces never hold resources.
+
+- 2026-11-06: user approved D177–D184 as recommended ("looks good, approved!"): CLI programs as first-class — scoped `Listen`/`Dial`, the process interface (arguments, stdin, stderr, terminals, broken pipe), interrupts cancel the root, environment by grant, argument paths (option b), per-user application directories, std for CLIs, and a CLI library with run-time commands. Follow-up: W24, spec 0.19.0.
