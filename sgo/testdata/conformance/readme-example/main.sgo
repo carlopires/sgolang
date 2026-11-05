@@ -1,0 +1,17 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+func main(root *sgo.Context) error {
+	nursery (n) {
+		a := sgo.Go(n, func(t *sgo.Context) (int, error) { return 20, nil })
+		b := sgo.Go(n, func(t *sgo.Context) (int, error) { return 22, nil })
+		x := check a.Wait(root)
+		y := check b.Wait(root)
+		check root.Stdout().WriteString("sum: " + strconv.Itoa(x+y) + "\n")
+	} // every task started in n has ended here
+	return nil
+}

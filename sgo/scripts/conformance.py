@@ -174,6 +174,19 @@ def referenced_fixtures():
     return refs
 
 
+def readme_example_errors(cases):
+    """The first ```go block of the top-level README.md must be the readme-example case's main.sgo,
+    byte for byte, so the program the README shows is built and run by every conformance run."""
+    readme = os.path.join(ROOT, "README.md")
+    if "readme-example" not in cases or not os.path.exists(readme):
+        return ["readme-example: the case and README.md must both exist"]
+    m = re.search(r"```go\n(.*?)```", open(readme).read(), re.S)
+    src = open(os.path.join(cases["readme-example"], "main.sgo")).read()
+    if not m or m.group(1) != src:
+        return ["readme-example: main.sgo differs from the ```go block of README.md; keep them identical"]
+    return []
+
+
 def validate():
     reg = json.load(open(REGISTRY))
     clauses = {c for r in reg["rows"] for c in r["clause_ids"]}
@@ -184,6 +197,7 @@ def validate():
     for fx, files in sorted(referenced_fixtures().items()):
         if fx not in cases:
             errs.append(f"fixture:{fx} named in {', '.join(sorted(files))} has no case directory")
+    errs += readme_example_errors(cases)
     if errs:
         for e in errs:
             print(f"conformance: {e}", file=sys.stderr)

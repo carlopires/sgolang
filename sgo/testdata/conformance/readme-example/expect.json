@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-NUR-001",
+  "SGO-SPAWN-006"
+ ],
+ "exit": 0,
+ "stdout": "sum: 42\n",
+ "note": "The example in the top-level README.md, byte for byte; keep the two identical."
+}
