@@ -38,7 +38,8 @@ func runtime_stdinIsTerminal() bool                                // sgo_stdin.
 func runtime_isBrokenPipe(err error) bool
 func runtime_isTerminal(fd int) bool
 func runtime_terminalWidth(fd int) int
-func runtime_args() []string // sgo_proc.go
+func runtime_args() []string                          // sgo_proc.go
+func runtime_getenv(name string) (string, bool, bool) // sgo_proc.go
 func runtime_violation(msg string)
 func runtime_fail(kind, msg string) // unwinds with a checked failure of the kind (SGO-DEF-003)
 
@@ -113,6 +114,23 @@ func (c *Context) Stdout() *Writer {
 		runtime_fail("MissingCapability", "Stdout called on a context that does not hold the stdout capability")
 	}
 	return &stdout
+}
+
+// Getenv returns the value of the environment variable name and whether it is set (D180). Only
+// names granted in sgo.mod ("grant env NAME", or "grant env PREFIX*" for a prefix) can be read; any
+// other name is refused with MissingCapability, so a missing grant shows in testing rather than as
+// a silently empty value. Only the root context holds the environment; a child receives what the
+// root passes it. In the lab the environment is the run's (sgo lab -env NAME=VALUE).
+func (c *Context) Getenv(name string) (string, bool) {
+	c.own()
+	if !runtime_isRoot(c.t) {
+		runtime_fail("MissingCapability", "Getenv called on a context that is not the root's: children receive what the root passes them")
+	}
+	v, ok, granted := runtime_getenv(name)
+	if !granted {
+		runtime_fail("MissingCapability", "Getenv: "+name+" is not granted (grant env "+name+" in sgo.mod, D180)")
+	}
+	return v, ok
 }
 
 // Args returns the arguments the program was started with, after the program name: a fresh copy

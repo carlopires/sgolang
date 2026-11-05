@@ -1,0 +1,14 @@
+{
+ "kind": "reject",
+ "clauses": [
+  "SGO-PROC-004"
+ ],
+ "diagnostics": [
+  {
+   "code": "SGO_E_USAGE",
+   "file": "sgo.mod",
+   "at": "grant env"
+  }
+ ],
+ "note": "D180: an environment grant names [A-Z0-9_] (or a prefix followed by *)."
+}

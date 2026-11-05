@@ -25,6 +25,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -44,6 +45,7 @@ type labFlags struct {
 	progArgs     []string // the program's arguments, after "--" (D178)
 	stdin        string   // the run's standard input, from -stdin FILE (D178)
 	interrupt    []int64  // virtual times of injected interrupts, from -interrupt MS[,MS] (D179)
+	env          []string // the run's environment, from -env NAME=VALUE (D180)
 	haveProgArgs bool
 }
 
@@ -119,6 +121,12 @@ func parseLabFlags(cmd string, args []string) (*labFlags, error) {
 				return nil, usage("cannot read -stdin file %s", val)
 			}
 			f.stdin = string(data)
+		case name == "env" && cmd != "replay":
+			k, _, ok := strings.Cut(val, "=")
+			if !ok || !envVar.MatchString(k) {
+				return nil, usage("-env must be NAME=VALUE with NAME of [A-Z0-9_], not %q (D180)", val)
+			}
+			f.env = append(f.env, val)
 		case name == "interrupt" && cmd != "replay":
 			f.interrupt = nil
 			for _, part := range strings.Split(val, ",") {
@@ -182,6 +190,7 @@ type labManifest struct {
 	Args    []string `json:"args,omitempty"`      // the program's command-line arguments (D178)
 	Stdin   string   `json:"stdin,omitempty"`     // the program's standard input (D178)
 	Intr    []int64  `json:"interrupt,omitempty"` // virtual times of injected interrupts (D179)
+	Env     []string `json:"env,omitempty"`       // the program's environment, NAME=VALUE (D180)
 	Picks   []int    `json:"-"`
 	program string   // the binary
 }
@@ -221,6 +230,9 @@ func labExec(m *labManifest, timeout time.Duration, stdout, stderr io.Writer) (*
 		n := min(len(in), 4096)
 		fmt.Fprintf(&man, "stdin %x\n", in[:n])
 		in = in[n:]
+	}
+	for _, e := range m.Env {
+		fmt.Fprintf(&man, "env %x\n", e)
 	}
 	for _, ms := range m.Intr {
 		fmt.Fprintf(&man, "interrupt %d\n", ms)
@@ -415,3 +427,6 @@ func readLabNet(dir string) ([]string, error) {
 	}
 	return out, nil
 }
+
+// envVar is the name of a variable of a lab run's environment (D180).
+var envVar = regexp.MustCompile(`^[A-Z_][A-Z0-9_]{0,63}$`)

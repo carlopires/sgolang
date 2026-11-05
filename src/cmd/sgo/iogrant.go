@@ -18,6 +18,7 @@ import (
 //
 //	grant dir NAME PATH ro|rw
 //	grant dir config|state|cache ro|rw     (a per-user application directory, D182)
+//	grant env NAME | PREFIX*               (an environment variable or prefix, D180)
 //	grant connect IP:PORT | unix:PATH
 //	grant listen IP:PORT | unix:PATH
 //
@@ -26,6 +27,10 @@ import (
 // (-sgoiogrants), and the build ID names its digest (/io=).
 
 var grantName = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,31}$`)
+
+// envName is the form of an environment grant (D180): a portable variable name, or a prefix of one
+// followed by '*'.
+var envName = regexp.MustCompile(`^[A-Z_][A-Z0-9_]{0,63}\*?$`)
 
 // appName is the form of an application name (D182): one path element, portable on every target.
 var appName = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]{0,63}$`)
@@ -112,6 +117,15 @@ func (m *module) parseIOGrant(fields []string, text, at string) (bool, error) {
 			}
 		}
 		m.ioGrants = append(m.ioGrants, "dir "+name+" "+fields[4]+" "+path)
+	case "env":
+		if len(fields) != 3 || !envName.MatchString(fields[2]) {
+			return true, &toolErr{at, "SGO_E_USAGE", fmt.Sprintf("%q: an environment grant is \"grant env NAME\" or \"grant env PREFIX*\", NAME of [A-Z0-9_] not starting with a digit (D180)", text), 2}
+		}
+		line := "env " + fields[2]
+		if slices.Contains(m.ioGrants, line) {
+			return true, &toolErr{at, "SGO_E_USAGE", fmt.Sprintf("%s is granted twice (D180)", line), 2}
+		}
+		m.ioGrants = append(m.ioGrants, line)
 	case "connect", "listen":
 		if len(fields) != 3 {
 			return true, usage(fmt.Sprintf("%q: an endpoint grant is \"grant %s IP:PORT\" or \"grant %s unix:PATH\"", text, fields[1], fields[1]))

@@ -63,3 +63,16 @@ Amendments, applied at the freeze as new clause versions:
 Fixtures: file-appdir-bad-form, file-appdir-path-at, file-app-name-bad, net-appsocket-bad;
 `sgo/scripts/test-cli.py` (creation, mode 0700, persistence, ro not created, no HOME, the XDG
 override on Linux, a socket round trip and its directory).
+
+## D180 — environment variables by grant (for the 0.19.0 freeze)
+
+- **SGO-PROC-004 v2 (environment).** `grant env NAME` or `grant env PREFIX*` in sgo.mod (NAME of
+  `[A-Z0-9_]`, not starting with a digit, at most 64 bytes) lets the root read those variables
+  through `root.Getenv(name) (string, bool)`: the value and whether it is set. Any other name is
+  refused with MissingCapability, so a missing grant shows in testing rather than as an empty
+  value; a child context is refused likewise. The grants are canonical I/O grant lines
+  (`env NAME`), part of the build identity (`/io=`), and the linker accepts only that form.
+  Everything else of SGO-PROC-004 is unchanged: no variable changes the runtime's behavior. In the
+  lab the environment is the run's `-env` entries (SGO-LAB-007).
+
+Fixtures: proc-env-granted, proc-env-ungranted, proc-env-grant-bad.

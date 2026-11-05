@@ -44,7 +44,7 @@ func labSetup(f *labFlags, nargs int, what string) (string, *labManifest, func()
 		cleanup()
 		return "", nil, nil, err
 	}
-	m := &labManifest{Format: labFormat, Build: id, Seed: f.seed, Policy: f.policy, K: f.k, Quota: f.quota, Epoch: f.epoch, Net: net, Args: f.progArgs, Stdin: f.stdin, Intr: f.interrupt, program: exe}
+	m := &labManifest{Format: labFormat, Build: id, Seed: f.seed, Policy: f.policy, K: f.k, Quota: f.quota, Epoch: f.epoch, Net: net, Args: f.progArgs, Stdin: f.stdin, Intr: f.interrupt, Env: f.env, program: exe}
 	return f.args[nargs-1], m, cleanup, nil
 }
 
@@ -135,7 +135,7 @@ func cmdLabReplay(args []string) error {
 	if f.haveProgArgs && !slices.Equal(f.progArgs, rec.Args) {
 		return labErr("SGO_E_LAB_MANIFEST", "the trace was recorded with arguments %q; a replay cannot change them", rec.Args)
 	}
-	m.Args, m.Stdin, m.Intr = rec.Args, rec.Stdin, rec.Intr
+	m.Args, m.Stdin, m.Intr, m.Env = rec.Args, rec.Stdin, rec.Intr, rec.Env
 	picks, err := labPicks(want)
 	if err != nil {
 		return err

@@ -377,6 +377,7 @@
       "trace",
       "stdin",
       "interrupt",
+      "env",
       "expect",
       "save",
       "timeout"

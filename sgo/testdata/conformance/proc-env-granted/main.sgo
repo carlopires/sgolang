@@ -1,0 +1,18 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+// Granted names and prefixes are read from the environment; an unset granted name is not an error
+// (D180, SGO-PROC-004).
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	v, ok := root.Getenv("NO_COLOR")
+	check out.WriteString("NO_COLOR=" + v + " " + strconv.FormatBool(ok) + "\n")
+	p, pok := root.Getenv("APP_PROFILE")
+	check out.WriteString("APP_PROFILE=" + p + " " + strconv.FormatBool(pok) + "\n")
+	_, mok := root.Getenv("APP_MISSING")
+	return out.WriteString("APP_MISSING " + strconv.FormatBool(mok) + "\n")
+}

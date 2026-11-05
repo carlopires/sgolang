@@ -1,0 +1,14 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PROC-004"
+ ],
+ "run_env": {
+  "NO_COLOR": "1",
+  "APP_PROFILE": "work",
+  "OTHER": "x"
+ },
+ "exit": 0,
+ "stdout": "NO_COLOR=1 true\nAPP_PROFILE=work true\nAPP_MISSING false\n",
+ "note": "D180: granted environment variables and prefixes."
+}

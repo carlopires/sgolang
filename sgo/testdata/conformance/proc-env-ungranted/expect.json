@@ -1,0 +1,13 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PROC-004"
+ ],
+ "run_env": {
+  "OTHER": "x"
+ },
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"MissingCapability\",\"message\":\"Getenv: OTHER is not granted (grant env OTHER in sgo.mod, D180)\",\"position\":null,\"task_id\":0,\"scope_id\":null,\"chain\":[]}\n",
+ "note": "D180: an ungranted name is MissingCapability."
+}

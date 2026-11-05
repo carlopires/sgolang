@@ -134,18 +134,18 @@ Denied in subsets 0 to 2 (spec 0.1.0 to 0.3.0, SGO-LAB-001). Spec 0.4.0 admits t
 - **executed_evidence:** `sgo/evidence/w08/README.md`.
 - **supported_execution_configurations:** lab.
 
-### SGO-LAB-007 — Lab standard input and interrupts
+### SGO-LAB-007 — Lab standard input, environment, and interrupts
 - **version:** 1
 - **status:** draft
-- **reference_closure:** SGO-LAB-003, SGO-LAB-004, SGO-LAB-005; D178, D179.
-- **grammar_and_types:** `sgo lab run [-stdin FILE] [-interrupt MS[,MS]] … pkg [-- ARGS]` and `sgo lab sweep [-stdin FILE] [-interrupt MS[,MS]] … pkg [-- ARGS]`; the program reads stdin through `root.Stdin()` (an `*sgo.Input`) and observes an interrupt as the cancellation `sgo.IsInterrupted` recognizes.
+- **reference_closure:** SGO-LAB-003, SGO-LAB-004, SGO-LAB-005; D178, D179, D180.
+- **grammar_and_types:** `sgo lab run [-stdin FILE] [-env NAME=VALUE]… [-interrupt MS[,MS]] … pkg [-- ARGS]` and `sgo lab sweep [-stdin FILE] [-env NAME=VALUE]… [-interrupt MS[,MS]] … pkg [-- ARGS]`; the program reads stdin through `root.Stdin()` (an `*sgo.Input`) and observes an interrupt as the cancellation `sgo.IsInterrupted` recognizes.
 - **preconditions:** FILE is readable by the driver; it is host input, not a grant of the program.
-- **evaluation_and_value_semantics:** The driver reads FILE once and records its text in the manifest; the program's standard input is exactly that text followed by end of input, and without `-stdin` it is empty. Reads return the text in order with no host timing, so a read never waits on the host. Replay takes the text from the trace, never from a file, and a sweep gives every seed the same text. Each `-interrupt` time is a virtual timer of the run, recorded in the manifest, which fires as a deadline does: when no task is ready and virtual time reaches it (SGO-LAB-003). The first cancels the root as a SIGINT does in production; the second ends the run with status 130 and outcome `Interrupted`.
+- **evaluation_and_value_semantics:** The driver reads FILE once and records its text in the manifest; the program's standard input is exactly that text followed by end of input, and without `-stdin` it is empty. Reads return the text in order with no host timing, so a read never waits on the host. Replay takes the text from the trace, never from a file, and a sweep gives every seed the same text. The environment `root.Getenv` reads is exactly the `-env` entries, recorded in the manifest and reused by replay, never the host's; the grants of the build still decide which names may be read. Each `-interrupt` time is a virtual timer of the run, recorded in the manifest, which fires as a deadline does: when no task is ready and virtual time reaches it (SGO-LAB-003). The first cancels the root as a SIGINT does in production; the second ends the run with status 130 and outcome `Interrupted`.
 - **ownership_and_lifecycle:** n/a — the text is part of the run's manifest; it is not a resource of the program.
 - **effect_and_capability_requirements:** n/a — the stdin capability is held by the root context as in production; the lab only replaces its source.
 - **concurrency_and_memory_order:** n/a — the run is one interleaving (SGO-LAB-003).
-- **allowed_nondeterminism:** None: the input and the interrupt times are fixed by the manifest.
-- **failure_and_partial_progress:** An unreadable FILE, or more than two or decreasing `-interrupt` times, is refused before the run (`SGO_E_USAGE`). A replay of a trace whose text differs from a given `-stdin` is refused (`SGO_E_LAB_MANIFEST`).
+- **allowed_nondeterminism:** None: the input, the environment, and the interrupt times are fixed by the manifest.
+- **failure_and_partial_progress:** An unreadable FILE, an `-env` entry that is not NAME=VALUE, or more than two or decreasing `-interrupt` times, is refused before the run (`SGO_E_USAGE`). A replay of a trace whose text differs from a given `-stdin` is refused (`SGO_E_LAB_MANIFEST`).
 - **cancellation_and_cleanup:** n/a — a read of lab input never blocks, so cancellation is observed at the program's next checkpoint.
 - **compile_link_checks:** n/a — no source construct.
 - **runtime_guards:** n/a — the input is supplied by the boot sequence (SGO-LAB-002).

@@ -105,6 +105,8 @@ func sgoIOGrantsInit() {
 				}
 			}
 			sgoNetGrants = append(sgoNetGrants, g)
+		case len(f) == 2 && f[0] == "env": // an environment variable or prefix (D180)
+			sgoEnvGrants = append(sgoEnvGrants, f[1])
 		default:
 			throw("sgo: corrupt I/O grant set")
 		}

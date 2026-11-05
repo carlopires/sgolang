@@ -85,6 +85,8 @@ func sgoLabBoot() {
 			sgoLabNetLine(val)
 		case "stdin":
 			sgoLabStdin += sgoLabUnhex(val)
+		case "env": // NAME=VALUE in hex: the lab run's environment (D180)
+			sgoLabEnv = append(sgoLabEnv, sgoLabUnhex(val))
 		case "interrupt": // an injected interrupt at a virtual time (D179)
 			if sgoLabInterruptN == len(sgoLabInterruptAt) {
 				sgoDefect("lab manifest: more than two interrupts")

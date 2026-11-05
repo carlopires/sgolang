@@ -111,7 +111,8 @@ func sgoSetGrants(ctxt *Link, s string) {
 
 // sgoSetIOGrants handles -sgoiogrants=lines: it sets runtime.sgoIOGrants, the file and network
 // grants (D52, D57). Only the driver's canonical form is accepted: sorted, unique lines
-// "dir NAME ro|rw PATH", "connect IP:PORT|unix:PATH|HOST:PORT", "listen IP:PORT|unix:PATH".
+// "dir NAME ro|rw PATH", "connect IP:PORT|unix:PATH|HOST:PORT", "listen IP:PORT|unix:PATH",
+// "env NAME|PREFIX*".
 func sgoSetIOGrants(ctxt *Link, s string) {
 	lines := strings.Split(s, "\n")
 	for i, l := range lines {
@@ -125,6 +126,8 @@ func sgoSetIOGrants(ctxt *Link, s string) {
 				m := sgoAppDirPath.FindStringSubmatch(f[3])
 				ok = m != nil && m[1] == f[1]
 			}
+		case f[0] == "env": // an environment variable or prefix (D180)
+			ok = len(f) == 2 && sgoEnvGrantName.MatchString(f[1])
 		case (f[0] == "connect" || f[0] == "listen") && len(f) == 2 && strings.HasPrefix(f[1], "unix:"):
 			p := f[1][len("unix:"):]
 			ok = p != "" && len(p) <= 103 && !strings.ContainsRune(p, 0)
@@ -151,6 +154,9 @@ func sgoSetIOGrants(ctxt *Link, s string) {
 }
 
 var sgoGrantName = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,31}$`)
+
+// sgoEnvGrantName is an environment grant: a variable name, or a prefix followed by '*' (D180).
+var sgoEnvGrantName = regexp.MustCompile(`^[A-Z_][A-Z0-9_]{0,63}\*?$`)
 
 // sgoAppSocketPath is the path of an application socket grant: "@runtime/APP/NAME" (D182).
 var sgoAppSocketPath = regexp.MustCompile(`^@runtime/[a-z0-9][a-z0-9._-]{0,63}/[a-z0-9][a-z0-9._-]{0,63}$`)

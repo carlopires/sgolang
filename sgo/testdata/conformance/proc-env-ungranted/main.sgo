@@ -1,0 +1,9 @@
+package main
+
+import "sgo"
+
+// A name that is not granted is refused, never read as empty (D180).
+func main(root *sgo.Context) error {
+	_, _ = root.Getenv("OTHER")
+	return nil
+}
