@@ -129,6 +129,8 @@ func kinds(k string) (cli.Kind, bool) {
 		return cli.Strings, true
 	case "I":
 		return cli.Ints, true
+	case "f":
+		return cli.Float, true
 	}
 	return cli.String, false
 }

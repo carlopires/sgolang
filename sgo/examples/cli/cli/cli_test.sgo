@@ -99,3 +99,43 @@ func TestTreeAtRunTime(t *sgo.T) error {
 	}
 	return nil
 }
+
+// scale prints its Float flag and argument.
+type scale struct{}
+
+func (scale) Run(ctx *sgo.Context, c *Call) error {
+	c.Printf("%g x %.2f = %v\n", []any{c.Float("by"), c.Float("x"), c.Float("by") * c.Float("x")})
+	return nil
+}
+
+func TestFloat(t *sgo.T) error {
+	run := func(args []string) string {
+		root := New("calc", "A calculator")
+		root.Add(&Command{
+			Name:    "scale",
+			Summary: "Scale a number",
+			Flags:   []Flag{{Name: "by", Kind: Float, Default: "1.5", Help: "the factor"}},
+			Args:    []Arg{{Name: "x", Kind: Float, Required: true, Help: "the number"}},
+			Run:     scale{},
+		})
+		got, err := root.Execute(t.Context(), args)
+		if err != nil {
+			return "error: " + err.Error()
+		}
+		return got
+	}
+	cases := [][]string{
+		{"scale 2", "1.5 x 2.00 = 3\n"},
+		{"scale --by=0.1 3", "0.1 x 3.00 = 0.30000000000000004\n"},
+		{"scale --by 1e3 -- -2.5", "1000 x -2.50 = -2500\n"},
+		{"scale x", "error: calc scale: <x>: \"x\" is not a finite number"},
+		{"scale --by=inf 1", "error: calc scale: --by: \"inf\" is not a finite number"},
+	}
+	for _, c := range cases {
+		got := run(strings.Split(c[0], " "))
+		if got != c[1] {
+			return sgo.NewError(c[0] + ":\n got " + strconv.QuoteToASCII(got) + "\nwant " + strconv.QuoteToASCII(c[1]))
+		}
+	}
+	return nil
+}

@@ -8,7 +8,7 @@
 // The protocol is lines. A request is "PROFILE user" or "CALL user\tpath\tname=value..."; a reply
 // is lines ended by ".". A profile reply is "user NAME ROLE" (or "anonymous") and a "cmd" line
 // per command: "cmd\tpath\tsummary\tgroup" followed by its flags and arguments, each
-// "F|name|kind|required|default|help" or "A|name|kind|required||help", kind one of s i b d S I.
+// "F|name|kind|required|default|help" or "A|name|kind|required||help", kind one of s i b d S I f.
 // A CALL reply is the command's output, or one line "!message" for an error.
 package daemon
 

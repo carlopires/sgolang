@@ -27,6 +27,7 @@ const (
 	Duration Kind = 3
 	Strings  Kind = 4
 	Ints     Kind = 5
+	Float    Kind = 6
 )
 
 // A Runner runs a command. ctx is the context Execute was given; c holds the parsed flags and

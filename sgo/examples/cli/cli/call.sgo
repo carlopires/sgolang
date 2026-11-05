@@ -69,6 +69,12 @@ func (c *Call) Duration(name string) time.Duration {
 	return d
 }
 
+// Float returns the Float flag or argument name.
+func (c *Call) Float(name string) float64 {
+	f, _ := strconv.ParseFloat(c.get(name, Float).text)
+	return f
+}
+
 // Strings returns the Strings flag or argument name.
 func (c *Call) Strings(name string) []string {
 	v := c.get(name, Strings)
@@ -128,6 +134,8 @@ func kindName(k Kind) string {
 		return "strings"
 	case Ints:
 		return "ints"
+	case Float:
+		return "float"
 	}
 	return "?"
 }
@@ -142,6 +150,11 @@ func validate(kind Kind, text string) error {
 	case Bool:
 		if text != "true" && text != "false" {
 			return fmt.Errorf("%q is not true or false", []any{text})
+		}
+	case Float:
+		f, err := strconv.ParseFloat(text)
+		if err != nil || f != f || f-f != 0 {
+			return fmt.Errorf("%q is not a finite number", []any{text})
 		}
 	case Duration:
 		if _, err := time.ParseDuration(text); err != nil {
