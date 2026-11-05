@@ -1,0 +1,232 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package strconv
+
+// Multiprecision decimal numbers, ported from Go's internal/strconv/decimal.go: the exact
+// arithmetic behind ParseFloat and FormatFloat (D193). Binary floating point can be held in
+// multiprecision decimal exactly because 2 divides 10. The only operations are assignment, binary
+// shifts, and rounding.
+
+type decimal struct {
+	d     [800]byte // digits, big-endian representation
+	nd    int       // number of digits used
+	dp    int       // decimal point
+	neg   bool      // negative flag
+	trunc bool      // discarded nonzero digits beyond d[:nd]
+}
+
+// trim removes trailing zeros (meaningless: the decimal point is tracked separately).
+func trim(a *decimal) {
+	for a.nd > 0 && a.d[a.nd-1] == '0' {
+		a.nd--
+	}
+	if a.nd == 0 {
+		a.dp = 0
+	}
+}
+
+// assign sets a to the nonnegative v.
+func (a *decimal) assign(v int) {
+	buf := [24]byte{}
+	n := 0
+	for v > 0 {
+		v1 := v / 10
+		buf[n] = byte(v-10*v1) + '0'
+		n++
+		v = v1
+	}
+	a.nd = 0
+	for n--; n >= 0; n-- {
+		a.d[a.nd] = buf[n]
+		a.nd++
+	}
+	a.dp = a.nd
+	trim(a)
+}
+
+// maxShift is the largest shift done in one pass: every intermediate stays below 10<<maxShift,
+// which fits int. (Go uses 60 with uint; the digits produced do not depend on the pass size.)
+const maxShift = 58
+
+// rightShift divides a by 2^k, k <= maxShift.
+func rightShift(a *decimal, k int) {
+	r := 0 // read pointer
+	w := 0 // write pointer
+
+	// Pick up enough leading digits to cover the first shift.
+	n := 0
+	for ; n>>k == 0; r++ {
+		if r >= a.nd {
+			if n == 0 {
+				// a == 0; shouldn't get here, but handle anyway.
+				a.nd = 0
+				return
+			}
+			for n>>k == 0 {
+				n = n * 10
+				r++
+			}
+			break
+		}
+		n = n*10 + int(a.d[r]-'0')
+	}
+	a.dp -= r - 1
+
+	mask := 1<<k - 1
+
+	// Pick up a digit, put down a digit.
+	for ; r < a.nd; r++ {
+		c := int(a.d[r] - '0')
+		dig := n >> k
+		n &= mask
+		a.d[w] = byte(dig) + '0'
+		w++
+		n = n*10 + c
+	}
+
+	// Put down extra digits.
+	for n > 0 {
+		dig := n >> k
+		n &= mask
+		if w < len(a.d) {
+			a.d[w] = byte(dig) + '0'
+			w++
+		} else if dig > 0 {
+			a.trunc = true
+		}
+		n = n * 10
+	}
+
+	a.nd = w
+	trim(a)
+}
+
+// leftShift multiplies a by 2^k, k <= maxShift. The digits are produced least significant first
+// into a scratch buffer; as in Go, digits beyond len(a.d) are dropped (setting trunc if nonzero).
+func leftShift(a *decimal, k int) {
+	rev := make([]byte, 0, a.nd+20)
+	n := 0
+	for r := a.nd - 1; r >= 0; r-- {
+		n += int(a.d[r]-'0') << k
+		quo := n / 10
+		rev = append(rev, byte(n-10*quo)+'0')
+		n = quo
+	}
+	for n > 0 {
+		quo := n / 10
+		rev = append(rev, byte(n-10*quo)+'0')
+		n = quo
+	}
+	delta := len(rev) - a.nd
+	for i := 0; i < len(rev); i++ {
+		c := rev[len(rev)-1-i]
+		if i < len(a.d) {
+			a.d[i] = c
+		} else if c != '0' {
+			a.trunc = true
+		}
+	}
+	a.nd += delta
+	if a.nd >= len(a.d) {
+		a.nd = len(a.d)
+	}
+	a.dp += delta
+	trim(a)
+}
+
+// shift multiplies a by 2^k (k > 0) or divides it by 2^-k (k < 0).
+func (a *decimal) shift(k int) {
+	switch {
+	case a.nd == 0:
+		// nothing to do: a == 0
+	case k > 0:
+		for k > maxShift {
+			leftShift(a, maxShift)
+			k -= maxShift
+		}
+		leftShift(a, k)
+	case k < 0:
+		for k < -maxShift {
+			rightShift(a, maxShift)
+			k += maxShift
+		}
+		rightShift(a, -k)
+	}
+}
+
+// shouldRoundUp reports whether chopping a at nd digits should round up.
+func shouldRoundUp(a *decimal, nd int) bool {
+	if nd < 0 || nd >= a.nd {
+		return false
+	}
+	if a.d[nd] == '5' && nd+1 == a.nd { // exactly halfway - round to even
+		// if we truncated, a little higher than what's recorded - always round up
+		if a.trunc {
+			return true
+		}
+		return nd > 0 && (a.d[nd-1]-'0')%2 != 0
+	}
+	// not halfway - digit tells all
+	return a.d[nd] >= '5'
+}
+
+// round rounds a to nd digits (or fewer). nd == 0 rounds just to the left of the digits, as in
+// 0.09 -> 0.1.
+func (a *decimal) round(nd int) {
+	if nd < 0 || nd >= a.nd {
+		return
+	}
+	if shouldRoundUp(a, nd) {
+		a.roundUp(nd)
+	} else {
+		a.roundDown(nd)
+	}
+}
+
+// roundDown rounds a down to nd digits (or fewer).
+func (a *decimal) roundDown(nd int) {
+	if nd < 0 || nd >= a.nd {
+		return
+	}
+	a.nd = nd
+	trim(a)
+}
+
+// roundUp rounds a up to nd digits (or fewer).
+func (a *decimal) roundUp(nd int) {
+	if nd < 0 || nd >= a.nd {
+		return
+	}
+	for i := nd - 1; i >= 0; i-- {
+		if a.d[i] < '9' { // can stop after this digit
+			a.d[i]++
+			a.nd = i + 1
+			return
+		}
+	}
+	// Number is all 9s: change to a single 1 with the decimal point moved.
+	a.d[0] = '1'
+	a.nd = 1
+	a.dp++
+}
+
+// roundedInteger returns the integer part of a, rounded. It is used only on values below 2^54.
+func (a *decimal) roundedInteger() int {
+	if a.dp > 18 {
+		return maxInt
+	}
+	i := 0
+	n := 0
+	for i = 0; i < a.dp && i < a.nd; i++ {
+		n = n*10 + int(a.d[i]-'0')
+	}
+	for ; i < a.dp; i++ {
+		n *= 10
+	}
+	if shouldRoundUp(a, a.dp) {
+		n++
+	}
+	return n
+}
