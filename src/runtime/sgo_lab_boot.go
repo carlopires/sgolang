@@ -29,6 +29,7 @@ const (
 //	replay <p,...>    replay: the pick of every choose and select event whose set has two or
 //	                  more elements, in order (D46, replayPick)
 //	net <line>        a line of the lab network table (D146, sgoLabNetLine)
+//	stdin <hex>       a chunk of the run's standard input, hex-encoded (D178)
 //
 // one key per line. A lab binary started without a manifest is a usage defect (status 4).
 func sgoLabBoot() {
@@ -82,6 +83,8 @@ func sgoLabBoot() {
 			}
 		case "net":
 			sgoLabNetLine(val)
+		case "stdin":
+			sgoLabStdin += sgoLabUnhex(val)
 		case "":
 		default:
 			sgoDefect("lab manifest: unknown key " + key)
@@ -206,4 +209,27 @@ func (l *sgoLabState) waitGraph() []sgoFailureInfo {
 		g = append(g, sgoFailureInfo{"LabWait", string(b), ""})
 	}
 	return g
+}
+
+// sgoLabUnhex decodes a hex-encoded manifest value.
+func sgoLabUnhex(s string) string {
+	if len(s)%2 != 0 {
+		sgoDefect("lab manifest: odd hex length")
+	}
+	b := make([]byte, len(s)/2)
+	for i := range b {
+		b[i] = sgoLabHexDigit(s[2*i])<<4 | sgoLabHexDigit(s[2*i+1])
+	}
+	return string(b)
+}
+
+func sgoLabHexDigit(c byte) byte {
+	switch {
+	case '0' <= c && c <= '9':
+		return c - '0'
+	case 'a' <= c && c <= 'f':
+		return c - 'a' + 10
+	}
+	sgoDefect("lab manifest: bad hex digit")
+	return 0
 }

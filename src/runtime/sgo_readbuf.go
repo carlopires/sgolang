@@ -17,8 +17,11 @@ var sgoReadLineHook func(h *sgoHandle)
 
 // sgoRawRead is one bounded read of the handle's stream, below the buffer.
 func sgoRawRead(h *sgoHandle, max int) (string, *sgoIOErr) {
-	if h.kind == sgoHConn {
+	switch h.kind {
+	case sgoHConn:
 		return sgoConnRead(h, max)
+	case sgoHStdin:
+		return sgoStdinRead(h, max)
 	}
 	return sgoFileRead(h, max)
 }

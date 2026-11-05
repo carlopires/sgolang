@@ -29,6 +29,7 @@ const (
 	sgoHListener
 	sgoHDialer // a delegated dialer (sgo_netdial.go, D143)
 	_          // formerly the connection slot (withdrawn, D158)
+	sgoHStdin  // standard input (sgo_stdin.go, D178)
 
 	sgoIOChunk = 1 << 20
 )

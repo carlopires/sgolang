@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PROC-004"
+ ],
+ "run_stdin": "hello\n",
+ "exit": 2,
+ "stdout": "",
+ "stderr_exact": "{\"sgo_diagnostic\":1,\"kind\":\"MissingCapability\",\"message\":\"Stdin called on a context that does not hold the stdin capability\",\"position\":null,\"task_id\":1,\"scope_id\":1,\"chain\":[]}\n",
+ "note": "D178: a child reads the *sgo.Input the root passes it; only the root context holds the capability."
+}

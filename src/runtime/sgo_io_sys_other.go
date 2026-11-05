@@ -71,3 +71,10 @@ const (
 
 // sgoIoctl is not provided on this platform: no stream is a terminal.
 func sgoIoctl(fd int32, req uintptr, arg unsafe.Pointer) int32 { return -1 }
+
+const (
+	sgoTIOCSETA    = 0
+	sgoTermiosSize = 64
+)
+
+func sgoTermiosClearEcho(t *[sgoTermiosSize]byte) {}

@@ -15,7 +15,7 @@ var sgoMembers = map[string]bool{"Context": true, "Nursery": true, "Writer": tru
 	"Channel": true, "SendPermit": true, "NewChannel": true, "Ready": true,
 	"Clock": true, "WallClock": true, "Random": true, "Entropy": true, "SimStore": true,
 	"Event": true, "NewEvent": true, "CapacityLimiter": true, "NewCapacityLimiter": true, "Token": true,
-	"Dir": true, "File": true, "Conn": true, "Listener": true, "Listing": true, "Dialer": true, "MoveTo": true, "Progress": true, "NoEffect": true, "IsEOF": true, "IsTooLong": true, "IsBrokenPipe": true,
+	"Dir": true, "File": true, "Conn": true, "Listener": true, "Listing": true, "Dialer": true, "MoveTo": true, "Progress": true, "NoEffect": true, "IsEOF": true, "IsTooLong": true, "IsBrokenPipe": true, "Input": true,
 	"T": true, "Copy": true, "Frozen": true, "Freeze": true,
 	"Go": true, "Task": true, "Result": true, "Timer": true, "Group": true, "NewGroup": true,
 	"Call": true, "NewCall": true, "Request": true, "IsNoReply": true,
@@ -34,7 +34,7 @@ var sgoHandleTypes = map[string]bool{"Context": true, "Nursery": true, "Writer":
 	"Clock": true, "WallClock": true, "Random": true, "Entropy": true, "SimStore": true,
 	"Event": true, "CapacityLimiter": true, "Token": true,
 	"Dir": true, "File": true, "Conn": true, "Listener": true, "Listing": true, "T": true,
-	"Dialer": true, "Timer": true, "Request": true, "Lease": true}
+	"Dialer": true, "Timer": true, "Request": true, "Lease": true, "Input": true}
 
 // deniedNames are predeclared identifiers denied in subset 0 (sgo/spec/INVENTORY.map "universe").
 // Predeclared names cannot be redeclared (SGO-BIND-004), so every use refers to the predeclared one.

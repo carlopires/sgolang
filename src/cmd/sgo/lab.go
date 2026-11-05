@@ -42,6 +42,7 @@ type labFlags struct {
 	timeout      time.Duration
 	args         []string
 	progArgs     []string // the program's arguments, after "--" (D178)
+	stdin        string   // the run's standard input, from -stdin FILE (D178)
 	haveProgArgs bool
 }
 
@@ -111,6 +112,12 @@ func parseLabFlags(cmd string, args []string) (*labFlags, error) {
 			f.epoch, err = num()
 		case name == "trace" && cmd == "run":
 			f.trace = val
+		case name == "stdin" && cmd != "replay":
+			data, rerr := os.ReadFile(val)
+			if rerr != nil {
+				return nil, usage("cannot read -stdin file %s", val)
+			}
+			f.stdin = string(data)
 		case name == "expect" && cmd == "sweep":
 			f.expect = val
 		case name == "save" && cmd == "sweep":
@@ -158,8 +165,9 @@ type labManifest struct {
 	Quota   int64    `json:"quota"`
 	Epoch   int64    `json:"epoch"`
 	Replay  bool     `json:"replay,omitempty"`
-	Net     []string `json:"net,omitempty"`  // the lab network table, from the package's lab.net (D146)
-	Args    []string `json:"args,omitempty"` // the program's command-line arguments (D178)
+	Net     []string `json:"net,omitempty"`   // the lab network table, from the package's lab.net (D146)
+	Args    []string `json:"args,omitempty"`  // the program's command-line arguments (D178)
+	Stdin   string   `json:"stdin,omitempty"` // the program's standard input (D178)
 	Picks   []int    `json:"-"`
 	program string   // the binary
 }
@@ -194,6 +202,11 @@ func labExec(m *labManifest, timeout time.Duration, stdout, stderr io.Writer) (*
 	fmt.Fprintf(&man, "seed %d\npolicy %s\nk %d\nquota %d\nepoch %d\n", m.Seed, m.Policy, m.K, m.Quota, m.Epoch)
 	for _, l := range m.Net {
 		fmt.Fprintf(&man, "net %s\n", l)
+	}
+	for in := m.Stdin; in != ""; {
+		n := min(len(in), 4096)
+		fmt.Fprintf(&man, "stdin %x\n", in[:n])
+		in = in[n:]
 	}
 	if m.Replay {
 		s := make([]string, len(m.Picks))

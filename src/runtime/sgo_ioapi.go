@@ -103,8 +103,11 @@ func sgo_dirWriteFile(g int, path, data string) error {
 
 // sgoReadOp names a read of h for messages: "Conn.op" or "File.op".
 func sgoReadOp(h *sgoHandle, op string) string {
-	if h.kind == sgoHConn {
+	switch h.kind {
+	case sgoHConn:
 		return "Conn." + op
+	case sgoHStdin:
+		return "Stdin." + op
 	}
 	return "File." + op
 }

@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PROC-004",
+  "SGO-FILE-004"
+ ],
+ "run_stdin": "alpha\nbeta\r\ngamma",
+ "exit": 0,
+ "stdout": "lines=3 last=gamma terminal=false\n",
+ "note": "D178: root.Stdin is an io.LineReader over standard input."
+}

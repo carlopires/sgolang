@@ -117,7 +117,8 @@ func isSgoHandle(T Type) bool {
 		"Clock", "WallClock", "Random", "Entropy", "SimStore", "Event", "CapacityLimiter", "Token",
 		"Dir", "File", "Conn", "Listener", "Listing", "T", "Dialer", "Timer",
 		"Request", // an accepted request of a call point (D174)
-		"Lease":   // a lease on an item of a pool (D175)
+		"Lease",   // a lease on an item of a pool (D175)
+		"Input":   // the stdin capability (D178)
 		return true
 	}
 	return false

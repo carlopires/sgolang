@@ -62,6 +62,7 @@ SERVICES = {
     ("gcBgMarkWorker", "src/runtime/mgc.go"): ("active", "GC: background mark workers, started per GC cycle"),
     ("forcegchelper", "src/runtime/proc.go"): ("active", "GC: periodic forced GC helper, started at start-up"),
     ("updateMaxProcsGoroutine", "src/runtime/proc.go"): ("active", "scheduler: GOMAXPROCS updates from CPU limits"),
+    ("sgoStdinPump", "src/runtime/sgo_stdin.go"): ("active", "stdin: one blocking read of fd 0 per reader demand, started by a read of root.Stdin() that finds nothing buffered; never in the lab (D178)"),
     ("sgoLabDriver", "src/runtime/sgo_deadline.go"): ("dormant", "lab only: the deadline driver, started by the first n.CancelAfter of a lab run; never in a production binary (D170)"),
     ("runFinalizers", "src/runtime/mfinal.go"): ("dormant", "started only by SetFinalizer; unreachable from subset 0 (verify in W02)"),
     ("runCleanups", "src/runtime/mcleanup.go"): ("dormant", "started only by AddCleanup; unreachable from subset 0 (verify in W02)"),

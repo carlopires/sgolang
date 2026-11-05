@@ -2,7 +2,7 @@
  "schema_version": 1,
  "clause": "SGO-TCB-002",
  "spec_version": "0.18.0",
- "allowlist_digest": "82df261ec0f156a7f39d679044907dc06a39686f29e67a4d1976b7045a57e32b",
+ "allowlist_digest": "d09d75fe895f340ec56ba15824c53ab396d439dabc7bca41b50964ce02b9756e",
  "approval": {
   "decision": "Runtime admitted as trusted target code by exact source identity",
   "approved_by": "user",
@@ -429,6 +429,13 @@
    "purpose": "lab only: the deadline driver, started by the first n.CancelAfter of a lab run; never in a production binary (D170)"
   },
   {
+   "callee": "sgoStdinPump",
+   "file": "src/runtime/sgo_stdin.go",
+   "line": 82,
+   "status": "active",
+   "purpose": "stdin: one blocking read of fd 0 per reader demand, started by a read of root.Stdin() that finds nothing buffered; never in the lab (D178)"
+  },
+  {
    "callee": "<func literal>",
    "file": "src/runtime/signal_unix.go",
    "line": 1076,
@@ -452,10 +459,10 @@
  ],
  "summary": {
   "packages": 31,
-  "files": 1085,
-  "files_changed_from_upstream": 70,
+  "files": 1086,
+  "files_changed_from_upstream": 71,
   "services": {
-   "active": 5,
+   "active": 6,
    "dormant": 6,
    "not-built": 1
   }
@@ -4508,12 +4515,12 @@
   },
   {
    "path": "src/runtime/sgo_io.go",
-   "sha256": "a7bb44ef3bc0f3eca9742ff12ad94c99aa99f3a70fe700a5d1bba2740a4eeca6",
+   "sha256": "031f7815647e8d964859feb73290f0f3efa514513bdf1c798bd8d4cd18d2eb43",
    "upstream_identical": false
   },
   {
    "path": "src/runtime/sgo_io_sys_darwin.go",
-   "sha256": "831eaec6551d1251f641db1460be6333e849d806b7838a0e0231d0030e59a3c7",
+   "sha256": "35f3c5b051765f3a6a9804c841878d51c2e07800341f3bdaeb7a024f60bd208f",
    "upstream_identical": false
   },
   {
@@ -4523,7 +4530,7 @@
   },
   {
    "path": "src/runtime/sgo_io_sys_linux.go",
-   "sha256": "4e4131833f98c2df2a3afba25b888b2a95078fbceb69272e83ec624c6ccc2c07",
+   "sha256": "0ba32d451af2500be8ff3b9201bcd8c7744fd23ae1eaffda954987b9af791379",
    "upstream_identical": false
   },
   {
@@ -4538,12 +4545,12 @@
   },
   {
    "path": "src/runtime/sgo_io_sys_other.go",
-   "sha256": "da55c6f328581ec9c3d671893d74cc169d717fd8f07bf529c8aa61ba72780aca",
+   "sha256": "861eeb0d625ecfeddbaa0e75bd72246749792dfaff21add396af49b828d7a927",
    "upstream_identical": false
   },
   {
    "path": "src/runtime/sgo_ioapi.go",
-   "sha256": "4f66055f441ed2c8c621042458d9419acb3117f40529394799abd375e961d8ff",
+   "sha256": "d447d9aad7014d5af57d55f8af9ddee06ab5d4443d844cfeec7e96e9b76e0790",
    "upstream_identical": false
   },
   {
@@ -4568,7 +4575,7 @@
   },
   {
    "path": "src/runtime/sgo_lab_boot.go",
-   "sha256": "a1e8489dadf1c8065365e0aa00c79e32b0285464c314866130c13ee0a1a897d2",
+   "sha256": "28550ac9002ac665bc9398408d66e509f01558b9efb4e352a71d6fb0cd97f0f4",
    "upstream_identical": false
   },
   {
@@ -4648,7 +4655,7 @@
   },
   {
    "path": "src/runtime/sgo_readbuf.go",
-   "sha256": "1b0b44d1e266f7cbe185a8d0d8acf276c463f92b7fac9f0dca94b97670107ddf",
+   "sha256": "b34d12accedb28292be9ab4a2b7e041f61b9d2e3443b0b3ab89eb18329e15be5",
    "upstream_identical": false
   },
   {
@@ -4673,7 +4680,12 @@
   },
   {
    "path": "src/runtime/sgo_service.go",
-   "sha256": "62f3ac254dbecc2ab12c76fcebdf55c0830dcf2e186ba91f261c47eb7c8fe484",
+   "sha256": "f67a4dc4bf2956262bb65992c0ac921592e7650f753af48aa207c84533caccd8",
+   "upstream_identical": false
+  },
+  {
+   "path": "src/runtime/sgo_stdin.go",
+   "sha256": "9e5eaf677f33f760f391cd0625ecec8c4efb69b778842a3bf03cbbe2417fae4e",
    "upstream_identical": false
   },
   {
@@ -5853,7 +5865,7 @@
   },
   {
    "path": "src/sgo/sgo.go",
-   "sha256": "b8042f042da7f3c58152f8e7197cb7f10218da7bc9a67fd7d13ab4499cd413be",
+   "sha256": "1cd8f64afa994de7ad5364c3d07fa9eb07e7731d6fa46fad215a568ce7d330f7",
    "upstream_identical": false
   },
   {

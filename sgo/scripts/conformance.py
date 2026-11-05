@@ -45,7 +45,7 @@ SGO = os.path.join(ROOT, "sgo")
 CASES = os.path.join(SGO, "testdata", "conformance")
 REGISTRY = os.path.join(SGO, "SGO_SPEC_ADMISSION.json")
 KEYS = {"kind", "clauses", "exit", "stdout", "stdout_any_of", "stderr_kind", "stderr_exact", "diagnostics",
-        "build_args", "build_env", "run_env", "run_args", "timeout_ms", "expect_watchdog", "procedure", "note", "no_module", "mkfifo", "occurrence", "stderr_message",
+        "build_args", "build_env", "run_env", "run_args", "run_stdin", "timeout_ms", "expect_watchdog", "procedure", "note", "no_module", "mkfifo", "occurrence", "stderr_message",
         "lab_args", "trace_events", "lab_checks", "sweep", "test_args", "test_results"}
 # Test cases (kind "test", W10, SPEC-TEST): run `sgo test -v` (with "test_args", default ./...) in the
 # module root and check the exit status and each test's result ("test_results": name -> {"result":
@@ -243,7 +243,7 @@ def run_case(name, src, sgo):
             return f"build failed: {b.stderr.strip()[:300]}"
         try:
             r = subprocess.run([os.path.join(tmp, "prog")] + e.get("run_args", []), cwd=d, env=env_for(e.get("run_env")),
-                               capture_output=True, text=True, timeout=e.get("timeout_ms", 10000) / 1000)
+                               input=e.get("run_stdin", ""), capture_output=True, text=True, timeout=e.get("timeout_ms", 10000) / 1000)
         except subprocess.TimeoutExpired:
             return "" if e.get("expect_watchdog") else "watchdog: killed after timeout"
         if e.get("expect_watchdog"):

@@ -6,7 +6,9 @@
 """CLI process interface checks the conformance runner cannot express (D178): a program whose
 standard output is piped into a reader that exits sees IsBrokenPipe and may end quietly, with no
 SIGPIPE; under a pseudo-terminal, IsTerminal holds and TerminalWidth is the terminal's width; and
-the arguments of an installed binary reach root.Args.
+the arguments of an installed binary reach root.Args; a read of idle stdin ends at its deadline;
+ReadSecret does not echo under a pseudo-terminal and restores echo after; and a lab run reads the
+-stdin text and replays it.
 
 usage: test-cli.py [--sgo PATH]
 """
@@ -33,6 +35,36 @@ import (
 func main(root *sgo.Context) error {
 	out, errw := root.Stdout(), root.Stderr()
 	args := root.Args()
+	in := root.Stdin()
+	if len(args) > 0 && args[0] == "idle" {
+		var err error = nil
+		nursery (n) {
+			n.CancelAfter(150)
+			_, e := in.ReadLine(256)
+			err = e
+		}
+		return out.WriteString("deadline=" + strconv.FormatBool(sgo.IsDeadline(err)) + "\\n")
+	}
+	if len(args) > 0 && args[0] == "secret" {
+		check out.WriteString("password: ")
+		pw := check in.ReadSecret(256)
+		check out.WriteString("got " + strconv.Itoa(len(pw)) + " chars\\n")
+		line := check in.ReadLine(256)
+		return out.WriteString("then read: " + line + "\\n")
+	}
+	if len(args) > 0 && args[0] == "lines" {
+		n := 0
+		for {
+			_, err := in.ReadLine(256)
+			if sgo.IsEOF(err) {
+				return out.WriteString("lines=" + strconv.Itoa(n) + "\\n")
+			}
+			if err != nil {
+				return err
+			}
+			n++
+		}
+	}
 	if len(args) > 0 && args[0] == "flood" {
 		for i := 0; i < 1000000; i++ {
 			if err := out.WriteString("line of output that fills the pipe\\n"); err != nil {
@@ -81,6 +113,20 @@ def main():
         if "status=0" not in r.stdout or "broken pipe after" not in r.stderr:
             problems.append("broken pipe: stdout %r, stderr %r" % (r.stdout, r.stderr))
 
+        # A read of idle stdin (a pipe whose writer waits) ends at its 150 ms deadline.
+        r = subprocess.run(["bash", "-c", 'sleep 5 | "$0" idle', prog], capture_output=True, text=True, timeout=30)
+        if r.stdout != "deadline=true\n":
+            problems.append("idle stdin: stdout %r stderr %r" % (r.stdout, r.stderr))
+
+        # A lab run reads the -stdin text, records it, and the replay reproduces it.
+        with open(os.path.join(tmp, "in.txt"), "w") as f:
+            f.write("one\ntwo\nthree\n")
+        trace = os.path.join(tmp, "t.jsonl")
+        r = subprocess.run([sgo, "lab", "run", "-stdin", "in.txt", "-trace", trace, ".", "--", "lines"], cwd=tmp, capture_output=True, text=True, timeout=120)
+        r2 = subprocess.run([sgo, "lab", "replay", trace, "."], cwd=tmp, capture_output=True, text=True, timeout=120)
+        if r.stdout != "lines=3\n" or r2.returncode != 0 or r2.stdout != "lines=3\n":
+            problems.append("lab stdin: run %r %r, replay %r %r" % (r.stdout, r.stderr[-200:], r2.stdout, r2.stderr[-200:]))
+
         # A pseudo-terminal of 97 columns.
         if shutil.which("script"):
             inner = "stty cols 97; %s" % prog
@@ -92,6 +138,16 @@ def main():
             out = r.stdout.replace("\r", "").replace("^D", "")
             if "args= terminal=true width=97" not in out:
                 problems.append("terminal: exit %d, output %r" % (r.returncode, out))
+            # ReadSecret: the secret is read but not echoed; echo is back for the next line.
+            feed = "sleep 1; printf 'hunter2\\n'; sleep 0.5; printf 'visible\\n'; sleep 0.5"
+            if platform.system() == "Darwin":
+                cmd = ["bash", "-c", "(%s) | script -q /dev/null %s secret" % (feed, prog)]
+            else:
+                cmd = ["bash", "-c", "(%s) | script -qec '%s secret' /dev/null" % (feed, prog)]
+            r = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            out = r.stdout.replace("\r", "").replace("^D", "")
+            if "got 7 chars" not in out or "hunter2" in out or "then read: visible" not in out:
+                problems.append("ReadSecret: output %r" % out)
         else:
             problems.append("terminal: no script command to allocate a pseudo-terminal")
 
@@ -99,7 +155,7 @@ def main():
         for p in problems:
             print("test-cli: FAIL", p)
         sys.exit(1)
-    print("test-cli: ok: installed-binary arguments, broken pipe ends quietly, terminal detection and width")
+    print("test-cli: ok: installed-binary arguments, broken pipe ends quietly, terminal detection and width, idle stdin ends at its deadline, ReadSecret hides the secret, lab stdin replays")
 
 
 if __name__ == "__main__":

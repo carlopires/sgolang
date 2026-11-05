@@ -179,3 +179,17 @@ func sgoIoctl(fd int32, req uintptr, arg unsafe.Pointer) int32 {
 func sgo_ioctl_trampoline()
 
 //go:cgo_import_dynamic libc_ioctl ioctl "/usr/lib/libSystem.B.dylib"
+
+// The termios of darwin/arm64: four 8-byte flag words (c_lflag at offset 24), then c_cc and speeds.
+const (
+	sgoTIOCSETA     = 0x80487414
+	sgoTermiosSize  = 72
+	sgoTermiosLflag = 24
+	sgoECHO         = 0x8
+)
+
+// sgoTermiosClearEcho turns ECHO off in a termios.
+func sgoTermiosClearEcho(t *[sgoTermiosSize]byte) {
+	p := (*uint64)(unsafe.Pointer(&t[sgoTermiosLflag]))
+	*p &^= sgoECHO
+}

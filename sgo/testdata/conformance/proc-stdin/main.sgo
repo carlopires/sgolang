@@ -1,0 +1,31 @@
+package main
+
+import (
+	"sgo"
+	"std/io"
+	"std/strconv"
+)
+
+// count reads lines through std/io until the end of input.
+func count(r io.LineReader) (int, string, error) {
+	n, last := 0, ""
+	for {
+		line, err := r.ReadLine(1024)
+		if err != nil {
+			if sgo.IsEOF(err) {
+				return n, last, nil
+			}
+			return n, last, err
+		}
+		n++
+		last = line
+	}
+}
+
+// root.Stdin is the stdin capability, an io.LineReader; "\r\n" ends a line, a last line without
+// "\n" is returned, and the end of input is EOF (D178, SGO-FILE-004).
+func main(root *sgo.Context) error {
+	in := root.Stdin()
+	n, last := check count(in)
+	return root.Stdout().WriteString("lines=" + strconv.Itoa(n) + " last=" + last + " terminal=" + strconv.FormatBool(in.IsTerminal()) + "\n")
+}

@@ -32,6 +32,9 @@ func runtime_spawn(scope unsafe.Pointer, fn func(task unsafe.Pointer) error) err
 func runtime_isRoot(task unsafe.Pointer) bool
 func runtime_isCurrent(task unsafe.Pointer) bool
 func runtime_write(fd int, s string) (int, error)
+func runtime_stdin() unsafe.Pointer                                // sgo_stdin.go
+func runtime_readSecret(h unsafe.Pointer, max int) (string, error) // sgo_stdin.go
+func runtime_stdinIsTerminal() bool                                // sgo_stdin.go
 func runtime_isBrokenPipe(err error) bool
 func runtime_isTerminal(fd int) bool
 func runtime_terminalWidth(fd int) int
@@ -150,6 +153,38 @@ func (w *Writer) IsTerminal() bool { return runtime_isTerminal(w.fd) }
 // TerminalWidth is the width of the terminal in columns, or 0 when the stream is not a terminal
 // or reports no width; always 0 in the lab (D178).
 func (w *Writer) TerminalWidth() int { return runtime_terminalWidth(w.fd) }
+
+// Input is the stdin capability (D178): the program's standard input, read through the read
+// turn and read buffer of every handle (SGO-FILE-004). Every read is a cancellation point. It
+// converts to io.Reader and io.LineReader as an untied value: it is never released or closed.
+type Input struct{ h unsafe.Pointer }
+
+// Stdin returns the stdin capability; only the root context holds it (D178). A child given the
+// *Input may read it.
+func (c *Context) Stdin() *Input {
+	c.own()
+	if !runtime_isRoot(c.t) {
+		runtime_fail("MissingCapability", "Stdin called on a context that does not hold the stdin capability")
+	}
+	return &Input{runtime_stdin()}
+}
+
+// Read reads at most max bytes: at least one, or an error (IsEOF at the end of input).
+func (in *Input) Read(max int) (string, error) { return runtime_read(in.h, max) }
+
+// ReadLine reads the next line, without its "\n" and a "\r" before it (SGO-FILE-004).
+func (in *Input) ReadLine(max int) (string, error) { return runtime_readLine(in.h, max) }
+
+// ReadAll reads the rest of the input, at most max bytes (SGO-FILE-004).
+func (in *Input) ReadAll(max int) (string, error) { return runtime_readAll(in.h, max) }
+
+// ReadSecret reads a line as ReadLine does, with the terminal's echo off while it reads when
+// standard input is a terminal (a password prompt). The terminal's settings are restored on every
+// return, cancellation included.
+func (in *Input) ReadSecret(max int) (string, error) { return runtime_readSecret(in.h, max) }
+
+// IsTerminal reports whether standard input is a terminal; never in the lab.
+func (in *Input) IsTerminal() bool { return runtime_stdinIsTerminal() }
 
 // IsBrokenPipe reports whether err is a write to standard output or error whose reader has gone,
 // as when the program's output is piped into a command that has exited (D178). A program may end

@@ -210,3 +210,17 @@ func sgoIoctl(fd int32, req uintptr, arg unsafe.Pointer) int32 {
 	KeepAlive(arg)
 	return r
 }
+
+// The termios of Linux: four 4-byte flag words (c_lflag at offset 12), c_line, c_cc[19].
+const (
+	sgoTIOCSETA     = 0x5402 // TCSETS
+	sgoTermiosSize  = 64
+	sgoTermiosLflag = 12
+	sgoECHO         = 0x8
+)
+
+// sgoTermiosClearEcho turns ECHO off in a termios.
+func sgoTermiosClearEcho(t *[sgoTermiosSize]byte) {
+	p := (*uint32)(unsafe.Pointer(&t[sgoTermiosLflag]))
+	*p &^= sgoECHO
+}

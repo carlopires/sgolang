@@ -1,0 +1,17 @@
+package main
+
+import "sgo"
+
+// Only the root context holds stdin; a child may read an *sgo.Input the root passes it (D178).
+func main(root *sgo.Context) error {
+	in := root.Stdin()
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			line := check in.ReadLine(64)
+			_ = line
+			_ = t.Stdin()
+			return nil
+		})
+	}
+	return nil
+}
