@@ -1074,6 +1074,14 @@ SGO-PROC-003 and SGO-PROC-004 get new versions.
 
 **Recommendation.** No language feature: commands are values. A library (first as `sgo/examples/cli`, promoted to `std/cli` once its API settles) with `cli.Command{Name, Summary, Description, Examples, Group, Hidden, Flags, Args}`, subcommands added at run time (`parent.Add(child)`, found and extended by name), typed flags and positional arguments (`string`, `int`, `bool`, `float`, `duration`, lists; required, defaults, variadic), a handler interface (`type Runner interface { Run(c *cli.Call) error }`, no function fields, user 2026-11-06), grouped help and usage rendered by plain code, `--help`, `--version`, and errors that name the command. Acceptance: `sgo/examples/cli` reproduces the `undisk-cli` shape: static commands, plus commands built from a profile read over a granted runtime socket from a fake daemon, with a `shell` loop on stdin over the same tree, all under `sgo test` and the lab.
 
+**Amendment (user, 2026-11-07: option (a)).** Floating point stays denied (SGO-FLOAT-001): D183 ships `std/fmt` and `std/time` durations only, without `ParseFloat`/`FormatFloat`; D184's flag types are `string`, `int`, `bool`, `duration`, and lists. Admitting `float64` is D185, for a later week.
+
+## D185 — Admit float64 · APPROVED IN PRINCIPLE 2026-11-07 (user), for a later week
+
+**Question.** Programs that measure or compute ratios need floating point, which SGO-FLOAT-001 denies.
+
+**Direction.** A new SPEC-FLOAT clause set: IEEE 754 binary64 with round-to-nearest-even, NaN and infinities as values, comparison and conversion rules, integer conversion that fails on an out-of-range value or NaN (as integer overflow does), literals, a `math` package, and `strconv.ParseFloat` and shortest `FormatFloat`; then a `float` flag type for the CLI library. A language change on the scale of W13: model, admission, conformance, and differential tests. Not part of W24; the details come back for approval when the week is planned.
+
 **Plan (W24, after approval).** D178, D179, D182, D180, D181 (runtime, driver, lab), model first for D179 (an interrupt racing scope ends); D183 (std, with differential tests); D184 last, as the acceptance. Spec 0.19.0.
 
 ---
@@ -1122,3 +1130,4 @@ SGO-PROC-003 and SGO-PROC-004 get new versions.
 
 - 2026-11-06: user approved D177–D184 as recommended ("looks good, approved!"): CLI programs as first-class — scoped `Listen`/`Dial`, the process interface (arguments, stdin, stderr, terminals, broken pipe), interrupts cancel the root, environment by grant, argument paths (option b), per-user application directories, std for CLIs, and a CLI library with run-time commands. Follow-up: W24, spec 0.19.0.
 - 2026-11-06: user withdrew D177 (the scoped forms `n.Listen`/`n.Dial` already exist).
+- 2026-11-07: user chose option (a) for floating point in W24 ("let's do (a), and (c) for the future"): floats stay denied; D183 without ParseFloat/FormatFloat, D184 without a float flag; D185 (admit float64) approved in principle for a later week.
