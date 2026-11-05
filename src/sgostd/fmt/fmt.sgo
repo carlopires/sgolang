@@ -4,7 +4,7 @@
 
 // Package fmt formats text (SGO-STD-009, D183). S-Go has no variadic functions (SGO-TYPE-003), so
 // the arguments are an explicit slice: fmt.Sprintf("%s=%d", []any{name, n}). Formatting is by type
-// switch, never by reflection: the verbs apply to string, int, bool, byte, rune, error, and any
+// switch, never by reflection: the verbs apply to string, int, float64, bool, byte, rune, error, and any
 // value with a String() string method (Stringer); other values print as unsupported.
 //
 // Errors: Errorf formats an error's text; Wrapf returns an error that wraps another (errors.Unwrap
@@ -12,16 +12,18 @@
 // value may become one (SGO-IFACE-004): %v and %s format any value with an Error() string method,
 // and %w is not a verb here.
 //
-// Verbs: %s %q %d %x %c %t %v and %%, with the flags '-' (left-align) and '0' (zero padding of
-// everything, after the sign of a number) and a width. %q quotes as strconv.QuoteToASCII. Errors in the format are reported in
-// the output as Go's fmt does: %!d(string=x) for a wrong type, %!d(MISSING) for a missing
-// argument, %!(EXTRA int=1) for extra ones, %!(NOVERB) for a trailing '%'.
+// Verbs: %s %q %d %x %c %t %v and %%, and for float64 %v %f %F %e %E %g %G %b %x %X (as Go's, with
+// %v the shortest %g). Flags: '-' (pad on the right), '+' (always print a number's sign), and '0'
+// (pad with zeros, after the sign of a number), then a width and a precision (.N), as Go's fmt: the
+// precision is the digits of a float, the minimum digits of an integer, and the maximum runes of
+// text (bytes for %x). %q quotes as strconv.QuoteToASCII. Errors in the format are reported in the
+// output as Go's fmt does: %!d(string=x) for a wrong type, %!d(MISSING) for a missing argument,
+// %!(EXTRA int=1) for extra ones, %!(NOVERB) for a trailing '%'.
 package fmt
 
 import (
 	"std/io"
 	"std/strconv"
-	"std/strings"
 	"std/utf8"
 )
 
@@ -67,6 +69,16 @@ func (e wrapError) Error() string { return e.msg }
 
 func (e wrapError) Unwrap() error { return e.err }
 
+// spec is one verb's flags, width, and precision (Go's fmtFlags with wid and prec).
+type spec struct {
+	minus       bool // '-': pad on the right
+	plus        bool // '+': always print a number's sign
+	zero        bool // '0': pad with zeros (on the left only)
+	wid         int  // the width; 0 if absent
+	prec        int  // the precision, if precPresent
+	precPresent bool
+}
+
 // format1 formats args according to format.
 func format1(format string, args []any) string {
 	buf := []byte{}
@@ -84,19 +96,29 @@ func format1(format string, args []any) string {
 			buf = append(buf, "%!(NOVERB)"...)
 			break
 		}
-		minus, zero := false, false
-		for i < len(format) && (format[i] == '-' || format[i] == '0') {
-			if format[i] == '-' {
-				minus = true
-			} else {
-				zero = true
+		sp := spec{}
+		for i < len(format) && (format[i] == '-' || format[i] == '0' || format[i] == '+') {
+			switch format[i] {
+			case '-':
+				sp.minus = true
+			case '0':
+				sp.zero = true
+			default:
+				sp.plus = true
 			}
 			i++
 		}
-		width := 0
 		for i < len(format) && format[i] >= '0' && format[i] <= '9' {
-			width = width*10 + int(format[i]-'0')
+			sp.wid = sp.wid*10 + int(format[i]-'0')
 			i++
+		}
+		if i+1 < len(format) && format[i] == '.' {
+			i++
+			sp.precPresent = true
+			for i < len(format) && format[i] >= '0' && format[i] <= '9' {
+				sp.prec = sp.prec*10 + int(format[i]-'0')
+				i++
+			}
 		}
 		if i == len(format) {
 			buf = append(buf, "%!(NOVERB)"...)
@@ -115,12 +137,16 @@ func format1(format string, args []any) string {
 		}
 		arg := args[next]
 		next++
-		text, num, ok := formatArg(arg, verb)
+		if verb == 'v' {
+			// %+v is Go's distinct "plusV" format, which prints these types as %v does.
+			sp.plus = false
+		}
+		text, ok := formatArg(arg, verb, sp)
 		if !ok {
-			buf = append(buf, badVerb(arg, verb, width, minus, zero && !minus)...)
+			buf = append(buf, badVerb(arg, verb, sp)...)
 			continue
 		}
-		buf = append(buf, pad(text, width, minus, zero && !minus, num)...)
+		buf = append(buf, text...)
 	}
 	if next < len(args) {
 		buf = append(buf, "%!(EXTRA "...)
@@ -135,66 +161,235 @@ func format1(format string, args []any) string {
 	return string(buf)
 }
 
-// formatArg formats one argument for verb; num reports a number (for zero padding); ok is false
+// formatArg formats one argument for verb with the flags, width, and precision of sp; ok is false
 // for a verb the argument's type does not accept.
-func formatArg(arg any, verb byte) (string, bool, bool) {
+func formatArg(arg any, verb byte, sp spec) (string, bool) {
 	switch v := arg.(type) {
 	case nil:
 		if verb == 'v' {
-			return "<nil>", false, true
+			return padString("<nil>", sp), true
 		}
-		return "", false, false
+		return "", false
 	case string:
-		switch verb {
-		case 's', 'v':
-			return v, false, true
-		case 'q':
-			return strconv.QuoteToASCII(v), false, true
-		case 'x':
-			return hexString(v), false, true
-		}
+		return fmtString(v, verb, sp)
 	case int:
-		return formatInt(v, verb)
+		return fmtInt(v, verb, sp)
 	case byte:
-		return formatInt(int(v), verb)
+		return fmtInt(int(v), verb, sp)
 	case rune:
-		return formatInt(int(v), verb)
+		return fmtInt(int(v), verb, sp)
 	case bool:
 		if verb == 't' || verb == 'v' {
-			return strconv.FormatBool(v), false, true
+			return padString(strconv.FormatBool(v), sp), true
 		}
+	case float64:
+		return fmtFloat(v, verb, sp)
 	case errorText:
-		return formatText(v.Error(), verb)
+		return fmtString(v.Error(), verb, sp)
 	case Stringer:
-		return formatText(v.String(), verb)
+		return fmtString(v.String(), verb, sp)
 	}
-	return "", false, false
+	return "", false
 }
 
-func formatText(s string, verb byte) (string, bool, bool) {
+// fmtString formats text for %s and %v (truncated to the precision in runes), %q (truncated, then
+// quoted), and %x (at most the precision in bytes, in hex), as Go's fmtS, fmtQ, and fmtSx.
+func fmtString(s string, verb byte, sp spec) (string, bool) {
 	switch verb {
 	case 's', 'v':
-		return s, false, true
+		return padString(truncate(s, sp), sp), true
 	case 'q':
-		return strconv.QuoteToASCII(s), false, true
+		return padString(strconv.QuoteToASCII(truncate(s, sp)), sp), true
 	case 'x':
-		return hexString(s), false, true
+		if sp.precPresent && sp.prec < len(s) {
+			s = s[:sp.prec]
+		}
+		return padString(hexString(s), sp), true
 	}
-	return "", false, false
+	return "", false
 }
 
-func formatInt(v int, verb byte) (string, bool, bool) {
+// truncate cuts s to the precision in runes, if one is present.
+func truncate(s string, sp spec) string {
+	if !sp.precPresent {
+		return s
+	}
+	n := sp.prec
+	for i := range s {
+		n--
+		if n < 0 {
+			return s[:i]
+		}
+	}
+	return s
+}
+
+func fmtInt(v int, verb byte, sp spec) (string, bool) {
 	switch verb {
 	case 'd', 'v':
-		return strconv.Itoa(v), true, true
+		return fmtInteger(v, 10, sp), true
 	case 'x':
-		return strconv.FormatInt(v, 16), true, true
+		return fmtInteger(v, 16, sp), true
 	case 'c':
-		return string(rune(v)), false, true
+		return padString(string(rune(v)), sp), true
 	case 'q':
-		return quoteRune(v), false, true
+		return padString(quoteRune(v), sp), true
 	}
-	return "", false, false
+	return "", false
+}
+
+// fmtInteger formats v in base 10 or 16 as Go's fmtInteger: the precision is the minimum number of
+// digits (precision 0 prints nothing for 0); without one, the '0' flag pads the digits to the width
+// after the sign; '+' prints a '+' for a nonnegative v. The result is padded with spaces.
+func fmtInteger(v int, base int, sp spec) string {
+	negative := v < 0
+	digits := strconv.FormatInt(v, base)
+	if negative {
+		digits = digits[1:]
+	}
+	prec := 0
+	nozero := sp
+	nozero.zero = false
+	if sp.precPresent {
+		prec = sp.prec
+		if prec == 0 && v == 0 {
+			return padString("", nozero)
+		}
+	} else if sp.zero && !sp.minus && sp.wid > 0 {
+		prec = sp.wid
+		if negative || sp.plus {
+			prec-- // leave room for the sign
+		}
+	}
+	for len(digits) < prec {
+		digits = "0" + digits
+	}
+	if negative {
+		digits = "-" + digits
+	} else if sp.plus {
+		digits = "+" + digits
+	}
+	return padString(digits, nozero)
+}
+
+// fmtFloat formats v as Go's fmtFloat: %v is %g with the shortest precision; %b %g %G %x %X default
+// to the shortest precision and %e %E %f %F to 6. '+' prints a '+' for nonnegative numbers, and
+// the '0' flag pads after the sign; infinities and NaN are padded with spaces, and NaN has no sign
+// unless '+' is given.
+func fmtFloat(v float64, verb byte, sp spec) (string, bool) {
+	prec := -1
+	f := verb
+	switch verb {
+	case 'v':
+		f = 'g'
+	case 'b', 'g', 'G', 'x', 'X':
+	case 'f', 'e', 'E':
+		prec = 6
+	case 'F':
+		f = 'f'
+		prec = 6
+	default:
+		return "", false
+	}
+	if sp.precPresent {
+		prec = sp.prec
+	}
+	num := strconv.FormatFloat(v, f, prec)
+	sign := "+"
+	if num[0] == '-' || num[0] == '+' {
+		sign = num[:1]
+		num = num[1:]
+	}
+	if num[0] == 'I' || num[0] == 'N' {
+		nozero := sp
+		nozero.zero = false
+		if num[0] == 'N' && !sp.plus {
+			return padString(num, nozero), true
+		}
+		return padString(sign+num, nozero), true
+	}
+	if sp.plus || sign != "+" {
+		if sp.zero && !sp.minus && sp.wid > len(sign)+len(num) {
+			return sign + zeros(sp.wid-len(sign)-len(num)) + num, true
+		}
+		return padString(sign+num, sp), true
+	}
+	return padString(num, sp), true
+}
+
+func zeros(n int) string {
+	b := make([]byte, n)
+	for k := range b {
+		b[k] = '0'
+	}
+	return string(b)
+}
+
+// padString pads s to the width in runes: on the right with '-', else on the left, with zeros if
+// the '0' flag is given and spaces otherwise (Go's padString and writePadding).
+func padString(s string, sp spec) string {
+	n := sp.wid - utf8.RuneCountInString(s)
+	if n <= 0 {
+		return s
+	}
+	fill := make([]byte, n)
+	for k := range fill {
+		fill[k] = ' '
+		if sp.zero && !sp.minus {
+			fill[k] = '0'
+		}
+	}
+	if sp.minus {
+		return s + string(fill)
+	}
+	return string(fill) + s
+}
+
+// badVerb reports a verb its argument's type does not accept, as Go's fmt does: the value is
+// formatted as %v with the verb's flags, width, and precision.
+func badVerb(arg any, verb byte, sp spec) string {
+	if arg == nil {
+		return "%!" + string(rune(verb)) + "(<nil>)"
+	}
+	text, ok := formatArg(arg, 'v', sp)
+	if !ok {
+		return "%!" + string(rune(verb)) + "(?)"
+	}
+	return "%!" + string(rune(verb)) + "(" + typeName(arg) + "=" + text + ")"
+}
+
+// typed is TYPE=VALUE for the error reports; types without a name here print as "?".
+func typed(arg any) string {
+	if arg == nil {
+		return "<nil>"
+	}
+	text, ok := formatArg(arg, 'v', spec{})
+	if !ok {
+		return "?"
+	}
+	return typeName(arg) + "=" + text
+}
+
+// typeName is Go's name for the dynamic type of arg in the error reports; "?" for a type that has
+// no name here.
+func typeName(arg any) string {
+	switch arg.(type) {
+	case string:
+		return "string"
+	case int:
+		return "int"
+	case byte:
+		return "uint8"
+	case rune:
+		return "int32"
+	case bool:
+		return "bool"
+	case float64:
+		return "float64"
+	case errorText:
+		return "error"
+	}
+	return "?"
 }
 
 // quoteRune is a single-quoted, ASCII-only literal of the rune v, as Go's %+q of an integer
@@ -217,64 +412,4 @@ func hexString(s string) string {
 		b = append(b, digits[s[i]>>4], digits[s[i]&15])
 	}
 	return string(b)
-}
-
-// pad pads s to width runes: on the right with '-', else on the left, with zeros if zero (after
-// the sign of a number, num) and spaces otherwise, as Go's fmt.
-func pad(s string, width int, minus, zero, num bool) string {
-	n := width - utf8.RuneCountInString(s)
-	if n <= 0 {
-		return s
-	}
-	fill := make([]byte, n)
-	for k := range fill {
-		fill[k] = ' '
-		if zero {
-			fill[k] = '0'
-		}
-	}
-	if minus {
-		return s + string(fill)
-	}
-	if zero && num && len(s) > 0 && s[0] == '-' {
-		return "-" + string(fill) + s[1:]
-	}
-	return string(fill) + s
-}
-
-// badVerb reports a verb its argument's type does not accept, as Go's fmt does.
-// The value is formatted as %v with the verb's flags and width.
-func badVerb(arg any, verb byte, width int, minus, zero bool) string {
-	if arg == nil {
-		return "%!" + string(rune(verb)) + "(<nil>)"
-	}
-	name, _, _ := strings.Cut(typed(arg), "=")
-	text, num, ok := formatArg(arg, 'v')
-	if !ok {
-		return "%!" + string(rune(verb)) + "(?)"
-	}
-	return "%!" + string(rune(verb)) + "(" + name + "=" + pad(text, width, minus, zero, num) + ")"
-}
-
-// typed is TYPE=VALUE for the error reports; types without a name here print as "?".
-func typed(arg any) string {
-	switch v := arg.(type) {
-	case nil:
-		return "<nil>"
-	case string:
-		return "string=" + v
-	case int:
-		return "int=" + strconv.Itoa(v)
-	case byte:
-		return "uint8=" + strconv.Itoa(int(v))
-	case rune:
-		return "int32=" + strconv.Itoa(int(v))
-	case bool:
-		return "bool=" + strconv.FormatBool(v)
-	case errorText:
-		return "error=" + v.Error()
-	case Stringer:
-		return "?=" + v.String()
-	}
-	return "?"
 }

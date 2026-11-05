@@ -75,8 +75,25 @@ def random_strings(rng, n):
     return out
 
 
+def float_bits(rng):
+    """Interesting float64 bit patterns (as signed int): specials, boundaries, and random values."""
+    import struct
+    def b(f):
+        return struct.unpack("<q", struct.pack("<d", f))[0]
+    fs = [0.0, -0.0, 1.0, -1.0, 0.1, 0.5, 2.5, 1e23, 5e-324, 2.2250738585072014e-308, 1.7976931348623157e308,
+          123456789.0, 1e21, 1e20, 0.000123, 9.5, 0.95, 99.5, 1234.5678, 1e-7, 1 / 3]
+    fs += [rng.uniform(-1000, 1000) for _ in range(30)] + [round(rng.uniform(-100, 100), 2) for _ in range(20)]
+    out = [b(f) for f in fs] + [0x7FF0000000000000, -0x10000000000000, 0x7FF8000000000000]
+    out += [rng.getrandbits(63) * rng.choice([1, -1]) for _ in range(30)]
+    return [v for v in out if (v & 0x7FF0000000000000) != 0x7FF0000000000000 or v in (0x7FF0000000000000, -0x10000000000000, 0x7FF8000000000000)]
+
+
+FLOATS = []
+
+
 def snippets(rng, strs):
     """Pairs (go, sgo) of statement snippets; each prints exactly one line through ln."""
+    FLOATS[:] = float_bits(rng)
     T = []
 
     def both(code):
@@ -139,6 +156,20 @@ def snippets(rng, strs):
         both(f"x := {il}; sort.Ints(x); y := {sl}; sort.Strings(y); ln(IL(x) + QL(y) + I(sort.SearchInts(x, 1)) + I(sort.SearchStrings(y, \"b\")))")
         k = rng.randint(1, 5)
         T.append((f"ln(IL(goPerm({n}, {k})))", f"ln(IL(sort.Perm({n}, func(i, j int) bool {{ return i%{k} < j%{k} }})))"))
+    # std/strconv floats (D193): FormatFloat in every format and precision, and ParseFloat of
+    # generated texts (decimal, hex, special values, and malformed ones).
+    for _ in range(400):
+        b = rng.choice(FLOATS)
+        f = rng.choice("eEfgGbxX")
+        p = rng.choice([-1, 0, 1, 2, 3, 6, 10, 17, 25])
+        T.append((f"ln(Q(strconv.FormatFloat(FV({b}), '{f}', {p}, 64)))", f"ln(Q(strconv.FormatFloat(FV({b}), '{f}', {p})))"))
+    for _ in range(400):
+        t = rng.choice(["", "-", "+"]) + rng.choice([
+            str(rng.randint(0, 10**rng.randint(1, 25))) + "." + str(rng.randint(0, 10**rng.randint(0, 20))) + "e" + str(rng.randint(-330, 320)),
+            str(rng.random() * 10**rng.randint(-20, 20)), "0x1.%xp%d" % (rng.getrandbits(52), rng.randint(-1080, 1030)),
+            rng.choice(["inf", "Infinity", "nan", "1e", "1_0.5", "_1", "0x1p", ".", "1.2.3", "1e400", "4.9e-324", "2.4703282292062328e-324"])])
+        T.append((f"f, err := strconv.ParseFloat({lit(t.encode())}, 64); ln(Q(strconv.FormatFloat(f, 'b', -1, 64)) + E(err))",
+                  f"f, err := strconv.ParseFloat({lit(t.encode())}); ln(Q(strconv.FormatFloat(f, 'b', -1)) + E(err))"))
     # std/fmt (SGO-STD-009): random formats over int, string, and bool arguments. %q is S-Go's
     # QuoteToASCII form, which is Go's %+q; %c and %q of an int use printable ASCII.
     for _ in range(300):
@@ -147,8 +178,11 @@ def snippets(rng, strs):
             pre = rng.choice(["", "x=", " ", "|", "é"])
             gof += pre
             sgf += pre
-            kind = rng.choice(["int", "int", "str", "bool", "chr"])
-            if kind == "int":
+            kind = rng.choice(["int", "int", "str", "bool", "chr", "float", "float"])
+            if kind == "float":
+                ga = "FV(%d)" % rng.choice(FLOATS)
+                verb = rng.choice("vfeEgGFbxX")
+            elif kind == "int":
                 v = rng.choice([0, 7, -3, 255, -255, 2**63 - 1, rng.randint(-10**6, 10**6)])
                 verb = rng.choice("dvx")
                 ga = str(v)
@@ -164,10 +198,12 @@ def snippets(rng, strs):
                 verb = rng.choice("tv")
             if rng.random() < 0.1:
                 verb = rng.choice("dst")  # possibly a verb the type does not take
-            flags = rng.choice(["", "", "-", "0"])
-            width = rng.choice(["", "", "3", "8"])
-            gof += "%" + flags + ("+" if verb == "q" else "") + width + verb
-            sgf += "%" + flags + width + verb
+            flags = rng.choice(["", "", "-", "0", "+", "-+", "0+"])
+            width = rng.choice(["", "", "3", "8", "12"])
+            prec = rng.choice(["", "", "", ".0", ".1", ".3", ".8", ".20"])
+            gq = "+" if verb == "q" and "+" not in flags else ""
+            gof += "%" + flags + gq + width + prec + verb
+            sgf += "%" + flags + width + prec + verb
             gargs.append(ga)
             sargs.append(ga)
         if rng.random() < 0.1:
@@ -212,6 +248,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"sort"
 	"strconv"
@@ -224,6 +261,7 @@ var out strings.Builder
 
 func ln(s string)        { out.WriteString(s); out.WriteByte('\n') }
 func I(v int) string     { return strconv.Itoa(v) + ";" }
+func FV(b int64) float64 { return math.Float64frombits(uint64(b)) }
 func B(v bool) string    { return strconv.FormatBool(v) + ";" }
 func Q(s string) string  { return strconv.QuoteToASCII(s) + ";" }
 func QL(a []string) string {
@@ -298,6 +336,7 @@ import (
 	"sgo"
 	"std/bytes"
 	"std/fmt"
+	"std/math"
 	"std/sort"
 	"std/strconv"
 	"std/strings"
@@ -314,6 +353,7 @@ func (o *outBuf) ln(s string) {
 	_ = o.b.WriteByte('\n')
 }
 func I(v int) string    { return strconv.Itoa(v) + ";" }
+func FV(b int) float64  { return math.Float64frombits(b) }
 func B(v bool) string   { return strconv.FormatBool(v) + ";" }
 func Q(s string) string { return strconv.QuoteToASCII(s) + ";" }
 func QL(a []string) string {
