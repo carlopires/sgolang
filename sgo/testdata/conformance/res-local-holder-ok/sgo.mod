@@ -1,3 +1,3 @@
 module example.com/res-local-holder-ok
 
-sgo 0.18.0
+sgo 0.19.0

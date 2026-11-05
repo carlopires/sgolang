@@ -1,3 +1,3 @@
 module example.com/test-files-not-in-build
 
-sgo 0.18.0
+sgo 0.19.0

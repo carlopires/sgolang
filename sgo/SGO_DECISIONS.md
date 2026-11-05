@@ -1084,6 +1084,14 @@ SGO-PROC-003 and SGO-PROC-004 get new versions.
 
 **Plan (W24, after approval).** D178, D179, D182, D180, D181 (runtime, driver, lab), model first for D179 (an interrupt racing scope ends); D183 (std, with differential tests); D184 last, as the acceptance. Spec 0.19.0.
 
+
+## D186 — A plain error exit for CLIs · PROPOSED 2026-11-07
+
+**Question.** `main` returning an error exits 1 and writes a JSON `MainError` record to stderr (SGO-PROC-002), which suits tools reading the stream but not a person at a terminal: a CLI that writes its own message (`undisk: unknown flag --x`) is followed by the record.
+
+**Options.** (a) Keep the record: programs live with the second line. (b) A usage-error kind: `return sgo.Exit(1, msg)` (or an error for which a predicate holds) ends with status 1 and only the message on stderr; a non-zero status other than 1 stays out of the programs' hands. (c) The record in human form (`main: message`) when stderr is a terminal, JSON otherwise.
+
+**Recommendation.** (b), as the one that keeps the record for every unexpected failure and gives CLIs the conventional form. Not part of W24: the 0.19.0 example writes its own line and returns the error.
 ---
 
 ## Approval record

@@ -1,3 +1,3 @@
 module example.com/comp-pointer-field
 
-sgo 0.18.0
+sgo 0.19.0

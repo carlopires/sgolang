@@ -2,6 +2,27 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.19.0 — 2026-11-07
+
+Command-line programs as first-class (W24; D178–D184, D177 withdrawn). Every 0.18.0 program keeps its meaning: the additions are new APIs and grants, and the one change of behavior is that SIGINT and SIGTERM now cancel the root instead of ending the process outside S-Go's outcomes (SGO-PROC-005).
+
+New clauses:
+
+- SGO-PROC-005 — interrupts: the first SIGINT or SIGTERM cancels the root (`sgo.IsInterrupted`); the program unwinds with its own status; a second signal exits 130 or 143 (D179).
+- SGO-LAB-007 — lab standard input, environment, and interrupts: `sgo lab run|sweep -stdin FILE -env NAME=VALUE -interrupt MS[,MS]`, recorded in the trace and replayed (D178–D180).
+- SGO-STD-009 — `std/fmt`: `Sprintf`, `Fprintf`, `Errorf`, `Wrapf` over an explicit `[]any`, verbs `%s %q %d %x %c %t %v`, Go's format-error forms (D183).
+- SGO-STD-010 — `std/time`: `Duration`, `ParseDuration`, `String`, the unit constants; no clock (D183).
+
+Amended clauses:
+
+- SGO-PROC-002 v2 — the statuses 130 and 143 after a second interrupt.
+- SGO-PROC-003 v2 — `root.Stderr()`; `Write`, `IsTerminal`, `TerminalWidth`; a write to a closed pipe returns an error for which `sgo.IsBrokenPipe` holds, and SIGPIPE never ends the process (D178).
+- SGO-PROC-004 v3 — `root.Args()` (D178), `root.Getenv` for `grant env NAME|PREFIX*` (D180), and `root.Stdin()` with `ReadLine`, `ReadAll`, `ReadSecret`, `IsTerminal` (D178).
+- SGO-FILE-002 v5 — per-user application directories: `grant dir config|state|cache ro|rw` and `app NAME` (D182); argument paths: `grant path args ro|rw`, `root.ArgDir`, `root.OpenArg`, `root.CreateArg` (D181).
+- SGO-NET-002 v4 — sockets in the application's runtime directory: `unix:@runtime/NAME` (D182).
+
+Floating point stays denied (SGO-FLOAT-001): `std/fmt` has no float verbs and `std/strconv` no `ParseFloat`; admitting `float64` is D185, for a later week. The CLI library of D184 is an example, `sgo/examples/cli`, not part of the specification.
+
 ## 0.18.0 — 2026-11-06
 
 The concurrency library and resource interfaces (W23; D173–D176) and the errata of the 0.17.0 review. Not every 0.17.0 program keeps its meaning: an error exit (a `return` with a non-nil error, a failing `check`) cancels each nursery it crosses, as implemented since W22 (SGO-CTL-004 v2); `Own` of a non-pointer value is refused; a start into a cancelling nursery publishes the cancellation instead of deadlocking.

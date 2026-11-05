@@ -270,6 +270,19 @@ def main():
             if r.returncode != status or r.stdout != want or r2.returncode != status or r2.stdout != want:
                 problems.append("lab -interrupt %s: run %d %r, replay %d %r %r" % (times, r.returncode, r.stdout, r2.returncode, r2.stdout, r2.stderr[-200:]))
 
+        # Lab input refusals (SGO-LAB-007): bad -stdin, -env, and -interrupt values are refused before
+        # the run, and a replay takes its input from the trace alone (no -stdin, -env, -interrupt).
+        refusals = [(["run", "-stdin", os.path.join(tmp, "absent.txt")], "cannot read -stdin file"),
+                    (["run", "-env", "NOEQUALS"], "-env must be NAME=VALUE"),
+                    (["run", "-interrupt", "5,4"], "non-decreasing"),
+                    (["run", "-interrupt", "1,2,3"], "at most two times"),
+                    (["replay", "-stdin", os.path.join(tmp, "in.txt"), os.path.join(tmp, "i.jsonl")], "unknown flag -stdin"),
+                    (["replay", "-env", "A=1", os.path.join(tmp, "i.jsonl")], "unknown flag -env")]
+        for args, want in refusals:
+            r = subprocess.run([sgo, "lab"] + args + ["."], cwd=tmp, capture_output=True, text=True, timeout=120)
+            if r.returncode != 2 or "SGO_E_USAGE" not in r.stderr or want not in r.stderr:
+                problems.append("lab refusal %s: exit %d %r" % (" ".join(args[:2]), r.returncode, r.stderr[-200:]))
+
         # Interrupts (D179): the first SIGINT or SIGTERM cancels the root, so the program unwinds with
         # status 1; a second one ends it at once with 128+signal. The child starts with default signal
         # dispositions (a background job of a non-interactive shell would ignore SIGINT).
@@ -305,7 +318,7 @@ def main():
         for p in problems:
             print("test-cli: FAIL", p)
         sys.exit(1)
-    print("test-cli: ok: installed-binary arguments, broken pipe ends quietly, terminal detection and width, idle stdin ends at its deadline, ReadSecret hides the secret, lab stdin replays, an interrupt unwinds, a second one ends the process, lab interrupts replay, application directories and sockets")
+    print("test-cli: ok: installed-binary arguments, broken pipe ends quietly, terminal detection and width, idle stdin ends at its deadline, ReadSecret hides the secret, lab stdin replays, lab input refusals, an interrupt unwinds, a second one ends the process, lab interrupts replay, application directories and sockets")
 
 
 if __name__ == "__main__":

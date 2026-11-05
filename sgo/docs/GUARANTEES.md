@@ -78,7 +78,7 @@ A child failure cancels its siblings and is reported to the owner; the primary e
 - **Scope:** runtime_enforced, model_explored, tested
 - **Model bounds:** sgo/model (model.go, explore.go): all interleavings of the 18 W01 scenarios (sgo/evidence/w01/README.md)
 - **Families:** SPEC-DEFER, SPEC-ERRORS, SPEC-PROC
-- **Clauses:** SGO-DEF-001, SGO-DEF-002, SGO-DEF-003, SGO-DEF-004, SGO-DEF-005, SGO-ERR-001, SGO-ERR-002, SGO-ERR-003, SGO-ERR-004, SGO-PROC-001, SGO-PROC-002, SGO-PROC-003, SGO-PROC-004
+- **Clauses:** SGO-DEF-001, SGO-DEF-002, SGO-DEF-003, SGO-DEF-004, SGO-DEF-005, SGO-ERR-001, SGO-ERR-002, SGO-ERR-003, SGO-ERR-004, SGO-PROC-001, SGO-PROC-002, SGO-PROC-003, SGO-PROC-004, SGO-PROC-005
 - **Acceptance cases:** O04, P01, P04, P05, P06, P08, S03, S06, S13, S16, S20, X09, X12
 - **Implementation:** `src/runtime/sgo_nursery.go`, `src/runtime/sgo_main.go`, `src/runtime/panic.go`, `src/runtime/sgo_record.go`
 

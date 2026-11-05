@@ -181,7 +181,7 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 
 ### SGO-STD-009 — `std/fmt`: Formatted text
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-001, SGO-STD-004, SGO-STD-008, SGO-IFACE-004, SGO-TYPE-003; D125, D183.
 - **grammar_and_types:** The package `std/fmt` exports exactly: `func Errorf(format string, args []any) error`; `func Fprintf(w io.Writer, format string, args []any) error`; `func Sprintf(format string, args []any) string`; `func Wrapf(err error, format string, args []any) error`; `type Stringer`. `Stringer` is an interface with `String() string`. The arguments are an explicit `[]any`, since variadic functions are denied (SGO-TYPE-003).
 - **preconditions:** None.
@@ -198,12 +198,12 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **positive_tests:** fixture:std-fmt-basic; `sgo/scripts/test-std-diff.py` (against Go's fmt).
 - **negative_tests:** fixture:std-fmt-basic (format errors in the text).
 - **implementation_coverage:** `src/sgostd/fmt/`.
-- **executed_evidence:** n/a: draft; recorded at the 0.19.0 freeze.
+- **executed_evidence:** conformance fixture std-fmt-basic (darwin/arm64, linux/amd64, linux/arm64); `sgo/scripts/test-std-diff.py` (seeds 1 and 7, identical to Go's); `src/sgostd` package tests; `sgo/evidence/w24/README.md`.
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-010 — `std/time`: Durations
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-001, SGO-STD-004, SGO-UTYPE-001, SGO-AUTH-002; D125, D183.
 - **grammar_and_types:** The package `std/time` exports exactly: `const Hour`; `const Microsecond`; `const Millisecond`; `const Minute`; `const Nanosecond`; `const Second`; `func (Duration) Milliseconds() int`; `func (Duration) Nanoseconds() int`; `func (Duration) String() string`; `func ParseDuration(s string) (Duration, error)`; `type Duration`. `Duration` is `int`, nanoseconds; the constants are `Duration`.
 - **preconditions:** None.
@@ -220,5 +220,5 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **positive_tests:** fixture:std-time-duration; `sgo/scripts/test-std-diff.py` (against Go's time).
 - **negative_tests:** fixture:std-time-duration (invalid texts).
 - **implementation_coverage:** `src/sgostd/time/`.
-- **executed_evidence:** n/a: draft; recorded at the 0.19.0 freeze.
+- **executed_evidence:** conformance fixture std-time-duration (darwin/arm64, linux/amd64, linux/arm64); `sgo/scripts/test-std-diff.py` (seeds 1 and 7, identical to Go's); `src/sgostd` package tests; `sgo/evidence/w24/README.md`.
 - **supported_execution_configurations:** production, lab.

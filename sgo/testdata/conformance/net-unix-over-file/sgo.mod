@@ -1,5 +1,5 @@
 module example.com/net-unix-over-file
 
-sgo 0.18.0
+sgo 0.19.0
 grant listen unix:busy
 grant dir here . ro

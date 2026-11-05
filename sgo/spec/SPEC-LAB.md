@@ -136,7 +136,7 @@ Denied in subsets 0 to 2 (spec 0.1.0 to 0.3.0, SGO-LAB-001). Spec 0.4.0 admits t
 
 ### SGO-LAB-007 — Lab standard input, environment, and interrupts
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-LAB-003, SGO-LAB-004, SGO-LAB-005; D178, D179, D180.
 - **grammar_and_types:** `sgo lab run [-stdin FILE] [-env NAME=VALUE]… [-interrupt MS[,MS]] … pkg [-- ARGS]` and `sgo lab sweep [-stdin FILE] [-env NAME=VALUE]… [-interrupt MS[,MS]] … pkg [-- ARGS]`; the program reads stdin through `root.Stdin()` (an `*sgo.Input`) and observes an interrupt as the cancellation `sgo.IsInterrupted` recognizes.
 - **preconditions:** FILE is readable by the driver; it is host input, not a grant of the program.
@@ -145,13 +145,13 @@ Denied in subsets 0 to 2 (spec 0.1.0 to 0.3.0, SGO-LAB-001). Spec 0.4.0 admits t
 - **effect_and_capability_requirements:** n/a — the stdin capability is held by the root context as in production; the lab only replaces its source.
 - **concurrency_and_memory_order:** n/a — the run is one interleaving (SGO-LAB-003).
 - **allowed_nondeterminism:** None: the input, the environment, and the interrupt times are fixed by the manifest.
-- **failure_and_partial_progress:** An unreadable FILE, an `-env` entry that is not NAME=VALUE, or more than two or decreasing `-interrupt` times, is refused before the run (`SGO_E_USAGE`). A replay of a trace whose text differs from a given `-stdin` is refused (`SGO_E_LAB_MANIFEST`).
+- **failure_and_partial_progress:** An unreadable FILE, an `-env` entry that is not NAME=VALUE, or more than two or decreasing `-interrupt` times, is refused before the run (`SGO_E_USAGE`). `sgo lab replay` takes no `-stdin`, `-env`, or `-interrupt` (`SGO_E_USAGE`): the input, the environment, and the interrupt times come from the trace alone.
 - **cancellation_and_cleanup:** n/a — a read of lab input never blocks, so cancellation is observed at the program's next checkpoint.
 - **compile_link_checks:** n/a — no source construct.
 - **runtime_guards:** n/a — the input is supplied by the boot sequence (SGO-LAB-002).
 - **tcb_assumptions:** The driver is host code (SGO-TOOL-001).
-- **positive_tests:** D02, D13; `sgo/scripts/test-cli.py` (lab stdin is read and replayed).
-- **negative_tests:** n/a — draft; refusal fixtures are added at the freeze.
+- **positive_tests:** D02, D13; `sgo/scripts/test-cli.py` (lab stdin is read and replayed; an `-interrupt` time cancels the root, a second ends the run with 130, and both replay).
+- **negative_tests:** D13; `sgo/scripts/test-cli.py` (an unreadable `-stdin` file, an `-env` entry that is not NAME=VALUE, decreasing or more than two `-interrupt` times, and replay given `-stdin` or `-env` are refused with `SGO_E_USAGE`).
 - **implementation_coverage:** driver `cmd/sgo/lab.go`, `lab_cmds.go`; runtime `sgo_lab_boot.go`, `sgo_stdin.go`.
-- **executed_evidence:** n/a — draft; recorded at the 0.19.0 freeze.
+- **executed_evidence:** `sgo/scripts/test-cli.py` (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w24/README.md`.
 - **supported_execution_configurations:** lab.
