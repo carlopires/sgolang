@@ -158,32 +158,82 @@ func sgoIntString(v int) string {
 
 var sgoStdoutLock mutex
 
-// sgo_write writes all of s to fd 1, atomically with respect to other calls (SGO-PROC-003). It
-// returns the number of bytes written and whether the whole string was written.
+// sgo_write writes all of s to fd 1 or fd 2 (standard output or error), atomically with respect to
+// other calls (SGO-PROC-003, D178). It returns the number of bytes written and nil, or an I/O error:
+// BrokenPipe when the reader has gone (SIGPIPE does not end the process), IOError otherwise.
 //
 //go:linkname sgo_write sgo.runtime_write
-func sgo_write(s string) (int, bool) {
+func sgo_write(fd int, s string) (int, error) {
 	if sgoLab != nil {
 		sgoLabPoint()
-		sgoLabWriteText(s)
+		if fd == 1 {
+			sgoLabWriteText(s)
+		}
 	}
 	p := unsafe.Pointer(unsafe.StringData(s))
 	done := 0
+	errno := int32(0)
 	lock(&sgoStdoutLock)
 	for done < len(s) {
 		chunk := len(s) - done
 		if chunk > 1<<30 {
 			chunk = 1 << 30
 		}
-		n := write1(1, add(p, uintptr(done)), int32(chunk))
+		n := write1(uintptr(fd), add(p, uintptr(done)), int32(chunk))
 		if n == -_EINTR {
 			continue
 		}
 		if n <= 0 {
+			errno = -n
 			break
 		}
 		done += int(n)
 	}
 	unlock(&sgoStdoutLock)
-	return done, done == len(s)
+	if done == len(s) {
+		return done, nil
+	}
+	op := "Stdout.Write"
+	if fd == 2 {
+		op = "Stderr.Write"
+	}
+	if errno == sgoEPIPE {
+		return done, &sgoIOError{kind: "BrokenPipe", op: op, msg: "the reader has gone", progress: done}
+	}
+	return done, &sgoIOError{kind: "IOError", op: op, progress: done}
+}
+
+// sgo_isBrokenPipe reports whether err is a write to standard output or error whose reader has
+// gone (D178).
+//
+//go:linkname sgo_isBrokenPipe sgo.runtime_isBrokenPipe
+func sgo_isBrokenPipe(err error) bool {
+	e, ok := any(err).(*sgoIOError)
+	return ok && e.kind == "BrokenPipe"
+}
+
+// sgo_isTerminal reports whether fd (0, 1, or 2) is a terminal; never in the lab (D178).
+//
+//go:linkname sgo_isTerminal sgo.runtime_isTerminal
+func sgo_isTerminal(fd int) bool {
+	if sgoLab != nil {
+		return false
+	}
+	var buf [128]byte // a termios
+	return sgoIoctl(int32(fd), sgoTIOCGETA, unsafe.Pointer(&buf[0])) == 0
+}
+
+// sgo_terminalWidth is the width in columns of the terminal on fd, or 0 when fd is not a terminal
+// or reports none; always 0 in the lab (D178).
+//
+//go:linkname sgo_terminalWidth sgo.runtime_terminalWidth
+func sgo_terminalWidth(fd int) int {
+	if sgoLab != nil {
+		return 0
+	}
+	var ws [4]uint16 // rows, cols, xpixel, ypixel
+	if sgoIoctl(int32(fd), sgoTIOCGWINSZ, unsafe.Pointer(&ws[0])) != 0 {
+		return 0
+	}
+	return int(ws[1])
 }

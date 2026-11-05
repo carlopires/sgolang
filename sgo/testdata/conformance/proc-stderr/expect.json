@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-PROC-003"
+ ],
+ "exit": 0,
+ "stdout": "terminal=false width=0\n",
+ "stderr_exact": "usage: tool COMMAND\n",
+ "note": "D178: root.Stderr converts to io.Writer; streams that are not terminals report so."
+}

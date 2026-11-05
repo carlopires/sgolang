@@ -62,9 +62,9 @@ type sgoHandle struct {
 	// sgo_readbuf.go). Only the holder of the turn touches rbuf.
 	rturn atomic.Uint32
 	rbuf  string
-	name           string     // for messages: the path or address
-	prev           *sgoHandle // the scope's resources (sgoResList)
-	next           *sgoHandle
+	name  string     // for messages: the path or address
+	prev  *sgoHandle // the scope's resources (sgoResList)
+	next  *sgoHandle
 }
 
 // sgoIOErr is the result of a failed operation: its kind and the bytes transferred before it.

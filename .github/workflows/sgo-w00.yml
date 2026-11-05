@@ -101,6 +101,9 @@ jobs:
       - name: Cross-package nurseries with and without inlining (X10)
         run: sgo/scripts/test-x10.py
 
+      - name: CLI process interface (D178; arguments, broken pipe, terminals)
+        run: sgo/scripts/test-cli.py
+
       - name: Compiled S-Go code reaches channels only through S-Go entry points (S12, W07)
         run: sgo/scripts/test-native-lowering.py
 

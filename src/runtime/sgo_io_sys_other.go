@@ -9,6 +9,8 @@
 
 package runtime
 
+import "unsafe"
+
 const (
 	sgoO_RDONLY, sgoO_WRONLY, sgoO_CREAT, sgoO_EXCL, sgoO_TRUNC, sgoO_CLOEXEC     = 0, 1, 0, 0, 0, 0
 	sgoO_NOFOLLOW, sgoO_DIRECTORY                                                 = 0, 0
@@ -61,3 +63,11 @@ func sgoReadDirNames(fd int32) ([]string, int32) { return nil, -sgoENOSYS }
 
 func sgoPeerUID(fd int32) (int, int32) { return 0, -sgoENOSYS }
 func sgoStatMode(b *sgoStatBuf) uint32 { return 0 }
+
+const (
+	sgoTIOCGETA   = 0
+	sgoTIOCGWINSZ = 0
+)
+
+// sgoIoctl is not provided on this platform: no stream is a terminal.
+func sgoIoctl(fd int32, req uintptr, arg unsafe.Pointer) int32 { return -1 }

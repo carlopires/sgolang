@@ -126,3 +126,17 @@ TEXT runtime·sgo_ftruncate_trampoline(SB),NOSPLIT,$0
 	NEG	R0, R0
 noerr:
 	RET
+
+// ioctl(fd int32 @0, req @8, arg @16) -> ret int32 @24. The third argument is variadic and is
+// passed on the stack (as fcntl_trampoline, sys_darwin_arm64.s).
+TEXT runtime·sgo_ioctl_trampoline(SB),NOSPLIT,$0
+	SUB	$16, RSP
+	MOVD	R0, R19
+	MOVW	0(R19), R0
+	MOVD	8(R19), R1
+	MOVD	16(R19), R2
+	MOVD	R2, (RSP)
+	BL	libc_ioctl(SB)
+	MOVW	R0, 24(R19)
+	ADD	$16, RSP
+	RET

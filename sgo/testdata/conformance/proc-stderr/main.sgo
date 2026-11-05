@@ -1,0 +1,16 @@
+package main
+
+import (
+	"sgo"
+	"std/io"
+	"std/strconv"
+)
+
+// root.Stderr is the stderr capability, an io.Writer like stdout; neither stream is a terminal
+// here, so IsTerminal is false and TerminalWidth 0 (D178).
+func main(root *sgo.Context) error {
+	out, errw := root.Stdout(), root.Stderr()
+	var w io.Writer = errw
+	check io.WriteString(w, "usage: tool COMMAND\n")
+	return out.WriteString("terminal=" + strconv.FormatBool(out.IsTerminal() || errw.IsTerminal()) + " width=" + strconv.Itoa(out.TerminalWidth()) + "\n")
+}

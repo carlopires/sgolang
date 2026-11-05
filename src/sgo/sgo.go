@@ -16,16 +16,25 @@ type Context struct{ t unsafe.Pointer }
 // Nursery is the handle of one nursery statement (SGO-NUR-001).
 type Nursery struct{ s unsafe.Pointer }
 
-// Writer is the stdout capability (SGO-PROC-003).
-type Writer struct{ _ [0]func() }
+// Writer is the stdout or the stderr capability (SGO-PROC-003, D178).
+type Writer struct {
+	_  [0]func()
+	fd int
+}
 
-var stdout Writer
+var (
+	stdout = Writer{fd: 1}
+	stderr = Writer{fd: 2}
+)
 
 // Implemented in the runtime (sgo_scope.go).
 func runtime_spawn(scope unsafe.Pointer, fn func(task unsafe.Pointer) error) error
 func runtime_isRoot(task unsafe.Pointer) bool
 func runtime_isCurrent(task unsafe.Pointer) bool
-func runtime_write(s string) (int, bool)
+func runtime_write(fd int, s string) (int, error)
+func runtime_isBrokenPipe(err error) bool
+func runtime_isTerminal(fd int) bool
+func runtime_terminalWidth(fd int) int
 func runtime_args() []string // sgo_proc.go
 func runtime_violation(msg string)
 func runtime_fail(kind, msg string) // unwinds with a checked failure of the kind (SGO-DEF-003)
@@ -112,25 +121,40 @@ func (c *Context) Args() []string {
 	return runtime_args()
 }
 
-// WriteString writes all of s to standard output, unbuffered and atomically (SGO-PROC-003).
-func (w *Writer) WriteString(s string) error {
-	n, ok := runtime_write(s)
-	if !ok {
-		return NewError("stdout write failed after " + itoa(n) + " bytes")
+// Stderr returns the stderr capability; only the root context holds it (D178).
+func (c *Context) Stderr() *Writer {
+	c.own()
+	if !runtime_isRoot(c.t) {
+		runtime_fail("MissingCapability", "Stderr called on a context that does not hold the stderr capability")
 	}
-	return nil
+	return &stderr
 }
 
-// Write writes all of s to standard output, as WriteString does, and returns len(s), or the
-// number of bytes written and an error. With it, standard output converts to io.Writer, as an
-// untied value: it holds no scope resource (D176).
-func (w *Writer) Write(s string) (int, error) {
-	n, ok := runtime_write(s)
-	if !ok {
-		return n, NewError("stdout write failed after " + itoa(n) + " bytes")
-	}
-	return n, nil
+// WriteString writes all of s to the stream, unbuffered and atomically (SGO-PROC-003). A write
+// whose reader has gone fails with an error for which IsBrokenPipe holds (D178).
+func (w *Writer) WriteString(s string) error {
+	_, err := runtime_write(w.fd, s)
+	return err
 }
+
+// Write writes all of s to the stream, as WriteString does, and returns len(s), or the number of
+// bytes written and an error. With it, the stream converts to io.Writer, as an untied value: it
+// holds no scope resource (D176).
+func (w *Writer) Write(s string) (int, error) {
+	return runtime_write(w.fd, s)
+}
+
+// IsTerminal reports whether the stream is a terminal; never in the lab (D178).
+func (w *Writer) IsTerminal() bool { return runtime_isTerminal(w.fd) }
+
+// TerminalWidth is the width of the terminal in columns, or 0 when the stream is not a terminal
+// or reports no width; always 0 in the lab (D178).
+func (w *Writer) TerminalWidth() int { return runtime_terminalWidth(w.fd) }
+
+// IsBrokenPipe reports whether err is a write to standard output or error whose reader has gone,
+// as when the program's output is piped into a command that has exited (D178). A program may end
+// quietly on it.
+func IsBrokenPipe(err error) bool { return runtime_isBrokenPipe(err) }
 
 func (c *Context) own() {
 	if c == nil || !runtime_isCurrent(c.t) {

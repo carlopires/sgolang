@@ -25,3 +25,11 @@ Decisions D178–D184 (approved 2026-11-06; D177 withdrawn). CLI programs as fir
 - **D178.3 broken pipe.** Already true on darwin/arm64: a write to a closed pipe returns an error
   (SIGPIPE does not kill the process) and `main` exits through `MainError` (status 1). Owed:
   `sgo.IsBrokenPipe(err)`, so a program can end quietly; Linux to be checked in CI.
+- **SGO-PROC-003 v2** (D178.2–3, done): `root.Stderr() *sgo.Writer`, the stderr capability (root
+  only; `MissingCapability` in a child), with `Write`/`WriteString` and conversion to `io.Writer`
+  as for stdout. `w.IsTerminal()` and `w.TerminalWidth()` on both streams (false and 0 in the
+  lab). A write whose reader has gone returns an error for which `sgo.IsBrokenPipe` holds (kind
+  `BrokenPipe`, progress the bytes written); SIGPIPE never ends the process. Stdout write errors
+  are now I/O errors with their kind instead of a bare message. Cases: proc-stderr,
+  proc-stderr-child; `sgo/scripts/test-cli.py` (installed-binary arguments, broken pipe ending
+  quietly under `| head -1`, a 97-column pseudo-terminal), run in sgo-w00.

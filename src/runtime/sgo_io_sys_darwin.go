@@ -155,3 +155,27 @@ func sgoCloseFD(fd int32) int32 {
 
 // sgoStatSize is st_size (int64 at 96: after the four timespecs).
 func sgoStatSize(b *sgoStatBuf) int64 { return *(*int64)(unsafe.Pointer(&b[96])) }
+
+// Terminal ioctls (D178): TIOCGETA reads the termios, TIOCGWINSZ the window size.
+const (
+	sgoTIOCGETA   = 0x40487413
+	sgoTIOCGWINSZ = 0x40087468
+)
+
+// sgoIoctl is ioctl(fd, req, arg); it returns 0 or -1.
+//
+//go:nosplit
+func sgoIoctl(fd int32, req uintptr, arg unsafe.Pointer) int32 {
+	args := struct {
+		fd  int32
+		req uintptr
+		arg unsafe.Pointer
+		ret int32
+	}{fd, req, arg, 0}
+	libcCall(unsafe.Pointer(abi.FuncPCABI0(sgo_ioctl_trampoline)), unsafe.Pointer(&args))
+	KeepAlive(arg)
+	return args.ret
+}
+func sgo_ioctl_trampoline()
+
+//go:cgo_import_dynamic libc_ioctl ioctl "/usr/lib/libSystem.B.dylib"

@@ -197,3 +197,16 @@ func sgoCloseFD(fd int32) int32 {
 
 // sgoStatSize is st_size (int64 at 48 on linux/amd64 and linux/arm64).
 func sgoStatSize(b *sgoStatBuf) int64 { return *(*int64)(unsafe.Pointer(&b[48])) }
+
+// Terminal ioctls (D178): TCGETS reads the termios, TIOCGWINSZ the window size.
+const (
+	sgoTIOCGETA   = 0x5401
+	sgoTIOCGWINSZ = 0x5413
+)
+
+// sgoIoctl is ioctl(fd, req, arg); it returns 0 or a negated errno.
+func sgoIoctl(fd int32, req uintptr, arg unsafe.Pointer) int32 {
+	r := sgoSys(sgoSYS_ioctl, uintptr(int64(fd)), req, uintptr(arg), 0)
+	KeepAlive(arg)
+	return r
+}
