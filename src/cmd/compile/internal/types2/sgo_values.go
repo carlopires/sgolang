@@ -51,8 +51,9 @@ func sgoTypeRec(T Type, seen map[Type]bool, refs bool) (bool, string) {
 	switch u := T.Underlying().(type) {
 	case *Basic:
 		switch u.kind {
-		case Int, Bool, String, Uint8, Int32:
+		case Int, Bool, String, Uint8, Int32, Float64, UntypedFloat:
 			// Int32 is only reachable as rune: the name int32 is denied (SGO-TYPE-008).
+			// Float64 is a value type with == (SGO-FLOAT-002), but never a map key (below).
 			return true, ""
 		}
 		return false, "type " + u.name
@@ -87,6 +88,9 @@ func sgoTypeRec(T Type, seen map[Type]bool, refs bool) (bool, string) {
 		if ok, why := sgoTypeRec(u.key, map[Type]bool{}, false); !ok {
 			return false, "map key (keys are value types): " + why
 		}
+		if sgoHasFloat(u.key, map[Type]bool{}) {
+			return false, "map key: a float64 key, or one containing a float64, could be NaN and never be found (SGO-FLOAT-002)"
+		}
 		if ok, why := sgoTypeRec(u.elem, seen, refs); !ok {
 			return false, "map value: " + why
 		}
@@ -111,6 +115,29 @@ func sgoTypeRec(T Type, seen map[Type]bool, refs bool) (bool, string) {
 		return true, ""
 	}
 	return false, "type " + TypeString(T, nil)
+}
+
+// sgoHasFloat reports whether the value type T is float64 or contains one (a struct field or array
+// element at any depth): such a type is not a map key (SGO-FLOAT-002, D190).
+func sgoHasFloat(T Type, seen map[Type]bool) bool {
+	T = Unalias(T)
+	if seen[T] {
+		return false
+	}
+	seen[T] = true
+	switch u := T.Underlying().(type) {
+	case *Basic:
+		return u.info&IsFloat != 0
+	case *Struct:
+		for _, f := range u.fields {
+			if sgoHasFloat(f.typ, seen) {
+				return true
+			}
+		}
+	case *Array:
+		return sgoHasFloat(u.elem, seen)
+	}
+	return false
 }
 
 // sgoTaskLocal reports whether T is a task-local type (SGO-COMP-004): a slice, map, or pointer
@@ -353,7 +380,8 @@ func (check *Checker) sgoMethodValue(e *syntax.SelectorExpr, called map[*syntax.
 }
 
 // sgoConversion checks a conversion T(x) (SGO-TYPE-002, SGO-TYPE-007, SGO-UTYPE-002,
-// SGO-COMP-005). Admitted: between types with identical underlying types; int(b) and byte(i)
+// SGO-COMP-005, SGO-FLOAT-003). Admitted: between types with identical underlying types; between
+// float64 and int, byte, or rune (to an integer, checked at run time); int(b) and byte(i)
 // between int and byte (byte(i) is checked at run time); string(b) of a []byte and []byte(s) of a
 // string; and an untyped constant to a named type of the same basic kind. A conversion to a
 // predeclared type is never of an untyped constant or of a value of that same predeclared type.
@@ -385,7 +413,7 @@ func (check *Checker) sgoConversion(call *syntax.CallExpr) {
 	}
 	switch {
 	case untyped:
-		const kinds = IsInteger | IsBoolean | IsString
+		const kinds = IsInteger | IsBoolean | IsString | IsFloat
 		b := A.(*Basic)
 		if u, ok := tu.(*Basic); ok && !sgoIsBasic(T) && b.info&kinds == u.info&kinds {
 			return // a constant to a named type of its kind
@@ -395,6 +423,10 @@ func (check *Checker) sgoConversion(call *syntax.CallExpr) {
 		return // int(b), byte(i) (SGO-TYPE-007)
 	case isKind(tu, Int32) && (isKind(au, Int) || isKind(au, Uint8)), (isKind(tu, Int) || isKind(tu, Uint8)) && isKind(au, Int32):
 		return // rune(i), rune(b), int(r), byte(r) (SGO-TYPE-008, D120)
+	case isKind(tu, Float64) && (isKind(au, Int) || isKind(au, Uint8) || isKind(au, Int32)):
+		return // float64(i), float64(b), float64(r): rounded (SGO-FLOAT-003)
+	case (isKind(tu, Int) || isKind(tu, Uint8) || isKind(tu, Int32)) && isKind(au, Float64):
+		return // int(f), byte(f), rune(f): checked at run time (SGO-FLOAT-003)
 	case isKind(tu, String) && isKind(au, Int32):
 		return // string(r) (SGO-VAL-002 v3); string(i) of an int stays denied (D120)
 	case isKind(tu, String) && isBytes(au), isBytes(tu) && isKind(au, String):

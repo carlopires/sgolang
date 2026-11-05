@@ -274,6 +274,10 @@ const sgoMaxRune = 0x10FFFF
 // Each is one unsigned comparison of the zero- or sign-extended operand: a negative int compares
 // above every limit. Widening conversions (int(b), int(r), rune(b)) need no check.
 func (s *state) sgoConvCheck(from, to *types.Type, x *ssa.Value) {
+	if from.IsFloat() && to.IsInteger() {
+		s.sgoFloatConvCheck(to, x)
+		return
+	}
 	if !from.IsInteger() || !to.IsInteger() || to.Size() >= from.Size() {
 		return
 	}
@@ -287,6 +291,32 @@ func (s *state) sgoConvCheck(from, to *types.Type, x *ssa.Value) {
 		return
 	}
 	s.sgoCheck(s.newValue2(ssa.OpLeq64U, types.Types[types.TBOOL], s.sgoWiden(x), s.constInt64(types.Types[types.TUINT64], limit)), sgoSyms.overflow)
+}
+
+// sgoFloatConvCheck checks int(f), byte(f), and rune(f) in S-Go code (SGO-FLOAT-003, D189): the
+// truncation of f toward zero must be in the target's range, so lo < f < hi with the exclusive
+// bounds -2^63-1 (written as lo <= f with -2^63, exact in binary64) and 2^63 for int, -1 and 256
+// for byte, -1 and 0x110000 for rune. A NaN fails every comparison, so it fails the check.
+func (s *state) sgoFloatConvCheck(to *types.Type, x *ssa.Value) {
+	f64 := types.Types[types.TFLOAT64]
+	bl := types.Types[types.TBOOL]
+	var low *ssa.Value
+	var hi float64
+	switch {
+	case to.Size() == 8:
+		low = s.newValue2(ssa.OpLeq64F, bl, s.constFloat64(f64, -9223372036854775808.0), x)
+		hi = 9223372036854775808.0
+	case !to.IsSigned() && to.Size() == 1:
+		low = s.newValue2(ssa.OpLess64F, bl, s.constFloat64(f64, -1), x)
+		hi = 256
+	case to.IsSigned() && to.Size() == 4:
+		low = s.newValue2(ssa.OpLess64F, bl, s.constFloat64(f64, -1), x)
+		hi = sgoMaxRune + 1
+	default:
+		base.Fatalf("S-Go float conversion to %v", to)
+	}
+	ok := s.newValue2(ssa.OpAndB, bl, low, s.newValue2(ssa.OpLess64F, bl, x, s.constFloat64(f64, hi)))
+	s.sgoCheck(ok, sgoSyms.overflow)
 }
 
 // sgoNilIfaceCheck checks the itab of an interface method call. In S-Go code a call on a nil

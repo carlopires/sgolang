@@ -848,6 +848,11 @@ func (f *Func) spSb() (sp, sb *Value) {
 // useFMA allows targeted debugging w/ GOFMAHASH
 // If you have an architecture-dependent FP glitch, this will help you find it.
 func (f *Func) useFMA(v *Value) bool {
+	// S-Go code rounds each operation once on every target: no contraction (SGO-FLOAT-002,
+	// D188). An explicit math.FMA is the OpFMA intrinsic, not this rewrite.
+	if strings.HasSuffix(base.Ctxt.InnermostPos(v.Pos).Filename(), ".sgo") {
+		return false
+	}
 	if base.FmaHash == nil {
 		return true
 	}
