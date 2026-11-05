@@ -6,35 +6,25 @@ package main
 
 import (
 	"sgo"
-	"std/strconv"
 
-	"example.com/httpserver/http"
+	"example.com/httpserver/client"
 	"example.com/httpserver/server"
 )
 
+const addr = "unix:http.sock"
+
+// main runs the server and the demo client side by side, then shuts the server down: one Cancel
+// of the server's nursery ends it, with the client's keep-alive connection still open.
 func main(root *sgo.Context) error {
-	out := check server.Run(root, "unix:http.sock", demo)
-	check root.Stdout().WriteString(out)
-	return root.Stdout().WriteString("shut down with a keep-alive connection open\n")
-}
-
-// demo is the client side: a client sending garbage, an idle client, and a keep-alive client.
-// It leaves the keep-alive connection open; the server's shutdown does not wait for it.
-func demo(r *sgo.Context, addr string) (string, error) {
-	// A client sending garbage gets 400, and only its connection ends.
-	bad := check r.Dial(addr)
-	check bad.Write("GARBAGE\r\n\r\n")
-	refused := check http.ReadResponse(bad)
-	t := server.Line("GARBAGE", refused)
-
-	// An idle client is closed after the read limit, while another is served.
-	idle := check r.Dial(addr)
-	c := check r.Dial(addr)
-	served := check server.Transcript(c, []string{"/hello", "/echo/sgo", "/slow", "/missing"})
-	t += served
-	check r.Sleep(server.ReadLimitMs + 100)
-	if _, err := idle.Read(1); sgo.IsEOF(err) {
-		t += "idle connection closed after " + strconv.Itoa(server.ReadLimitMs) + " ms\n"
+	l := check root.Listen(addr)
+	nursery (n) {
+		check n.Start(func(task *sgo.Context, ready *sgo.Ready) error {
+			return server.Serve(task, l, ready)
+		})
+		out := check client.Demo(root, addr, server.ReadLimitMs)
+		check root.Stdout().WriteString(out)
+		n.Cancel()
 	}
-	return t, nil
+	check l.Close() // the listener belongs to root's scope; close it with the server
+	return root.Stdout().WriteString("shut down with a keep-alive connection open\n")
 }

@@ -1,0 +1,57 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package client makes HTTP/1.1 requests with package http: one request, a sequence of requests
+// over one keep-alive connection, and the demo that exercises the server's edge cases.
+package client
+
+import (
+	"sgo"
+	"std/strconv"
+
+	"example.com/httpserver/http"
+)
+
+// Get sends a GET request for path over c and reads the response.
+func Get(c *sgo.Conn, path string) (http.Response, error) {
+	check http.WriteRequest(c, "GET", path, "")
+	return http.ReadResponse(c)
+}
+
+// Transcript sends each path over c, one keep-alive connection, and returns a line per response.
+func Transcript(c *sgo.Conn, paths []string) (string, error) {
+	out := ""
+	for _, p := range paths {
+		r := check Get(c, p)
+		out += Line(p, r)
+	}
+	return out, nil
+}
+
+// Line is the transcript line of the response r to a request for what.
+func Line(what string, r http.Response) string {
+	return what + " -> " + http.StatusText(r.Status) + ": " + r.Body + "\n"
+}
+
+// Demo runs three clients against the server on addr: one sending garbage, one left idle longer
+// than idleMs (the server's read limit), and one making keep-alive requests. It leaves the
+// keep-alive connection open, so the server is shut down with it open.
+func Demo(r *sgo.Context, addr string, idleMs int) (string, error) {
+	// A client sending garbage gets 400, and only its connection ends.
+	bad := check r.Dial(addr)
+	check bad.Write("GARBAGE\r\n\r\n")
+	refused := check http.ReadResponse(bad)
+	t := Line("GARBAGE", refused)
+
+	// An idle client is closed after the read limit, while another is served.
+	idle := check r.Dial(addr)
+	c := check r.Dial(addr)
+	served := check Transcript(c, []string{"/hello", "/echo/sgo", "/slow", "/missing"})
+	t += served
+	check r.Sleep(idleMs + 100)
+	if _, err := idle.Read(1); sgo.IsEOF(err) {
+		t += "idle connection closed after " + strconv.Itoa(idleMs) + " ms\n"
+	}
+	return t, nil
+}

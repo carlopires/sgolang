@@ -3,8 +3,9 @@
 // license that can be found in the LICENSE file.
 
 // Package server is a small HTTP/1.1 server built on structured concurrency: one task per
-// connection inside the server's nursery, keep-alive request loops, a deadline per request, and a
-// shutdown that is one Cancel of the server's scope. No connection, task, or timer can outlive it.
+// connection inside the server's nursery, keep-alive request loops, a read limit and a handler
+// deadline per request, and a shutdown that is one Cancel of the server's scope. No connection,
+// task, or timer can outlive it.
 package server
 
 import (
@@ -21,45 +22,10 @@ const SlowLimitMs = 30
 // trickling client is closed after it, while the server keeps serving the others.
 const ReadLimitMs = 500
 
-// Run serves on addr while client runs, then shuts the server down with one Cancel of its scope,
-// whatever connections client left open. It returns what client returned.
-func Run(root *sgo.Context, addr string, client func(*sgo.Context, string) (string, error)) (string, error) {
-	l := check root.Listen(addr)
-	out := ""
-	nursery (n) {
-		check n.Start(func(task *sgo.Context, ready *sgo.Ready) error {
-			return serve(task, l, ready)
-		})
-		out = check client(root, addr)
-		n.Cancel() // shutdown: the server's Accept and every connection's read end
-	}
-	check l.Close()
-	return out, nil
-}
-
-// Get sends a GET request for path over c and reads the response.
-func Get(c *sgo.Conn, path string) (http.Response, error) {
-	check http.WriteRequest(c, "GET", path, "")
-	return http.ReadResponse(c)
-}
-
-// Transcript sends each path over c, one keep-alive connection, and returns a line per response.
-func Transcript(c *sgo.Conn, paths []string) (string, error) {
-	out := ""
-	for _, p := range paths {
-		r := check Get(c, p)
-		out += Line(p, r)
-	}
-	return out, nil
-}
-
-// Line is the transcript line of the response r to a request for what.
-func Line(what string, r http.Response) string {
-	return what + " -> " + http.StatusText(r.Status) + ": " + r.Body + "\n"
-}
-
-// serve accepts connections into its own nursery and gives each one a task.
-func serve(task *sgo.Context, l *sgo.Listener, ready *sgo.Ready) error {
+// Serve serves on l until task's scope is cancelled: it signals ready once it is accepting, then
+// gives each connection a task of its own. A cancellation of the scope is the shutdown: the Accept
+// loop and every connection's read end, and the connections are released with the scope.
+func Serve(task *sgo.Context, l *sgo.Listener, ready *sgo.Ready) error {
 	nursery (m) {
 		ready.Signal()
 		for {

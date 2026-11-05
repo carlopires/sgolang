@@ -7,18 +7,35 @@ package server
 import (
 	"sgo"
 
+	"example.com/httpserver/client"
 	"example.com/httpserver/http"
 )
 
 const sock = "unix:http.sock"
 
+// withServer serves on sock while run runs, then shuts the server down, whatever connections run
+// left open, and returns what run returned.
+func withServer(root *sgo.Context, run func(*sgo.Context, string) (string, error)) (string, error) {
+	l := check root.Listen(sock)
+	out := ""
+	nursery (n) {
+		check n.Start(func(task *sgo.Context, ready *sgo.Ready) error {
+			return Serve(task, l, ready)
+		})
+		out = check run(root, sock)
+		n.Cancel()
+	}
+	check l.Close()
+	return out, nil
+}
+
 func keepAlive(r *sgo.Context, a string) (string, error) {
 	c := check r.Dial(a)
-	return Transcript(c, []string{"/slow", "/hello", "/slow"})
+	return client.Transcript(c, []string{"/slow", "/hello", "/slow"})
 }
 
 func TestKeepAliveAndDeadline(t *sgo.T) error {
-	out := check Run(t.Context(), sock, keepAlive)
+	out := check withServer(t.Context(), keepAlive)
 	want := "/slow -> Gateway Timeout: deadline\n/hello -> OK: hello\n/slow -> Gateway Timeout: deadline\n"
 	if out != want {
 		return sgo.NewError("transcript: " + out)
@@ -32,18 +49,18 @@ func idleOnly(r *sgo.Context, a string) (string, error) {
 }
 
 func TestShutdownIdle(t *sgo.T) error {
-	_, err := Run(t.Context(), sock, idleOnly)
+	_, err := withServer(t.Context(), idleOnly)
 	return err
 }
 
 func hello(r *sgo.Context, a string) (string, error) {
 	c := check r.Dial(a)
-	return Transcript(c, []string{"/hello"})
+	return client.Transcript(c, []string{"/hello"})
 }
 
 func TestRestart(t *sgo.T) error {
-	check Run(t.Context(), sock, hello)
-	_, err := Run(t.Context(), sock, hello)
+	check withServer(t.Context(), hello)
+	_, err := withServer(t.Context(), hello)
 	return err
 }
 
@@ -57,7 +74,7 @@ func rawThenHello(r *sgo.Context, a string, raw string) (string, error) {
 		return "", sgo.NewError("a malformed request was not refused")
 	}
 	good := check r.Dial(a)
-	served := check Transcript(good, []string{"/hello"})
+	served := check client.Transcript(good, []string{"/hello"})
 	return served, nil
 }
 
@@ -66,7 +83,7 @@ func badLine(r *sgo.Context, a string) (string, error) {
 }
 
 func TestBadClient(t *sgo.T) error {
-	out := check Run(t.Context(), sock, badLine)
+	out := check withServer(t.Context(), badLine)
 	if out != "/hello -> OK: hello\n" {
 		return sgo.NewError("after a bad client: " + out)
 	}
@@ -77,7 +94,7 @@ func statusOf(r *sgo.Context, a string, raw string) (string, error) {
 	c := check r.Dial(a)
 	check c.Write(raw)
 	resp := check http.ReadResponse(c)
-	return Line("raw", resp), nil
+	return client.Line("raw", resp), nil
 }
 
 func tooLarge(r *sgo.Context, a string) (string, error) {
@@ -85,7 +102,7 @@ func tooLarge(r *sgo.Context, a string) (string, error) {
 }
 
 func TestBodyTooLarge(t *sgo.T) error {
-	out := check Run(t.Context(), sock, tooLarge)
+	out := check withServer(t.Context(), tooLarge)
 	if out != "raw -> Payload Too Large: body of 99999999999 bytes\n" {
 		return sgo.NewError("got " + out)
 	}
@@ -97,7 +114,7 @@ func chunked(r *sgo.Context, a string) (string, error) {
 }
 
 func TestChunkedRefused(t *sgo.T) error {
-	out := check Run(t.Context(), sock, chunked)
+	out := check withServer(t.Context(), chunked)
 	if out != "raw -> Bad Request: Transfer-Encoding is not supported\n" {
 		return sgo.NewError("got " + out)
 	}
