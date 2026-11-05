@@ -574,22 +574,18 @@ func TestSGoTaskResult(t *testing.T) {
 		if got.Load() != 5 {
 			t.Fatalf("%d of 5 parked receivers got the result", got.Load())
 		}
-		// A kept channel delivers once; a loop with a timer arm then takes the timer arm.
+		// A kept channel delivers once; a loop with a timer arm then takes the timer arm. Select
+		// chooses at random among ready arms, so the one delivery is taken with the result arm
+		// alone, and every later select with a ready timer must take the timer.
 		res := runtime.SGoTaskResChan(r)
-		seen := 0
-		for range 5 {
-			runtime.SGoNSend(timer, 1)
-			arm, v, _ := runtime.SGoNSelect([]runtime.SGoNArm{{Ch: res}, {Ch: timer}}, true)
-			if arm == 0 {
-				if v != 7 {
-					t.Fatalf("result %d", v)
-				}
-				seen++
-				runtime.SGoNRecv(timer) // the timer value sent for this iteration
-			}
+		if arm, v, _ := runtime.SGoNSelect([]runtime.SGoNArm{{Ch: res}}, false); arm != 0 || v != 7 {
+			t.Fatalf("a kept result channel did not deliver: arm %d result %d", arm, v)
 		}
-		if seen != 1 {
-			t.Fatalf("a kept result channel delivered %d times", seen)
+		for i := range 20 {
+			runtime.SGoNSend(timer, 1)
+			if arm, v, _ := runtime.SGoNSelect([]runtime.SGoNArm{{Ch: res}, {Ch: timer}}, true); arm != 1 {
+				t.Fatalf("a kept result channel delivered again (select %d, result %d)", i, v)
+			}
 		}
 		if v, ok := runtime.SGoNRecv(runtime.SGoTaskResChan(r)); !ok || v != 7 {
 			t.Fatalf("a new channel after publication: %d %v", v, ok)
