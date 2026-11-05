@@ -1016,6 +1016,32 @@ Supersedes D144's slot and D157. SGO-NET-003/004 are rewritten: the dialer race 
 
 **Why.** The marker keeps the analysis type-based: code that never touches resources (every `any`, `error`, and unmarked interface) keeps exactly today's rules, the checker reuses the existing flow pass instead of inferring provenance per value across packages, and a reader of the code sees from a declaration whether a value may hold a connection. Cost: one embedded line in interfaces that carry I/O, usually inherited from `sgo.Reader`/`sgo.Writer`. Amends SGO-RES-003 (Z1 holds for non-resource interfaces) and SGO-IFACE at 0.18.0; new draft clause for resource interfaces.
 
+## D177 — `Listen` and `Dial` take the scope that owns the handle · PROPOSED
+
+**Question.** `root.Listen(addr)` and `root.Dial(addr)` take no scope: the handle belongs to the scope of the calling task, so a function that listens for a nursery's lifetime must close the listener by hand after the nursery (`check l.Close()` in `sgo/examples/httpserver`). `l.MoveTo(n)` cannot hand it to the nursery, because ownership only moves outward (D158). Every other acquisition already names its scope: `l.Accept(s)`, `d.Dial(s, addr)`, `dir.Open(s, name)`, `n.NewTimer`.
+
+**Recommendation.** `c.Listen(s sgo.Scope, addr string)` and `c.Dial(s sgo.Scope, addr string)`: `c` is the context holding the grant (as today), `s` is the scope that owns the handle, the caller's current scope or one enclosing it (as `Dir.Open`). The handle is released when `s` ends, so `Run`-style functions listen into their nursery and need no `Close`. No one-argument form is kept (no compatibility mode). Every call site changes (32 programs in the corpus); SGO-NET-002 and SGO-NET-003 get new versions.
+
+**Why.** One rule for every acquisition: the code shows who owns a handle where it is made, and a lifetime is a block, not a call the reader must find. Cost: one more argument at each call; a mechanical migration.
+
+## D178 — Command-line arguments · PROPOSED
+
+**Question.** SGO-PROC-004 gives a program no access to its command line, so a program cannot choose what to do (`httpserver serve`, `httpserver get /hello`) and examples run fixed demos.
+
+**Recommendation.** `root.Args() []string` returns a fresh copy of the arguments after the program name. Only the root context has it (it is input to the program, given by whoever started it; children receive what the root passes them). Arguments are not authority: grants stay in `sgo.mod`, and no argument can widen them. The driver passes them as `sgo run PKG -- ARGS...` and `sgo test` passes none. In the lab, the arguments are part of the run's manifest: `sgo lab run PKG -- ARGS` records them in the trace, and replay with different arguments is refused, as a different build is today. Environment variables stay ignored (SGO-PROC-004, which gets a new version).
+
+**Why.** Arguments are the smallest input a program needs to be a tool rather than a demo. They are deterministic per run, so the lab keeps exact replay by recording them. A slice copy keeps the task-local rules unchanged.
+
+## D179 — Interrupts cancel the root · PROPOSED
+
+**Question.** OS signals are denied (SGO-PROC-001): SIGINT or SIGTERM ends a program outside S-Go's outcomes, with no release of its scopes. A server run until interrupted cannot shut down through its scopes.
+
+**Recommendation.** The first SIGINT or SIGTERM cancels the root scope, with a cancellation that `sgo.IsInterrupted` recognizes (and `sgo.IsCancelled`); the program then unwinds through its nurseries, releasing every resource, and exits with the outcome of that unwind (status 1 if `main` returns the cancellation). A second signal during the unwind ends the process at once with a fixed status (130 / 143). Other signals keep their default actions. In the lab, no signal is delivered; a scenario may inject an interrupt at a virtual time, recorded in the trace.
+
+**Why.** Graceful shutdown then needs no new construct: it is the cancellation every S-Go program already handles, and the release order is the one the scopes already guarantee. Cost: a runtime signal handler, which the runtime already installs for other purposes; a new cause of cancellation in SGO-CANCEL.
+
+**Plan (W24, after approval).** D177 first (mechanical migration, simplest examples). Then D178 and D179 together: `httpserver` becomes `serve` / `get PATH`, with the demo kept as `demo`. Model first for D179 (an interrupt racing scope ends). Spec 0.19.0.
+
 ---
 
 ## Approval record

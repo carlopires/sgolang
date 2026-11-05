@@ -13,7 +13,7 @@ and runs `client.Demo` against it: one client sends garbage, one stays idle, and
 keep-alive requests. Then it shuts the server down with one `Cancel` of the nursery while the
 keep-alive connection is still open. Nothing the server started can outlive it.
 
-S-Go programs have no command-line arguments yet (SGO-PROC-003), so `main` runs both sides.
+S-Go programs have no command-line arguments yet (SGO-PROC-004), so `main` runs both sides.
 Once arguments are admitted (proposed D178), `main` becomes a dispatcher: `serve` runs
 `server.Serve` until interrupted, and `get PATH` makes one `client.Get`.
 
