@@ -8,7 +8,8 @@ A small HTTP/1.1 server (W23), in three packages:
 | `server` | `server.Serve(task, l, ready)`: one task per connection, until the scope is cancelled |
 | `client` | `client.Get`, `client.Transcript` over a keep-alive connection, and `client.Demo` |
 
-`main` wires them together. It listens on `unix:http.sock`, starts `server.Serve` in a nursery,
+`main` wires them together. It listens on `unix:http.sock` into a nursery (`n.Listen`, so the
+listener is released with the nursery), starts `server.Serve` there,
 and runs `client.Demo` against it: one client sends garbage, one stays idle, and one makes
 keep-alive requests. Then it shuts the server down with one `Cancel` of the nursery while the
 keep-alive connection is still open. Nothing the server started can outlive it.

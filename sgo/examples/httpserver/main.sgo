@@ -16,8 +16,8 @@ const addr = "unix:http.sock"
 // main runs the server and the demo client side by side, then shuts the server down: one Cancel
 // of the server's nursery ends it, with the client's keep-alive connection still open.
 func main(root *sgo.Context) error {
-	l := check root.Listen(addr)
 	nursery (n) {
+		l := check n.Listen(addr) // a resource of n: released when the server's scope ends
 		check n.Start(func(task *sgo.Context, ready *sgo.Ready) error {
 			return server.Serve(task, l, ready)
 		})
@@ -25,6 +25,5 @@ func main(root *sgo.Context) error {
 		check root.Stdout().WriteString(out)
 		n.Cancel()
 	}
-	check l.Close() // the listener belongs to root's scope; close it with the server
 	return root.Stdout().WriteString("shut down with a keep-alive connection open\n")
 }

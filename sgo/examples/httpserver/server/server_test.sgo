@@ -16,16 +16,15 @@ const sock = "unix:http.sock"
 // withServer serves on sock while run runs, then shuts the server down, whatever connections run
 // left open, and returns what run returned.
 func withServer(root *sgo.Context, run func(*sgo.Context, string) (string, error)) (string, error) {
-	l := check root.Listen(sock)
 	out := ""
 	nursery (n) {
+		l := check n.Listen(sock)
 		check n.Start(func(task *sgo.Context, ready *sgo.Ready) error {
 			return Serve(task, l, ready)
 		})
 		out = check run(root, sock)
 		n.Cancel()
 	}
-	check l.Close()
 	return out, nil
 }
 
