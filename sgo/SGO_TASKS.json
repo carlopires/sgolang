@@ -1028,21 +1028,24 @@
         "W24"
       ],
       "risk": "high",
-      "status": "in_progress",
+      "status": "passed",
       "plan_section": "sgo/docs/w25-float-plan.md; sgo/SGO_DECISIONS.md D185, D187-D194",
       "deliverables": [
         "exact oracle sgo/scripts/float-oracle.py (D194)",
         "admission of float64, literals, comparisons; no float map keys (D187, D190)",
         "no fused multiply-add in S-Go code; checked float-to-int conversion (D188, D189)",
-        "std/math float functions, integer ones renamed AbsInt/MinInt/MaxInt/PowInt (D191, D192)",
-        "strconv ParseFloat/FormatFloat, fmt %f %e %g (D193)",
+        "std/math float functions, integer ones renamed IntAbs/IntMin/IntMax/IntPow (D191, D192)",
+        "strconv ParseFloat/FormatFloat, fmt float verbs, + flag, precision (D193)",
         "cli Float flag kind; spec 0.20.0"
       ],
       "acceptance_case_ids": [],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w25/README.md",
+        "sgo-w00 run 42072666080 (linux/amd64, linux/arm64), sgo-runtime run 42072511595 and sgo-spec run 42072511789 on main at 9da365995c (0.20.0 freeze)"
+      ],
       "blockers": [],
-      "commit": null,
-      "completion_note": null
+      "commit": "9da365995c",
+      "completion_note": "float64 admitted, frozen at spec 0.20.0 (D185, D187-D194): IEEE 754 binary64 rounded once and never fused (useFMA off in S-Go code; math.FMA the one fused operation), one observable NaN, no float map keys, checked float-to-int conversion (IntegerOverflow). std/math exact functions and Go's portable transcendentals in S-Go source, bit-identical to Go's portable math (amd64 v1, no fusion) on 1433 x 25 results; strconv ParseFloat/FormatFloat identical to Go on 49673 cases; fmt float verbs, + and precision (test-std-diff 11698 checks, seeds 1-6); Float flag kind in the CLI example. W24 review P1/P2 text (SGO-RES-002 v4, -004 v6, -005 v2); README refresh with readme-example."
     }
   ],
   "language_policy": "One specification-defined S-Go language; no Go compatibility path. Bare go rejected; explicit nursery capabilities; missing contracts rejected transitively. Host/reference tools are external build dependencies.",

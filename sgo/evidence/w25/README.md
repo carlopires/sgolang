@@ -52,11 +52,19 @@ message 1348) SGO-RES-002 v4, SGO-RES-004 v6 (P1) and SGO-RES-005 v2 (P2). CHANG
 
 ## Results at the 0.20.0 freeze
 
-- darwin/arm64: to be recorded from the freeze gate run (conformance and the 21 gates, including
-  `test-std-diff`).
-- linux/amd64 and linux/arm64: to be recorded from the CI runs on the merge to main. The
+- darwin/arm64 at 7a9e070f07 (same toolchain as 9da365995c): conformance 768/768; the 21 gates all
+  0, including `test-std-diff` (11698 checks identical to Go's packages) and `test-check`.
+- linux/amd64 and linux/arm64 on main at 9da365995c: sgo-w00 run 42072666080 (both runners: stage0,
+  conformance, identity, lab, examples), sgo-spec run 42072511789, sgo-runtime run 42072511595. The
   conformance fixtures print the bits of float results, so a target that fused or rounded
-  differently fails them.
+  differently fails them; none did.
+- sgo-spec run 42069282143 on 7a9e070f07 failed license-audit: the std/math ports keep Go's
+  header and the Sun notice, which the audit did not know. Fixed in 23eb2e42aa (an added file
+  that names its upstream source must keep that file's header and notices verbatim).
+- sgo-runtime run 42070519003 on 23eb2e42aa failed once on linux/arm64: TestSGoTaskResult
+  expected a select between a ready result and a ready timer to pick the result within five
+  tries, but select chooses at random (1 in 32). The test now takes the result with the
+  result arm alone (9da365995c); the runtime was not at fault.
 
 ## Open
 
