@@ -1,0 +1,30 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package hex
+
+import "sgo"
+
+func TestRoundTrip(t *sgo.T) error {
+	if EncodeToString([]byte("hi!")) != "686921" {
+		return sgo.NewError("encode")
+	}
+	b, err := DecodeString("DEADbeef")
+	if err != nil || len(b) != 4 || b[0] != 0xde || b[3] != 0xef {
+		return sgo.NewError("decode")
+	}
+	return nil
+}
+
+func TestErrors(t *sgo.T) error {
+	_, err := DecodeString("0g")
+	if err == nil || err.Error() != "encoding/hex: invalid byte: U+0067 'g'" {
+		return sgo.NewError("invalid byte")
+	}
+	_, err2 := DecodeString("abc")
+	if !IsLength(err2) || err2.Error() != "encoding/hex: odd length hex string" {
+		return sgo.NewError("odd length")
+	}
+	return nil
+}

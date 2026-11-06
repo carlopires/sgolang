@@ -52,7 +52,13 @@ def exported(pkg):
 
 
 def packages():
-    return sorted(p for p in os.listdir(STD) if os.path.isdir(os.path.join(STD, p)))
+    """Package paths under src/sgostd (encoding/hex for std/encoding/hex): every directory holding a
+    non-test .sgo file."""
+    out = []
+    for d, _, files in os.walk(STD):
+        if any(f.endswith(".sgo") and not f.endswith("_test.sgo") for f in files):
+            out.append(os.path.relpath(d, STD).replace(os.sep, "/"))
+    return sorted(out)
 
 
 def specified():
@@ -60,7 +66,7 @@ def specified():
     spec = {}
     text = open(SPEC).read()
     for clause in re.split(r"^### ", text, flags=re.M)[1:]:
-        m = re.search(r"`std/(\w+)`", clause.splitlines()[0])
+        m = re.search(r"`std/([\w/]+)`", clause.splitlines()[0])
         if not m:
             continue
         decls = set()

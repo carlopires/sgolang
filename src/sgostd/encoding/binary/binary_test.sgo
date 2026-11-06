@@ -1,0 +1,20 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package binary
+
+import "sgo"
+
+func TestOrders(t *sgo.T) error {
+	b := BigEndian.AppendUint64([]byte{}, 0x0102030405060708)
+	if len(b) != 8 || b[0] != 1 || b[7] != 8 || LittleEndian.Uint64(b) != 0x0807060504030201 {
+		return sgo.NewError("uint64")
+	}
+	p := make([]byte, 4)
+	LittleEndian.PutUint32(p, 0xdeadbeef)
+	if BigEndian.Uint32(p) != 0xefbeadde {
+		return sgo.NewError("uint32")
+	}
+	return nil
+}

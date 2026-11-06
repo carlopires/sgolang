@@ -1,0 +1,87 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package binary converts between uint32 and uint64 values and byte sequences in big- and
+// little-endian order, as Go's encoding/binary byte orders do (SGO-STD-014, D197). BigEndian and
+// LittleEndian are constants of an unexported type, so binary.BigEndian.Uint32(b) is written as
+// in Go; the package has no variables.
+package binary
+
+type bigEndian int
+
+type littleEndian int
+
+// BigEndian is the big-endian byte order.
+const BigEndian bigEndian = 0
+
+// LittleEndian is the little-endian byte order.
+const LittleEndian littleEndian = 0
+
+// Uint32 returns the big-endian value of b[0:4].
+func (bigEndian) Uint32(b []byte) uint32 {
+	return uint32(b[0])<<24 | uint32(b[1])<<16 | uint32(b[2])<<8 | uint32(b[3])
+}
+
+// PutUint32 writes v into b[0:4], big-endian.
+func (bigEndian) PutUint32(b []byte, v uint32) {
+	b[0] = byte(v >> 24)
+	b[1] = byte((v >> 16) & 0xff)
+	b[2] = byte((v >> 8) & 0xff)
+	b[3] = byte(v & 0xff)
+}
+
+// AppendUint32 appends the big-endian bytes of v to b.
+func (bigEndian) AppendUint32(b []byte, v uint32) []byte {
+	return append(b, byte(v>>24), byte((v>>16)&0xff), byte((v>>8)&0xff), byte(v&0xff))
+}
+
+// Uint64 returns the big-endian value of b[0:8].
+func (e bigEndian) Uint64(b []byte) uint64 {
+	return uint64(e.Uint32(b[0:4]))<<32 | uint64(e.Uint32(b[4:8]))
+}
+
+// PutUint64 writes v into b[0:8], big-endian.
+func (e bigEndian) PutUint64(b []byte, v uint64) {
+	e.PutUint32(b[0:4], uint32(v>>32))
+	e.PutUint32(b[4:8], uint32(v&0xffffffff))
+}
+
+// AppendUint64 appends the big-endian bytes of v to b.
+func (e bigEndian) AppendUint64(b []byte, v uint64) []byte {
+	return e.AppendUint32(e.AppendUint32(b, uint32(v>>32)), uint32(v&0xffffffff))
+}
+
+// Uint32 returns the little-endian value of b[0:4].
+func (littleEndian) Uint32(b []byte) uint32 {
+	return uint32(b[0]) | uint32(b[1])<<8 | uint32(b[2])<<16 | uint32(b[3])<<24
+}
+
+// PutUint32 writes v into b[0:4], little-endian.
+func (littleEndian) PutUint32(b []byte, v uint32) {
+	b[0] = byte(v & 0xff)
+	b[1] = byte((v >> 8) & 0xff)
+	b[2] = byte((v >> 16) & 0xff)
+	b[3] = byte(v >> 24)
+}
+
+// AppendUint32 appends the little-endian bytes of v to b.
+func (littleEndian) AppendUint32(b []byte, v uint32) []byte {
+	return append(b, byte(v&0xff), byte((v>>8)&0xff), byte((v>>16)&0xff), byte(v>>24))
+}
+
+// Uint64 returns the little-endian value of b[0:8].
+func (e littleEndian) Uint64(b []byte) uint64 {
+	return uint64(e.Uint32(b[0:4])) | uint64(e.Uint32(b[4:8]))<<32
+}
+
+// PutUint64 writes v into b[0:8], little-endian.
+func (e littleEndian) PutUint64(b []byte, v uint64) {
+	e.PutUint32(b[0:4], uint32(v&0xffffffff))
+	e.PutUint32(b[4:8], uint32(v>>32))
+}
+
+// AppendUint64 appends the little-endian bytes of v to b.
+func (e littleEndian) AppendUint64(b []byte, v uint64) []byte {
+	return e.AppendUint32(e.AppendUint32(b, uint32(v&0xffffffff)), uint32(v>>32))
+}

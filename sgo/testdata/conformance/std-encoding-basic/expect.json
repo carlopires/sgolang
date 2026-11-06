@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-012",
+  "SGO-STD-013",
+  "SGO-STD-014"
+ ],
+ "exit": 0,
+ "stdout": "68656c6c6f2c20532d476f21 hello, S-Go! 12\nencoding/hex: invalid byte: U+007A 'z'\nencoding/hex: odd length hex string\naGVsbG8sIFMtR28h hello, S-Go!\nillegal base64 data at input byte 4\n-_8 deadbeef 4022250974\n"
+}

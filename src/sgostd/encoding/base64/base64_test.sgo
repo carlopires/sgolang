@@ -1,0 +1,35 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package base64
+
+import "sgo"
+
+// The test vectors of RFC 4648, section 10.
+func TestRFC4648(t *sgo.T) error {
+	in := []string{"", "f", "fo", "foo", "foob", "fooba", "foobar"}
+	want := []string{"", "Zg==", "Zm8=", "Zm9v", "Zm9vYg==", "Zm9vYmE=", "Zm9vYmFy"}
+	for i, s := range in {
+		if StdEncoding.EncodeToString([]byte(s)) != want[i] {
+			return sgo.NewError("encode " + s)
+		}
+		b, err := StdEncoding.DecodeString(want[i])
+		if err != nil || string(b) != s {
+			return sgo.NewError("decode " + want[i])
+		}
+	}
+	return nil
+}
+
+func TestCorrupt(t *sgo.T) error {
+	_, err := StdEncoding.DecodeString("Zm9v!")
+	if err == nil || err.Error() != "illegal base64 data at input byte 4" {
+		return sgo.NewError("corrupt")
+	}
+	b, err2 := RawURLEncoding.DecodeString("-_8")
+	if err2 != nil || len(b) != 2 || b[0] != 0xfb || b[1] != 0xff {
+		return sgo.NewError("raw url")
+	}
+	return nil
+}

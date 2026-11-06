@@ -239,8 +239,74 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
 - **runtime_guards:** As SGO-ERR-003.
 - **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
-- **positive_tests:** fixture:std-bits-basic; `.work/w26/bitsdiff.py` (against Go's math/bits; 28426 results identical, seeds 1-3), to move into `sgo/scripts/test-std-diff.py`.
+- **positive_tests:** fixture:std-bits-basic; `src/sgostd/bits` package tests; `.work/w26/bitsdiff.py` (against Go's math/bits; 28426 results identical, seeds 1-3), to move into `sgo/scripts/test-std-diff.py`.
 - **negative_tests:** fixture:std-bits-div-zero, fixture:std-bits-div-overflow.
 - **implementation_coverage:** `src/sgostd/bits/`.
+- **executed_evidence:** PENDING: W26.
+- **supported_execution_configurations:** production, lab.
+
+### SGO-STD-012 — `std/encoding/hex`: Hexadecimal
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-STD-001, SGO-TYPE-007, SGO-TYPE-009; D136, D197.
+- **grammar_and_types:** The package `std/encoding/hex` exports exactly: `func (InvalidByteError) Error() string`; `func (lengthError) Error() string`; `func Decode(dst, src []byte) (int, error)`; `func DecodeString(s string) ([]byte, error)`; `func DecodedLen(x int) int`; `func Encode(dst, src []byte) int`; `func EncodeToString(src []byte) string`; `func EncodedLen(n int) int`; `func IsLength(err error) bool`; `type InvalidByteError`. There is no `ErrLength` variable (D109): `IsLength` reports the odd-length error.
+- **preconditions:** For `Encode`: `len(dst) >= EncodedLen(len(src))`. For `Decode`: `len(dst) >= DecodedLen(len(src))`.
+- **evaluation_and_value_semantics:** Encoding writes two lowercase digits per byte. Decoding accepts upper- and lowercase digits, as Go's encoding/hex does, decodes pairs until the first invalid byte, and then reports an odd length; `DecodeString` decodes into a copy of its input and returns the bytes decoded before an error.
+- **ownership_and_lifecycle:** None: values; the byte slices returned are new and owned by the calling task.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a: the package has no state (D109).
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** `Decode` and `DecodeString` return `InvalidByteError` (text `encoding/hex: invalid byte: U+0067 'g'`, Go's `%#U`) or the odd-length error (text `encoding/hex: odd length hex string`), with the bytes decoded before it.
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003; a destination slice shorter than the result is a bounds failure (SGO-COMP-003).
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-encoding-basic; `src/sgostd/encoding/hex` package tests; `.work/w26/encdiff.py` (against Go's encoding/hex, seeds 1-3 identical), to move into `sgo/scripts/test-std-diff.py`.
+- **negative_tests:** fixture:std-encoding-basic (malformed input).
+- **implementation_coverage:** `src/sgostd/encoding/hex/`.
+- **executed_evidence:** PENDING: W26.
+- **supported_execution_configurations:** production, lab.
+
+### SGO-STD-013 — `std/encoding/base64`: Base64
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-STD-001, SGO-TYPE-007, SGO-TYPE-009; D136, D197.
+- **grammar_and_types:** The package `std/encoding/base64` exports exactly: `const RawStdEncoding`; `const RawURLEncoding`; `const StdEncoding`; `const URLEncoding`; `func (CorruptInputError) Error() string`; `func (Encoding) Decode(dst, src []byte) (int, error)`; `func (Encoding) DecodeString(s string) ([]byte, error)`; `func (Encoding) DecodedLen(n int) int`; `func (Encoding) Encode(dst, src []byte)`; `func (Encoding) EncodeToString(src []byte) string`; `func (Encoding) EncodedLen(n int) int`; `type CorruptInputError`; `type Encoding`. `StdEncoding`, `URLEncoding`, `RawStdEncoding`, and `RawURLEncoding` are constants of type `Encoding`: a call is written `base64.StdEncoding.EncodeToString(b)`; custom alphabets (`NewEncoding`), `WithPadding`, `Strict`, and the streaming encoder and decoder are not provided.
+- **preconditions:** For `Encode`: `len(dst) >= EncodedLen(len(src))`. For `Decode`: `len(dst) >= DecodedLen(len(src))`.
+- **evaluation_and_value_semantics:** The four encodings of RFC 4648: the standard and the URL-and-file-name alphabets, padded with `=` or raw. Decoding ignores `\r` and `\n` anywhere, accepts non-zero trailing bits as Go's non-strict decoding does, and returns the bytes decoded before an error; the results and error offsets are Go's for every input.
+- **ownership_and_lifecycle:** None: values; the byte slices returned are new and owned by the calling task.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a: the package has no state (D109).
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** `Decode` and `DecodeString` return `CorruptInputError`, the offset of the first malformed byte (text `illegal base64 data at input byte N`), as Go's do.
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003; a destination slice shorter than the result is a bounds failure (SGO-COMP-003).
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-encoding-basic; `src/sgostd/encoding/base64` package tests; `.work/w26/encdiff.py` (against Go's encoding/base64, seeds 1-3 identical), to move into `sgo/scripts/test-std-diff.py`.
+- **negative_tests:** fixture:std-encoding-basic (malformed input).
+- **implementation_coverage:** `src/sgostd/encoding/base64/`.
+- **executed_evidence:** PENDING: W26.
+- **supported_execution_configurations:** production, lab.
+
+### SGO-STD-014 — `std/encoding/binary`: Byte orders
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-STD-001, SGO-TYPE-007, SGO-TYPE-009; D136, D197.
+- **grammar_and_types:** The package `std/encoding/binary` exports exactly: `const BigEndian`; `const LittleEndian`; `func (bigEndian) AppendUint32(b []byte, v uint32) []byte`; `func (bigEndian) AppendUint64(b []byte, v uint64) []byte`; `func (bigEndian) PutUint32(b []byte, v uint32)`; `func (bigEndian) PutUint64(b []byte, v uint64)`; `func (bigEndian) Uint32(b []byte) uint32`; `func (bigEndian) Uint64(b []byte) uint64`; `func (littleEndian) AppendUint32(b []byte, v uint32) []byte`; `func (littleEndian) AppendUint64(b []byte, v uint64) []byte`; `func (littleEndian) PutUint32(b []byte, v uint32)`; `func (littleEndian) PutUint64(b []byte, v uint64)`; `func (littleEndian) Uint32(b []byte) uint32`; `func (littleEndian) Uint64(b []byte) uint64`. `BigEndian` and `LittleEndian` are constants of unexported types: a call is written `binary.BigEndian.Uint32(b)`. `Read`, `Write`, `Size`, and the varint functions are not provided.
+- **preconditions:** For `Uint32` and `PutUint32`: `len(b) >= 4`; for `Uint64` and `PutUint64`: `len(b) >= 8`.
+- **evaluation_and_value_semantics:** The value of 4 or 8 bytes in big- or little-endian order, and those bytes for a value, as Go's byte orders give them.
+- **ownership_and_lifecycle:** None: values; the byte slices returned are new and owned by the calling task.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a: the package has no state (D109).
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** None beyond the bounds failure of a short slice.
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003; a destination slice shorter than the result is a bounds failure (SGO-COMP-003).
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-encoding-basic; `src/sgostd/encoding/binary` package tests; `.work/w26/encdiff.py` (against Go's encoding/binary, seeds 1-3 identical), to move into `sgo/scripts/test-std-diff.py`.
+- **negative_tests:** fixture:std-encoding-basic (malformed input).
+- **implementation_coverage:** `src/sgostd/encoding/binary/`.
 - **executed_evidence:** PENDING: W26.
 - **supported_execution_configurations:** production, lab.

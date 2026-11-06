@@ -1,0 +1,30 @@
+package main
+
+import (
+	"sgo"
+	"std/encoding/base64"
+	"std/encoding/binary"
+	"std/encoding/hex"
+	"std/strconv"
+)
+
+func main(root *sgo.Context) error {
+	b := []byte("hello, S-Go!")
+	h := hex.EncodeToString(b)
+	back, err := hex.DecodeString(h)
+	_, bad := hex.DecodeString("abz")
+	_, odd := hex.DecodeString("abc")
+	e := base64.StdEncoding.EncodeToString(b)
+	d, err2 := base64.StdEncoding.DecodeString(e)
+	_, cerr := base64.StdEncoding.DecodeString("aGVs!G8=")
+	r := base64.RawURLEncoding.EncodeToString([]byte{0xfb, 0xff})
+	buf := binary.BigEndian.AppendUint32([]byte{}, 0xdeadbeef)
+	le := binary.LittleEndian.Uint32(buf)
+	msg := h + " " + string(back) + " " + strconv.Itoa(len(back)) + "\n" + bad.Error() + "\n" + odd.Error() + "\n" +
+		e + " " + string(d) + "\n" + cerr.Error() + "\n" + r + " " + hex.EncodeToString(buf) + " " +
+		strconv.Itoa(int(le)) + "\n"
+	if err != nil || err2 != nil {
+		msg = "unexpected error\n"
+	}
+	return root.Stdout().WriteString(msg)
+}

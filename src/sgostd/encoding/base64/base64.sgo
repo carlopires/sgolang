@@ -1,0 +1,218 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package base64 implements the base64 encodings of RFC 4648 as Go's encoding/base64 does
+// (SGO-STD-013, D197): the standard and URL alphabets, padded and raw. StdEncoding,
+// URLEncoding, RawStdEncoding, and RawURLEncoding are constants of type Encoding, so
+// base64.StdEncoding.EncodeToString(b) is written as in Go; the package has no variables.
+// Decoding ignores \r and \n and reports Go's CorruptInputError offsets. NewEncoding,
+// WithPadding, Strict, and the streaming encoder and decoder are not provided.
+package base64
+
+import "std/strconv"
+
+// An Encoding is one of the four RFC 4648 base64 encodings.
+type Encoding int
+
+// The four encodings.
+const (
+	StdEncoding    Encoding = 0 // standard alphabet, padded with '='
+	URLEncoding    Encoding = 1 // URL and file name alphabet, padded with '='
+	RawStdEncoding Encoding = 2 // standard alphabet, no padding
+	RawURLEncoding Encoding = 3 // URL and file name alphabet, no padding
+)
+
+const stdAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+const urlAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+
+func (enc Encoding) alphabet() string {
+	if enc == URLEncoding || enc == RawURLEncoding {
+		return urlAlphabet
+	}
+	return stdAlphabet
+}
+
+func (enc Encoding) padded() bool {
+	return enc == StdEncoding || enc == URLEncoding
+}
+
+// decode returns the value of c in enc's alphabet, or 0xff.
+func (enc Encoding) decode(c byte) byte {
+	switch {
+	case 'A' <= c && c <= 'Z':
+		return c - 'A'
+	case 'a' <= c && c <= 'z':
+		return c - 'a' + 26
+	case '0' <= c && c <= '9':
+		return c - '0' + 52
+	}
+	url := enc == URLEncoding || enc == RawURLEncoding
+	switch {
+	case c == '+' && !url, c == '-' && url:
+		return 62
+	case c == '/' && !url, c == '_' && url:
+		return 63
+	}
+	return 0xff
+}
+
+// CorruptInputError is the offset of the first byte of malformed input.
+type CorruptInputError int
+
+func (e CorruptInputError) Error() string {
+	return "illegal base64 data at input byte " + strconv.Itoa(int(e))
+}
+
+// EncodedLen returns the length of the encoding of n source bytes.
+func (enc Encoding) EncodedLen(n int) int {
+	if !enc.padded() {
+		return n/3*4 + (n%3*8+5)/6
+	}
+	return (n + 2) / 3 * 4
+}
+
+// DecodedLen returns the largest length of the decoding of n source bytes.
+func (enc Encoding) DecodedLen(n int) int {
+	if !enc.padded() {
+		return n/4*3 + n%4*6/8
+	}
+	return n / 4 * 3
+}
+
+// Encode writes the encoding of src into the first EncodedLen(len(src)) bytes of dst.
+func (enc Encoding) Encode(dst, src []byte) {
+	a := enc.alphabet()
+	di := 0
+	si := 0
+	for len(src)-si >= 3 {
+		val := int(src[si])<<16 | int(src[si+1])<<8 | int(src[si+2])
+		dst[di] = a[val>>18&0x3f]
+		dst[di+1] = a[val>>12&0x3f]
+		dst[di+2] = a[val>>6&0x3f]
+		dst[di+3] = a[val&0x3f]
+		si = si + 3
+		di = di + 4
+	}
+	switch len(src) - si {
+	case 1:
+		val := int(src[si]) << 16
+		dst[di] = a[val>>18&0x3f]
+		dst[di+1] = a[val>>12&0x3f]
+		if enc.padded() {
+			dst[di+2] = '='
+			dst[di+3] = '='
+		}
+	case 2:
+		val := int(src[si])<<16 | int(src[si+1])<<8
+		dst[di] = a[val>>18&0x3f]
+		dst[di+1] = a[val>>12&0x3f]
+		dst[di+2] = a[val>>6&0x3f]
+		if enc.padded() {
+			dst[di+3] = '='
+		}
+	}
+}
+
+// EncodeToString returns the encoding of src.
+func (enc Encoding) EncodeToString(src []byte) string {
+	buf := make([]byte, enc.EncodedLen(len(src)))
+	enc.Encode(buf, src)
+	return string(buf)
+}
+
+// decodeQuantum decodes up to 4 base64 bytes of src from si into dst. It returns the index after
+// the bytes read, the number of bytes written, and an error (Go's decodeQuantum).
+func (enc Encoding) decodeQuantum(dst, src []byte, si int) (int, int, error) {
+	dbuf := [4]byte{}
+	dlen := 4
+	var err error = nil
+	j := 0
+	for j < 4 {
+		if len(src) == si {
+			if j == 0 {
+				return si, 0, nil
+			}
+			if j == 1 || enc.padded() {
+				return si, 0, CorruptInputError(si - j)
+			}
+			dlen = j
+			break
+		}
+		in := src[si]
+		si++
+		out := enc.decode(in)
+		if out != 0xff {
+			dbuf[j] = out
+			j++
+			continue
+		}
+		if in == '\n' || in == '\r' {
+			continue
+		}
+		if !enc.padded() || in != '=' {
+			return si, 0, CorruptInputError(si - 1)
+		}
+		// Padding: the end of the input.
+		if j == 0 || j == 1 {
+			return si, 0, CorruptInputError(si - 1)
+		}
+		if j == 2 {
+			for si < len(src) && (src[si] == '\n' || src[si] == '\r') {
+				si++
+			}
+			if si == len(src) {
+				return si, 0, CorruptInputError(len(src))
+			}
+			if src[si] != '=' {
+				return si, 0, CorruptInputError(si - 1)
+			}
+			si++
+		}
+		for si < len(src) && (src[si] == '\n' || src[si] == '\r') {
+			si++
+		}
+		if si < len(src) {
+			err = CorruptInputError(si)
+		}
+		dlen = j
+		break
+	}
+	val := int(dbuf[0])<<18 | int(dbuf[1])<<12 | int(dbuf[2])<<6 | int(dbuf[3])
+	b0 := byte(val >> 16 & 0xff)
+	b1 := byte(val >> 8 & 0xff)
+	b2 := byte(val & 0xff)
+	if dlen == 4 {
+		dst[2] = b2
+	}
+	if dlen >= 3 {
+		dst[1] = b1
+	}
+	if dlen >= 2 {
+		dst[0] = b0
+	}
+	return si, dlen - 1, err
+}
+
+// Decode decodes src into dst and returns the number of bytes written. New line characters are
+// ignored; malformed input stops decoding with a CorruptInputError.
+func (enc Encoding) Decode(dst, src []byte) (int, error) {
+	n := 0
+	si := 0
+	for si < len(src) {
+		nsi, ninc, err := enc.decodeQuantum(dst[n:], src, si)
+		si = nsi
+		n = n + ninc
+		if err != nil {
+			return n, err
+		}
+	}
+	return n, nil
+}
+
+// DecodeString returns the bytes s represents, and the bytes decoded before an error.
+func (enc Encoding) DecodeString(s string) ([]byte, error) {
+	dbuf := make([]byte, enc.DecodedLen(len(s)))
+	n, err := enc.Decode(dbuf, []byte(s))
+	return dbuf[:n], err
+}
