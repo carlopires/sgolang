@@ -122,6 +122,9 @@ jobs:
       - name: std behaves as Go's packages on generated inputs (D125, SGO-STD-*)
         run: sgo/scripts/test-std-diff.py --seed 1 && sgo/scripts/test-std-diff.py --seed 2 --strings 200
 
+      - name: std/bits, std/encoding and std/crypto against Go and Wycheproof (D197, SGO-STD-011..022)
+        run: sgo/scripts/test-std-crypto.py --seed 1 && sgo/scripts/test-std-crypto.py --seed 2
+
       - name: No flag, mode, or environment reopens stock Go (S01, S15)
         run: sgo/scripts/test-flags.py
 
