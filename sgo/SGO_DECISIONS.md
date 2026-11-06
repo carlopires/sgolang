@@ -1360,3 +1360,31 @@ a W28 decision.
 constant-time big-number package, ECDSA P-256/P-384 verify, RSA verify (PKCS#1 v1.5 and PSS),
 bitsliced AES with GCM, `std/encoding/asn1` (DER subset) and `std/crypto/x509`; the TLS 1.3 client
 and the root-certificate policy are W28.
+
+## D200 — `std/crypto/x509` as built: representations and differences from Go · RECORDED 2026-11-08 (within D199)
+
+Context: D199 (b) puts `std/crypto/x509` (parse, chain verify, name check) in W27. Go's package
+uses types S-Go does not have in its standard library (`*big.Int`, `time.Time`, `net.IP`,
+`*url.URL`, `crypto.PublicKey`) and two process-wide inputs S-Go code does not have (the wall
+clock and the system root store). As built (SGO-STD-029 draft):
+
+- Values: serial numbers are a big-endian magnitude `[]byte` plus `SerialNumberNegative`;
+  `NotBefore`/`NotAfter` and `VerifyOptions.CurrentTime` are `int` Unix seconds; IP addresses are
+  4- or 16-byte slices; URIs are their text; the public key is a `PublicKey` struct (algorithm,
+  `rsa.PublicKey`, curve name, key bytes).
+- No ambient inputs: `CurrentTime` is required, and there are no system roots (a nil `Roots` is
+  `SystemRootsError`). Where roots come from is the W28 root policy (D199).
+- Error types keep Go's names, reasons and texts but carry their message, not a `*Certificate`, so
+  they stay shareable error values; names in texts are quoted with `strconv.QuoteToASCII` (equal to
+  Go's `%q` for ASCII; the corpus has no case where they differ).
+- Not provided: `AppendCertsFromPEM` (no `std/encoding/pem` yet), `AddCertWithConstraint`
+  (function-valued constraints), `SystemCertPool`, certificate creation, CRLs and CSRs.
+- Beyond D199's list, `std/crypto/ecdsa` also gained P-224 and P-521, so x509 verifies every
+  signature algorithm Go's x509 verifies except DSA and ML-DSA (both parsed; unimplemented, as
+  DSA is in Go).
+
+Evidence: `sgo/scripts/test-std-crypto.py` runs the 9746 x509-limbo cases Go's own
+`TestX509Limbo` runs, and 22 chains Go issues for each key type and signature algorithm it signs
+with and their tampered variants, through Go's crypto/x509 and `std/crypto/x509`: 9768 cases,
+parse and verification results and error texts identical. ECDSA Wycheproof: 6905 of 6905 on the
+four curves.
