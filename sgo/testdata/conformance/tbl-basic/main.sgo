@@ -1,0 +1,28 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+// A package-level table: built once before main, read by every task, written by none (D136).
+var primes = sgo.Freeze([]int{2, 3, 5, 7, 11, 13})
+
+func sum() int {
+	s := 0
+	for _, p := range primes.Get() {
+		s = s + p
+	}
+	return s
+}
+
+func main(root *sgo.Context) error {
+	out := make(chan int, 1)
+	nursery (n) {
+		n.Spawn(func(t *sgo.Context) error {
+			out <- primes.Get()[5]
+			return nil
+		})
+	}
+	return root.Stdout().WriteString(strconv.Itoa(sum()) + " " + strconv.Itoa(<-out) + "\n")
+}

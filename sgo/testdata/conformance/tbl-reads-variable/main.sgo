@@ -1,0 +1,11 @@
+package main
+
+import "sgo"
+
+var first = sgo.Freeze([]int{1})
+var second = sgo.Freeze([]sgo.Frozen[[]int]{first})
+
+func main(root *sgo.Context) error {
+	_ = second
+	return nil
+}

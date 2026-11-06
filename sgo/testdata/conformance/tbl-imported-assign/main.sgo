@@ -1,0 +1,11 @@
+package main
+
+import (
+	"example.com/tbl-imported-assign/lib"
+	"sgo"
+)
+
+func main(root *sgo.Context) error {
+	lib.Squares = sgo.Freeze([]int{7})
+	return nil
+}

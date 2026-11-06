@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+var limits = sgo.Freeze([]int{1, 2})
+
+func main(root *sgo.Context) error {
+	limits = sgo.Freeze([]int{3})
+	return nil
+}

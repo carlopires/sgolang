@@ -1,0 +1,21 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+type Unit struct {
+	Name  string
+	Scale int
+}
+
+const kilo = 1000
+
+// A table of struct values with nested literals, typed declaration form (D136).
+var units sgo.Frozen[[]Unit] = sgo.Freeze([]Unit{{Name: "k", Scale: kilo}, {Name: "M", Scale: kilo * kilo}})
+
+func main(root *sgo.Context) error {
+	u := units.Get()[1]
+	return root.Stdout().WriteString(u.Name + " " + strconv.Itoa(u.Scale) + "\n")
+}

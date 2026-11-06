@@ -1,0 +1,12 @@
+package main
+
+import "sgo"
+
+func seven() int { return 7 }
+
+var bad = sgo.Freeze([]int{1, seven()})
+
+func main(root *sgo.Context) error {
+	_ = bad
+	return nil
+}
