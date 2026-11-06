@@ -1306,3 +1306,57 @@ replays in the lab; the TCB does not grow.
   constant-time big-number package, asn1, x509, a TLS 1.3 client over `*sgo.Conn`, the
   root-certificate policy (file grant or pinned set), then HTTPS on the HTTP/1.1 example.
 
+
+## D198 — W26 as built differs from D197 in two places · APPROVED 2026-11-08 (user): option (a)
+
+Context: W26 is frozen at spec 0.21.0 (98a06bb489). Two implementation choices differ from the
+approved text of D197; they are recorded here for the owner to accept or reverse.
+
+1. **Package name.** D197 names `std/crypto/x25519`; the package is `std/crypto/curve25519`, with the
+   API of golang.org/x/crypto/curve25519 (`X25519(scalar, point)`, `Basepoint()`, `ScalarSize`,
+   `PointSize`), frozen as SGO-STD-022.
+2. **Field arithmetic.** D197 says X25519 follows Go's fiat code (`bits` calls and masks). The
+   package uses sixteen 16-bit limbs held in `int` (the TweetNaCl layout) instead, because every
+   intermediate then stays far inside the checked `int` range and no unsigned add needs a wrap
+   audit. It keeps D197's timing rule: the ladder swaps with masks, and no branch or table index
+   depends on the scalar or the point. Wycheproof: 518 of 518. It is likely slower than a 51-bit
+   limb version; not measured.
+
+Also: D197 calls the Wycheproof vectors vendored; `src/crypto/internal/cryptotest/wycheproof` only
+pins a version, so `sgo/scripts/test-std-crypto.py` fetches that pinned version with the pinned
+bootstrap toolchain (checksum-database verified). The vectors are the same ones Go's tests use.
+
+**Options.**
+- (a) Accept both as built.
+- (b) Rename to `std/crypto/x25519` (spec 0.21.1; no user code depends on the name yet) and keep
+  the limb layout.
+- (c) (b), and rewrite the field arithmetic on 51-bit limbs with `std/bits` as D197 states,
+  measured against the current version.
+
+## D199 — W27 scope: signatures, ASN.1, X.509 and AES-GCM before TLS · APPROVED 2026-11-08 (user): option (b)
+
+Context: D197 defers ed25519, ECDSA, RSA verify, asn1, x509, a TLS 1.3 client and the root
+policy to W27-W28, each by separate decision. The TLS 1.3 client needs, for a typical server:
+X25519 (done), ChaCha20-Poly1305 (done) or AES-GCM, SHA-256/384 and HKDF (done), and signature
+verification for the certificate chain: ECDSA P-256 for most servers, RSA-PSS/PKCS#1 v1.5 for many,
+Ed25519 for few.
+
+**Options for W27.**
+- (a) Verification only, in order: `std/crypto/ed25519` (verify and sign), a constant-time
+  `std/crypto/internal/nat` big-number package, ECDSA P-256/P-384 verify, RSA verify (PKCS#1 v1.5
+  and PSS), `std/encoding/asn1` (DER, the subset x509 needs), `std/crypto/x509` (parse, chain
+  verify, name check). TLS client in W28. AES stays out (ChaCha20-Poly1305 only), so servers that
+  offer only AES-GCM suites cannot be reached until a bitsliced AES lands.
+- (b) As (a), plus bitsliced AES-GCM in W27, so the W28 client can reach AES-only servers.
+- (c) Narrower: Ed25519 and ECDSA P-256 only, asn1 and x509 for those keys, TLS client in W28 for
+  ECDSA/Ed25519 certificate chains; RSA later.
+
+Each package is checked as in W26: identical to Go's package on generated inputs, and the Wycheproof
+vectors Go's tests use, negative cases included. Root certificates (file grant or pinned set) are
+a W28 decision.
+
+**Approved 2026-11-08 (user).** D198: (a), both as built — `std/crypto/curve25519` with the
+16-bit limb layout stays as frozen in spec 0.21.0. D199: (b) — W27 is `std/crypto/ed25519`, a
+constant-time big-number package, ECDSA P-256/P-384 verify, RSA verify (PKCS#1 v1.5 and PSS),
+bitsliced AES with GCM, `std/encoding/asn1` (DER subset) and `std/crypto/x509`; the TLS 1.3 client
+and the root-certificate policy are W28.
