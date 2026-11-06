@@ -59,9 +59,11 @@ func (check *Checker) sgoLocalVar(obj Object) *Var {
 func (check *Checker) sgoFlowChecks(files []*syntax.File) {
 	check.sgoTypeDecls(files)
 	check.sgoRuneConsts()
+	check.sgoPackageTables(files) // sgo_tables.go (D136)
 	for _, f := range files {
 		for _, d := range f.DeclList {
 			if fd, _ := d.(*syntax.FuncDecl); fd != nil && fd.Body != nil {
+				check.sgoTableWrites(fd)    // sgo_tables.go (D136)
 				check.sgoCheckPlacement(fd) // sgo_check.go
 				check.sgoAfterPlacement(fd) // sgo_check.go
 				check.sgoGoCalls(fd)        // sgo_check.go

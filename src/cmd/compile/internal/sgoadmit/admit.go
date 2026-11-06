@@ -143,13 +143,44 @@ func (a *admitter) file(f *syntax.File) {
 			}
 			a.expr(d.Values)
 		case *syntax.VarDecl:
-			a.deny(a.tokenBefore(d.Pos(), "var"), "package-level variable", "SGO-BIND-003")
+			// The one package-level variable is a frozen table, var name = sgo.Freeze(lit)
+			// (D136); types2 checks that lit holds only constants (sgo_tables.go).
+			if len(d.NameList) != 1 || !freezeOfLiteral(d.Values) {
+				a.deny(a.tokenBefore(d.Pos(), "var"), "package-level variable", "SGO-BIND-003")
+				continue
+			}
+			if d.Type != nil {
+				a.typ(d.Type)
+			}
+			a.expr(d.Values)
 		case *syntax.TypeDecl:
 			a.typeDecl(d)
 		case *syntax.FuncDecl:
 			a.funcDecl(d)
 		}
 	}
+}
+
+// freezeOfLiteral reports whether e is sgo.Freeze(lit) or sgo.Freeze[T](lit) with a composite
+// literal lit: the form of a package-level table (D136).
+func freezeOfLiteral(e syntax.Expr) bool {
+	call, _ := syntax.Unparen(e).(*syntax.CallExpr)
+	if call == nil || len(call.ArgList) != 1 || call.HasDots {
+		return false
+	}
+	fun := syntax.Unparen(call.Fun)
+	if ix, _ := fun.(*syntax.IndexExpr); ix != nil {
+		fun = syntax.Unparen(ix.X)
+	}
+	sel, _ := fun.(*syntax.SelectorExpr)
+	if sel == nil || sel.Sel.Value != "Freeze" {
+		return false
+	}
+	if pkg, _ := syntax.Unparen(sel.X).(*syntax.Name); pkg == nil || pkg.Value != "sgo" {
+		return false
+	}
+	_, ok := syntax.Unparen(call.ArgList[0]).(*syntax.CompositeLit)
+	return ok
 }
 
 func (a *admitter) importDecl(d *syntax.ImportDecl) {
