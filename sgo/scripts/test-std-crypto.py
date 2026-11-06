@@ -1189,7 +1189,8 @@ def wyche_x25519(WP):
 
 
 def wyche_ecdsa(WP):
-    files = [(f, 'P256' if 'secp256r1' in f else 'P384', f.split('_')[2], f.endswith('_p1363_test.json')) for f in sorted(os.listdir(WP)) if f.startswith(('ecdsa_secp256r1_sha', 'ecdsa_secp384r1_sha')) and f.endswith('_test.json') and f.split('_')[2] in ('sha256', 'sha384', 'sha512')]
+    names = {'secp224r1': 'P224', 'secp256r1': 'P256', 'secp384r1': 'P384', 'secp521r1': 'P521'}
+    files = [(f, names[f.split('_')[1]], f.split('_')[2], f.endswith('_p1363_test.json')) for f in sorted(os.listdir(WP)) if f.startswith('ecdsa_') and f.split('_')[1] in names and f.endswith('_test.json') and f.split('_')[2] in ('sha224', 'sha256', 'sha384', 'sha512')]
     rows = []
     for f, curve, h, p1363 in files:
         for g in json.load(open(os.path.join(WP, f)))['testGroups']:
@@ -1225,6 +1226,10 @@ def wyche_ecdsa(WP):
     }
 
     func digest(name string, msg []byte) []byte {
+    	if name == "sha224" {
+    		d := sha256.Sum224(msg)
+    		return d[:]
+    	}
     	if name == "sha256" {
     		d := sha256.Sum256(msg)
     		return d[:]
@@ -1239,23 +1244,31 @@ def wyche_ecdsa(WP):
 
     func main(root *sgo.Context) error {
     	vs := []vector{%s}
+    	p224 := ecdsa.P224()
     	p256 := ecdsa.P256()
     	p384 := ecdsa.P384()
+    	p521 := ecdsa.P521()
     	pass := 0
     	bad := ""
     	for _, v := range vs {
     		c := p256
+    		size := 32
+    		if v.curve == "P224" {
+    			c = p224
+    			size = 28
+    		}
     		if v.curve == "P384" {
     			c = p384
+    			size = 48
+    		}
+    		if v.curve == "P521" {
+    			c = p521
+    			size = 66
     		}
     		h := digest(v.hash, unhex(v.msg))
     		sig := unhex(v.sig)
     		got := false
     		if v.p1363 {
-    			size := 32
-    			if v.curve == "P384" {
-    				size = 48
-    			}
     			if len(sig) == 2*size {
     				got = ecdsa.Verify(c, unhex(v.pk), h, sig[:len(sig)/2], sig[len(sig)/2:])
     			}
@@ -1481,6 +1494,9 @@ LIMBO_GEN = '// Command gen reads x509-limbo\'s limbo.json, applies the skips of
 LIMBO_SGO = 'package main\n\nimport (\n\t"sgo"\n\t"std/crypto/x509"\n\t"std/encoding/hex"\n\t"std/strconv"\n\t"std/strings"\n)\n\nfunc result(err error) string {\n\tif err == nil {\n\t\treturn "ok"\n\t}\n\treturn "err " + strings.ReplaceAll(err.Error(), "\\n", " ")\n}\n\nfunc pool(hexes string) *x509.CertPool {\n\tp := x509.NewCertPool()\n\tif hexes == "" {\n\t\treturn p\n\t}\n\tl := strings.Split(hexes, ",")\n\tfor i := 0; i < len(l); i++ {\n\t\td, _ := hex.DecodeString(l[i])\n\t\tc, err := x509.ParseCertificate(d)\n\t\tif err == nil {\n\t\t\tp.AddCert(c)\n\t\t}\n\t}\n\treturn p\n}\n\nfunc one(line string) string {\n\tf := strings.Split(line, "\\t")\n\tid := f[0]\n\tvt, _ := strconv.Atoi(f[2])\n\tekus := []x509.ExtKeyUsage{}\n\tif f[3] != "" {\n\t\te := strings.Split(f[3], ",")\n\t\tfor i := 0; i < len(e); i++ {\n\t\t\tv, _ := strconv.Atoi(e[i])\n\t\t\tekus = append(ekus, x509.ExtKeyUsage(v))\n\t\t}\n\t}\n\td, _ := hex.DecodeString(f[5])\n\tc, perr := x509.ParseCertificate(d)\n\tif perr != nil {\n\t\treturn id + "\\tparse " + result(perr)\n\t}\n\t_, verr := c.Verify(x509.VerifyOptions{DNSName: f[1], Intermediates: pool(f[7]), Roots: pool(f[6]),\n\t\tCurrentTime: vt, KeyUsages: ekus, CertificatePolicies: []x509.OID{}})\n\tout := id + "\\tverify " + result(verr)\n\tif f[4] != "" {\n\t\tnames := strings.Split(f[4], ",")\n\t\tfor i := 0; i < len(names); i++ {\n\t\t\tout += "\\thost " + result(c.VerifyHostname(names[i]))\n\t\t}\n\t}\n\treturn out\n}\n\nfunc main(root *sgo.Context) error {\n\tin := root.Stdin()\n\tout := root.Stdout()\n\tfor {\n\t\tline, err := in.ReadLine(1 << 20)\n\t\tif err != nil {\n\t\t\tif sgo.IsEOF(err) {\n\t\t\t\treturn nil\n\t\t\t}\n\t\t\treturn err\n\t\t}\n\t\tcheck out.WriteString(one(line) + "\\n")\n\t}\n}\n'
 
 
+CHAINS_GEN = '// Command chains issues root -> intermediate -> leaf chains with each key type and signature\n// algorithm Go\'s crypto/x509 signs with, plus tampered variants, and writes them in the\n// x509-limbo harness format with Go\'s verdicts.\npackage main\n\nimport (\n\t"crypto"\n\t"crypto/ecdsa"\n\t"crypto/ed25519"\n\t"crypto/elliptic"\n\t"crypto/rand"\n\t"crypto/rsa"\n\t"crypto/x509"\n\t"crypto/x509/pkix"\n\t"encoding/hex"\n\t"fmt"\n\t"math/big"\n\t"os"\n\t"strings"\n\t"time"\n)\n\ntype kind struct {\n\tname string\n\tkey  func() crypto.Signer\n\talgo x509.SignatureAlgorithm\n}\n\nfunc ec(c elliptic.Curve) func() crypto.Signer {\n\treturn func() crypto.Signer { k, _ := ecdsa.GenerateKey(c, rand.Reader); return k }\n}\n\nfunc rsaKey() crypto.Signer { k, _ := rsa.GenerateKey(rand.Reader, 2048); return k }\n\nfunc edKey() crypto.Signer { _, k, _ := ed25519.GenerateKey(rand.Reader); return k }\n\nfunc issue(tmpl, parent *x509.Certificate, pub crypto.PublicKey, signer crypto.Signer) []byte {\n\tder, err := x509.CreateCertificate(rand.Reader, tmpl, parent, pub, signer)\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\treturn der\n}\n\nfunc result(err error) string {\n\tif err == nil {\n\t\treturn "ok"\n\t}\n\treturn "err " + strings.ReplaceAll(err.Error(), "\\n", " ")\n}\n\nfunc main() {\n\tkinds := []kind{\n\t\t{"rsa-sha256", rsaKey, x509.SHA256WithRSA}, {"rsa-sha384", rsaKey, x509.SHA384WithRSA}, {"rsa-sha512", rsaKey, x509.SHA512WithRSA},\n\t\t{"rsapss-sha256", rsaKey, x509.SHA256WithRSAPSS}, {"rsapss-sha512", rsaKey, x509.SHA512WithRSAPSS},\n\t\t{"p224", ec(elliptic.P224()), x509.ECDSAWithSHA256}, {"p256", ec(elliptic.P256()), x509.ECDSAWithSHA256},\n\t\t{"p384", ec(elliptic.P384()), x509.ECDSAWithSHA384}, {"p521", ec(elliptic.P521()), x509.ECDSAWithSHA512},\n\t\t{"p521-sha256", ec(elliptic.P521()), x509.ECDSAWithSHA256}, {"ed25519", edKey, x509.PureEd25519},\n\t}\n\tcases, _ := os.Create(os.Args[1])\n\tgores, _ := os.Create(os.Args[2])\n\tdefer cases.Close()\n\tdefer gores.Close()\n\tnow := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)\n\tserial := int64(1)\n\tfor _, k := range kinds {\n\t\trootKey, intKey, leafKey := k.key(), k.key(), k.key()\n\t\ttmpl := func(cn string, ca bool) *x509.Certificate {\n\t\t\tserial++\n\t\t\tt := &x509.Certificate{SerialNumber: big.NewInt(serial), Subject: pkix.Name{CommonName: cn},\n\t\t\t\tNotBefore: now.Add(-time.Hour), NotAfter: now.Add(24 * time.Hour), SignatureAlgorithm: k.algo,\n\t\t\t\tBasicConstraintsValid: true, IsCA: ca}\n\t\t\tif ca {\n\t\t\t\tt.KeyUsage = x509.KeyUsageCertSign\n\t\t\t} else {\n\t\t\t\tt.DNSNames = []string{"example.com"}\n\t\t\t\tt.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}\n\t\t\t}\n\t\t\treturn t\n\t\t}\n\t\trt := tmpl(k.name+" root", true)\n\t\trootDER := issue(rt, rt, rootKey.Public(), rootKey)\n\t\troot, _ := x509.ParseCertificate(rootDER)\n\t\tintDER := issue(tmpl(k.name+" int", true), root, intKey.Public(), rootKey)\n\t\tinter, _ := x509.ParseCertificate(intDER)\n\t\tleafDER := issue(tmpl("leaf", false), inter, leafKey.Public(), intKey)\n\t\tbad := append([]byte{}, leafDER...)\n\t\tbad[len(bad)-3] ^= 1\n\t\tfor _, v := range []struct {\n\t\t\tid   string\n\t\t\tleaf []byte\n\t\t}{{k.name + "::chain", leafDER}, {k.name + "::tampered", bad}} {\n\t\t\tfmt.Fprintf(cases, "%s\\t%s\\t%d\\t%s\\t%s\\t%s\\t%s\\t%s\\n", v.id, "example.com", now.Unix(), "", "",\n\t\t\t\thex.EncodeToString(v.leaf), hex.EncodeToString(rootDER), hex.EncodeToString(intDER))\n\t\t\tc, err := x509.ParseCertificate(v.leaf)\n\t\t\tif err != nil {\n\t\t\t\tfmt.Fprintf(gores, "%s\\tparse %s\\n", v.id, result(err))\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\troots, ints := x509.NewCertPool(), x509.NewCertPool()\n\t\t\troots.AddCert(root)\n\t\t\tints.AddCert(inter)\n\t\t\t_, verr := c.Verify(x509.VerifyOptions{DNSName: "example.com", Roots: roots, Intermediates: ints, CurrentTime: now})\n\t\t\tfmt.Fprintf(gores, "%s\\tverify %s\\n", v.id, result(verr))\n\t\t}\n\t}\n}\n'
+
+
 def limbo_dir():
     text = open(os.path.join(ROOT, "src/crypto/internal/cryptotest/x509limbo/schemaversion.go")).read()
     version = re.search(r'X509LimboVersion = "([^"]+)"', text).group(1)
@@ -1492,7 +1508,7 @@ def limbo_dir():
 
 
 def x509_limbo():
-    """Run Go's x509-limbo case selection through Go's crypto/x509 and std/crypto/x509."""
+    """Run Go's x509-limbo case selection, and chains Go issues, through Go's crypto/x509 and std/crypto/x509."""
     with tempfile.TemporaryDirectory() as d:
         gd, sd = os.path.join(d, "gen"), os.path.join(d, "harness")
         os.makedirs(gd)
@@ -1505,6 +1521,19 @@ def x509_limbo():
                            cwd=gd, env=env, capture_output=True, text=True, timeout=1800)
         if g.returncode:
             return False, "x509-limbo: go exit %d\n%s" % (g.returncode, g.stderr[-1500:])
+        # Issued chains for every key type and signature algorithm Go signs with, tampered too.
+        cd = os.path.join(d, "chains")
+        os.makedirs(cd)
+        open(os.path.join(cd, "main.go"), "w").write(CHAINS_GEN)
+        open(os.path.join(cd, "go.mod"), "w").write("module chains\n\ngo 1.26\n")
+        cc, cg = os.path.join(d, "chains-cases.txt"), os.path.join(d, "chains-go.txt")
+        g = subprocess.run([GO, "run", ".", cc, cg], cwd=cd, env=env, capture_output=True, text=True, timeout=900)
+        if g.returncode:
+            return False, "x509-limbo: chains go exit %d\n%s" % (g.returncode, g.stderr[-1500:])
+        with open(cases, "a") as out:
+            out.write(open(cc).read())
+        with open(gores, "a") as out:
+            out.write(open(cg).read())
         open(os.path.join(sd, "main.sgo"), "w").write(LIMBO_SGO)
         open(os.path.join(sd, "sgo.mod"), "w").write(f"module example.com/limbo\n\nsgo {VERSION}\n")
         b = subprocess.run([SGO, "build", "-o", os.path.join(d, "limbo"), "."], cwd=sd, capture_output=True, text=True, timeout=900)

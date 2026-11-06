@@ -328,20 +328,18 @@ func checkSignature(algo SignatureAlgorithm, signed, signature []byte, pub Publi
 		if d.pubAlgo != ECDSA {
 			return errors.New("x509: signature algorithm specifies an " + d.pubAlgo.String() + " public key, but have public key of type " + keyTypeName(pub))
 		}
-		if pub.Curve == "P-256" {
-			if !ecdsa.VerifyASN1(ecdsa.P256(), pub.Key, signed, signature) {
-				return errors.New("x509: ECDSA verification failure")
-			}
-			return nil
+		c := ecdsa.P256()
+		if pub.Curve == "P-224" {
+			c = ecdsa.P224()
+		} else if pub.Curve == "P-384" {
+			c = ecdsa.P384()
+		} else if pub.Curve == "P-521" {
+			c = ecdsa.P521()
 		}
-		if pub.Curve == "P-384" {
-			if !ecdsa.VerifyASN1(ecdsa.P384(), pub.Key, signed, signature) {
-				return errors.New("x509: ECDSA verification failure")
-			}
-			return nil
+		if !ecdsa.VerifyASN1(c, pub.Key, signed, signature) {
+			return errors.New("x509: ECDSA verification failure")
 		}
-		// P-224 and P-521 are parsed but not implemented for verification in S-Go.
-		return ErrUnsupportedAlgorithm()
+		return nil
 	}
 	if pub.Algorithm == Ed25519 {
 		if d.pubAlgo != Ed25519 {

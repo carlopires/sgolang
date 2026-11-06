@@ -13,7 +13,7 @@ import (
 	"std/encoding/hex"
 )
 
-// A Curve is one of the NIST curves P-256 and P-384.
+// A Curve is one of the NIST curves P-224, P-256, P-384 and P-521.
 type Curve struct {
 	p    *bigmod.Modulus
 	n    *bigmod.Modulus
@@ -63,6 +63,26 @@ type point struct {
 	x *bigmod.Nat
 	y *bigmod.Nat
 	z *bigmod.Nat
+}
+
+// P224 returns the curve P-224 of FIPS 186-5 (secp224r1).
+func P224() *Curve {
+	return newCurve(
+		"ffffffffffffffffffffffffffffffff000000000000000000000001",
+		"ffffffffffffffffffffffffffff16a2e0b8f03e13dd29455c5c2a3d",
+		"b4050a850c04b3abf54132565044b0b7d7bfd8ba270b39432355ffb4",
+		"b70e0cbd6bb4bf7f321390b94a03c1d356c21122343280d6115c1d21",
+		"bd376388b5f723fb4c22dfe6cd4375a05a07476444d5819985007e34")
+}
+
+// P521 returns the curve P-521 of FIPS 186-5 (secp521r1).
+func P521() *Curve {
+	return newCurve(
+		"01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+		"01fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa51868783bf2f966b7fcc0148f709a5d03bb5c9b8899c47aebb6fb71e91386409",
+		"0051953eb9618e1c9a1f929a21a0b68540eea2da725b99b315f3b8b489918ef109e156193951ec7e937b1652c0bd3bb1bf073573df883d2c34f1ef451fd46b503f00",
+		"00c6858e06b70404e9cd9e3ecb662395b4429c648139053fb521f828af606b4d3dbaa14b5e77efe75928fe1dc127a2ffa8de3348b3c1856a429bf97e7e31c2e5bd66",
+		"011839296a789a3bc0045c8a5fb42c7d1bd998f54449579b446817afbd17273e662c97ee72995ef42640c550b9013fad0761353c7086a272c24088be94769fd16650")
 }
 
 func (c *Curve) nat(v uint64) *bigmod.Nat {
