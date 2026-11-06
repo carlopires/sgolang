@@ -810,9 +810,19 @@ Native channels, `select`, and cancellation transfer (plan §7, W07). Spec 0.2.0
 
 **Recommendation.** sgo.Copy of an interface that may hold a handle is refused at compile time (SGO_E_CAPABILITY_MISUSE); handles cross tasks only by LendTo. Today the runtime refuses the operation late (sgoHandleUser). (sgo/docs/stdlib-parity-plan.md)
 
-## D136 — Package-level tables **[NEEDS USER]** · PROPOSED
+## D136 — Package-level tables · APPROVED 2026-11-07 (user)
 
 **Recommendation.** Admit package-level var of type sgo.Frozen[T] with a constant composite-literal initializer; all other package state stays denied (D109). (sgo/docs/stdlib-parity-plan.md)
+
+**Decision.** As recommended, for W26 (D197). The one admitted package-level declaration is
+`var name = sgo.Freeze(lit)` (or with the type written, `var name sgo.Frozen[T] = sgo.Freeze(lit)`),
+where `lit` is a composite literal whose elements, at every depth, are constants or nested
+composite literals: no function calls, no references to other variables, no handles. The value is
+built once before `main` (or before the first test) in source order, which cannot be observed
+because no initializer reads another; it is the same in production and the lab. Every task may
+read it (`name.Get()`); no task can write it (SGO-COMP-009). All other package-level state stays
+denied (D109). Tables are written as slices (`sgo.Freeze([]uint32{...})`), so `Get` returns a
+read-only view, not a copy.
 
 ## D137 — Variadic parameters **[NEEDS USER]** · PROPOSED
 
@@ -1242,3 +1252,57 @@ Plan and work order: `sgo/docs/w25-float-plan.md` (W25, spec 0.20.0).
 - 2026-11-07: user chose option (a) for floating point in W24 ("let's do (a), and (c) for the future"): floats stay denied; D183 without ParseFloat/FormatFloat, D184 without a float flag; D185 (admit float64) approved in principle for a later week.
 - 2026-11-07: user approved D186 option (b) ("option b works"): a plain error exit for CLIs, in a 0.19.1 freeze; then D185 (float64) planned properly.
 - 2026-11-07: user approved D187–D194 as recommended, D191 option (a) ("all looks good, all approved"): float64 in W25 (`sgo/docs/w25-float-plan.md`), spec 0.20.0.
+
+## D196 — Unsigned integers: checked `uint32` and `uint64`, wrapping only through `std/bits` · APPROVED 2026-11-07 (user)
+
+Context: S-Go has `int`, `byte` and `rune`, and every overflow is a checked failure (G-LANG).
+Cryptography is built on 32- and 64-bit modular arithmetic. Options were (a) wrapping unsigned
+types, (b) checked unsigned types with wrapping only through explicit `std/bits` calls, and (c) no
+new types, masked `int` arithmetic on 16-bit limbs. The user chose (b).
+
+**Decision.**
+- `uint32` and `uint64` are admitted: declarations, untyped constants that fit, comparisons,
+  `==` and `<`, map keys, struct fields, slices and arrays of them.
+- `+ - * / %` are checked like `int`: a result outside the type's range (a sum past the maximum,
+  a difference below zero, a product that does not fit) fails with `IntegerOverflow`, as does
+  division by zero. `<<` fails when a set bit would be shifted out; `>>` never fails. `& | ^ &^`
+  and unary `^` never fail. Unary `-` on an unsigned operand is refused at compile time.
+- Conversions among `int`, `byte`, `rune`, `uint32`, `uint64` and from `float64` are checked: a
+  value the target cannot represent fails with `IntegerOverflow`. Truncation is written: for
+  example `uint32(x & 0xffffffff)`.
+- Wrapping, carries and rotations are only through `std/bits`, the S-Go port of Go's `math/bits`
+  for these widths: `Add32/Add64(x, y, carry) (sum, carryOut)`, `Sub32/Sub64`,
+  `Mul32/Mul64 (hi, lo)`, `Div32/Div64`, `RotateLeft32/RotateLeft64`, `LeadingZeros`,
+  `TrailingZeros`, `OnesCount`, `Len`, `ReverseBytes` (32 and 64 bits each). Results equal Go's.
+- `strconv.FormatUint`/`ParseUint` and `fmt`'s integer verbs accept the new types.
+- `uint`, `uint8` (other than `byte`), `uint16`, `int8`–`int64` and `uintptr` stay denied.
+- Every 0.20.x program keeps its meaning.
+
+## D197 — W26: frozen tables, unsigned integers, and the first `std/crypto` · APPROVED 2026-11-07 (user)
+
+Context: the user asked whether S-Go could implement an HTTPS client. The options were TLS in the
+TCB (Go's `crypto/tls` behind a handle) or TLS as S-Go source over `*sgo.Conn`. The user chose
+S-Go source, so cryptography is checked by the same admission and sharing rules as user code and
+replays in the lab; the TCB does not grow.
+
+**Decision.**
+- W26 implements D136 and D196, then these packages as S-Go source under `std/`:
+  `std/bits`; `std/encoding/hex`, `std/encoding/base64`, byte-order helpers;
+  `std/crypto/sha256`, `std/crypto/sha512`, `std/crypto/hmac`, `std/crypto/hkdf`;
+  `std/crypto/chacha20poly1305`; `std/crypto/x25519`.
+  Spec: a minor version (0.21.0).
+- Evidence: each function is diffed against Go's package on generated inputs (test-std-diff), and
+  the AEAD, X25519, HMAC and HKDF are checked against the vendored Wycheproof vectors
+  (`src/crypto/internal/cryptotest/wycheproof`), negative cases included. Results are
+  byte-identical.
+- Timing: no secret-dependent branch or table index in the crypto packages. Field arithmetic for
+  X25519 follows Go's fiat code (`bits` calls and masks). AES is not in W26. A table-based AES would
+  leak timing; it comes later bitsliced or not at all. Checked arithmetic and bounds checks take the
+  same branch on every valid input, so they do not leak. Review and targeted tests enforce this,
+  not the compiler.
+- Speed: no assembly or SIMD. Throughput is expected to be several times below Go's and is
+  measured, not promised.
+- Later (W27-W28, separate decisions): ed25519, ECDSA P-256/P-384, RSA verify with a
+  constant-time big-number package, asn1, x509, a TLS 1.3 client over `*sgo.Conn`, the
+  root-certificate policy (file grant or pinned set), then HTTPS on the HTTP/1.1 example.
+
