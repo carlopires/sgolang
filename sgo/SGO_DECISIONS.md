@@ -1388,3 +1388,48 @@ Evidence: `sgo/scripts/test-std-crypto.py` runs the 9746 x509-limbo cases Go's o
 with and their tampered variants, through Go's crypto/x509 and `std/crypto/x509`: 9768 cases,
 parse and verification results and error texts identical. ECDSA Wycheproof: 6905 of 6905 on the
 four curves.
+
+## D201 — W28 root certificates: a pinned default set, and a granted file to replace or extend it · APPROVED 2026-11-08 (user): option (d)
+
+Context: D199 leaves the root-certificate policy to W28. `std/crypto/x509` takes roots from the
+caller and has no system pool (D200): S-Go code reads no file it was not granted and has no
+process-wide state, so Go's implicit system root store (`/etc/ssl/certs/...`, the macOS and
+Windows verifiers) has no counterpart.
+
+**Options.**
+- (a) The operating system's CA bundle, read through a file grant. Current OS trust, but
+  host-dependent (paths differ; macOS trusts its keychain, not a file), not reproducible in the
+  lab, and it needs a PEM decoder.
+- (b) A pinned root set in `std` (the Mozilla list, as Go's `x509roots/fallback`). The same trust
+  everywhere and in the lab, no grant; updates arrive only with S-Go releases, private CAs must be
+  added by the program, about 200 KB of data.
+- (c) No default: every TLS connection is given its roots explicitly.
+- (d) (b) as the default, plus an optional file grant as in (a) that replaces or extends it.
+
+**Approved 2026-11-08 (user): (d), in two steps.**
+1. The W28 TLS client takes its roots explicitly, as `std/crypto/x509` does, and `std` provides
+   the pinned Mozilla set as a ready value. Root changes reach programs with S-Go releases.
+2. A PEM decoder (`std/encoding/pem`) and `CertPool.AppendCertsFromPEM`, so a program holding a
+   file grant can load the OS bundle or its own CA file, to replace or extend the pinned set.
+   The program names the file in its grant; S-Go does not probe OS paths (documented examples of
+   the usual bundle locations only).
+
+**Emergency distrust (approved 2026-11-08, user), from the eMudhra incident.** In October 2026 the
+private keys of eight eMudhra intermediate CAs were found computable from their certificates (each
+key below 256; CVE-2026-111943). Browsers blocked them within hours through remotely updated block
+lists; software with a bundled root store needed a release, and every Go program a rebuild
+(Go 1.27.3, 1.26.10). Because Sectigo's AAA Certificate Services root cross-signed the eight,
+removing eMudhra's roots from a root store was not enough: Go blocks the keys themselves, by SHA-256
+SPKI hash, anywhere in a chain. `std/crypto/x509` is ported from that fixed code and carries the
+same eight hashes (SGO-STD-029). Added to D201:
+- (a) `std` keeps the distrusted-key list in step with Go's and with the root programs; an
+  emergency change ships as a patch release whose notes tell users to rebuild.
+- (b) With step 2, the granted trust file and the `CertPool` API also accept distrusted keys
+  (SHA-256 SPKI hashes) besides roots, applied anywhere in a chain, so an operator can respond by
+  updating one granted file and restarting, without a rebuild.
+- (c) The root set and distrust list a binary was built with are recorded in it and reported by
+  the toolchain (as `sgo version -m <binary>`), so affected deployed binaries can be found.
+- (d) Open, a separate decision after the basic W28 client: Certificate Transparency checks in the
+  TLS client (reject certificates without proof of public logging), the measure that protected
+  Chrome before this incident was known. Revocation over the network (CRL, OCSP) is not planned as
+  the emergency path.
