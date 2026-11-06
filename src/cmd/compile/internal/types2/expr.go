@@ -174,6 +174,16 @@ func (check *Checker) unary(x *operand, e *syntax.Operation) {
 		return
 	}
 
+	if check.conf.SGo && e.Op == syntax.Sub && x.mode() != constant_ {
+		// An unsigned value has no negation in S-Go (SGO-TYPE-009, D196). byte keeps its checked
+		// unary minus (SGO-TYPE-007): only -0 is in range.
+		if b, ok := x.typ().Underlying().(*Basic); ok && (b.kind == Uint32 || b.kind == Uint64) {
+			check.errorf(x, UnsupportedFeature, "SGO_E_UNADMITTED: unary - on %s is not admitted; an unsigned value has no negation (SGO-TYPE-009)", x.typ())
+			x.mode_ = invalid
+			return
+		}
+	}
+
 	if x.mode() == constant_ {
 		if x.val.Kind() == constant.Unknown {
 			// nothing to do (and don't cause an error below in the overflow check)

@@ -1,0 +1,28 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+// uint32 and uint64 arithmetic in range, map keys, and ^ (SGO-TYPE-009, D196).
+func main(root *sgo.Context) error {
+	var a uint32 = 0xfffffff0
+	var b uint32 = 0x0f
+	c := a + b
+	var x uint64 = 0xfffffffffffffff0
+	var y uint64 = 15
+	z := x + y
+	var m uint64 = 0xffffffff
+	p := m * m
+	var sh uint32 = 1
+	sh = sh << 31
+	var top uint64 = 0x8000000000000000
+	r := top >> 63
+	keys := map[uint32]int{}
+	keys[c] = 1
+	msg := strconv.Itoa(int(c)) + " " + strconv.Itoa(int(z>>4)) + " " + strconv.Itoa(int(p>>32)) + " " +
+		strconv.Itoa(int(sh)) + " " + strconv.Itoa(int(r)) + " " + strconv.Itoa(keys[0xffffffff]) + " " +
+		strconv.Itoa(int(^b)) + " " + strconv.Itoa(int(x%7)) + " " + strconv.Itoa(int(c/16)) + "\n"
+	return root.Stdout().WriteString(msg)
+}

@@ -40,8 +40,8 @@ var sgoHandleTypes = map[string]bool{"Context": true, "Nursery": true, "Writer":
 // Predeclared names cannot be redeclared (SGO-BIND-004), so every use refers to the predeclared one.
 var deniedNames = map[string]string{
 	"int8": "SGO-TYPE-001", "int16": "SGO-TYPE-001", "int32": "SGO-TYPE-001", "int64": "SGO-TYPE-001",
-	"uint": "SGO-TYPE-001", "uint8": "SGO-TYPE-001", "uint16": "SGO-TYPE-001", "uint32": "SGO-TYPE-001",
-	"uint64": "SGO-TYPE-001", "uintptr": "SGO-TYPE-001", // rune is admitted (SGO-TYPE-008)
+	"uint": "SGO-TYPE-001", "uint8": "SGO-TYPE-001", "uint16": "SGO-TYPE-001",
+	"uintptr": "SGO-TYPE-001",                                // rune (SGO-TYPE-008), uint32 and uint64 (SGO-TYPE-009) are admitted
 	"float32": "SGO-FLOAT-001", "complex64": "SGO-FLOAT-001", // float64 is admitted (SGO-FLOAT-002)
 	"complex128": "SGO-FLOAT-001", "real": "SGO-FLOAT-001", "imag": "SGO-FLOAT-001", "complex": "SGO-FLOAT-001",
 	"comparable": "SGO-GEN-001", "iota": "SGO-VAL-004", // any is admitted (SGO-IFACE-002)

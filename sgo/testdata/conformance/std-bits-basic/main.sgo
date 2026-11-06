@@ -1,0 +1,25 @@
+package main
+
+import (
+	"sgo"
+	"std/bits"
+	"std/strconv"
+)
+
+// std/bits: the wrapping operations S-Go writes explicitly (SGO-STD-011, D196).
+func main(root *sgo.Context) error {
+	var top uint32 = 0xffffffff
+	var one uint32 = 1
+	s, c := bits.Add32(top, one, 0)
+	var big uint64 = 0xffffffffffffffff
+	hi, lo := bits.Mul64(big, big)
+	d, b := bits.Sub64(0, 1, 0)
+	q, r := bits.Div64(1, 0, 3)
+	rot := bits.RotateLeft32(0x80000001, 1)
+	msg := strconv.Itoa(int(s)) + " " + strconv.Itoa(int(c)) + " " + strconv.Itoa(int(hi>>32)) + " " +
+		strconv.Itoa(int(lo)) + " " + strconv.Itoa(int(d>>63)) + " " + strconv.Itoa(int(b)) + " " +
+		strconv.Itoa(int(q>>32)) + " " + strconv.Itoa(int(r)) + " " + strconv.Itoa(int(rot)) + " " +
+		strconv.Itoa(bits.Len64(big)) + " " + strconv.Itoa(bits.TrailingZeros32(8)) + " " +
+		strconv.Itoa(bits.OnesCount64(big)) + " " + strconv.Itoa(int(bits.ReverseBytes32(0x01020304))) + "\n"
+	return root.Stdout().WriteString(msg)
+}

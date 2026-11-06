@@ -1,0 +1,13 @@
+package main
+
+import (
+	"sgo"
+	"std/bits"
+)
+
+func main(root *sgo.Context) error {
+	_ = root.Stdout().WriteString("before\n")
+	q, _ := bits.Div64(1, 0, 0)
+	_ = q
+	return nil
+}

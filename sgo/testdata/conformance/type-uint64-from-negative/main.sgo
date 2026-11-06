@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	i := -1
+	_ = root.Stdout().WriteString("before\n")
+	_ = uint64(i)
+	return nil
+}

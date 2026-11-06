@@ -177,3 +177,25 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §3 and decisions D01, D04–D06.
 - **implementation_coverage:** `sgoadmit/admit_expr.go` (rune admitted, int32 denied by name), `types2/sgo_values.go` (`sgoTypeRec`, `sgoConversion`), `types2/sgo_flow.go` (`sgoRuneConsts`), `noder/writer.go` (`sgoChecked`), `ssagen/sgo.go` (`sgoByteBinary`, `sgoNeg`, `sgoConvCheck`).
 - **executed_evidence:** W15 conformance (sgo/evidence/w15/README.md).
 - **supported_execution_configurations:** production, lab.
+
+### SGO-TYPE-009 — The uint32 and uint64 types
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-TYPE-001, SGO-TYPE-002, SGO-TYPE-007, SGO-TYPE-008, SGO-VAL-001, SGO-FLOAT-003, SGO-STD-011; D196.
+- **grammar_and_types:** `uint32` and `uint64` are admitted: integer types with values 0..2^32−1 and 0..2^64−1. Operands of one of these types combine with operands of the same type under the operators of SGO-VAL-001 (shifts with an int count). Untyped constants representable in the type are assignable to it. Conversions: `uint32(x)`, `uint64(x)`, `int(u)`, `byte(u)`, `rune(u)` among int, byte, rune, uint32, and uint64; `float64(u)` rounds to nearest-even and `uint32(f)`, `uint64(f)` truncate toward zero (SGO-FLOAT-003). Values are comparable and ordered: map keys, `switch` cases, struct fields, array and slice elements. Named types over them are admitted like named types over int. Unary `-` on a uint32 or uint64 operand is not admitted. `uint`, `uint8` (other than as `byte`), `uint16`, `int8`, `int16`, `int32` (other than as `rune`), `int64`, and `uintptr` stay denied (SGO-TYPE-001).
+- **preconditions:** For a conversion to uint32, uint64, int, byte, or rune: the operand is a value of the target type.
+- **evaluation_and_value_semantics:** Arithmetic is exact: the mathematical result of `+`, `-`, `*`, `/`, `%`, `<<` is the result if it lies in the type's range. `&`, `|`, `^`, `&^`, unary `^`, and `>>` cannot leave the range. There is no wrapping operator: modular arithmetic, carries, and rotations are written with `std/bits` (SGO-STD-011), which returns the wrapped result and the carry or borrow explicitly. A conversion that loses a set bit is written with a mask: `uint32(x & 0xffffffff)`.
+- **ownership_and_lifecycle:** n/a — value types.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** Value types: shareable and sendable (SGO-TYPE-004).
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** A sum that carries out of the type, a difference below 0, a product outside the range, a left shift that loses a set bit, and a conversion whose operand is not a value of the target type (a negative int to uint64, a uint64 above 2^63−1 to int, a value above 2^32−1 to uint32, a float64 that truncates outside the range, NaN, or an infinity) are `IntegerOverflow` (SGO-VAL-001); division by zero is `DivideByZero`; a shift count outside 0..63 is `ShiftRange`.
+- **cancellation_and_cleanup:** n/a — not cancellation points.
+- **compile_link_checks:** `SGO_E_CONST_OVERFLOW` for a constant outside the type's range; `SGO_E_TYPE_MISMATCH` for mixing uint32 or uint64 with another integer type without a conversion; `SGO_E_UNADMITTED` for unary `-` on uint32 or uint64, for the denied integer type names, and for a conversion of an untyped constant (written as a typed declaration instead).
+- **runtime_guards:** `IntegerOverflow`, `DivideByZero`, `ShiftRange`.
+- **tcb_assumptions:** The checked-arithmetic code generation of SGO-VAL-001: uint32 operations are done on 64-bit values with the upper bound 2^32−1, as for byte and rune; uint64 `+` checks the carry (`a <= a+b`), `-` the borrow (`b <= a`), `*` that the high word of the 128-bit product is 0, and `<<` that shifting back restores the operand.
+- **positive_tests:** fixture:type-uint-arith, fixture:type-uint-convert.
+- **negative_tests:** fixture:type-uint32-add-overflow, fixture:type-uint32-sub-underflow, fixture:type-uint32-mul-overflow, fixture:type-uint32-shift-overflow, fixture:type-uint64-add-overflow, fixture:type-uint64-sub-underflow, fixture:type-uint64-mul-overflow, fixture:type-uint64-shift-overflow, fixture:type-uint64-div-zero, fixture:type-uint64-from-negative, fixture:type-uint64-to-int-overflow, fixture:type-uint64-to-uint32-overflow, fixture:type-uint32-from-float-overflow, fixture:type-uint-neg-denied, fixture:type-uint16-denied, fixture:type-uint-int-mismatch.
+- **implementation_coverage:** `sgoadmit/admit_expr.go` (uint32 and uint64 admitted by name), `types2/sgo_values.go` (`sgoTypeRec`, `sgoIntKind`, `sgoConversion`), `types2/expr.go` (`unary`: unsigned negation refused), `noder/writer.go` (`sgoChecked`), `ssagen/sgo.go` (`sgoU64Binary`, `sgoByteBinary`, `sgoIntMax`, `sgoConvCheck`, `sgoFloatConvCheck`).
+- **executed_evidence:** PENDING: W26 conformance.
+- **supported_execution_configurations:** production, lab.

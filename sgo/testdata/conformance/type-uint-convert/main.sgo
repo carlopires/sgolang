@@ -1,0 +1,26 @@
+package main
+
+import (
+	"sgo"
+	"std/strconv"
+)
+
+// Conversions among int, byte, rune, uint32, uint64, and float64 in range (SGO-TYPE-009).
+func main(root *sgo.Context) error {
+	i := 7
+	u := uint64(i)
+	back := int(u)
+	var x uint64 = 0xfffffffffffffff0
+	w := uint32(x & 0xffffffff)
+	var s uint32 = 200
+	bt := byte(s)
+	rn := rune(w & 0xffff)
+	wide := uint64(w)
+	f := 3.9e9
+	g := uint32(f)
+	h := float64(x)
+	msg := strconv.Itoa(back) + " " + strconv.Itoa(int(w)) + " " + strconv.Itoa(int(bt)) + " " +
+		strconv.Itoa(int(rn)) + " " + strconv.Itoa(int(wide)) + " " + strconv.Itoa(int(g)) + " " +
+		strconv.FormatFloat(h, 'g', -1) + "\n"
+	return root.Stdout().WriteString(msg)
+}

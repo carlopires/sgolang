@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	f := 4.3e9
+	_ = root.Stdout().WriteString("before\n")
+	_ = uint32(f)
+	return nil
+}

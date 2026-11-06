@@ -63,7 +63,8 @@ universe  len  admit  SGO-VAL-002
 universe  panic  admit  SGO-DEF-002
 universe  byte  admit  SGO-TYPE-007  # (0.9.0)
 universe  rune  admit  SGO-TYPE-008  # (0.12.0)
-universe  int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|uintptr  deny  SGO-TYPE-001
+universe  int8|int16|int32|int64|uint|uint8|uint16|uintptr  deny  SGO-TYPE-001
+universe  uint32|uint64  admit  SGO-TYPE-009  # (0.21.0)
 universe  float32|float64|complex64|complex128|real|imag|complex  deny  SGO-FLOAT-001
 universe  any  admit  SGO-IFACE-002
 universe  comparable  deny  SGO-GEN-001

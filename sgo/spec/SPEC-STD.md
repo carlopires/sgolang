@@ -222,3 +222,25 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **implementation_coverage:** `src/sgostd/time/`.
 - **executed_evidence:** conformance fixture std-time-duration (darwin/arm64, linux/amd64, linux/arm64); `sgo/scripts/test-std-diff.py` (seeds 1 and 7, identical to Go's); `src/sgostd` package tests; `sgo/evidence/w24/README.md`.
 - **supported_execution_configurations:** production, lab.
+
+### SGO-STD-011 — `std/bits`: Modular arithmetic and bit counts
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-TYPE-009, SGO-VAL-001; D196.
+- **grammar_and_types:** The package `std/bits` exports exactly: `func Add32(x, y, carry uint32) (sum, carryOut uint32)`; `func Add64(x, y, carry uint64) (sum, carryOut uint64)`; `func Div32(hi, lo, y uint32) (quo, rem uint32)`; `func Div64(hi, lo, y uint64) (quo, rem uint64)`; `func LeadingZeros32(x uint32) int`; `func LeadingZeros64(x uint64) int`; `func Len32(x uint32) int`; `func Len64(x uint64) int`; `func Mul32(x, y uint32) (hi, lo uint32)`; `func Mul64(x, y uint64) (hi, lo uint64)`; `func OnesCount32(x uint32) int`; `func OnesCount64(x uint64) int`; `func ReverseBytes32(x uint32) uint32`; `func ReverseBytes64(x uint64) uint64`; `func RotateLeft32(x uint32, k int) uint32`; `func RotateLeft64(x uint64, k int) uint64`; `func Sub32(x, y, borrow uint32) (diff, borrowOut uint32)`; `func Sub64(x, y, borrow uint64) (diff, borrowOut uint64)`; `func TrailingZeros32(x uint32) int`; `func TrailingZeros64(x uint64) int`.
+- **preconditions:** For `Add32`, `Add64`, `Sub32`, `Sub64`: the carry or borrow is 0 or 1 (other values give Go's results). For `Div32`, `Div64`: `y != 0` and `y > hi`.
+- **evaluation_and_value_semantics:** Each function returns the result of Go's `math/bits` function of the same name for every input: sums, differences, and products modulo 2^32 or 2^64 with the carry, borrow, or high word returned; quotient and remainder of a double-width dividend; rotations by k modulo the width (a negative k rotates right); bit lengths and counts; byte reversal. These are the only wrapping operations in S-Go (SGO-TYPE-009).
+- **ownership_and_lifecycle:** None: values.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a: the package has no state (D109).
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** `Div32` and `Div64` fail with `DivideByZero` for `y == 0` and with `IntegerOverflow` for `y <= hi`, where Go's panic; no other function fails.
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003.
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-bits-basic; `.work/w26/bitsdiff.py` (against Go's math/bits; 28426 results identical, seeds 1-3), to move into `sgo/scripts/test-std-diff.py`.
+- **negative_tests:** fixture:std-bits-div-zero, fixture:std-bits-div-overflow.
+- **implementation_coverage:** `src/sgostd/bits/`.
+- **executed_evidence:** PENDING: W26.
+- **supported_execution_configurations:** production, lab.

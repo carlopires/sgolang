@@ -36,7 +36,7 @@ A program compiles only if every construct it uses is in the closed S-Go subset 
 
 - **Scope:** admission, runtime_enforced, tested
 - **Families:** SPEC-LEX, SPEC-BIND, SPEC-TYPE, SPEC-VALUE, SPEC-CONTROL, SPEC-COMPOSITE, SPEC-USERTYPE, SPEC-IFACE, SPEC-FLOAT
-- **Clauses:** SGO-LEX-001, SGO-LEX-002, SGO-LEX-003, SGO-LEX-004, SGO-BIND-001, SGO-BIND-002, SGO-BIND-003, SGO-BIND-004, SGO-BIND-005, SGO-TYPE-001, SGO-TYPE-002, SGO-TYPE-003, SGO-TYPE-004, SGO-TYPE-005, SGO-TYPE-006, SGO-TYPE-007, SGO-TYPE-008, SGO-VAL-001, SGO-VAL-002, SGO-VAL-003, SGO-VAL-004, SGO-VAL-005, SGO-CTL-001, SGO-CTL-002, SGO-CTL-003, SGO-CTL-004, SGO-COMP-001, SGO-COMP-002, SGO-COMP-003, SGO-COMP-004, SGO-COMP-005, SGO-COMP-006, SGO-COMP-007, SGO-COMP-008, SGO-COMP-009, SGO-UTYPE-001, SGO-UTYPE-002, SGO-IFACE-001, SGO-IFACE-002, SGO-IFACE-003, SGO-IFACE-004, SGO-FLOAT-001, SGO-FLOAT-002, SGO-FLOAT-003
+- **Clauses:** SGO-LEX-001, SGO-LEX-002, SGO-LEX-003, SGO-LEX-004, SGO-BIND-001, SGO-BIND-002, SGO-BIND-003, SGO-BIND-004, SGO-BIND-005, SGO-TYPE-001, SGO-TYPE-002, SGO-TYPE-003, SGO-TYPE-004, SGO-TYPE-005, SGO-TYPE-006, SGO-TYPE-007, SGO-TYPE-008, SGO-TYPE-009, SGO-VAL-001, SGO-VAL-002, SGO-VAL-003, SGO-VAL-004, SGO-VAL-005, SGO-CTL-001, SGO-CTL-002, SGO-CTL-003, SGO-CTL-004, SGO-COMP-001, SGO-COMP-002, SGO-COMP-003, SGO-COMP-004, SGO-COMP-005, SGO-COMP-006, SGO-COMP-007, SGO-COMP-008, SGO-COMP-009, SGO-UTYPE-001, SGO-UTYPE-002, SGO-IFACE-001, SGO-IFACE-002, SGO-IFACE-003, SGO-IFACE-004, SGO-FLOAT-001, SGO-FLOAT-002, SGO-FLOAT-003
 - **Acceptance cases:** G02, G03, G07, S02, S03, S05, S09, S10, S16, S17, S19, X01, X02, X03, X04, X05, X06, X07, X08, X10, X11
 - **Implementation:** `src/cmd/compile/internal/syntax/`, `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/types2/sgo_flow.go`, `src/cmd/compile/internal/types2/sgo_values.go`, `src/cmd/compile/internal/types2/sgo_local.go`, `src/cmd/compile/internal/types2/sgo_frozen.go`, `src/sgo/frozen.go`, `src/cmd/compile/internal/walk/sgo_map.go`, `src/runtime/sgo_map.go`, `src/runtime/sgo_copy.go`, `src/cmd/compile/internal/sgoadmit/admit.go`, `src/cmd/compile/internal/sgoadmit/admit_expr.go`, `src/cmd/compile/internal/ssagen/sgo.go`, `src/cmd/compile/internal/walk/convert.go`, `src/cmd/compile/internal/ssa/func.go`
 
@@ -177,7 +177,7 @@ The standard library (std/errors, strings, bytes, strconv, utf8, sort, math; spe
 
 - **Scope:** admission, tested
 - **Families:** SPEC-STD
-- **Clauses:** SGO-STD-001, SGO-STD-002, SGO-STD-003, SGO-STD-004, SGO-STD-005, SGO-STD-006, SGO-STD-007, SGO-STD-008, SGO-STD-009, SGO-STD-010
+- **Clauses:** SGO-STD-001, SGO-STD-002, SGO-STD-003, SGO-STD-004, SGO-STD-005, SGO-STD-006, SGO-STD-007, SGO-STD-008, SGO-STD-009, SGO-STD-010, SGO-STD-011
 - **Acceptance cases:** 
 - **Implementation:** `src/sgostd/`, `sgo/scripts/std-api-check.py`, `sgo/scripts/std-manifest.py`, `sgo/scripts/test-std-diff.py`
 - **Limitation:** Behavior equal to Go's packages is tested on seeded generated inputs (test-std-diff), not proven.

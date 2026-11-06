@@ -91,8 +91,9 @@ func sgoConst(v *ssa.Value) (int64, bool) {
 
 func (s *state) sgoIntType(n ir.Node) *types.Type {
 	t := n.Type()
-	// int, byte, and rune (int32 in the compiler, SGO-TYPE-008) and named types over them.
-	if !t.IsInteger() || !(t.IsSigned() && (t.Size() == 8 || t.Size() == 4) || !t.IsSigned() && t.Size() == 1) {
+	// int, byte, rune (int32 in the compiler, SGO-TYPE-008), uint32, uint64 (SGO-TYPE-009), and
+	// named types over them.
+	if !t.IsInteger() || !(t.IsSigned() && (t.Size() == 8 || t.Size() == 4) || !t.IsSigned() && (t.Size() == 1 || t.Size() == 4 || t.Size() == 8)) {
 		base.FatalfAt(n.Pos(), "S-Go checked arithmetic on %v", t)
 	}
 	return t
@@ -105,6 +106,9 @@ func (s *state) sgoBool(op ir.Op, t *types.Type, x, y *ssa.Value) *ssa.Value {
 // sgoBinary computes a checked + - * / % << >> on int.
 func (s *state) sgoBinary(n *ir.BinaryExpr, a, b *ssa.Value) *ssa.Value {
 	t := s.sgoIntType(n)
+	if !t.IsSigned() && t.Size() == 8 {
+		return s.sgoU64Binary(n, t, a, b)
+	}
 	if t.Size() < 8 {
 		return s.sgoByteBinary(n, t, a, b)
 	}
@@ -227,16 +231,59 @@ func (s *state) sgoWiden(v *ssa.Value) *ssa.Value {
 	return v
 }
 
-// sgoByteBinary computes a checked + - * / % << >> on byte (SGO-TYPE-007) or rune (SGO-TYPE-008):
-// the operation is done on 64-bit values, which cannot overflow for these operands, and the result
-// must lie in 0..255 (byte) or 0..0x10FFFF (rune).
+// sgoU64Binary computes a checked + - * / % << >> on uint64 (SGO-TYPE-009, D196): a sum that
+// carries, a difference that borrows, a product with a nonzero high word, and a left shift that
+// loses a set bit are IntegerOverflow; a zero divisor is DivideByZero.
+func (s *state) sgoU64Binary(n *ir.BinaryExpr, t *types.Type, a, b *ssa.Value) *ssa.Value {
+	u := types.Types[types.TUINT64]
+	bl := types.Types[types.TBOOL]
+	switch n.Op() {
+	case ir.OADD:
+		r := s.newValue2(ssa.OpAdd64, t, a, b)
+		s.sgoCheck(s.newValue2(ssa.OpLeq64U, bl, a, r), sgoSyms.overflow) // no carry iff a <= a+b
+		return r
+	case ir.OSUB:
+		s.sgoCheck(s.newValue2(ssa.OpLeq64U, bl, b, a), sgoSyms.overflow) // no borrow iff b <= a
+		return s.newValue2(ssa.OpSub64, t, a, b)
+	case ir.OMUL:
+		hi := s.newValue2(ssa.OpHmul64u, t, a, b)
+		s.sgoCheck(s.newValue2(ssa.OpEq64, bl, hi, s.constInt64(t, 0)), sgoSyms.overflow)
+		return s.newValue2(ssa.OpMul64, t, a, b)
+	case ir.ODIV, ir.OMOD:
+		if c, ok := sgoConst(b); !ok || c == 0 {
+			s.sgoCheck(s.newValue2(ssa.OpNeq64, bl, b, s.constInt64(t, 0)), sgoSyms.divideByZero)
+		}
+		return s.newValue2(s.ssaOp(n.Op(), t), t, a, b)
+	case ir.OLSH, ir.ORSH:
+		b = s.sgoWiden(b)
+		if c, ok := sgoConst(b); !ok || c < 0 || c > 63 {
+			s.sgoCheck(s.newValue2(ssa.OpLeq64U, bl, b, s.constInt64(u, 63)), sgoSyms.shiftRange)
+		}
+		r := s.newValue2(s.ssaShiftOp(n.Op(), t, u), t, a, b)
+		if n.Op() == ir.OLSH {
+			back := s.newValue2(s.ssaShiftOp(ir.ORSH, t, u), t, r, b)
+			s.sgoCheck(s.newValue2(ssa.OpEq64, bl, back, a), sgoSyms.overflow)
+		}
+		return r
+	}
+	base.FatalfAt(n.Pos(), "S-Go checked uint64 arithmetic: unexpected %v", n.Op())
+	return nil
+}
+
+// sgoByteBinary computes a checked + - * / % << >> on byte (SGO-TYPE-007), rune (SGO-TYPE-008),
+// or uint32 (SGO-TYPE-009): the operation is done on 64-bit values, which cannot overflow for
+// these operands (a product of two values below 2^32 is below 2^64), and the result must lie in
+// 0..255 (byte), 0..0x10FFFF (rune), or 0..0xFFFFFFFF (uint32).
 func (s *state) sgoByteBinary(n *ir.BinaryExpr, t *types.Type, a, b *ssa.Value) *ssa.Value {
 	u := types.Types[types.TUINT64]
 	bl := types.Types[types.TBOOL]
 	wa, wb := s.sgoWiden(a), s.sgoWiden(b)
 	limit, maxShift := int64(255), int64(7)
-	if t.Size() == 4 {
+	switch {
+	case t.Size() == 4 && t.IsSigned():
 		limit, maxShift = sgoMaxRune, 20
+	case t.Size() == 4:
+		limit, maxShift = 0xFFFFFFFF, 31
 	}
 	max := s.constInt64(u, limit)
 	var r *ssa.Value
@@ -269,28 +316,43 @@ func (s *state) sgoByteBinary(n *ir.BinaryExpr, t *types.Type, a, b *ssa.Value) 
 // sgoMaxRune is the largest rune value (SGO-TYPE-008).
 const sgoMaxRune = 0x10FFFF
 
-// sgoConvCheck checks a narrowing integer conversion in S-Go code: byte(i) of an int and byte(r)
-// of a rune must lie in 0..255 (SGO-TYPE-007), rune(i) of an int in 0..0x10FFFF (SGO-TYPE-008).
-// Each is one unsigned comparison of the zero- or sign-extended operand: a negative int compares
-// above every limit. Widening conversions (int(b), int(r), rune(b)) need no check.
+// sgoIntMax is the largest value of an S-Go integer type, as an unsigned 64-bit number.
+func sgoIntMax(t *types.Type) uint64 {
+	switch {
+	case !t.IsSigned() && t.Size() == 1:
+		return 255
+	case t.IsSigned() && t.Size() == 4:
+		return sgoMaxRune
+	case !t.IsSigned() && t.Size() == 4:
+		return math.MaxUint32
+	case t.IsSigned():
+		return math.MaxInt64
+	}
+	return math.MaxUint64
+}
+
+// sgoConvCheck checks an integer conversion in S-Go code: the operand must be a value of the
+// target type (SGO-TYPE-007, SGO-TYPE-008, SGO-TYPE-009), else IntegerOverflow. A conversion
+// from a type whose largest value exceeds the target's is one unsigned comparison of the zero- or
+// sign-extended operand, so a negative int compares above every limit below 2^64; uint64(i) of an
+// int checks i >= 0. Conversions that always fit (int(b), rune(b), uint64(u32), ...) need none.
 func (s *state) sgoConvCheck(from, to *types.Type, x *ssa.Value) {
 	if from.IsFloat() && to.IsInteger() {
 		s.sgoFloatConvCheck(to, x)
 		return
 	}
-	if !from.IsInteger() || !to.IsInteger() || to.Size() >= from.Size() {
+	if !from.IsInteger() || !to.IsInteger() {
 		return
 	}
-	var limit int64
+	bl := types.Types[types.TBOOL]
+	u := types.Types[types.TUINT64]
+	fromMax, toMax := sgoIntMax(from), sgoIntMax(to)
 	switch {
-	case !to.IsSigned() && to.Size() == 1:
-		limit = 255
-	case to.IsSigned() && to.Size() == 4:
-		limit = sgoMaxRune
-	default:
-		return
+	case from.IsSigned() && from.Size() == 8 && toMax == math.MaxUint64:
+		s.sgoCheck(s.newValue2(ssa.OpLeq64, bl, s.constInt64(from, 0), x), sgoSyms.overflow)
+	case fromMax > toMax:
+		s.sgoCheck(s.newValue2(ssa.OpLeq64U, bl, s.sgoWiden(x), s.constInt64(u, int64(toMax))), sgoSyms.overflow)
 	}
-	s.sgoCheck(s.newValue2(ssa.OpLeq64U, types.Types[types.TBOOL], s.sgoWiden(x), s.constInt64(types.Types[types.TUINT64], limit)), sgoSyms.overflow)
 }
 
 // sgoFloatConvCheck checks int(f), byte(f), and rune(f) in S-Go code (SGO-FLOAT-003, D189): the
@@ -303,6 +365,12 @@ func (s *state) sgoFloatConvCheck(to *types.Type, x *ssa.Value) {
 	var low *ssa.Value
 	var hi float64
 	switch {
+	case !to.IsSigned() && to.Size() == 8:
+		low = s.newValue2(ssa.OpLess64F, bl, s.constFloat64(f64, -1), x)
+		hi = 18446744073709551616.0 // 2^64
+	case !to.IsSigned() && to.Size() == 4:
+		low = s.newValue2(ssa.OpLess64F, bl, s.constFloat64(f64, -1), x)
+		hi = 4294967296.0 // 2^32
 	case to.Size() == 8:
 		low = s.newValue2(ssa.OpLeq64F, bl, s.constFloat64(f64, -9223372036854775808.0), x)
 		hi = 9223372036854775808.0

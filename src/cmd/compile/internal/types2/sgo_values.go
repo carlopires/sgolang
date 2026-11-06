@@ -51,8 +51,9 @@ func sgoTypeRec(T Type, seen map[Type]bool, refs bool) (bool, string) {
 	switch u := T.Underlying().(type) {
 	case *Basic:
 		switch u.kind {
-		case Int, Bool, String, Uint8, Int32, Float64, UntypedFloat:
+		case Int, Bool, String, Uint8, Int32, Uint32, Uint64, Float64, UntypedFloat:
 			// Int32 is only reachable as rune: the name int32 is denied (SGO-TYPE-008).
+			// Uint32 and Uint64 are checked like int (SGO-TYPE-009, D196).
 			// Float64 is a value type with == (SGO-FLOAT-002), but never a map key (below).
 			return true, ""
 		}
@@ -419,14 +420,14 @@ func (check *Checker) sgoConversion(call *syntax.CallExpr) {
 			return // a constant to a named type of its kind
 		}
 		bad()
-	case isKind(tu, Int) && isKind(au, Uint8), isKind(tu, Uint8) && isKind(au, Int):
-		return // int(b), byte(i) (SGO-TYPE-007)
-	case isKind(tu, Int32) && (isKind(au, Int) || isKind(au, Uint8)), (isKind(tu, Int) || isKind(tu, Uint8)) && isKind(au, Int32):
-		return // rune(i), rune(b), int(r), byte(r) (SGO-TYPE-008, D120)
-	case isKind(tu, Float64) && (isKind(au, Int) || isKind(au, Uint8) || isKind(au, Int32)):
-		return // float64(i), float64(b), float64(r): rounded (SGO-FLOAT-003)
-	case (isKind(tu, Int) || isKind(tu, Uint8) || isKind(tu, Int32)) && isKind(au, Float64):
-		return // int(f), byte(f), rune(f): checked at run time (SGO-FLOAT-003)
+	case sgoIntKind(tu) && sgoIntKind(au) && !Identical(tu, au):
+		// int, byte, rune, uint32, uint64 among themselves: checked at run time when the target
+		// cannot hold every value of the operand (SGO-TYPE-007, SGO-TYPE-008, SGO-TYPE-009, D120)
+		return
+	case isKind(tu, Float64) && sgoIntKind(au):
+		return // float64(i), float64(b), float64(r), float64(u): rounded (SGO-FLOAT-003)
+	case sgoIntKind(tu) && isKind(au, Float64):
+		return // int(f), byte(f), rune(f), uint32(f), uint64(f): checked at run time (SGO-FLOAT-003)
 	case isKind(tu, String) && isKind(au, Int32):
 		return // string(r) (SGO-VAL-002 v3); string(i) of an int stays denied (D120)
 	case isKind(tu, String) && isBytes(au), isBytes(tu) && isKind(au, String):
@@ -445,6 +446,19 @@ func (check *Checker) sgoConversion(call *syntax.CallExpr) {
 }
 
 // sgoIsBasic reports whether T is a predeclared basic type (not a named type over one).
+// sgoIntKind reports whether u is one of S-Go's integer types: int, byte, rune, uint32, uint64.
+func sgoIntKind(u Type) bool {
+	b, ok := u.(*Basic)
+	if !ok {
+		return false
+	}
+	switch b.kind {
+	case Int, Uint8, Int32, Uint32, Uint64:
+		return true
+	}
+	return false
+}
+
 func sgoIsBasic(T Type) bool {
 	_, ok := Unalias(T).(*Basic)
 	return ok

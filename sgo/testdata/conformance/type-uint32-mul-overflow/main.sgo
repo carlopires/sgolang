@@ -1,0 +1,10 @@
+package main
+
+import "sgo"
+
+func main(root *sgo.Context) error {
+	var a uint32 = 0x10000
+	_ = root.Stdout().WriteString("before\n")
+	_ = a * a
+	return nil
+}
