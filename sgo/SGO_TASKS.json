@@ -1072,6 +1072,32 @@
       "blockers": [],
       "commit": "98a06bb489",
       "completion_note": "Frozen at spec 0.21.0 (D136, D196, D197): package-level tables (var name = sgo.Freeze(constant composite literal), built once, frozen for every task; SGO-BIND-003 v2); uint32/uint64 whose arithmetic, shifts and conversions fail instead of wrapping (SGO-TYPE-009, SGO-TYPE-001 v11); std/bits, std/encoding/hex, base64, binary, std/hash, std/crypto/sha256, sha512, hmac, hkdf, cipher, chacha20poly1305 and curve25519 as S-Go source (SGO-STD-011..022). Identical to Go on generated inputs (bits 28426, encoding ~6000, sha256 1820, sha512 2226 results per seed); Wycheproof vectors of Go's own crypto tests: HMAC/HKDF 774/774, ChaCha20-Poly1305 316/316, X25519 518/518 (sgo/scripts/test-std-crypto.py, in sgo-w00)."
+    },
+    {
+      "id": "W27",
+      "title": "Signatures, big numbers, AES-GCM, ASN.1 and X.509 as S-Go source: ed25519, constant-time nat, ECDSA P-256/P-384 and RSA verify, bitsliced AES with GCM, asn1, x509",
+      "depends_on": [
+        "W26"
+      ],
+      "risk": "high",
+      "status": "in_progress",
+      "plan_section": "sgo/SGO_DECISIONS.md D199 (D197, D198)",
+      "deliverables": [
+        "std/crypto/ed25519 (sign and verify, RFC 8032)",
+        "a constant-time big-number package for ECDSA and RSA",
+        "ECDSA P-256 and P-384 verify",
+        "RSA verify, PKCS#1 v1.5 and PSS",
+        "bitsliced AES with GCM, no secret-dependent table index",
+        "std/encoding/asn1 (the DER subset x509 needs)",
+        "std/crypto/x509: parse, chain verification, name check",
+        "each package identical to Go on generated inputs and to the Wycheproof vectors of Go's own tests, negative cases included",
+        "a spec minor version"
+      ],
+      "acceptance_case_ids": [],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": null
     }
   ],
   "language_policy": "One specification-defined S-Go language; no Go compatibility path. Bare go rejected; explicit nursery capabilities; missing contracts rejected transitively. Host/reference tools are external build dependencies.",
