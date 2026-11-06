@@ -1,0 +1,14 @@
+package main
+
+import (
+	"sgo"
+	"std/crypto/sha256"
+	"std/encoding/hex"
+)
+
+// SHA-256 and SHA-224 of the FIPS 180-4 example "abc" (SGO-STD-015).
+func main(root *sgo.Context) error {
+	a := sha256.Sum256([]byte("abc"))
+	b := sha256.Sum224([]byte("abc"))
+	return root.Stdout().WriteString(hex.EncodeToString(a[:]) + "\n" + hex.EncodeToString(b[:]) + "\n")
+}

@@ -1,0 +1,41 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package sha256
+
+import (
+	"sgo"
+	"std/encoding/hex"
+)
+
+// The examples of FIPS 180-4 (NIST CSRC): "abc" and the empty string.
+func TestVectors(t *sgo.T) error {
+	a := Sum256([]byte("abc"))
+	if hex.EncodeToString(a[:]) != "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad" {
+		return sgo.NewError("sha256 abc")
+	}
+	e := Sum256([]byte{})
+	if hex.EncodeToString(e[:]) != "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" {
+		return sgo.NewError("sha256 empty")
+	}
+	b := Sum224([]byte("abc"))
+	if hex.EncodeToString(b[:]) != "23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7" {
+		return sgo.NewError("sha224 abc")
+	}
+	return nil
+}
+
+func TestStreaming(t *sgo.T) error {
+	d := New()
+	_, _ = d.Write([]byte("a"))
+	_, _ = d.Write([]byte("bc"))
+	if hex.EncodeToString(d.Sum([]byte{})) != "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad" {
+		return sgo.NewError("streaming")
+	}
+	d.Reset()
+	if hex.EncodeToString(d.Sum([]byte{})) != "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" {
+		return sgo.NewError("reset")
+	}
+	return nil
+}

@@ -1813,9 +1813,10 @@
         "SGO-STD-011",
         "SGO-STD-012",
         "SGO-STD-013",
-        "SGO-STD-014"
+        "SGO-STD-014",
+        "SGO-STD-015"
       ],
-      "normative_text_digest": "67e91cca9a91de73cdaf0c5913ce936021fe6e97edf2edca8a6911fb5ac23e29",
+      "normative_text_digest": "b9d87e524fa6cbe10dbccc91b6fc062f3e854923fc653f0cd5a5160db33bd13b",
       "admitted_in": [
         "0.13.0"
       ],
@@ -1838,7 +1839,8 @@
         "SGO-STD-011": "5ecc796c09e3f86dc312f284be644f84d75059e97471a10d3002b89a7a316665",
         "SGO-STD-012": "091415b44e9cd59b6172662ac9463c6b7ab788f62b49e723d6e2bd4f3741f62f",
         "SGO-STD-013": "9a6465f398bc384664af1cc819659e73b2bc61c1b3dd1da80fa7cc972b29d8b1",
-        "SGO-STD-014": "f3f7c2a5d003cac7d3a2914ee27a9f00f9f777b87d960f6081829c18346fd247"
+        "SGO-STD-014": "f3f7c2a5d003cac7d3a2914ee27a9f00f9f777b87d960f6081829c18346fd247",
+        "SGO-STD-015": "d2df92de0606e70585de604622153cd291daf743f2aa6697133ee027107c3f04"
       },
       "clause_status": {
         "SGO-STD-001": "frozen",
@@ -1854,7 +1856,8 @@
         "SGO-STD-011": "draft",
         "SGO-STD-012": "draft",
         "SGO-STD-013": "draft",
-        "SGO-STD-014": "draft"
+        "SGO-STD-014": "draft",
+        "SGO-STD-015": "draft"
       },
       "clause_versions": {
         "SGO-STD-001": 2,
@@ -1870,10 +1873,11 @@
         "SGO-STD-011": 1,
         "SGO-STD-012": 1,
         "SGO-STD-013": 1,
-        "SGO-STD-014": 1
+        "SGO-STD-014": 1,
+        "SGO-STD-015": 1
       }
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "b357f6e732fe20ef8963fab5e40766d9af82b37611f85e3293fe0b1cedded4b3"
+  "rows_digest": "5c29686d9e671c9b5daed3010acbe573fc34f6dcfcf01f029a622e0e80138383"
 }

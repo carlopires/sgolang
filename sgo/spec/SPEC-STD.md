@@ -310,3 +310,25 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **implementation_coverage:** `src/sgostd/encoding/binary/`.
 - **executed_evidence:** PENDING: W26.
 - **supported_execution_configurations:** production, lab.
+
+### SGO-STD-015 — `std/crypto/sha256`: SHA-224 and SHA-256
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-STD-011, SGO-STD-014, SGO-TYPE-009, SGO-BIND-003; D136, D197.
+- **grammar_and_types:** The package `std/crypto/sha256` exports exactly: `const BlockSize`; `const Size`; `const Size224`; `func (*Digest) BlockSize() int`; `func (*Digest) Reset()`; `func (*Digest) Size() int`; `func (*Digest) Sum(b []byte) []byte`; `func (*Digest) Write(p []byte) (int, error)`; `func New() *Digest`; `func New224() *Digest`; `func Sum224(data []byte) [Size224]byte`; `func Sum256(data []byte) [Size]byte`; `type Digest`. A `*Digest` is task-local (SGO-COMP-007); `Sum` appends to its argument and leaves the digest unchanged.
+- **preconditions:** None.
+- **evaluation_and_value_semantics:** The hash functions of FIPS 180-4: `Sum256`, `Sum224`, and a `Digest` fed by `Write` give the checksums of Go's crypto/sha256 for every input and every split of the input into writes. The round constants and initial values are package-level tables (D136). No branch and no table index depends on the data hashed: every block takes the same operations.
+- **ownership_and_lifecycle:** A `Digest` is a value owned by the task that made it; checksums are arrays or new slices.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a: the package's only state is its frozen tables.
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** No function fails; `Write` always returns `len(p), nil`.
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003.
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-sha256-basic; `src/sgostd/crypto/sha256` package tests (FIPS 180-4 examples and streaming); `.work/w26/shadiff.py` (against Go's crypto/sha256: 260 messages, lengths 0-129 and to 3000, six write splits; 1820 results identical, seeds 1-2), to move into `sgo/scripts/test-std-diff.py`.
+- **negative_tests:** n/a: no function fails.
+- **implementation_coverage:** `src/sgostd/crypto/sha256/`.
+- **executed_evidence:** PENDING: W26.
+- **supported_execution_configurations:** production, lab.

@@ -1,0 +1,201 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package sha256 implements the SHA-224 and SHA-256 hash functions of FIPS 180-4 (SGO-STD-015,
+// D197), with the results of Go's crypto/sha256. The round constants are a package-level table
+// (D136). The computation has no branch or table index that depends on the data hashed.
+package sha256
+
+import (
+	"sgo"
+	"std/bits"
+	"std/encoding/binary"
+)
+
+// The size of a SHA-256 checksum, of a SHA-224 checksum, and the block size, in bytes.
+const (
+	Size      = 32
+	Size224   = 28
+	BlockSize = 64
+)
+
+const m32 = 0xffffffff
+
+var roundK = sgo.Freeze([]uint32{
+	0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+	0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+	0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+	0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+	0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+	0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+	0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+	0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+})
+
+var init256 = sgo.Freeze([]uint32{0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19})
+
+var init224 = sgo.Freeze([]uint32{0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939, 0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4})
+
+// A Digest is a running SHA-256 or SHA-224 computation.
+type Digest struct {
+	h     [8]uint32
+	x     [BlockSize]byte
+	nx    int
+	len   int
+	is224 bool
+}
+
+// New returns a SHA-256 digest.
+func New() *Digest {
+	d := &Digest{}
+	d.Reset()
+	return d
+}
+
+// New224 returns a SHA-224 digest.
+func New224() *Digest {
+	d := &Digest{is224: true}
+	d.Reset()
+	return d
+}
+
+// Reset returns d to its initial state.
+func (d *Digest) Reset() {
+	for i := 0; i < 8; i++ {
+		if d.is224 {
+			d.h[i] = init224.Get()[i]
+		} else {
+			d.h[i] = init256.Get()[i]
+		}
+	}
+	d.nx = 0
+	d.len = 0
+}
+
+// Size returns the checksum length: 32, or 28 for SHA-224.
+func (d *Digest) Size() int {
+	if d.is224 {
+		return Size224
+	}
+	return Size
+}
+
+// BlockSize returns the block size, 64.
+func (d *Digest) BlockSize() int {
+	return BlockSize
+}
+
+// Write adds p to the running hash. It never fails.
+func (d *Digest) Write(p []byte) (int, error) {
+	n := len(p)
+	d.len = d.len + n
+	i := 0
+	if d.nx > 0 {
+		for i < n && d.nx < BlockSize {
+			d.x[d.nx] = p[i]
+			d.nx++
+			i++
+		}
+		if d.nx == BlockSize {
+			block(&d.h, d.x[:])
+			d.nx = 0
+		}
+	}
+	for n-i >= BlockSize {
+		block(&d.h, p[i:i+BlockSize])
+		i = i + BlockSize
+	}
+	for i < n {
+		d.x[d.nx] = p[i]
+		d.nx++
+		i++
+	}
+	return n, nil
+}
+
+// Sum appends the checksum of the data written so far to b; d is unchanged.
+func (d *Digest) Sum(b []byte) []byte {
+	c := *d
+	sum := c.finish()
+	return append(b, sum[:c.Size()]...)
+}
+
+// finish pads and processes the final blocks and returns the state as bytes.
+func (d *Digest) finish() [Size]byte {
+	n := d.len
+	pad := [BlockSize + 8]byte{}
+	pad[0] = 0x80
+	k := 55 - n%64
+	if k < 0 {
+		k = k + 64
+	}
+	bitLen := uint64(n) << 3
+	binary.BigEndian.PutUint64(pad[1+k:9+k], bitLen)
+	_, _ = d.Write(pad[:9+k])
+	out := [Size]byte{}
+	for i := 0; i < 8; i++ {
+		binary.BigEndian.PutUint32(out[4*i:4*i+4], d.h[i])
+	}
+	return out
+}
+
+// Sum256 returns the SHA-256 checksum of data.
+func Sum256(data []byte) [Size]byte {
+	d := New()
+	_, _ = d.Write(data)
+	return d.finish()
+}
+
+// Sum224 returns the SHA-224 checksum of data.
+func Sum224(data []byte) [Size224]byte {
+	d := New224()
+	_, _ = d.Write(data)
+	full := d.finish()
+	out := [Size224]byte{}
+	for i := 0; i < Size224; i++ {
+		out[i] = full[i]
+	}
+	return out
+}
+
+// block processes one 64-byte block p into the state h. Sums of up to five 32-bit words are
+// computed on uint64 values, which cannot overflow, and reduced modulo 2^32 once.
+func block(h *[8]uint32, p []byte) {
+	w := [64]uint32{}
+	for i := 0; i < 16; i++ {
+		w[i] = binary.BigEndian.Uint32(p[4*i : 4*i+4])
+	}
+	for i := 16; i < 64; i++ {
+		v1 := w[i-2]
+		t1 := bits.RotateLeft32(v1, -17) ^ bits.RotateLeft32(v1, -19) ^ (v1 >> 10)
+		v2 := w[i-15]
+		t2 := bits.RotateLeft32(v2, -7) ^ bits.RotateLeft32(v2, -18) ^ (v2 >> 3)
+		w[i] = uint32((uint64(t1) + uint64(w[i-7]) + uint64(t2) + uint64(w[i-16])) & m32)
+	}
+	a, b, c, dd, e, f, g, hh := h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7]
+	for i := 0; i < 64; i++ {
+		s1 := bits.RotateLeft32(e, -6) ^ bits.RotateLeft32(e, -11) ^ bits.RotateLeft32(e, -25)
+		ch := (e & f) ^ (^e & g)
+		t1 := uint64(hh) + uint64(s1) + uint64(ch) + uint64(roundK.Get()[i]) + uint64(w[i])
+		s0 := bits.RotateLeft32(a, -2) ^ bits.RotateLeft32(a, -13) ^ bits.RotateLeft32(a, -22)
+		maj := (a & b) ^ (a & c) ^ (b & c)
+		t2 := uint64(s0) + uint64(maj)
+		hh = g
+		g = f
+		f = e
+		e = uint32((uint64(dd) + t1) & m32)
+		dd = c
+		c = b
+		b = a
+		a = uint32((t1 + t2) & m32)
+	}
+	h[0] = uint32((uint64(h[0]) + uint64(a)) & m32)
+	h[1] = uint32((uint64(h[1]) + uint64(b)) & m32)
+	h[2] = uint32((uint64(h[2]) + uint64(c)) & m32)
+	h[3] = uint32((uint64(h[3]) + uint64(dd)) & m32)
+	h[4] = uint32((uint64(h[4]) + uint64(e)) & m32)
+	h[5] = uint32((uint64(h[5]) + uint64(f)) & m32)
+	h[6] = uint32((uint64(h[6]) + uint64(g)) & m32)
+	h[7] = uint32((uint64(h[7]) + uint64(hh)) & m32)
+}
