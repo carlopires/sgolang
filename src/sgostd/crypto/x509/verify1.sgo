@@ -120,11 +120,12 @@ type CertPool struct {
 	certs  []*Certificate
 	byName map[string][]int
 	have   map[string]bool
+	after  map[string]int
 }
 
 // NewCertPool returns an empty pool.
 func NewCertPool() *CertPool {
-	return &CertPool{certs: []*Certificate{}, byName: map[string][]int{}, have: map[string]bool{}}
+	return &CertPool{certs: []*Certificate{}, byName: map[string][]int{}, have: map[string]bool{}, after: map[string]int{}}
 }
 
 func rawSum(c *Certificate) string {
@@ -142,6 +143,34 @@ func (s *CertPool) AddCert(c *Certificate) {
 	s.certs = append(s.certs, c)
 	n := string(c.RawSubject)
 	s.byName[n] = append(s.byName[n], len(s.certs)-1)
+}
+
+// AddCertWithDistrustAfter adds c as AddCert does, constrained as a root program's
+// distrust-after date: a chain through c fails when a certificate below c in it has a NotBefore
+// after t (Unix seconds). It is the data form of Go's AddCertWithConstraint for that constraint;
+// a certificate already present is not added again and keeps its constraint.
+func (s *CertPool) AddCertWithDistrustAfter(c *Certificate, t int) {
+	k := rawSum(c)
+	if s.have[k] {
+		return
+	}
+	s.AddCert(c)
+	s.after[k] = t
+}
+
+// distrustAfterOf reports c's distrust-after time in s, if it was added with one.
+func (s *CertPool) distrustAfterOf(c *Certificate) (int, bool) {
+	if s == nil {
+		return 0, false
+	}
+	t, ok := s.after[rawSum(c)]
+	return t, ok
+}
+
+// goTimeString formats Unix seconds as Go's time.Time String in UTC.
+func goTimeString(t int) string {
+	s := rfc3339(t)
+	return s[:10] + " " + s[11:19] + " +0000 UTC"
 }
 
 // Subjects returns the DER subjects of the pool's certificates, in insertion order.

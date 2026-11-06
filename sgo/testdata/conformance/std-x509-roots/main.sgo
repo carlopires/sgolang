@@ -1,0 +1,13 @@
+package main
+
+import (
+	"sgo"
+	"std/crypto/x509/roots"
+	"std/strconv"
+)
+
+// main loads the pinned Mozilla roots (SGO-STD-030): one pool entry per root.
+func main(root *sgo.Context) error {
+	n := len(roots.Mozilla().Subjects())
+	return root.Stdout().WriteString(strconv.Itoa(n) + " roots, as many as roots.Count: " + strconv.FormatBool(n == roots.Count) + "\n")
+}

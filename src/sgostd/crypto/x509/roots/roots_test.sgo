@@ -1,0 +1,26 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package roots
+
+import (
+	"sgo"
+	"std/errors"
+)
+
+func TestBundle(t *sgo.T) error {
+	if len(Mozilla().Subjects()) != Count {
+		return errors.New("pool size differs from Count")
+	}
+	constrained := 0
+	for _, e := range bundle.Get() {
+		if e.distrustAfter != 0 {
+			constrained++
+		}
+	}
+	if constrained == 0 {
+		return errors.New("no distrust-after entry")
+	}
+	return nil
+}

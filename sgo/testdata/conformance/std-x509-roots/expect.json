@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-030"
+ ],
+ "exit": 0,
+ "stdout": "117 roots, as many as roots.Count: true\n"
+}

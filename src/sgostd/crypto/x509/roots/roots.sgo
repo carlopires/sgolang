@@ -1,0 +1,40 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package roots is the pinned Mozilla root certificate set (D201): the roots of Go's
+// golang.org/x/crypto/x509roots/fallback bundle at BundleVersion, with their distrust-after
+// constraints. It reads no file: the set changes only with an S-Go release.
+package roots
+
+import (
+	"std/crypto/x509"
+	"std/encoding/hex"
+)
+
+type rootEntry struct {
+	der           string
+	distrustAfter int
+}
+
+// Mozilla returns a new pool holding the pinned roots. A root with a distrust-after date is
+// added with AddCertWithDistrustAfter, as Go's fallback pool adds it with its constraint.
+func Mozilla() *x509.CertPool {
+	p := x509.NewCertPool()
+	for _, e := range bundle.Get() {
+		der, err := hex.DecodeString(e.der)
+		if err != nil {
+			continue
+		}
+		c, perr := x509.ParseCertificate(der)
+		if perr != nil {
+			continue
+		}
+		if e.distrustAfter != 0 {
+			p.AddCertWithDistrustAfter(c, e.distrustAfter)
+		} else {
+			p.AddCert(c)
+		}
+	}
+	return p
+}

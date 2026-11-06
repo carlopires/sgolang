@@ -1491,10 +1491,10 @@ def wyche_ed25519(WP):
 
 LIMBO_GEN = '// Command gen reads x509-limbo\'s limbo.json, applies the skips of Go\'s TestX509Limbo, runs\n// Go\'s crypto/x509 on each case, and writes cases.txt (inputs for the S-Go harness) and\n// go.txt (Go\'s verdict per case).\npackage main\n\nimport (\n\t"crypto/x509"\n\t"encoding/hex"\n\t"encoding/json"\n\t"encoding/pem"\n\t"fmt"\n\t"os"\n\t"strings"\n\t"time"\n)\n\ntype peer struct {\n\tKind  string `json:"kind"`\n\tValue string `json:"value"`\n}\n\ntype testcase struct {\n\tID                     string   `json:"id"`\n\tFeatures               []string `json:"features"`\n\tSignatureAlgorithms    []string `json:"signature_algorithms"`\n\tKeyUsage               []string `json:"key_usage"`\n\tExtendedKeyUsage       []string `json:"extended_key_usage"`\n\tValidationKind         string   `json:"validation_kind"`\n\tExpectedPeerName       *peer    `json:"expected_peer_name"`\n\tExpectedPeerNames      []peer   `json:"expected_peer_names"`\n\tTrustedCerts           []string `json:"trusted_certs"`\n\tUntrustedIntermediates []string `json:"untrusted_intermediates"`\n\tPeerCertificate        string   `json:"peer_certificate"`\n\tValidationTime         *string  `json:"validation_time"`\n\tExpectedResult         string   `json:"expected_result"`\n}\n\nvar ekuMap = map[string]x509.ExtKeyUsage{\n\t"anyExtendedKeyUsage": x509.ExtKeyUsageAny,\n\t"clientAuth":          x509.ExtKeyUsageClientAuth,\n\t"codeSigning":         x509.ExtKeyUsageCodeSigning,\n\t"emailProtection":     x509.ExtKeyUsageEmailProtection,\n\t"OCSPSigning":         x509.ExtKeyUsageOCSPSigning,\n\t"serverAuth":          x509.ExtKeyUsageServerAuth,\n\t"timeStamping":        x509.ExtKeyUsageTimeStamping,\n}\n\nfunc has(l []string, s string) bool {\n\tfor _, x := range l {\n\t\tif x == s {\n\t\t\treturn true\n\t\t}\n\t}\n\treturn false\n}\n\nfunc ders(pems []string) []string {\n\tout := []string{}\n\tfor _, p := range pems {\n\t\trest := []byte(p)\n\t\tfor {\n\t\t\tvar b *pem.Block\n\t\t\tb, rest = pem.Decode(rest)\n\t\t\tif b == nil {\n\t\t\t\tbreak\n\t\t\t}\n\t\t\tif b.Type == "CERTIFICATE" && len(b.Headers) == 0 {\n\t\t\t\tout = append(out, hex.EncodeToString(b.Bytes))\n\t\t\t}\n\t\t}\n\t}\n\treturn out\n}\n\nfunc pool(hexes []string) *x509.CertPool {\n\tp := x509.NewCertPool()\n\tfor _, h := range hexes {\n\t\td, _ := hex.DecodeString(h)\n\t\tif c, err := x509.ParseCertificate(d); err == nil {\n\t\t\tp.AddCert(c)\n\t\t}\n\t}\n\treturn p\n}\n\nfunc result(err error) string {\n\tif err == nil {\n\t\treturn "ok"\n\t}\n\treturn "err " + strings.ReplaceAll(err.Error(), "\\n", " ")\n}\n\nfunc main() {\n\tdata, err := os.ReadFile(os.Args[1])\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\tvar limbo struct {\n\t\tTestcases []testcase `json:"testcases"`\n\t}\n\tif err := json.Unmarshal(data, &limbo); err != nil {\n\t\tpanic(err)\n\t}\n\tnow := time.Now().Unix()\n\tcases, _ := os.Create(os.Args[2])\n\tgores, _ := os.Create(os.Args[3])\n\tdefer cases.Close()\n\tdefer gores.Close()\n\tfor _, tc := range limbo.Testcases {\n\t\tif has(tc.Features, "has-crl") || has(tc.Features, "max-chain-depth") || has(tc.Features, "name-constraint-dn") ||\n\t\t\tlen(tc.SignatureAlgorithms) != 0 || len(tc.KeyUsage) != 0 && !has(tc.KeyUsage, "digitalSignature") {\n\t\t\tcontinue\n\t\t}\n\t\tdns := ""\n\t\tif tc.ExpectedPeerName != nil && tc.ValidationKind == "SERVER" {\n\t\t\tswitch tc.ExpectedPeerName.Kind {\n\t\t\tcase "DNS":\n\t\t\t\tdns = tc.ExpectedPeerName.Value\n\t\t\tcase "IP":\n\t\t\t\tdns = "[" + tc.ExpectedPeerName.Value + "]"\n\t\t\tdefault:\n\t\t\t\tcontinue\n\t\t\t}\n\t\t}\n\t\tekus, ekuStr, skip := []x509.ExtKeyUsage{}, []string{}, false\n\t\tfor _, e := range tc.ExtendedKeyUsage {\n\t\t\tu, ok := ekuMap[e]\n\t\t\tif !ok {\n\t\t\t\tskip = true\n\t\t\t}\n\t\t\tekus = append(ekus, u)\n\t\t\tekuStr = append(ekuStr, fmt.Sprint(int(u)))\n\t\t}\n\t\tnames := []string{}\n\t\tif tc.ValidationKind == "CLIENT" {\n\t\t\tfor _, n := range tc.ExpectedPeerNames {\n\t\t\t\tif n.Kind != "IP" && n.Kind != "DNS" {\n\t\t\t\t\tskip = true\n\t\t\t\t}\n\t\t\t\tnames = append(names, n.Value)\n\t\t\t}\n\t\t}\n\t\tif skip {\n\t\t\tcontinue\n\t\t}\n\t\tvt := now\n\t\tif tc.ValidationTime != nil {\n\t\t\tt, err := time.Parse(time.RFC3339, *tc.ValidationTime)\n\t\t\tif err != nil {\n\t\t\t\tpanic(err)\n\t\t\t}\n\t\t\tvt = t.Unix()\n\t\t}\n\t\tpeerDER := ders([]string{tc.PeerCertificate})\n\t\tif len(peerDER) != 1 {\n\t\t\tcontinue\n\t\t}\n\t\troots, ints := ders(tc.TrustedCerts), ders(tc.UntrustedIntermediates)\n\t\tfmt.Fprintf(cases, "%s\\t%s\\t%d\\t%s\\t%s\\t%s\\t%s\\t%s\\n", tc.ID, dns, vt, strings.Join(ekuStr, ","),\n\t\t\tstrings.Join(names, ","), peerDER[0], strings.Join(roots, ","), strings.Join(ints, ","))\n\t\td, _ := hex.DecodeString(peerDER[0])\n\t\tc, perr := x509.ParseCertificate(d)\n\t\tif perr != nil {\n\t\t\tfmt.Fprintf(gores, "%s\\tparse %s\\n", tc.ID, result(perr))\n\t\t\tcontinue\n\t\t}\n\t\t_, verr := c.Verify(x509.VerifyOptions{DNSName: dns, Intermediates: pool(ints), Roots: pool(roots),\n\t\t\tCurrentTime: time.Unix(vt, 0).UTC(), KeyUsages: ekus})\n\t\tline := tc.ID + "\\tverify " + result(verr)\n\t\tfor _, n := range names {\n\t\t\tline += "\\thost " + result(c.VerifyHostname(n))\n\t\t}\n\t\tfmt.Fprintln(gores, line)\n\t}\n}\n'
 
-LIMBO_SGO = 'package main\n\nimport (\n\t"sgo"\n\t"std/crypto/x509"\n\t"std/encoding/hex"\n\t"std/strconv"\n\t"std/strings"\n)\n\nfunc result(err error) string {\n\tif err == nil {\n\t\treturn "ok"\n\t}\n\treturn "err " + strings.ReplaceAll(err.Error(), "\\n", " ")\n}\n\nfunc pool(hexes string) *x509.CertPool {\n\tp := x509.NewCertPool()\n\tif hexes == "" {\n\t\treturn p\n\t}\n\tl := strings.Split(hexes, ",")\n\tfor i := 0; i < len(l); i++ {\n\t\td, _ := hex.DecodeString(l[i])\n\t\tc, err := x509.ParseCertificate(d)\n\t\tif err == nil {\n\t\t\tp.AddCert(c)\n\t\t}\n\t}\n\treturn p\n}\n\nfunc one(line string) string {\n\tf := strings.Split(line, "\\t")\n\tid := f[0]\n\tvt, _ := strconv.Atoi(f[2])\n\tekus := []x509.ExtKeyUsage{}\n\tif f[3] != "" {\n\t\te := strings.Split(f[3], ",")\n\t\tfor i := 0; i < len(e); i++ {\n\t\t\tv, _ := strconv.Atoi(e[i])\n\t\t\tekus = append(ekus, x509.ExtKeyUsage(v))\n\t\t}\n\t}\n\td, _ := hex.DecodeString(f[5])\n\tc, perr := x509.ParseCertificate(d)\n\tif perr != nil {\n\t\treturn id + "\\tparse " + result(perr)\n\t}\n\t_, verr := c.Verify(x509.VerifyOptions{DNSName: f[1], Intermediates: pool(f[7]), Roots: pool(f[6]),\n\t\tCurrentTime: vt, KeyUsages: ekus, CertificatePolicies: []x509.OID{}})\n\tout := id + "\\tverify " + result(verr)\n\tif f[4] != "" {\n\t\tnames := strings.Split(f[4], ",")\n\t\tfor i := 0; i < len(names); i++ {\n\t\t\tout += "\\thost " + result(c.VerifyHostname(names[i]))\n\t\t}\n\t}\n\treturn out\n}\n\nfunc main(root *sgo.Context) error {\n\tin := root.Stdin()\n\tout := root.Stdout()\n\tfor {\n\t\tline, err := in.ReadLine(1 << 20)\n\t\tif err != nil {\n\t\t\tif sgo.IsEOF(err) {\n\t\t\t\treturn nil\n\t\t\t}\n\t\t\treturn err\n\t\t}\n\t\tcheck out.WriteString(one(line) + "\\n")\n\t}\n}\n'
+LIMBO_SGO = 'package main\n\nimport (\n\t"sgo"\n\t"std/crypto/x509"\n\t"std/encoding/hex"\n\t"std/strconv"\n\t"std/strings"\n)\n\nfunc result(err error) string {\n\tif err == nil {\n\t\treturn "ok"\n\t}\n\treturn "err " + strings.ReplaceAll(err.Error(), "\\n", " ")\n}\n\nfunc pool(hexes string, afters string) *x509.CertPool {\n\tp := x509.NewCertPool()\n\tif hexes == "" {\n\t\treturn p\n\t}\n\tl := strings.Split(hexes, ",")\n\ta := strings.Split(afters, ",")\n\tfor i := 0; i < len(l); i++ {\n\t\td, _ := hex.DecodeString(l[i])\n\t\tc, err := x509.ParseCertificate(d)\n\t\tif err == nil {\n\t\t\tif i < len(a) && a[i] != "" {\n\t\t\t\tt, _ := strconv.Atoi(a[i])\n\t\t\t\tp.AddCertWithDistrustAfter(c, t)\n\t\t\t} else {\n\t\t\t\tp.AddCert(c)\n\t\t\t}\n\t\t}\n\t}\n\treturn p\n}\n\nfunc one(line string) string {\n\tf := strings.Split(line, "\\t")\n\tid := f[0]\n\tafter := ""\n\tif len(f) > 8 {\n\t\tafter = f[8]\n\t}\n\tvt, _ := strconv.Atoi(f[2])\n\tekus := []x509.ExtKeyUsage{}\n\tif f[3] != "" {\n\t\te := strings.Split(f[3], ",")\n\t\tfor i := 0; i < len(e); i++ {\n\t\t\tv, _ := strconv.Atoi(e[i])\n\t\t\tekus = append(ekus, x509.ExtKeyUsage(v))\n\t\t}\n\t}\n\td, _ := hex.DecodeString(f[5])\n\tc, perr := x509.ParseCertificate(d)\n\tif perr != nil {\n\t\treturn id + "\\tparse " + result(perr)\n\t}\n\t_, verr := c.Verify(x509.VerifyOptions{DNSName: f[1], Intermediates: pool(f[7], ""), Roots: pool(f[6], after),\n\t\tCurrentTime: vt, KeyUsages: ekus, CertificatePolicies: []x509.OID{}})\n\tout := id + "\\tverify " + result(verr)\n\tif f[4] != "" {\n\t\tnames := strings.Split(f[4], ",")\n\t\tfor i := 0; i < len(names); i++ {\n\t\t\tout += "\\thost " + result(c.VerifyHostname(names[i]))\n\t\t}\n\t}\n\treturn out\n}\n\nfunc main(root *sgo.Context) error {\n\tin := root.Stdin()\n\tout := root.Stdout()\n\tfor {\n\t\tline, err := in.ReadLine(1 << 20)\n\t\tif err != nil {\n\t\t\tif sgo.IsEOF(err) {\n\t\t\t\treturn nil\n\t\t\t}\n\t\t\treturn err\n\t\t}\n\t\tcheck out.WriteString(one(line) + "\\n")\n\t}\n}\n'
 
 
-CHAINS_GEN = '// Command chains issues root -> intermediate -> leaf chains with each key type and signature\n// algorithm Go\'s crypto/x509 signs with, plus tampered variants, and writes them in the\n// x509-limbo harness format with Go\'s verdicts.\npackage main\n\nimport (\n\t"crypto"\n\t"crypto/ecdsa"\n\t"crypto/ed25519"\n\t"crypto/elliptic"\n\t"crypto/rand"\n\t"crypto/rsa"\n\t"crypto/x509"\n\t"crypto/x509/pkix"\n\t"encoding/hex"\n\t"fmt"\n\t"math/big"\n\t"os"\n\t"strings"\n\t"time"\n)\n\ntype kind struct {\n\tname string\n\tkey  func() crypto.Signer\n\talgo x509.SignatureAlgorithm\n}\n\nfunc ec(c elliptic.Curve) func() crypto.Signer {\n\treturn func() crypto.Signer { k, _ := ecdsa.GenerateKey(c, rand.Reader); return k }\n}\n\nfunc rsaKey() crypto.Signer { k, _ := rsa.GenerateKey(rand.Reader, 2048); return k }\n\nfunc edKey() crypto.Signer { _, k, _ := ed25519.GenerateKey(rand.Reader); return k }\n\nfunc issue(tmpl, parent *x509.Certificate, pub crypto.PublicKey, signer crypto.Signer) []byte {\n\tder, err := x509.CreateCertificate(rand.Reader, tmpl, parent, pub, signer)\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\treturn der\n}\n\nfunc result(err error) string {\n\tif err == nil {\n\t\treturn "ok"\n\t}\n\treturn "err " + strings.ReplaceAll(err.Error(), "\\n", " ")\n}\n\nfunc main() {\n\tkinds := []kind{\n\t\t{"rsa-sha256", rsaKey, x509.SHA256WithRSA}, {"rsa-sha384", rsaKey, x509.SHA384WithRSA}, {"rsa-sha512", rsaKey, x509.SHA512WithRSA},\n\t\t{"rsapss-sha256", rsaKey, x509.SHA256WithRSAPSS}, {"rsapss-sha512", rsaKey, x509.SHA512WithRSAPSS},\n\t\t{"p224", ec(elliptic.P224()), x509.ECDSAWithSHA256}, {"p256", ec(elliptic.P256()), x509.ECDSAWithSHA256},\n\t\t{"p384", ec(elliptic.P384()), x509.ECDSAWithSHA384}, {"p521", ec(elliptic.P521()), x509.ECDSAWithSHA512},\n\t\t{"p521-sha256", ec(elliptic.P521()), x509.ECDSAWithSHA256}, {"ed25519", edKey, x509.PureEd25519},\n\t}\n\tcases, _ := os.Create(os.Args[1])\n\tgores, _ := os.Create(os.Args[2])\n\tdefer cases.Close()\n\tdefer gores.Close()\n\tnow := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)\n\tserial := int64(1)\n\tfor _, k := range kinds {\n\t\trootKey, intKey, leafKey := k.key(), k.key(), k.key()\n\t\ttmpl := func(cn string, ca bool) *x509.Certificate {\n\t\t\tserial++\n\t\t\tt := &x509.Certificate{SerialNumber: big.NewInt(serial), Subject: pkix.Name{CommonName: cn},\n\t\t\t\tNotBefore: now.Add(-time.Hour), NotAfter: now.Add(24 * time.Hour), SignatureAlgorithm: k.algo,\n\t\t\t\tBasicConstraintsValid: true, IsCA: ca}\n\t\t\tif ca {\n\t\t\t\tt.KeyUsage = x509.KeyUsageCertSign\n\t\t\t} else {\n\t\t\t\tt.DNSNames = []string{"example.com"}\n\t\t\t\tt.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}\n\t\t\t}\n\t\t\treturn t\n\t\t}\n\t\trt := tmpl(k.name+" root", true)\n\t\trootDER := issue(rt, rt, rootKey.Public(), rootKey)\n\t\troot, _ := x509.ParseCertificate(rootDER)\n\t\tintDER := issue(tmpl(k.name+" int", true), root, intKey.Public(), rootKey)\n\t\tinter, _ := x509.ParseCertificate(intDER)\n\t\tleafDER := issue(tmpl("leaf", false), inter, leafKey.Public(), intKey)\n\t\tbad := append([]byte{}, leafDER...)\n\t\tbad[len(bad)-3] ^= 1\n\t\tfor _, v := range []struct {\n\t\t\tid   string\n\t\t\tleaf []byte\n\t\t}{{k.name + "::chain", leafDER}, {k.name + "::tampered", bad}} {\n\t\t\tfmt.Fprintf(cases, "%s\\t%s\\t%d\\t%s\\t%s\\t%s\\t%s\\t%s\\n", v.id, "example.com", now.Unix(), "", "",\n\t\t\t\thex.EncodeToString(v.leaf), hex.EncodeToString(rootDER), hex.EncodeToString(intDER))\n\t\t\tc, err := x509.ParseCertificate(v.leaf)\n\t\t\tif err != nil {\n\t\t\t\tfmt.Fprintf(gores, "%s\\tparse %s\\n", v.id, result(err))\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\troots, ints := x509.NewCertPool(), x509.NewCertPool()\n\t\t\troots.AddCert(root)\n\t\t\tints.AddCert(inter)\n\t\t\t_, verr := c.Verify(x509.VerifyOptions{DNSName: "example.com", Roots: roots, Intermediates: ints, CurrentTime: now})\n\t\t\tfmt.Fprintf(gores, "%s\\tverify %s\\n", v.id, result(verr))\n\t\t}\n\t}\n}\n'
+CHAINS_GEN = '// Command chains issues root -> intermediate -> leaf chains with each key type and signature\n// algorithm Go\'s crypto/x509 signs with, plus tampered variants, and writes them in the\n// x509-limbo harness format with Go\'s verdicts.\npackage main\n\nimport (\n\t"crypto"\n\t"crypto/ecdsa"\n\t"crypto/ed25519"\n\t"crypto/elliptic"\n\t"crypto/rand"\n\t"crypto/rsa"\n\t"crypto/x509"\n\t"crypto/x509/pkix"\n\t"encoding/hex"\n\t"fmt"\n\t"math/big"\n\t"os"\n\t"strings"\n\t"time"\n)\n\ntype kind struct {\n\tname string\n\tkey  func() crypto.Signer\n\talgo x509.SignatureAlgorithm\n}\n\nfunc ec(c elliptic.Curve) func() crypto.Signer {\n\treturn func() crypto.Signer { k, _ := ecdsa.GenerateKey(c, rand.Reader); return k }\n}\n\nfunc rsaKey() crypto.Signer { k, _ := rsa.GenerateKey(rand.Reader, 2048); return k }\n\nfunc edKey() crypto.Signer { _, k, _ := ed25519.GenerateKey(rand.Reader); return k }\n\nfunc issue(tmpl, parent *x509.Certificate, pub crypto.PublicKey, signer crypto.Signer) []byte {\n\tder, err := x509.CreateCertificate(rand.Reader, tmpl, parent, pub, signer)\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\treturn der\n}\n\nfunc result(err error) string {\n\tif err == nil {\n\t\treturn "ok"\n\t}\n\treturn "err " + strings.ReplaceAll(err.Error(), "\\n", " ")\n}\n\nfunc main() {\n\tkinds := []kind{\n\t\t{"rsa-sha256", rsaKey, x509.SHA256WithRSA}, {"rsa-sha384", rsaKey, x509.SHA384WithRSA}, {"rsa-sha512", rsaKey, x509.SHA512WithRSA},\n\t\t{"rsapss-sha256", rsaKey, x509.SHA256WithRSAPSS}, {"rsapss-sha512", rsaKey, x509.SHA512WithRSAPSS},\n\t\t{"p224", ec(elliptic.P224()), x509.ECDSAWithSHA256}, {"p256", ec(elliptic.P256()), x509.ECDSAWithSHA256},\n\t\t{"p384", ec(elliptic.P384()), x509.ECDSAWithSHA384}, {"p521", ec(elliptic.P521()), x509.ECDSAWithSHA512},\n\t\t{"p521-sha256", ec(elliptic.P521()), x509.ECDSAWithSHA256}, {"ed25519", edKey, x509.PureEd25519},\n\t}\n\tcases, _ := os.Create(os.Args[1])\n\tgores, _ := os.Create(os.Args[2])\n\tdefer cases.Close()\n\tdefer gores.Close()\n\tnow := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)\n\tserial := int64(1)\n\tfor _, k := range kinds {\n\t\trootKey, intKey, leafKey := k.key(), k.key(), k.key()\n\t\ttmpl := func(cn string, ca bool) *x509.Certificate {\n\t\t\tserial++\n\t\t\tt := &x509.Certificate{SerialNumber: big.NewInt(serial), Subject: pkix.Name{CommonName: cn},\n\t\t\t\tNotBefore: now.Add(-time.Hour), NotAfter: now.Add(24 * time.Hour), SignatureAlgorithm: k.algo,\n\t\t\t\tBasicConstraintsValid: true, IsCA: ca}\n\t\t\tif ca {\n\t\t\t\tt.KeyUsage = x509.KeyUsageCertSign\n\t\t\t} else {\n\t\t\t\tt.DNSNames = []string{"example.com"}\n\t\t\t\tt.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}\n\t\t\t}\n\t\t\treturn t\n\t\t}\n\t\trt := tmpl(k.name+" root", true)\n\t\trootDER := issue(rt, rt, rootKey.Public(), rootKey)\n\t\troot, _ := x509.ParseCertificate(rootDER)\n\t\tintDER := issue(tmpl(k.name+" int", true), root, intKey.Public(), rootKey)\n\t\tinter, _ := x509.ParseCertificate(intDER)\n\t\tleafDER := issue(tmpl("leaf", false), inter, leafKey.Public(), intKey)\n\t\tbad := append([]byte{}, leafDER...)\n\t\tbad[len(bad)-3] ^= 1\n\t\ttype variant struct {\n\t\t\tid    string\n\t\t\tleaf  []byte\n\t\t\tafter int64 // distrust-after for the root, Unix seconds; 0 for none\n\t\t}\n\t\tvs := []variant{{k.name + "::chain", leafDER, 0}, {k.name + "::tampered", bad, 0}}\n\t\tif k.name == "p256" || k.name == "rsa-sha256" {\n\t\t\tvs = append(vs, variant{k.name + "::distrust-after-later", leafDER, now.Add(-30 * time.Minute).Unix()},\n\t\t\t\tvariant{k.name + "::distrust-after-earlier", leafDER, now.Add(-2 * time.Hour).Unix()})\n\t\t}\n\t\tfor _, v := range vs {\n\t\t\tafterField := ""\n\t\t\tif v.after != 0 {\n\t\t\t\tafterField = fmt.Sprint(v.after)\n\t\t\t}\n\t\t\tfmt.Fprintf(cases, "%s\\t%s\\t%d\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n", v.id, "example.com", now.Unix(), "", "",\n\t\t\t\thex.EncodeToString(v.leaf), hex.EncodeToString(rootDER), hex.EncodeToString(intDER), afterField)\n\t\t\tc, err := x509.ParseCertificate(v.leaf)\n\t\t\tif err != nil {\n\t\t\t\tfmt.Fprintf(gores, "%s\\tparse %s\\n", v.id, result(err))\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\troots, ints := x509.NewCertPool(), x509.NewCertPool()\n\t\t\tif v.after == 0 {\n\t\t\t\troots.AddCert(root)\n\t\t\t} else {\n\t\t\t\tdistrustAfter := time.Unix(v.after, 0).UTC()\n\t\t\t\troots.AddCertWithConstraint(root, func(chain []*x509.Certificate) error {\n\t\t\t\t\tfor _, c := range chain {\n\t\t\t\t\t\tif c.NotBefore.After(distrustAfter) {\n\t\t\t\t\t\t\treturn fmt.Errorf("certificate issued after distrust-after date %q", distrustAfter)\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t\treturn nil\n\t\t\t\t})\n\t\t\t}\n\t\t\tints.AddCert(inter)\n\t\t\t_, verr := c.Verify(x509.VerifyOptions{DNSName: "example.com", Roots: roots, Intermediates: ints, CurrentTime: now})\n\t\t\tfmt.Fprintf(gores, "%s\\tverify %s\\n", v.id, result(verr))\n\t\t}\n\t}\n}\n'
 
 
 def limbo_dir():
@@ -1552,6 +1552,77 @@ def x509_limbo():
         return not bad and s.returncode == 0 and len(gl) > 0, msg
 
 
+ROOTS_GO = """package main
+
+import (
+	"crypto/x509"
+	"encoding/hex"
+	"fmt"
+
+	"golang.org/x/crypto/x509roots/fallback/bundle"
+)
+
+func main() {
+	p := x509.NewCertPool()
+	n := 0
+	for r := range bundle.Roots() {
+		c, err := x509.ParseCertificate(r.Certificate)
+		if err != nil {
+			panic(err)
+		}
+		if r.Constraint == nil {
+			p.AddCert(c)
+		} else {
+			p.AddCertWithConstraint(c, r.Constraint)
+		}
+		n++
+	}
+	fmt.Println("roots", n)
+	for _, s := range p.Subjects() {
+		fmt.Println(hex.EncodeToString(s))
+	}
+}
+"""
+
+ROOTS_SGO = """package main
+
+import (
+	"sgo"
+	"std/crypto/x509/roots"
+	"std/encoding/hex"
+	"std/strconv"
+)
+
+func main(root *sgo.Context) error {
+	p := roots.Mozilla()
+	out := "roots " + strconv.Itoa(roots.Count) + "\\n"
+	s := p.Subjects()
+	for i := 0; i < len(s); i++ {
+		out += hex.EncodeToString(s[i]) + "\\n"
+	}
+	return root.Stdout().WriteString(out)
+}
+"""
+
+
+def x509_roots():
+    """std/crypto/x509/roots against Go's fallback pool built from the same pinned bundle."""
+    chk = subprocess.run([sys.executable, os.path.join(ROOT, "sgo", "scripts", "gen-roots.py"), "--check"],
+                         capture_output=True, text=True, timeout=900)
+    if chk.returncode:
+        return False, "x509-roots: " + (chk.stdout + chk.stderr).strip()
+    version = re.search(r'VERSION = "([^"]+)"', open(os.path.join(ROOT, "sgo", "scripts", "gen-roots.py")).read()).group(1)
+    with tempfile.TemporaryDirectory() as d:
+        open(os.path.join(d, "main.go"), "w").write(ROOTS_GO)
+        open(os.path.join(d, "go.mod"), "w").write("module rootsdiff\n\ngo 1.26\n\nrequire golang.org/x/crypto/x509roots/fallback " + version + "\n")
+        g = subprocess.run([GO, "run", "."], cwd=d, env=dict(os.environ, GOFLAGS="-mod=mod"), capture_output=True, text=True, timeout=900)
+    s = run_sgo(ROOTS_SGO)
+    if g.returncode or s.returncode:
+        return False, "x509-roots: go exit %d, sgo exit %d\n%s%s" % (g.returncode, s.returncode, g.stderr[-800:], s.stderr[-800:])
+    same = g.stdout == s.stdout
+    return same, "x509-roots: %s, %d subjects %s" % (version, len(g.stdout.splitlines()) - 1, "identical" if same else "DIFFER")
+
+
 def main():
     seed = 1
     if "--seed" in sys.argv:
@@ -1580,10 +1651,11 @@ def main():
         tail = line.split(" agree", 1)[1] if " agree" in line else ""
         if r.returncode or not m or m.group(1) != m.group(2) or "#" in tail or "base: false" in tail or "test 1: false" in tail:
             failed = True
-    ok, msg = x509_limbo()
-    print("test-std-crypto: " + msg)
-    if not ok:
-        failed = True
+    for stage in (x509_limbo, x509_roots):
+        ok, msg = stage()
+        print("test-std-crypto: " + msg)
+        if not ok:
+            failed = True
     if failed:
         sys.exit("test-std-crypto: FAIL")
     print("test-std-crypto: ok")

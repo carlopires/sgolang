@@ -5,7 +5,10 @@
 
 package x509
 
-import "std/errors"
+import (
+	"std/errors"
+	"std/strconv"
+)
 
 const (
 	leafCertificate         = 0
@@ -106,11 +109,12 @@ func (c *Certificate) buildChains(chain []*Certificate, st *chainState, opts *Ve
 	limit := false
 	for pass := 0; pass < 2 && !limit; pass++ {
 		certType := rootCertificate
-		cands := opts.Roots.findPotentialParents(c)
+		pool := opts.Roots
 		if pass == 1 {
 			certType = intermediateCertificate
-			cands = opts.Intermediates.findPotentialParents(c)
+			pool = opts.Intermediates
 		}
+		cands := pool.findPotentialParents(c)
 		for j := 0; j < len(cands) && !limit; j++ {
 			cand := cands[j]
 			st.sigChecks++
@@ -136,6 +140,21 @@ func (c *Certificate) buildChains(chain []*Certificate, st *chainState, opts *Ve
 					hint = cand
 				}
 				continue
+			}
+			if after, ok := pool.distrustAfterOf(cand); ok {
+				late := false
+				for k := 0; k < len(chain); k++ {
+					if chain[k].NotBefore > after {
+						late = true
+					}
+				}
+				if late {
+					if hintErr == nil {
+						hintErr = errors.New("certificate issued after distrust-after date " + strconv.QuoteToASCII(goTimeString(after)))
+						hint = cand
+					}
+					continue
+				}
 			}
 			if certType == rootCertificate {
 				chains = append(chains, appendToFreshChain(chain, cand))
