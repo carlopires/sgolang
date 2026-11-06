@@ -1,0 +1,58 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package chacha20poly1305
+
+import (
+	"sgo"
+	"std/encoding/hex"
+)
+
+func rfcInputs() ([]byte, []byte, []byte, []byte) {
+	key := []byte{}
+	for i := 0x80; i < 0xa0; i++ {
+		key = append(key, byte(i))
+	}
+	nonce, _ := hex.DecodeString("070000004041424344454647")
+	aad, _ := hex.DecodeString("50515253c0c1c2c3c4c5c6c7")
+	pt := []byte("Ladies and Gentlemen of the class of '99: If I could offer you only one tip for the future, sunscreen would be it.")
+	return key, nonce, aad, pt
+}
+
+// RFC 8439 section 2.8.2.
+func TestRFC8439(t *sgo.T) error {
+	key, nonce, aad, pt := rfcInputs()
+	a, err := New(key)
+	if err != nil {
+		return err
+	}
+	out := hex.EncodeToString(a.Seal([]byte{}, nonce, pt, aad))
+	want := "d31a8d34648e60db7b86afbc53ef7ec2a4aded51296e08fea9e2b5a736ee62d63dbea45e8ca9671282fafb69da92728b1a71de0a9e060b2905d6a5b67ecd3b3692ddbd7f2d778b8c9803aee328091b58fab324e4fad675945585808b4831d7bc3ff4def08e4b7a9de576d26586cec64b6116" + "1ae10b594f09e26a7e902ecbd0600691"
+	if out != want {
+		return sgo.NewError("seal: " + out)
+	}
+	return nil
+}
+
+// Open inverts Seal, appends to dst, and refuses a modified tag or a short message.
+func TestOpen(t *sgo.T) error {
+	key, nonce, aad, pt := rfcInputs()
+	a, _ := New(key)
+	ct := a.Seal([]byte{}, nonce, pt, aad)
+	got, err := a.Open([]byte("x"), nonce, ct, aad)
+	if err != nil || string(got) != "x"+string(pt) {
+		return sgo.NewError("open round trip")
+	}
+	ct[len(ct)-1] = ct[len(ct)-1] ^ 1
+	if _, e2 := a.Open([]byte{}, nonce, ct, aad); e2 == nil || e2.Error() != "chacha20poly1305: message authentication failed" {
+		return sgo.NewError("open accepted a modified tag")
+	}
+	if _, e3 := a.Open([]byte{}, nonce, ct[:15], aad); e3 == nil {
+		return sgo.NewError("open accepted a short message")
+	}
+	if _, e4 := New(key[:31]); e4 == nil || e4.Error() != "chacha20poly1305: bad key length" {
+		return sgo.NewError("New accepted a short key")
+	}
+	return nil
+}

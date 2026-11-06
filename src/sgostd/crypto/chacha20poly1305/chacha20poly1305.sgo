@@ -1,0 +1,247 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package chacha20poly1305 implements the ChaCha20-Poly1305 AEAD of RFC 8439 (SGO-STD-021,
+// D197), with the results and error texts of Go's golang.org/x/crypto/chacha20poly1305. No
+// branch and no table index depends on the key, the plaintext, or the tag being checked.
+package chacha20poly1305
+
+import (
+	"std/bits"
+	"std/crypto/cipher"
+	"std/encoding/binary"
+	"std/errors"
+)
+
+const (
+	// KeySize is the size of the key in bytes.
+	KeySize = 32
+	// NonceSize is the size of the nonce in bytes.
+	NonceSize = 12
+	// Overhead is the size of the Poly1305 tag in bytes.
+	Overhead = 16
+)
+
+const m32 uint64 = 0xffffffff
+
+type aead struct {
+	key []byte
+}
+
+// New returns a ChaCha20-Poly1305 AEAD that uses the given 256-bit key.
+func New(key []byte) (cipher.AEAD, error) {
+	if len(key) != KeySize {
+		return nil, errors.New("chacha20poly1305: bad key length")
+	}
+	k := make([]byte, KeySize)
+	copy(k, key)
+	return &aead{key: k}, nil
+}
+
+func (c *aead) NonceSize() int {
+	return NonceSize
+}
+
+func (c *aead) Overhead() int {
+	return Overhead
+}
+
+func add32(a, b uint32) uint32 {
+	return uint32((uint64(a) + uint64(b)) & m32)
+}
+
+func quarterRound(a, b, c, d uint32) (uint32, uint32, uint32, uint32) {
+	a = add32(a, b)
+	d = bits.RotateLeft32(d^a, 16)
+	c = add32(c, d)
+	b = bits.RotateLeft32(b^c, 12)
+	a = add32(a, b)
+	d = bits.RotateLeft32(d^a, 8)
+	c = add32(c, d)
+	b = bits.RotateLeft32(b^c, 7)
+	return a, b, c, d
+}
+
+// block writes the 64-byte ChaCha20 block for key, counter and nonce into out.
+func block(out []byte, key []byte, counter uint32, nonce []byte) {
+	s := [16]uint32{}
+	s[0], s[1], s[2], s[3] = 0x61707865, 0x3320646e, 0x79622d32, 0x6b206574
+	for i := 0; i < 8; i++ {
+		s[4+i] = binary.LittleEndian.Uint32(key[4*i : 4*i+4])
+	}
+	s[12] = counter
+	for i := 0; i < 3; i++ {
+		s[13+i] = binary.LittleEndian.Uint32(nonce[4*i : 4*i+4])
+	}
+	x := s
+	for i := 0; i < 10; i++ {
+		x[0], x[4], x[8], x[12] = quarterRound(x[0], x[4], x[8], x[12])
+		x[1], x[5], x[9], x[13] = quarterRound(x[1], x[5], x[9], x[13])
+		x[2], x[6], x[10], x[14] = quarterRound(x[2], x[6], x[10], x[14])
+		x[3], x[7], x[11], x[15] = quarterRound(x[3], x[7], x[11], x[15])
+		x[0], x[5], x[10], x[15] = quarterRound(x[0], x[5], x[10], x[15])
+		x[1], x[6], x[11], x[12] = quarterRound(x[1], x[6], x[11], x[12])
+		x[2], x[7], x[8], x[13] = quarterRound(x[2], x[7], x[8], x[13])
+		x[3], x[4], x[9], x[14] = quarterRound(x[3], x[4], x[9], x[14])
+	}
+	for i := 0; i < 16; i++ {
+		binary.LittleEndian.PutUint32(out[4*i:4*i+4], add32(x[i], s[i]))
+	}
+}
+
+// xorStream XORs src with the ChaCha20 key stream starting at block counter 1.
+func xorStream(dst, src, key, nonce []byte) {
+	ks := [64]byte{}
+	var counter uint32 = 1
+	for off := 0; off < len(src); off += 64 {
+		block(ks[:], key, counter, nonce)
+		counter = add32(counter, 1)
+		n := len(src) - off
+		if n > 64 {
+			n = 64
+		}
+		for i := 0; i < n; i++ {
+			dst[off+i] = src[off+i] ^ ks[i]
+		}
+	}
+}
+
+type poly struct {
+	h0, h1, h2 uint64
+	r0, r1     uint64
+	s0, s1     uint64
+}
+
+func newPoly(key []byte) *poly {
+	return &poly{
+		r0: binary.LittleEndian.Uint64(key[0:8]) & 0x0FFFFFFC0FFFFFFF,
+		r1: binary.LittleEndian.Uint64(key[8:16]) & 0x0FFFFFFC0FFFFFFC,
+		s0: binary.LittleEndian.Uint64(key[16:24]),
+		s1: binary.LittleEndian.Uint64(key[24:32]),
+	}
+}
+
+func add128(alo, ahi, blo, bhi uint64) (uint64, uint64) {
+	lo, c := bits.Add64(alo, blo, 0)
+	hi, c2 := bits.Add64(ahi, bhi, c)
+	if c2 != 0 {
+		panic("poly1305: unexpected overflow")
+	}
+	return lo, hi
+}
+
+// update absorbs msg, padded with zeros to a multiple of 16 bytes (RFC 8439 section 2.8).
+func (p *poly) update(msg []byte) {
+	h0, h1, h2 := p.h0, p.h1, p.h2
+	r0, r1 := p.r0, p.r1
+	for len(msg) > 0 {
+		buf := [16]byte{}
+		n := copy(buf[:], msg)
+		msg = msg[n:]
+		var c uint64 = 0
+		h0, c = bits.Add64(h0, binary.LittleEndian.Uint64(buf[0:8]), 0)
+		h1, c = bits.Add64(h1, binary.LittleEndian.Uint64(buf[8:16]), c)
+		h2 = h2 + c + 1
+
+		h0r0hi, h0r0lo := bits.Mul64(h0, r0)
+		h1r0hi, h1r0lo := bits.Mul64(h1, r0)
+		h2r0hi, h2r0lo := bits.Mul64(h2, r0)
+		h0r1hi, h0r1lo := bits.Mul64(h0, r1)
+		h1r1hi, h1r1lo := bits.Mul64(h1, r1)
+		h2r1hi, h2r1lo := bits.Mul64(h2, r1)
+		if h2r0hi != 0 || h2r1hi != 0 {
+			panic("poly1305: unexpected overflow")
+		}
+		m1lo, m1hi := add128(h1r0lo, h1r0hi, h0r1lo, h0r1hi)
+		m2lo, m2hi := add128(h2r0lo, h2r0hi, h1r1lo, h1r1hi)
+		t0 := h0r0lo
+		t1, c1 := bits.Add64(m1lo, h0r0hi, 0)
+		t2, c2 := bits.Add64(m2lo, m1hi, c1)
+		t3, _ := bits.Add64(h2r1lo, m2hi, c2)
+
+		h0, h1, h2 = t0, t1, t2&3
+		cclo, cchi := t2&^3, t3
+		h0, c = bits.Add64(h0, cclo, 0)
+		h1, c = bits.Add64(h1, cchi, c)
+		h2 = h2 + c
+		cclo = cclo>>2 | (cchi&3)<<62
+		cchi = cchi >> 2
+		h0, c = bits.Add64(h0, cclo, 0)
+		h1, c = bits.Add64(h1, cchi, c)
+		h2 = h2 + c
+	}
+	p.h0, p.h1, p.h2 = h0, h1, h2
+}
+
+// select64 returns x if v == 1 and y if v == 0, without a branch.
+func select64(v, x, y uint64) uint64 {
+	m, _ := bits.Sub64(v, 1, 0)
+	return ^m&x | m&y
+}
+
+func (p *poly) sum(out []byte) {
+	h0, h1, h2 := p.h0, p.h1, p.h2
+	t0, b := bits.Sub64(h0, 0xFFFFFFFFFFFFFFFB, 0)
+	t1, b1 := bits.Sub64(h1, 0xFFFFFFFFFFFFFFFF, b)
+	_, b2 := bits.Sub64(h2, 3, b1)
+	h0 = select64(b2, h0, t0)
+	h1 = select64(b2, h1, t1)
+	h0, c := bits.Add64(h0, p.s0, 0)
+	h1, _ = bits.Add64(h1, p.s1, c)
+	binary.LittleEndian.PutUint64(out[0:8], h0)
+	binary.LittleEndian.PutUint64(out[8:16], h1)
+}
+
+func (c *aead) tag(out, nonce, ciphertext, additionalData []byte) {
+	polyKey := [64]byte{}
+	block(polyKey[:], c.key, 0, nonce)
+	p := newPoly(polyKey[:32])
+	p.update(additionalData)
+	p.update(ciphertext)
+	lens := [16]byte{}
+	binary.LittleEndian.PutUint64(lens[0:8], uint64(len(additionalData)))
+	binary.LittleEndian.PutUint64(lens[8:16], uint64(len(ciphertext)))
+	p.update(lens[:])
+	p.sum(out)
+}
+
+// Seal encrypts and authenticates plaintext with additionalData and appends the result to dst.
+// A nonce of the wrong length fails as Go's panic.
+func (c *aead) Seal(dst, nonce, plaintext, additionalData []byte) []byte {
+	if len(nonce) != NonceSize {
+		panic("chacha20poly1305: bad nonce length passed to Seal")
+	}
+	n := len(dst)
+	out := append(dst, make([]byte, len(plaintext)+Overhead)...)
+	ct := out[n : n+len(plaintext)]
+	xorStream(ct, plaintext, c.key, nonce)
+	c.tag(out[n+len(plaintext):], nonce, ct, additionalData)
+	return out
+}
+
+// Open authenticates and decrypts ciphertext and appends the plaintext to dst; an
+// inauthentic message is the error "chacha20poly1305: message authentication failed".
+func (c *aead) Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, error) {
+	if len(nonce) != NonceSize {
+		panic("chacha20poly1305: bad nonce length passed to Open")
+	}
+	if len(ciphertext) < Overhead {
+		return []byte{}, errors.New("chacha20poly1305: message authentication failed")
+	}
+	ct := ciphertext[:len(ciphertext)-Overhead]
+	want := [16]byte{}
+	c.tag(want[:], nonce, ct, additionalData)
+	given := ciphertext[len(ct):]
+	var v byte = 0
+	for i := 0; i < Overhead; i++ {
+		v = v | (want[i] ^ given[i])
+	}
+	if v != 0 {
+		return []byte{}, errors.New("chacha20poly1305: message authentication failed")
+	}
+	n := len(dst)
+	out := append(dst, make([]byte, len(ct))...)
+	xorStream(out[n:], ct, c.key, nonce)
+	return out, nil
+}

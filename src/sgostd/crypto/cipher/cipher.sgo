@@ -1,0 +1,15 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package cipher declares the interface of authenticated encryption with associated data
+// (SGO-STD-020, D197), the AEAD of Go's crypto/cipher.
+package cipher
+
+// AEAD is a cipher mode providing authenticated encryption with associated data.
+type AEAD interface {
+	NonceSize() int
+	Overhead() int
+	Seal(dst, nonce, plaintext, additionalData []byte) []byte
+	Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, error)
+}

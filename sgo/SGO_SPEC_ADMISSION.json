@@ -1818,9 +1818,12 @@
         "SGO-STD-016",
         "SGO-STD-017",
         "SGO-STD-018",
-        "SGO-STD-019"
+        "SGO-STD-019",
+        "SGO-STD-020",
+        "SGO-STD-021",
+        "SGO-STD-022"
       ],
-      "normative_text_digest": "0c9ac83af8ef527f9a0b8da967cc4635222b7cc850955cc13db8a705b514b105",
+      "normative_text_digest": "548abc93098906f5e131040054c1531920609fb5d40b12d79ebba3faa3d5ee7a",
       "admitted_in": [
         "0.13.0"
       ],
@@ -1848,7 +1851,10 @@
         "SGO-STD-016": "a9c8dc7921979b3aef31e337c37f9bdd12cf439ffcb8e877ce5a73caf9785794",
         "SGO-STD-017": "50a2da691b6fee4a00170ccd5dca7a2278a9617164ce56a2f9797e53b75a074d",
         "SGO-STD-018": "e2dc7d1afed0ecb7f448f4ec92697a2428da7acf2b34872580f8e5dd36e2b18a",
-        "SGO-STD-019": "9f9681207f43253fefca5f2607f25a01d71bad61b739462910015dd6d444870a"
+        "SGO-STD-019": "9f9681207f43253fefca5f2607f25a01d71bad61b739462910015dd6d444870a",
+        "SGO-STD-020": "1b0d20f0ce30b5b2d9b74759062a246fa27106df3fdc7c705b589125c38312ad",
+        "SGO-STD-021": "f20ff778a53f8f7bb14df08c0b389fd6903ac14f1536708acfae7e44422c86af",
+        "SGO-STD-022": "1a37d0879356aecf46600feff3dd3a25a2dd6498fc63d9c1d31ab24c85bb6a6c"
       },
       "clause_status": {
         "SGO-STD-001": "frozen",
@@ -1869,7 +1875,10 @@
         "SGO-STD-016": "draft",
         "SGO-STD-017": "draft",
         "SGO-STD-018": "draft",
-        "SGO-STD-019": "draft"
+        "SGO-STD-019": "draft",
+        "SGO-STD-020": "draft",
+        "SGO-STD-021": "draft",
+        "SGO-STD-022": "draft"
       },
       "clause_versions": {
         "SGO-STD-001": 2,
@@ -1890,10 +1899,13 @@
         "SGO-STD-016": 1,
         "SGO-STD-017": 1,
         "SGO-STD-018": 1,
-        "SGO-STD-019": 1
+        "SGO-STD-019": 1,
+        "SGO-STD-020": 1,
+        "SGO-STD-021": 1,
+        "SGO-STD-022": 1
       }
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "2dd6df25d3627a1ae5ae62edd2814f90d1128f1b82b48d4ccf38d7c3989d2aec"
+  "rows_digest": "e828df4adf37dcad6c33cd29c54314fed42caaa35342fdfd220a054f3b58f26c"
 }

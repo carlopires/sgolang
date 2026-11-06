@@ -1,0 +1,25 @@
+package main
+
+import (
+	"sgo"
+	"std/crypto/chacha20poly1305"
+	"std/crypto/curve25519"
+	"std/encoding/hex"
+)
+
+func main(root *sgo.Context) error {
+	alice, _ := hex.DecodeString("77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a")
+	bob, _ := hex.DecodeString("5dab087e624a8a4b79e17f8b83800ee66f3bb1292618b6fd1c2f8b27ff88e0eb")
+	bobPublic, _ := curve25519.X25519(bob, curve25519.Basepoint())
+	shared, _ := curve25519.X25519(alice, bobPublic)
+	a, _ := chacha20poly1305.New(shared)
+	nonce := make([]byte, chacha20poly1305.NonceSize)
+	sealed := a.Seal([]byte{}, nonce, []byte("hello"), []byte("ad"))
+	opened, err := a.Open([]byte{}, nonce, sealed, []byte("ad"))
+	if err != nil {
+		return err
+	}
+	sealed[0] = sealed[0] ^ 1
+	_, refused := a.Open([]byte{}, nonce, sealed, []byte("ad"))
+	return root.Stdout().WriteString(hex.EncodeToString(shared) + "\n" + string(opened) + "\n" + refused.Error() + "\n")
+}

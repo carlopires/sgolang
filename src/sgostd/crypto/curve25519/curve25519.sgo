@@ -1,0 +1,192 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package curve25519 implements the X25519 function of RFC 7748 (SGO-STD-022, D197), with the
+// results and error texts of Go's golang.org/x/crypto/curve25519. Field elements are sixteen
+// 16-bit limbs in int, so no intermediate leaves the int range; the ladder swaps with masks,
+// and no branch and no table index depends on the scalar or the point.
+package curve25519
+
+import (
+	"std/errors"
+	"std/strconv"
+)
+
+const (
+	// ScalarSize is the size of the scalar input to X25519.
+	ScalarSize = 32
+	// PointSize is the size of the point input to X25519.
+	PointSize = 32
+)
+
+// Basepoint returns the canonical Curve25519 generator, the u-coordinate 9.
+func Basepoint() []byte {
+	b := make([]byte, PointSize)
+	b[0] = 9
+	return b
+}
+
+type fe [16]int
+
+func carry(o *fe) {
+	for i := 0; i < 16; i++ {
+		o[i] = o[i] + 65536
+		c := o[i] >> 16
+		if i < 15 {
+			o[i+1] = o[i+1] + c - 1
+		} else {
+			o[0] = o[0] + 38*(c-1)
+		}
+		o[i] = o[i] - c*65536
+	}
+}
+
+// sel swaps p and q when b == 1 and leaves them when b == 0, without a branch.
+func sel(p, q *fe, b int) {
+	c := ^(b - 1)
+	for i := 0; i < 16; i++ {
+		t := c & (p[i] ^ q[i])
+		p[i] = p[i] ^ t
+		q[i] = q[i] ^ t
+	}
+}
+
+func pack(out []byte, n *fe) {
+	t := *n
+	carry(&t)
+	carry(&t)
+	carry(&t)
+	for j := 0; j < 2; j++ {
+		m := fe{}
+		m[0] = t[0] - 0xffed
+		for i := 1; i < 15; i++ {
+			m[i] = t[i] - 0xffff - ((m[i-1] >> 16) & 1)
+			m[i-1] = m[i-1] & 0xffff
+		}
+		m[15] = t[15] - 0x7fff - ((m[14] >> 16) & 1)
+		b := (m[15] >> 16) & 1
+		m[14] = m[14] & 0xffff
+		sel(&t, &m, 1-b)
+	}
+	for i := 0; i < 16; i++ {
+		out[2*i] = byte(t[i] & 0xff)
+		out[2*i+1] = byte(t[i] >> 8)
+	}
+}
+
+func unpack(o *fe, n []byte) {
+	for i := 0; i < 16; i++ {
+		o[i] = int(n[2*i]) + int(n[2*i+1])*256
+	}
+	o[15] = o[15] & 0x7fff
+}
+
+func add(o, a, b *fe) {
+	for i := 0; i < 16; i++ {
+		o[i] = a[i] + b[i]
+	}
+}
+
+func sub(o, a, b *fe) {
+	for i := 0; i < 16; i++ {
+		o[i] = a[i] - b[i]
+	}
+}
+
+func mul(o, a, b *fe) {
+	t := [31]int{}
+	for i := 0; i < 16; i++ {
+		for j := 0; j < 16; j++ {
+			t[i+j] = t[i+j] + a[i]*b[j]
+		}
+	}
+	for i := 0; i < 15; i++ {
+		t[i] = t[i] + 38*t[i+16]
+	}
+	for i := 0; i < 16; i++ {
+		o[i] = t[i]
+	}
+	carry(o)
+	carry(o)
+}
+
+func square(o, a *fe) {
+	mul(o, a, a)
+}
+
+// invert sets o to i^(p-2), the inverse of i (0 for 0).
+func invert(o, i *fe) {
+	c := *i
+	for a := 253; a >= 0; a-- {
+		square(&c, &c)
+		if a != 2 && a != 4 {
+			mul(&c, &c, i)
+		}
+	}
+	*o = c
+}
+
+func scalarMult(out, n, p []byte) {
+	z := make([]byte, 32)
+	copy(z, n)
+	z[31] = (n[31] & 127) | 64
+	z[0] = z[0] & 248
+	x := fe{}
+	unpack(&x, p)
+	a, b, c, d, e, f := fe{}, x, fe{}, fe{}, fe{}, fe{}
+	a[0] = 1
+	d[0] = 1
+	k := fe{}
+	k[0], k[1] = 0xdb41, 1
+	for i := 254; i >= 0; i-- {
+		r := int((z[i>>3] >> (i & 7)) & 1)
+		sel(&a, &b, r)
+		sel(&c, &d, r)
+		add(&e, &a, &c)
+		sub(&a, &a, &c)
+		add(&c, &b, &d)
+		sub(&b, &b, &d)
+		square(&d, &e)
+		square(&f, &a)
+		mul(&a, &c, &a)
+		mul(&c, &b, &e)
+		add(&e, &a, &c)
+		sub(&a, &a, &c)
+		square(&b, &a)
+		sub(&c, &d, &f)
+		mul(&a, &c, &k)
+		add(&a, &a, &d)
+		mul(&c, &c, &a)
+		mul(&a, &d, &f)
+		mul(&d, &b, &x)
+		square(&b, &e)
+		sel(&a, &b, r)
+		sel(&c, &d, r)
+	}
+	invert(&c, &c)
+	mul(&a, &a, &c)
+	pack(out, &a)
+}
+
+// X25519 returns the result of the scalar multiplication (scalar * point), according to
+// RFC 7748, Section 5. scalar and point must be 32 bytes; an all-zero result (a low order
+// point) is an error.
+func X25519(scalar, point []byte) ([]byte, error) {
+	if len(scalar) != ScalarSize {
+		return []byte{}, errors.New("bad scalar length: " + strconv.Itoa(len(scalar)) + ", expected " + strconv.Itoa(ScalarSize))
+	}
+	if len(point) != PointSize {
+		return []byte{}, errors.New("bad point length: " + strconv.Itoa(len(point)) + ", expected " + strconv.Itoa(PointSize))
+	}
+	out := make([]byte, 32)
+	scalarMult(out, scalar, point)
+	var acc byte = 0
+	for i := 0; i < 32; i++ {
+		acc = acc | out[i]
+	}
+	if acc == 0 {
+		return []byte{}, errors.New("bad input point: low order point")
+	}
+	return out, nil
+}

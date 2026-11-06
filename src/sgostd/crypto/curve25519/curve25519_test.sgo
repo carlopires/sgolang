@@ -1,0 +1,45 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package curve25519
+
+import (
+	"sgo"
+	"std/encoding/hex"
+)
+
+func unhex(s string) []byte {
+	b, _ := hex.DecodeString(s)
+	return b
+}
+
+// RFC 7748 section 6.1: both public keys and the shared secret.
+func TestRFC7748(t *sgo.T) error {
+	a := unhex("77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a")
+	b := unhex("5dab087e624a8a4b79e17f8b83800ee66f3bb1292618b6fd1c2f8b27ff88e0eb")
+	pa, _ := X25519(a, Basepoint())
+	pb, _ := X25519(b, Basepoint())
+	if hex.EncodeToString(pa) != "8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a" {
+		return sgo.NewError("alice public")
+	}
+	if hex.EncodeToString(pb) != "de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f" {
+		return sgo.NewError("bob public")
+	}
+	s1, _ := X25519(a, pb)
+	s2, _ := X25519(b, pa)
+	if hex.EncodeToString(s1) != "4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742" || hex.EncodeToString(s2) != hex.EncodeToString(s1) {
+		return sgo.NewError("shared")
+	}
+	return nil
+}
+
+func TestErrors(t *sgo.T) error {
+	if _, err := X25519(make([]byte, 31), Basepoint()); err == nil || err.Error() != "bad scalar length: 31, expected 32" {
+		return sgo.NewError("scalar length")
+	}
+	if _, err := X25519(make([]byte, 32), make([]byte, 32)); err == nil || err.Error() != "bad input point: low order point" {
+		return sgo.NewError("low order")
+	}
+	return nil
+}

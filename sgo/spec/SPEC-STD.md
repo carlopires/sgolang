@@ -420,3 +420,69 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **implementation_coverage:** `src/sgostd/crypto/hkdf/`.
 - **executed_evidence:** PENDING: W26.
 - **supported_execution_configurations:** production, lab.
+
+### SGO-STD-020 — `std/crypto/cipher`: the AEAD interface
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-IFACE-001, SGO-STD-011; D197.
+- **grammar_and_types:** The package `std/crypto/cipher` exports exactly: `type AEAD`. `AEAD` is the interface with the methods `NonceSize() int`, `Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, error)`, `Overhead() int` and `Seal(dst, nonce, plaintext, additionalData []byte) []byte`; any type with those methods implements it (SGO-IFACE-001).
+- **preconditions:** None.
+- **evaluation_and_value_semantics:** The interface declares no behaviour of its own. AEADs of std/crypto meet this contract: `Seal` appends the ciphertext and tag of `plaintext` under `nonce` and `additionalData` to `dst`; `Open` checks the tag and appends the plaintext to `dst`, or returns an error and appends nothing; `NonceSize` and `Overhead` are the nonce and tag lengths in bytes.
+- **ownership_and_lifecycle:** n/a: the package has no values.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a: the package has no state.
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** n/a: the package has no functions.
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003.
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-chacha20poly1305-basic; `src/sgostd/crypto/cipher` package test (a user type implements `AEAD`).
+- **negative_tests:** n/a: the package has no functions.
+- **implementation_coverage:** `src/sgostd/crypto/cipher/`.
+- **executed_evidence:** PENDING: W26.
+- **supported_execution_configurations:** production, lab.
+
+### SGO-STD-021 — `std/crypto/chacha20poly1305`: the ChaCha20-Poly1305 AEAD
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-STD-001, SGO-STD-011, SGO-STD-014, SGO-STD-020, SGO-TYPE-009; D197.
+- **grammar_and_types:** The package `std/crypto/chacha20poly1305` exports exactly: `const KeySize`; `const NonceSize`; `const Overhead`; `func (*aead) NonceSize() int`; `func (*aead) Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, error)`; `func (*aead) Overhead() int`; `func (*aead) Seal(dst, nonce, plaintext, additionalData []byte) []byte`; `func New(key []byte) (cipher.AEAD, error)`. The returned AEAD is task-local (SGO-COMP-007).
+- **preconditions:** None.
+- **evaluation_and_value_semantics:** The AEAD of RFC 8439 with a 32-byte key, a 12-byte nonce and a 16-byte tag, giving the results of Go's golang.org/x/crypto/chacha20poly1305: `Seal` appends ChaCha20 ciphertext (block counter from 1) and the Poly1305 tag over the padded additional data, the padded ciphertext and their lengths; `Open` recomputes the tag, compares it in time that depends only on the lengths, and decrypts only on a match. No branch and no table index depends on the key, the data or the tags.
+- **ownership_and_lifecycle:** An AEAD keeps its own copy of the key and is owned by the task that made it; results are new or appended slices.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a: the package has no state.
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** `New` fails with the error text `chacha20poly1305: bad key length` for a key that is not 32 bytes. `Open` fails with the error text `chacha20poly1305: message authentication failed`, appending nothing, for a message shorter than the tag or with a tag that does not match. `Seal` and `Open` with a nonce that is not 12 bytes fail as SGO-ERR-003 with Go's panic text.
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003.
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-chacha20poly1305-basic; `src/sgostd/crypto/chacha20poly1305` package tests (RFC 8439 section 2.8.2, round trip, refusals); Wycheproof vectors of Go's own tests (github.com/c2sp/wycheproof at the version in src/crypto/internal/cryptotest/wycheproof/schemaversion.go) via `.work/w26/wyche_aead.py`: 316 of 316 vectors with 32-byte keys and 12-byte nonces agree, invalid tags refused.
+- **negative_tests:** n/a: refusals are error values; package test TestOpen and the Wycheproof invalid vectors check them.
+- **implementation_coverage:** `src/sgostd/crypto/chacha20poly1305/`.
+- **executed_evidence:** PENDING: W26.
+- **supported_execution_configurations:** production, lab.
+
+### SGO-STD-022 — `std/crypto/curve25519`: the X25519 function
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-STD-001, SGO-STD-011; D197.
+- **grammar_and_types:** The package `std/crypto/curve25519` exports exactly: `const PointSize`; `const ScalarSize`; `func Basepoint() []byte`; `func X25519(scalar, point []byte) ([]byte, error)`.
+- **preconditions:** None.
+- **evaluation_and_value_semantics:** X25519 of RFC 7748 section 5, giving the results of Go's golang.org/x/crypto/curve25519: the scalar is clamped, the top bit of the point is ignored, a non-canonical point is reduced, and the result is the u-coordinate of the scalar multiple as 32 bytes. `Basepoint` returns a new slice holding the u-coordinate 9. The ladder swaps with masks; no branch and no table index depends on the scalar or the point.
+- **ownership_and_lifecycle:** Results are new slices.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a: the package has no state.
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** `X25519` fails, returning an empty slice, with the error texts `bad scalar length: N, expected 32` and `bad point length: N, expected 32` for other lengths, and `bad input point: low order point` when the result is all zeros.
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003.
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-chacha20poly1305-basic; `src/sgostd/crypto/curve25519` package tests (RFC 7748 section 6.1, refusals); Wycheproof vectors of Go's own tests (github.com/c2sp/wycheproof at the version in src/crypto/internal/cryptotest/wycheproof/schemaversion.go) via `.work/w26/wyche_x25519.py`: 518 of 518 vectors agree, every all-zero result refused.
+- **negative_tests:** n/a: refusals are error values; package test TestErrors and the Wycheproof low order vectors check them.
+- **implementation_coverage:** `src/sgostd/crypto/curve25519/`.
+- **executed_evidence:** PENDING: W26.
+- **supported_execution_configurations:** production, lab.

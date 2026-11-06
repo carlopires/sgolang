@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-020",
+  "SGO-STD-021",
+  "SGO-STD-022"
+ ],
+ "exit": 0,
+ "stdout": "4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742\nhello\nchacha20poly1305: message authentication failed\n"
+}
