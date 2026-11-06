@@ -508,3 +508,47 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **implementation_coverage:** `src/sgostd/crypto/ed25519/`.
 - **executed_evidence:** PENDING: W27.
 - **supported_execution_configurations:** production, lab.
+
+### SGO-STD-024 — `std/crypto/bigmod`: arithmetic modulo an odd number
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-STD-001, SGO-STD-011, SGO-TYPE-009; D199.
+- **grammar_and_types:** The package `std/crypto/bigmod` exports exactly: `func (*Modulus) BitLen() int`; `func (*Modulus) Nat() *Nat`; `func (*Modulus) Size() int`; `func (*Nat) Add(y *Nat, m *Modulus) *Nat`; `func (*Nat) Bytes(m *Modulus) []byte`; `func (*Nat) Equal(y *Nat) int`; `func (*Nat) Exp(x *Nat, e []byte, m *Modulus) *Nat`; `func (*Nat) ExpShortVarTime(x *Nat, e uint64, m *Modulus) *Nat`; `func (*Nat) IsZero() int`; `func (*Nat) Mul(y *Nat, m *Modulus) *Nat`; `func (*Nat) SetBytes(b []byte, m *Modulus) (*Nat, error)`; `func (*Nat) SetOverflowingBytes(b []byte, m *Modulus) (*Nat, error)`; `func (*Nat) SetUint(y uint64, m *Modulus) (*Nat, error)`; `func (*Nat) Sub(y *Nat, m *Modulus) *Nat`; `func NewModulus(b []byte) (*Modulus, error)`; `func NewNat() *Nat`; `type Modulus`; `type Nat`. A `*Nat` and a `*Modulus` are task-local (SGO-COMP-007).
+- **preconditions:** None.
+- **evaluation_and_value_semantics:** Exact modular arithmetic on natural numbers below an odd modulus greater than one, the modulus given as big-endian bytes; the results equal those of Go's math/big (`Add`, `Sub`, `Mul`, `Exp` and `Mod` of the inputs). Numbers are little-endian `uint64` limbs as long as the modulus, every wrapping operation goes through std/bits, and multiplication is Montgomery's. `Add`, `Sub`, `Mul`, `Exp`, `Equal`, `IsZero`, `SetBytes` and `SetOverflowingBytes` take the same branches and indices for all values of one size; `ExpShortVarTime` takes time that depends on its exponent. The methods that set a number change their receiver and return it.
+- **ownership_and_lifecycle:** A number is owned by the task that made it; `Bytes` and `Nat` return new values.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a: the package has no state.
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** `NewModulus` fails with `bigmod: modulus must be odd and greater than one`; `SetBytes` and `SetUint` fail for a value not below the modulus, and `SetOverflowingBytes` for a value longer in bits than the modulus; on failure the receiver is unchanged.
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003.
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-ecdsa-basic; `src/sgostd/crypto/bigmod` package tests; `sgo/scripts/test-std-crypto.py`: 93 cases per seed (random odd moduli of 1 to 2048 bits, the P-256 and P-384 primes and orders) times Add, Sub, Mul, Exp, ExpShortVarTime and SetOverflowingBytes, identical to math/big on seeds 1 to 3.
+- **negative_tests:** n/a: refusals are error values; package test TestRefusals checks them.
+- **implementation_coverage:** `src/sgostd/crypto/bigmod/`.
+- **executed_evidence:** PENDING: W27.
+- **supported_execution_configurations:** production, lab.
+
+### SGO-STD-025 — `std/crypto/ecdsa`: ECDSA verification on P-256 and P-384
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-STD-015, SGO-STD-016, SGO-STD-024; D199.
+- **grammar_and_types:** The package `std/crypto/ecdsa` exports exactly: `func P256() *Curve`; `func P384() *Curve`; `func Verify(c *Curve, pub []byte, hash []byte, r []byte, s []byte) bool`; `func VerifyASN1(c *Curve, pub []byte, hash []byte, sig []byte) bool`; `type Curve`. A public key is the uncompressed point encoding `0x04 || X || Y`; `r` and `s` are big-endian.
+- **preconditions:** None.
+- **evaluation_and_value_semantics:** ECDSA verification of FIPS 186-5 on the curves P-256 and P-384, giving the results of Go's crypto/ecdsa `Verify` and `VerifyASN1`: the hash is truncated to the bit length of the order and reduced, `r` and `s` must lie in [1, n-1], the key must be a point on the curve with coordinates below p, and the signature holds when the x-coordinate of `u1*G + u2*Q`, reduced mod n, equals `r`. `VerifyASN1` reads a DER SEQUENCE of two non-negative, minimally encoded INTEGERs and refuses any other encoding or trailing bytes. Verification uses only public values, and its time may depend on them; point arithmetic uses the complete addition formulas for a = -3 (Renes, Costello and Batina).
+- **ownership_and_lifecycle:** A curve is owned by the task that made it; the package keeps no state.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a: the package has no state.
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** No function fails: an invalid key, encoding, or signature is the result false.
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003.
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-ecdsa-basic; `src/sgostd/crypto/ecdsa` package test; Wycheproof vectors of Go's own tests (github.com/c2sp/wycheproof at the version in src/crypto/internal/cryptotest/wycheproof/schemaversion.go) via `sgo/scripts/test-std-crypto.py`: 3748 of 3748 vectors agree (P-256 with SHA-256 and SHA-512, P-384 with SHA-256, SHA-384 and SHA-512, DER and IEEE P1363 encodings).
+- **negative_tests:** n/a: refusals are false results; the package test and the Wycheproof invalid vectors (bad encodings, modified signatures, out-of-range r and s) check them.
+- **implementation_coverage:** `src/sgostd/crypto/ecdsa/`.
+- **executed_evidence:** PENDING: W27.
+- **supported_execution_configurations:** production, lab.

@@ -1,0 +1,365 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package bigmod implements arithmetic modulo an odd modulus on natural numbers of fixed size
+// (SGO-STD-024, D199), for ECDSA and RSA. Numbers are little-endian uint64 limbs as long as the
+// modulus; multiplication is Montgomery's (CIOS), and Add, Sub, Mul and Exp take the same
+// branches and indices for every value of the same size. Functions named VarTime may take time
+// that depends on their arguments and are for public values only.
+package bigmod
+
+import (
+	"std/bits"
+	"std/errors"
+)
+
+// A Modulus is an odd number greater than one.
+type Modulus struct {
+	n      []uint64
+	m0inv  uint64
+	rr     []uint64
+	bitLen int
+}
+
+// A Nat is a natural number below the modulus it was made with.
+type Nat struct {
+	limbs []uint64
+}
+
+// NewModulus returns the modulus whose big-endian encoding is b (leading zeros allowed). An even
+// number, zero or one is an error.
+func NewModulus(b []byte) (*Modulus, error) {
+	n := limbsFromBytes(b)
+	n = trim(n)
+	if len(n) == 0 || n[0]&1 == 0 || (len(n) == 1 && n[0] == 1) {
+		return nil, errors.New("bigmod: modulus must be odd and greater than one")
+	}
+	m := &Modulus{n: n, bitLen: (len(n)-1)*64 + bits.Len64(n[len(n)-1])}
+	m.m0inv = minusInverseModW(n[0])
+	m.rr = rrFor(m)
+	return m, nil
+}
+
+// BitLen returns the length of the modulus in bits.
+func (m *Modulus) BitLen() int {
+	return m.bitLen
+}
+
+// Size returns the length of the modulus in bytes.
+func (m *Modulus) Size() int {
+	return (m.bitLen + 7) / 8
+}
+
+// Nat returns the modulus as a Nat; it is not a value below the modulus, so it is only for
+// comparison and Bytes.
+func (m *Modulus) Nat() *Nat {
+	l := make([]uint64, len(m.n))
+	copy(l, m.n)
+	return &Nat{limbs: l}
+}
+
+func limbsFromBytes(b []byte) []uint64 {
+	n := (len(b) + 7) / 8
+	l := make([]uint64, n)
+	for i := 0; i < len(b); i++ {
+		k := len(b) - 1 - i
+		l[k/8] = l[k/8] | uint64(b[i])<<(8*(k%8))
+	}
+	return l
+}
+
+func trim(l []uint64) []uint64 {
+	for len(l) > 0 && l[len(l)-1] == 0 {
+		l = l[:len(l)-1]
+	}
+	return l
+}
+
+func minusInverseModW(x uint64) uint64 {
+	y := x
+	for i := 0; i < 5; i++ {
+		_, xy := bits.Mul64(x, y)
+		t, _ := bits.Sub64(2, xy, 0)
+		_, y = bits.Mul64(y, t)
+	}
+	r, _ := bits.Sub64(0, y, 0)
+	return r
+}
+
+// mask returns all ones if c is 1 and zero if c is 0.
+func mask(c uint64) uint64 {
+	m, _ := bits.Sub64(0, c, 0)
+	return m
+}
+
+// addVV sets z = x + y and returns the carry.
+func addVV(z, x, y []uint64) uint64 {
+	var c uint64 = 0
+	for i := 0; i < len(z); i++ {
+		z[i], c = bits.Add64(x[i], y[i], c)
+	}
+	return c
+}
+
+// subVV sets z = x - y and returns the borrow.
+func subVV(z, x, y []uint64) uint64 {
+	var b uint64 = 0
+	for i := 0; i < len(z); i++ {
+		z[i], b = bits.Sub64(x[i], y[i], b)
+	}
+	return b
+}
+
+// selectInto sets z to y where c is 1 and leaves it where c is 0.
+func selectInto(z, y []uint64, c uint64) {
+	m := mask(c)
+	for i := 0; i < len(z); i++ {
+		z[i] = (z[i] &^ m) | (y[i] & m)
+	}
+}
+
+// modAdd sets z = x + y mod n, for x, y < n.
+func modAdd(z, x, y, n []uint64) {
+	t := make([]uint64, len(n))
+	c := addVV(t, x, y)
+	u := make([]uint64, len(n))
+	b := subVV(u, t, n)
+	// subtract when the sum overflowed or t >= n
+	need := c | (1 ^ b)
+	copy(z, t)
+	selectInto(z, u, need)
+}
+
+// modSub sets z = x - y mod n, for x, y < n.
+func modSub(z, x, y, n []uint64) {
+	t := make([]uint64, len(n))
+	b := subVV(t, x, y)
+	u := make([]uint64, len(n))
+	_ = addVV(u, t, n)
+	copy(z, t)
+	selectInto(z, u, b)
+}
+
+// rrFor returns R*R mod n, R = 2^(64*len(n)), by doubling 1 that many times.
+func rrFor(m *Modulus) []uint64 {
+	x := make([]uint64, len(m.n))
+	x[0] = 1
+	if len(m.n) == 1 && m.n[0] == 1 {
+		return x
+	}
+	for i := 0; i < 2*64*len(m.n); i++ {
+		modAdd(x, x, x, m.n)
+	}
+	return x
+}
+
+// montMul sets z = x * y * R^-1 mod n (CIOS), for x, y < n.
+func montMul(z, x, y []uint64, m *Modulus) {
+	n := m.n
+	k := len(n)
+	t := make([]uint64, k+2)
+	for i := 0; i < k; i++ {
+		var c uint64 = 0
+		for j := 0; j < k; j++ {
+			hi, lo := bits.Mul64(x[j], y[i])
+			s, c1 := bits.Add64(t[j], lo, 0)
+			s, c2 := bits.Add64(s, c, 0)
+			t[j] = s
+			c = hi + c1 + c2
+		}
+		var c3 uint64 = 0
+		t[k], c3 = bits.Add64(t[k], c, 0)
+		t[k+1] = c3
+		_, q := bits.Mul64(t[0], m.m0inv)
+		hi, lo := bits.Mul64(q, n[0])
+		_, c4 := bits.Add64(t[0], lo, 0)
+		c = hi + c4
+		for j := 1; j < k; j++ {
+			hi2, lo2 := bits.Mul64(q, n[j])
+			s, c5 := bits.Add64(t[j], lo2, 0)
+			s, c6 := bits.Add64(s, c, 0)
+			t[j-1] = s
+			c = hi2 + c5 + c6
+		}
+		var c7 uint64 = 0
+		t[k-1], c7 = bits.Add64(t[k], c, 0)
+		t[k] = t[k+1] + c7
+	}
+	u := make([]uint64, k)
+	b := subVV(u, t[:k], n)
+	// t < 2n: subtract n when t[k] carries or t[:k] >= n
+	need := t[k] | (1 ^ b)
+	copy(z, t[:k])
+	selectInto(z, u, need)
+}
+
+// NewNat returns a new number, to be set with SetBytes, SetOverflowingBytes or SetUint.
+func NewNat() *Nat {
+	return &Nat{limbs: []uint64{}}
+}
+
+func (x *Nat) resetFor(m *Modulus) {
+	if len(x.limbs) != len(m.n) {
+		x.limbs = make([]uint64, len(m.n))
+	}
+}
+
+func (x *Nat) setLimbs(l []uint64, m *Modulus) {
+	x.limbs = make([]uint64, len(m.n))
+	copy(x.limbs, l)
+}
+
+func lessThan(x, n []uint64) bool {
+	t := make([]uint64, len(n))
+	return subVV(t, x, n) == 1
+}
+
+// SetBytes sets x to the big-endian value b, which must have at most the modulus's length in
+// bytes and be below the modulus; otherwise it is an error and x is unchanged.
+func (x *Nat) SetBytes(b []byte, m *Modulus) (*Nat, error) {
+	if len(b) > m.Size() {
+		return nil, errors.New("bigmod: input too large")
+	}
+	l := limbsFromBytes(b)
+	full := make([]uint64, len(m.n))
+	copy(full, l)
+	if !lessThan(full, m.n) {
+		return nil, errors.New("bigmod: input overflows the modulus")
+	}
+	x.limbs = full
+	return x, nil
+}
+
+// SetOverflowingBytes sets x to the big-endian value b reduced modulo m. b must have at most
+// the modulus's length in bits; a longer value is an error.
+func (x *Nat) SetOverflowingBytes(b []byte, m *Modulus) (*Nat, error) {
+	l := trim(limbsFromBytes(b))
+	if len(l) > len(m.n) || (len(l) == len(m.n) && bits.Len64(l[len(l)-1]) > bits.Len64(m.n[len(m.n)-1])) {
+		return nil, errors.New("bigmod: input overflows the modulus size")
+	}
+	full := make([]uint64, len(m.n))
+	copy(full, l)
+	u := make([]uint64, len(m.n))
+	bw := subVV(u, full, m.n)
+	selectInto(full, u, 1^bw)
+	x.limbs = full
+	return x, nil
+}
+
+// SetUint sets x to y, which must be below the modulus.
+func (x *Nat) SetUint(y uint64, m *Modulus) (*Nat, error) {
+	l := make([]uint64, len(m.n))
+	l[0] = y
+	if !lessThan(l, m.n) {
+		return nil, errors.New("bigmod: input overflows the modulus")
+	}
+	x.limbs = l
+	return x, nil
+}
+
+// Bytes returns x as big-endian bytes of the modulus's length in bytes.
+func (x *Nat) Bytes(m *Modulus) []byte {
+	out := make([]byte, m.Size())
+	for i := 0; i < len(out); i++ {
+		k := len(out) - 1 - i
+		if k/8 < len(x.limbs) {
+			out[i] = byte((x.limbs[k/8] >> (8 * (k % 8))) & 0xff)
+		}
+	}
+	return out
+}
+
+// Equal returns 1 if x and y are equal and 0 otherwise.
+func (x *Nat) Equal(y *Nat) int {
+	if len(x.limbs) != len(y.limbs) {
+		return 0
+	}
+	var d uint64 = 0
+	for i := 0; i < len(x.limbs); i++ {
+		d = d | (x.limbs[i] ^ y.limbs[i])
+	}
+	if d == 0 {
+		return 1
+	}
+	return 0
+}
+
+// IsZero returns 1 if x is zero and 0 otherwise.
+func (x *Nat) IsZero() int {
+	var d uint64 = 0
+	for i := 0; i < len(x.limbs); i++ {
+		d = d | x.limbs[i]
+	}
+	if d == 0 {
+		return 1
+	}
+	return 0
+}
+
+// Add sets x = x + y mod m.
+func (x *Nat) Add(y *Nat, m *Modulus) *Nat {
+	modAdd(x.limbs, x.limbs, y.limbs, m.n)
+	return x
+}
+
+// Sub sets x = x - y mod m.
+func (x *Nat) Sub(y *Nat, m *Modulus) *Nat {
+	modSub(x.limbs, x.limbs, y.limbs, m.n)
+	return x
+}
+
+// Mul sets x = x * y mod m.
+func (x *Nat) Mul(y *Nat, m *Modulus) *Nat {
+	t := make([]uint64, len(m.n))
+	montMul(t, x.limbs, y.limbs, m)
+	montMul(x.limbs, t, m.rr, m)
+	return x
+}
+
+// Exp sets out = x^e mod m, e being big-endian bytes of any length; every bit of e takes the
+// same operations.
+func (out *Nat) Exp(x *Nat, e []byte, m *Modulus) *Nat {
+	k := len(m.n)
+	xm := make([]uint64, k)
+	montMul(xm, x.limbs, m.rr, m)
+	one := make([]uint64, k)
+	one[0] = 1
+	acc := make([]uint64, k)
+	montMul(acc, one, m.rr, m)
+	t := make([]uint64, k)
+	for i := 0; i < len(e); i++ {
+		for j := 7; j >= 0; j-- {
+			montMul(acc, acc, acc, m)
+			montMul(t, acc, xm, m)
+			selectInto(acc, t, uint64((e[i]>>j)&1))
+		}
+	}
+	out.limbs = make([]uint64, k)
+	montMul(out.limbs, acc, one, m)
+	return out
+}
+
+// ExpShortVarTime sets out = x^e mod m; its time depends on e, which must be public.
+func (out *Nat) ExpShortVarTime(x *Nat, e uint64, m *Modulus) *Nat {
+	k := len(m.n)
+	xm := make([]uint64, k)
+	montMul(xm, x.limbs, m.rr, m)
+	one := make([]uint64, k)
+	one[0] = 1
+	acc := make([]uint64, k)
+	copy(acc, xm)
+	for j := bits.Len64(e) - 2; j >= 0; j-- {
+		montMul(acc, acc, acc, m)
+		if (e>>j)&1 == 1 {
+			montMul(acc, acc, xm, m)
+		}
+	}
+	out.limbs = make([]uint64, k)
+	if e == 0 {
+		copy(out.limbs, one)
+		return out
+	}
+	montMul(out.limbs, acc, one, m)
+	return out
+}

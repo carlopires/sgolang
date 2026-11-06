@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-024",
+  "SGO-STD-025"
+ ],
+ "exit": 0,
+ "stdout": "valid\nother message refused\n56\n"
+}

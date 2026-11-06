@@ -483,6 +483,116 @@ def gen_ed25519(rnd):
     return gosrc, sgosrc
 
 
+def gen_bigmod(rnd):
+    pass
+    P256 = 2**256 - 2**224 + 2**192 + 2**96 - 1
+    N256 = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
+    P384 = 2**384 - 2**128 - 2**96 + 2**32 - 1
+    N384 = 0xffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973
+    mods = [P256, N256, P384, N384, 3, 2**64 - 59, 2**64 + 13]
+    for bitsz in [1, 7, 63, 64, 65, 127, 128, 129, 255, 511, 1024, 2047, 2048]:
+        for _ in range(2):
+            m = rnd.getrandbits(bitsz) | (1 << (bitsz - 1)) | 1
+            if m > 1: mods.append(m)
+    def b(v, n=None):
+        n = n if n is not None else (v.bit_length() + 7) // 8
+        return v.to_bytes(n, 'big')
+    cases = []
+    for m in mods:
+        size = (m.bit_length() + 7) // 8
+        for _ in range(3):
+            x, y = rnd.randrange(m), rnd.randrange(m)
+            e = rnd.getrandbits(rnd.choice([1, 8, 64, 256]))
+            over = rnd.getrandbits(m.bit_length())
+            cases.append((m, x, y, e, over, size))
+    def lit(bs): return '[]byte{' + ', '.join(map(str, bs)) + '}'
+    rows = ', '.join('{%s, %s, %s, %s, %s}' % (lit(b(m)), lit(b(x, s)), lit(b(y, s)), lit(b(e)), lit(b(over))) for m, x, y, e, over, s in cases)
+    gosrc = '''package main
+
+    import (
+    	"encoding/hex"
+    	"fmt"
+    	"math/big"
+    	"strings"
+    )
+
+    type tc struct{ m, x, y, e, over []byte }
+
+    func fixed(v *big.Int, n int) string {
+    	out := make([]byte, n)
+    	v.FillBytes(out)
+    	return hex.EncodeToString(out)
+    }
+
+    func main() {
+    	out := []string{}
+    	cs := []tc{%s}
+    	for _, c := range cs {
+    		m := new(big.Int).SetBytes(c.m)
+    		n := (m.BitLen() + 7) / 8
+    		x := new(big.Int).SetBytes(c.x)
+    		y := new(big.Int).SetBytes(c.y)
+    		e := new(big.Int).SetBytes(c.e)
+    		over := new(big.Int).SetBytes(c.over)
+    		add := new(big.Int).Mod(new(big.Int).Add(x, y), m)
+    		sub := new(big.Int).Mod(new(big.Int).Sub(x, y), m)
+    		mul := new(big.Int).Mod(new(big.Int).Mul(x, y), m)
+    		exp := new(big.Int).Exp(x, e, m)
+    		f4 := new(big.Int).Exp(x, big.NewInt(65537), m)
+    		red := new(big.Int).Mod(over, m)
+    		out = append(out, strings.Join([]string{fixed(add, n), fixed(sub, n), fixed(mul, n), fixed(exp, n), fixed(f4, n), fixed(red, n)}, " "))
+    	}
+    	fmt.Print(strings.Join(out, "\\n") + "\\n")
+    }
+    ''' % rows
+    sgosrc = '''package main
+
+    import (
+    	"std/crypto/bigmod"
+    	"sgo"
+    	"std/encoding/hex"
+    	"std/strings"
+    )
+
+    type tc struct {
+    	m    []byte
+    	x    []byte
+    	y    []byte
+    	e    []byte
+    	over []byte
+    }
+
+    func main(root *sgo.Context) error {
+    	out := []string{}
+    	cs := []tc{%s}
+    	for _, c := range cs {
+    		m, err := bigmod.NewModulus(c.m)
+    		if err != nil {
+    			return err
+    		}
+    		x, _ := bigmod.NewNat().SetBytes(c.x, m)
+    		y, _ := bigmod.NewNat().SetBytes(c.y, m)
+    		a, _ := bigmod.NewNat().SetBytes(c.x, m)
+    		s, _ := bigmod.NewNat().SetBytes(c.x, m)
+    		p, _ := bigmod.NewNat().SetBytes(c.x, m)
+    		a.Add(y, m)
+    		s.Sub(y, m)
+    		p.Mul(y, m)
+    		ex := bigmod.NewNat().Exp(x, c.e, m)
+    		f4 := bigmod.NewNat().ExpShortVarTime(x, 65537, m)
+    		red, rerr := bigmod.NewNat().SetOverflowingBytes(c.over, m)
+    		r := "error"
+    		if rerr == nil {
+    			r = hex.EncodeToString(red.Bytes(m))
+    		}
+    		out = append(out, strings.Join([]string{hex.EncodeToString(a.Bytes(m)), hex.EncodeToString(s.Bytes(m)), hex.EncodeToString(p.Bytes(m)), hex.EncodeToString(ex.Bytes(m)), hex.EncodeToString(f4.Bytes(m)), r}, " "))
+    	}
+    	return root.Stdout().WriteString(strings.Join(out, "\\n") + "\\n")
+    }
+    ''' % rows
+    return gosrc, sgosrc
+
+
 def wyche_hmac_hkdf(WP):
     rows = []
     for bits, pkg, ctor in ((256, 'sha256', 'sha256.New'), (384, 'sha512', 'sha512.New384'), (512, 'sha512', 'sha512.New')):
@@ -681,6 +791,92 @@ def wyche_x25519(WP):
     return src
 
 
+def wyche_ecdsa(WP):
+    files = [(f, 'P256' if 'secp256r1' in f else 'P384', f.split('_')[2], f.endswith('_p1363_test.json')) for f in sorted(os.listdir(WP)) if f.startswith(('ecdsa_secp256r1_sha', 'ecdsa_secp384r1_sha')) and f.endswith('_test.json') and f.split('_')[2] in ('sha256', 'sha384', 'sha512')]
+    rows = []
+    for f, curve, h, p1363 in files:
+        for g in json.load(open(os.path.join(WP, f)))['testGroups']:
+            pk = g['publicKey']['uncompressed']
+            for t in g['tests']:
+                rows.append('{"%s", "%s", %s, %d, "%s", "%s", "%s", %s}' % (curve, h, 'true' if p1363 else 'false', t['tcId'], pk, t['msg'], t['sig'], 'true' if t['result'] == 'valid' else 'false'))
+    imp_e = '"std/crypto/ecdsa"'
+    src = '''package main
+
+    import (
+    	%s
+    	"sgo"
+    	"std/crypto/sha256"
+    	"std/crypto/sha512"
+    	"std/encoding/hex"
+    	"std/strconv"
+    )
+
+    type vector struct {
+    	curve string
+    	hash  string
+    	p1363 bool
+    	id    int
+    	pk    string
+    	msg   string
+    	sig   string
+    	valid bool
+    }
+
+    func unhex(s string) []byte {
+    	b, _ := hex.DecodeString(s)
+    	return b
+    }
+
+    func digest(name string, msg []byte) []byte {
+    	if name == "sha256" {
+    		d := sha256.Sum256(msg)
+    		return d[:]
+    	}
+    	if name == "sha384" {
+    		d := sha512.Sum384(msg)
+    		return d[:]
+    	}
+    	d := sha512.Sum512(msg)
+    	return d[:]
+    }
+
+    func main(root *sgo.Context) error {
+    	vs := []vector{%s}
+    	p256 := ecdsa.P256()
+    	p384 := ecdsa.P384()
+    	pass := 0
+    	bad := ""
+    	for _, v := range vs {
+    		c := p256
+    		if v.curve == "P384" {
+    			c = p384
+    		}
+    		h := digest(v.hash, unhex(v.msg))
+    		sig := unhex(v.sig)
+    		got := false
+    		if v.p1363 {
+    			size := 32
+    			if v.curve == "P384" {
+    				size = 48
+    			}
+    			if len(sig) == 2*size {
+    				got = ecdsa.Verify(c, unhex(v.pk), h, sig[:len(sig)/2], sig[len(sig)/2:])
+    			}
+    		} else {
+    			got = ecdsa.VerifyASN1(c, unhex(v.pk), h, sig)
+    		}
+    		if got == v.valid {
+    			pass++
+    		} else {
+    			bad = bad + " " + v.curve + "/" + v.hash + "#" + strconv.Itoa(v.id)
+    		}
+    	}
+    	return root.Stdout().WriteString("wycheproof ecdsa: " + strconv.Itoa(pass) + " of " + strconv.Itoa(len(vs)) + " agree" + bad + "\\n")
+    }
+    ''' % (imp_e, ', '.join(rows))
+    return src
+
+
 def wyche_ed25519(WP):
     rows = []
     for g in json.load(open(os.path.join(WP, 'ed25519_test.json')))['testGroups']:
@@ -734,7 +930,7 @@ def main():
     if "--seed" in sys.argv:
         seed = int(sys.argv[sys.argv.index("--seed") + 1])
     failed = False
-    for name, gen in (("bits", gen_bits), ("encoding", gen_encoding), ("sha256", gen_sha256), ("sha512", gen_sha512), ("ed25519", gen_ed25519)):
+    for name, gen in (("bits", gen_bits), ("encoding", gen_encoding), ("sha256", gen_sha256), ("sha512", gen_sha512), ("ed25519", gen_ed25519), ("bigmod", gen_bigmod)):
         gosrc, sgosrc = gen(random.Random(seed))
         g, s = run_go(gosrc), run_sgo(sgosrc)
         if g.returncode or s.returncode:
@@ -749,7 +945,7 @@ def main():
             print(f"  go : {gl[i] if i < len(gl) else None!r}\n  sgo: {sl[i] if i < len(sl) else None!r}")
             failed = True
     WP = wycheproof_dir()
-    for name, gen in (("hmac+hkdf", wyche_hmac_hkdf), ("chacha20poly1305", wyche_chacha20poly1305), ("x25519", wyche_x25519), ("ed25519", wyche_ed25519)):
+    for name, gen in (("hmac+hkdf", wyche_hmac_hkdf), ("chacha20poly1305", wyche_chacha20poly1305), ("x25519", wyche_x25519), ("ecdsa", wyche_ecdsa), ("ed25519", wyche_ed25519)):
         r = run_sgo(gen(WP))
         line = r.stdout.strip()
         print("test-std-crypto: " + (line or f"{name}: exit {r.returncode}\n{r.stderr[-1500:]}"))

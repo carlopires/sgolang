@@ -1,0 +1,27 @@
+package main
+
+import (
+	"sgo"
+	"std/crypto/bigmod"
+	"std/crypto/ecdsa"
+	"std/crypto/sha256"
+	"std/encoding/hex"
+)
+
+func main(root *sgo.Context) error {
+	pub, _ := hex.DecodeString("0404aaec73635726f213fb8a9e64da3b8632e41495a944d0045b522eba7240fad587d9315798aaa3a5ba01775787ced05eaaf7b4e09fc81d6d1aa546e8365d525d")
+	sig, _ := hex.DecodeString("3045022100b292a619339f6e567a305c951c0dcbcc42d16e47f219f9e98e76e09d8770b34a02200177e60492c5a8242f76f07bfe3661bde59ec2a17ce5bd2dab2abebdf89a62e2")
+	h := sha256.Sum256([]byte{})
+	out := ""
+	if ecdsa.VerifyASN1(ecdsa.P256(), pub, h[:], sig) {
+		out = out + "valid\n"
+	}
+	other := sha256.Sum256([]byte("other"))
+	if !ecdsa.VerifyASN1(ecdsa.P256(), pub, other[:], sig) {
+		out = out + "other message refused\n"
+	}
+	m, _ := bigmod.NewModulus([]byte{0x7f})
+	x, _ := bigmod.NewNat().SetUint(3, m)
+	y := bigmod.NewNat().ExpShortVarTime(x, 65537, m)
+	return root.Stdout().WriteString(out + hex.EncodeToString(y.Bytes(m)) + "\n")
+}

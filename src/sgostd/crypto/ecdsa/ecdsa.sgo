@@ -1,0 +1,309 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package ecdsa implements ECDSA signature verification on the NIST curves P-256 and P-384
+// (SGO-STD-025, D199), with the results of Go's crypto/ecdsa Verify and VerifyASN1. Verification
+// uses only public values; its time may depend on them. Point arithmetic uses the complete
+// addition formulas for a = -3 (Renes, Costello and Batina, 2015) on std/crypto/bigmod.
+package ecdsa
+
+import (
+	"std/crypto/bigmod"
+	"std/encoding/hex"
+)
+
+// A Curve is one of the NIST curves P-256 and P-384.
+type Curve struct {
+	p    *bigmod.Modulus
+	n    *bigmod.Modulus
+	b    *bigmod.Nat
+	gx   *bigmod.Nat
+	gy   *bigmod.Nat
+	size int
+}
+
+func unhex(s string) []byte {
+	b, _ := hex.DecodeString(s)
+	return b
+}
+
+func newCurve(p, n, b, gx, gy string) *Curve {
+	pm, _ := bigmod.NewModulus(unhex(p))
+	nm, _ := bigmod.NewModulus(unhex(n))
+	c := &Curve{p: pm, n: nm, size: pm.Size()}
+	c.b, _ = bigmod.NewNat().SetBytes(unhex(b), pm)
+	c.gx, _ = bigmod.NewNat().SetBytes(unhex(gx), pm)
+	c.gy, _ = bigmod.NewNat().SetBytes(unhex(gy), pm)
+	return c
+}
+
+// P256 returns the curve P-256 of FIPS 186-5 (secp256r1).
+func P256() *Curve {
+	return newCurve(
+		"ffffffff00000001000000000000000000000000ffffffffffffffffffffffff",
+		"ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551",
+		"5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b",
+		"6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296",
+		"4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5")
+}
+
+// P384 returns the curve P-384 of FIPS 186-5 (secp384r1).
+func P384() *Curve {
+	return newCurve(
+		"fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff",
+		"ffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973",
+		"b3312fa7e23ee7e4988e056be3f82d19181d9c6efe8141120314088f5013875ac656398d8a2ed19d2a85c8edd3ec2aef",
+		"aa87ca22be8b05378eb1c71ef320ad746e1d3b628ba79b9859f741e082542a385502f25dbf55296c3a545e3872760ab7",
+		"3617de4a96262c6f5d9e98bf9292dc29f8f41dbd289a147ce9da3113b5f0b8c00a60b1ce1d7e819d7a431d7c90ea0e5f")
+}
+
+// A point in projective coordinates (X:Y:Z); the identity is (0:1:0).
+type point struct {
+	x *bigmod.Nat
+	y *bigmod.Nat
+	z *bigmod.Nat
+}
+
+func (c *Curve) nat(v uint64) *bigmod.Nat {
+	x, _ := bigmod.NewNat().SetUint(v, c.p)
+	return x
+}
+
+func (c *Curve) copyNat(v *bigmod.Nat) *bigmod.Nat {
+	x, _ := bigmod.NewNat().SetBytes(v.Bytes(c.p), c.p)
+	return x
+}
+
+func (c *Curve) identity() *point {
+	return &point{x: c.nat(0), y: c.nat(1), z: c.nat(0)}
+}
+
+// add returns p + q (complete formulas, a = -3; Algorithm 4 of Renes, Costello, Batina).
+func (c *Curve) add(p1, p2 *point) *point {
+	m := c.p
+	t0 := c.copyNat(p1.x).Mul(p2.x, m)
+	t1 := c.copyNat(p1.y).Mul(p2.y, m)
+	t2 := c.copyNat(p1.z).Mul(p2.z, m)
+	t3 := c.copyNat(p1.x).Add(p1.y, m)
+	t4 := c.copyNat(p2.x).Add(p2.y, m)
+	t3.Mul(t4, m)
+	t4 = c.copyNat(t0).Add(t1, m)
+	t3.Sub(t4, m)
+	t4 = c.copyNat(p1.y).Add(p1.z, m)
+	x3 := c.copyNat(p2.y).Add(p2.z, m)
+	t4.Mul(x3, m)
+	x3 = c.copyNat(t1).Add(t2, m)
+	t4.Sub(x3, m)
+	x3 = c.copyNat(p1.x).Add(p1.z, m)
+	y3 := c.copyNat(p2.x).Add(p2.z, m)
+	x3.Mul(y3, m)
+	y3 = c.copyNat(t0).Add(t2, m)
+	y3 = c.copyNat(x3).Sub(y3, m)
+	z3 := c.copyNat(c.b).Mul(t2, m)
+	x3 = c.copyNat(y3).Sub(z3, m)
+	z3 = c.copyNat(x3).Add(x3, m)
+	x3.Add(z3, m)
+	z3 = c.copyNat(t1).Sub(x3, m)
+	x3 = c.copyNat(t1).Add(x3, m)
+	y3 = c.copyNat(c.b).Mul(y3, m)
+	t1 = c.copyNat(t2).Add(t2, m)
+	t2 = c.copyNat(t1).Add(t2, m)
+	y3.Sub(t2, m)
+	y3.Sub(t0, m)
+	t1 = c.copyNat(y3).Add(y3, m)
+	y3 = c.copyNat(t1).Add(y3, m)
+	t1 = c.copyNat(t0).Add(t0, m)
+	t0 = c.copyNat(t1).Add(t0, m)
+	t0.Sub(t2, m)
+	t1 = c.copyNat(t4).Mul(y3, m)
+	t2 = c.copyNat(t0).Mul(y3, m)
+	y3 = c.copyNat(x3).Mul(z3, m)
+	y3.Add(t2, m)
+	x3 = c.copyNat(t3).Mul(x3, m)
+	x3.Sub(t1, m)
+	z3 = c.copyNat(t4).Mul(z3, m)
+	t1 = c.copyNat(t3).Mul(t0, m)
+	z3.Add(t1, m)
+	return &point{x: x3, y: y3, z: z3}
+}
+
+// mul returns k * p for big-endian k; its time depends on k.
+func (c *Curve) mul(k []byte, p1 *point) *point {
+	r := c.identity()
+	for i := 0; i < len(k); i++ {
+		for j := 7; j >= 0; j-- {
+			r = c.add(r, r)
+			if (k[i]>>j)&1 == 1 {
+				r = c.add(r, p1)
+			}
+		}
+	}
+	return r
+}
+
+// decodePoint returns the point of an uncompressed encoding 0x04 || X || Y on the curve.
+func (c *Curve) decodePoint(b []byte) (*point, bool) {
+	if len(b) != 1+2*c.size || b[0] != 4 {
+		return nil, false
+	}
+	x, err := bigmod.NewNat().SetBytes(b[1:1+c.size], c.p)
+	if err != nil {
+		return nil, false
+	}
+	y, err2 := bigmod.NewNat().SetBytes(b[1+c.size:], c.p)
+	if err2 != nil {
+		return nil, false
+	}
+	// y^2 = x^3 - 3x + b
+	lhs := c.copyNat(y).Mul(y, c.p)
+	rhs := c.copyNat(x).Mul(x, c.p)
+	rhs.Mul(x, c.p)
+	three := c.copyNat(x).Add(x, c.p)
+	three.Add(x, c.p)
+	rhs.Sub(three, c.p)
+	rhs.Add(c.b, c.p)
+	if lhs.Equal(rhs) != 1 {
+		return nil, false
+	}
+	return &point{x: x, y: y, z: c.nat(1)}, true
+}
+
+// hashToNat sets e to the leftmost bits of hash, as many as the order has, reduced mod n.
+func (c *Curve) hashToNat(hash []byte) *bigmod.Nat {
+	size := c.n.Size()
+	h := hash
+	if len(h) >= size {
+		h = make([]byte, size)
+		copy(h, hash[:size])
+		excess := len(h)*8 - c.n.BitLen()
+		if excess > 0 {
+			for i := len(h) - 1; i >= 0; i-- {
+				v := int(h[i]) >> excess
+				if i > 0 {
+					v = v | ((int(h[i-1]) << (8 - excess)) & 0xff)
+				}
+				h[i] = byte(v)
+			}
+		}
+	}
+	e, _ := bigmod.NewNat().SetOverflowingBytes(h, c.n)
+	return e
+}
+
+func trimZeros(b []byte) []byte {
+	for len(b) > 0 && b[0] == 0 {
+		b = b[1:]
+	}
+	return b
+}
+
+// Verify reports whether r, s (big-endian) is a valid signature of hash by the public key pub,
+// an uncompressed point 0x04 || X || Y on c. An invalid key, r or s outside [1, n-1], and a
+// failed check are all false.
+func Verify(c *Curve, pub []byte, hash []byte, r []byte, s []byte) bool {
+	q, ok := c.decodePoint(pub)
+	if !ok {
+		return false
+	}
+	rn, err := bigmod.NewNat().SetBytes(trimZeros(r), c.n)
+	if err != nil || rn.IsZero() == 1 {
+		return false
+	}
+	sn, err2 := bigmod.NewNat().SetBytes(trimZeros(s), c.n)
+	if err2 != nil || sn.IsZero() == 1 {
+		return false
+	}
+	e := c.hashToNat(hash)
+	// w = s^(n-2) mod n
+	two, _ := bigmod.NewNat().SetUint(2, c.n)
+	nm2 := c.n.Nat()
+	nb := nm2.Bytes(c.n)
+	nmin2, _ := bigmod.NewNat().SetOverflowingBytes(nb, c.n)
+	nmin2.Sub(two, c.n)
+	w := bigmod.NewNat().Exp(sn, nmin2.Bytes(c.n), c.n)
+	u1 := e.Mul(w, c.n)
+	u2, _ := bigmod.NewNat().SetBytes(rn.Bytes(c.n), c.n)
+	u2.Mul(w, c.n)
+	g := &point{x: c.copyNat(c.gx), y: c.copyNat(c.gy), z: c.nat(1)}
+	p1 := c.add(c.mul(u1.Bytes(c.n), g), c.mul(u2.Bytes(c.n), q))
+	if p1.z.IsZero() == 1 {
+		return false
+	}
+	// x = X / Z mod p, then mod n
+	zinv := bigmod.NewNat()
+	pb := c.p.Nat().Bytes(c.p)
+	pmin2, _ := bigmod.NewNat().SetOverflowingBytes(pb, c.p)
+	two2, _ := bigmod.NewNat().SetUint(2, c.p)
+	pmin2.Sub(two2, c.p)
+	zinv.Exp(p1.z, pmin2.Bytes(c.p), c.p)
+	x := c.copyNat(p1.x).Mul(zinv, c.p)
+	xn, err3 := bigmod.NewNat().SetOverflowingBytes(x.Bytes(c.p), c.n)
+	if err3 != nil {
+		return false
+	}
+	return xn.Equal(rn) == 1
+}
+
+// readDERLength reads a minimal DER length at b[0:], returning the length and the bytes used.
+func readDERLength(b []byte) (int, int, bool) {
+	if len(b) == 0 {
+		return 0, 0, false
+	}
+	if b[0] < 0x80 {
+		return int(b[0]), 1, true
+	}
+	k := int(b[0] & 0x7f)
+	if k == 0 || k > 2 || len(b) < 1+k || b[1] == 0 {
+		return 0, 0, false
+	}
+	n := 0
+	for i := 1; i <= k; i++ {
+		n = n*256 + int(b[i])
+	}
+	if n < 0x80 {
+		return 0, 0, false
+	}
+	return n, 1 + k, true
+}
+
+// readDERInteger reads a non-negative, minimally encoded DER INTEGER.
+func readDERInteger(b []byte) ([]byte, []byte, bool) {
+	if len(b) < 2 || b[0] != 0x02 {
+		return nil, nil, false
+	}
+	n, used, ok := readDERLength(b[1:])
+	if !ok || n == 0 || len(b) < 1+used+n {
+		return nil, nil, false
+	}
+	v := b[1+used : 1+used+n]
+	if v[0]&0x80 != 0 {
+		return nil, nil, false
+	}
+	if len(v) > 1 && v[0] == 0 && v[1]&0x80 == 0 {
+		return nil, nil, false
+	}
+	return v, b[1+used+n:], true
+}
+
+// VerifyASN1 reports whether sig, a DER SEQUENCE of the INTEGERs r and s, is a valid signature
+// of hash by pub. A non-minimal or trailing encoding is false.
+func VerifyASN1(c *Curve, pub []byte, hash []byte, sig []byte) bool {
+	if len(sig) < 2 || sig[0] != 0x30 {
+		return false
+	}
+	n, used, ok := readDERLength(sig[1:])
+	if !ok || len(sig) != 1+used+n {
+		return false
+	}
+	body := sig[1+used:]
+	r, rest, ok2 := readDERInteger(body)
+	if !ok2 {
+		return false
+	}
+	s, rest2, ok3 := readDERInteger(rest)
+	if !ok3 || len(rest2) != 0 {
+		return false
+	}
+	return Verify(c, pub, hash, r, s)
+}

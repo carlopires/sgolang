@@ -1,0 +1,66 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package bigmod
+
+import (
+	"sgo"
+	"std/encoding/hex"
+)
+
+func unhex(s string) []byte {
+	b, _ := hex.DecodeString(s)
+	return b
+}
+
+// Arithmetic modulo the Mersenne prime 2^127 - 1, checked against exact values.
+func TestArithmetic(t *sgo.T) error {
+	m, err := NewModulus(unhex("7fffffffffffffffffffffffffffffff"))
+	if err != nil {
+		return err
+	}
+	x, _ := NewNat().SetBytes(unhex("27e41b3246bec9b16e398115"), m)
+	y, _ := NewNat().SetBytes(unhex("013f20d9c2fff89d38e1c70cb1"), m)
+	p, _ := NewNat().SetBytes(x.Bytes(m), m)
+	p.Mul(y, m)
+	if hex.EncodeToString(p.Bytes(m)) != "53028a3dc9fa744451b5d442489dc324" {
+		return sgo.NewError("mul: " + hex.EncodeToString(p.Bytes(m)))
+	}
+	e := NewNat().ExpShortVarTime(x, 65537, m)
+	if hex.EncodeToString(e.Bytes(m)) != "1a7cbb78199cc7b020967e65ebfcaa9c" {
+		return sgo.NewError("exp")
+	}
+	e2 := NewNat().Exp(x, []byte{1, 0, 1}, m)
+	if e2.Equal(e) != 1 {
+		return sgo.NewError("Exp and ExpShortVarTime differ")
+	}
+	d, _ := NewNat().SetBytes(x.Bytes(m), m)
+	d.Sub(y, m)
+	if hex.EncodeToString(d.Bytes(m)) != "7ffffffee8c3416f46c62c788c727463" {
+		return sgo.NewError("sub")
+	}
+	d.Add(y, m)
+	if d.Equal(x) != 1 {
+		return sgo.NewError("add")
+	}
+	return nil
+}
+
+func TestRefusals(t *sgo.T) error {
+	if _, err := NewModulus([]byte{4}); err == nil {
+		return sgo.NewError("even modulus accepted")
+	}
+	if _, e1 := NewModulus([]byte{0, 1}); e1 == nil {
+		return sgo.NewError("modulus one accepted")
+	}
+	m, _ := NewModulus([]byte{0xfb})
+	if _, e2 := NewNat().SetBytes([]byte{0xfb}, m); e2 == nil {
+		return sgo.NewError("value equal to the modulus accepted")
+	}
+	r, _ := NewNat().SetOverflowingBytes([]byte{0xfd}, m)
+	if r.Bytes(m)[0] != 2 {
+		return sgo.NewError("SetOverflowingBytes did not reduce")
+	}
+	return nil
+}

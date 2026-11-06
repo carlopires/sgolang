@@ -1,0 +1,38 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package ecdsa
+
+import (
+	"sgo"
+	"std/crypto/sha256"
+)
+
+// The first P-256 SHA-256 vector of Wycheproof (tcId 1), and two changes that break it.
+func TestVerify(t *sgo.T) error {
+	pub := unhex("0404aaec73635726f213fb8a9e64da3b8632e41495a944d0045b522eba7240fad587d9315798aaa3a5ba01775787ced05eaaf7b4e09fc81d6d1aa546e8365d525d")
+	sig := unhex("3045022100b292a619339f6e567a305c951c0dcbcc42d16e47f219f9e98e76e09d8770b34a02200177e60492c5a8242f76f07bfe3661bde59ec2a17ce5bd2dab2abebdf89a62e2")
+	h := sha256.Sum256([]byte{})
+	c := P256()
+	if !VerifyASN1(c, pub, h[:], sig) {
+		return sgo.NewError("valid signature refused")
+	}
+	h2 := sha256.Sum256([]byte("x"))
+	if VerifyASN1(c, pub, h2[:], sig) {
+		return sgo.NewError("other message accepted")
+	}
+	bad := make([]byte, len(sig))
+	copy(bad, sig)
+	bad[len(bad)-1] = bad[len(bad)-1] ^ 1
+	if VerifyASN1(c, pub, h[:], bad) {
+		return sgo.NewError("changed s accepted")
+	}
+	if VerifyASN1(c, pub, h[:], append(sig, 0)) {
+		return sgo.NewError("trailing byte accepted")
+	}
+	if VerifyASN1(P384(), pub, h[:], sig) {
+		return sgo.NewError("P-256 key accepted on P-384")
+	}
+	return nil
+}
