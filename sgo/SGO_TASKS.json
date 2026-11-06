@@ -1101,6 +1101,29 @@
       "blockers": [],
       "commit": "377f73d36c",
       "completion_note": "Frozen at spec 0.22.0 (D199, D200): std/crypto/ed25519, std/crypto/bigmod (constant-time, Montgomery), std/crypto/ecdsa verify on P-224, P-256, P-384 and P-521, std/crypto/rsa PKCS #1 v1.5 and PSS verify, bitsliced std/crypto/aes with cipher.Block and GCM, std/encoding/asn1 (DER reading) and std/crypto/x509 (parse, chain verification, hostname, EKU, name constraints, policies; caller-supplied time and roots) as S-Go source (SGO-STD-020 v2, SGO-STD-023..029). Wycheproof vectors of Go's own crypto tests: ECDSA 6905/6905, RSA 4171/4171, AES-GCM 197/197, Ed25519 150/150; x509-limbo cases Go's TestX509Limbo runs plus Go-issued chains: 9768 cases identical to Go's crypto/x509 including error texts (sgo/scripts/test-std-crypto.py, in sgo-w00)."
+    },
+    {
+      "id": "W28",
+      "title": "A TLS 1.3 client as S-Go source, with the pinned Mozilla root set",
+      "depends_on": [
+        "W27"
+      ],
+      "risk": "high",
+      "status": "in_progress",
+      "plan_section": "sgo/docs/w28-tls-plan.md (D199, D201)",
+      "deliverables": [
+        "std/crypto/x509/roots: the pinned Mozilla root set as a frozen table, with its version recorded",
+        "std/crypto/tls: TLS 1.3 client (X25519; AES-128-GCM, AES-256-GCM, ChaCha20-Poly1305; ECDSA, RSA-PSS, Ed25519 signatures; HRR, ALPN, SNI, KeyUpdate, close_notify) over *sgo.Conn, with caller-supplied roots, time and entropy",
+        "RFC 8448 vectors; a differential harness against Go's crypto/tls client on Go crypto/tls servers, broken peers included",
+        "a lab replay of a full handshake; an HTTPS example",
+        "D201 step 2 if time allows: std/encoding/pem, AppendCertsFromPEM, distrust by SPKI hash",
+        "a spec minor version"
+      ],
+      "acceptance_case_ids": [],
+      "evidence": [],
+      "blockers": [],
+      "commit": null,
+      "completion_note": null
     }
   ],
   "language_policy": "One specification-defined S-Go language; no Go compatibility path. Bare go rejected; explicit nursery capabilities; missing contracts rejected transitively. Host/reference tools are external build dependencies.",
