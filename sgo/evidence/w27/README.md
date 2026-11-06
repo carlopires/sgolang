@@ -1,6 +1,6 @@
 # W27 evidence — signatures, big numbers, AES-GCM, ASN.1 and X.509
 
-Spec 0.22.0 (D199, D200). Branch `w27`; state: complete on darwin/arm64; Linux pending (W27 merge).
+Spec 0.22.0 (D199, D200). Branch `w27`; state: complete on darwin/arm64, linux/amd64 and linux/arm64.
 
 ## What landed
 
@@ -32,4 +32,4 @@ Spec 0.22.0 (D199, D200). Branch `w27`; state: complete on darwin/arm64; Linux p
 
 ## Linux
 
-Pending: the sgo-w00, sgo-spec and sgo-runtime runs at the W27 merge.
+Main at 377f73d36c (0.22.0 freeze): sgo-w00 run 42306830909 green on linux/amd64 and linux/arm64 (conformance, all check scripts, test-std-crypto including x509-limbo, reference and stage-0 builds); sgo-spec run 42306830966 green; sgo-runtime run 42306996647 green (runtime lane, race lane).

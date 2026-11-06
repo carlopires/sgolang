@@ -1080,7 +1080,7 @@
         "W26"
       ],
       "risk": "high",
-      "status": "in_progress",
+      "status": "passed",
       "plan_section": "sgo/SGO_DECISIONS.md D199 (D197, D198)",
       "deliverables": [
         "std/crypto/ed25519 (sign and verify, RFC 8032)",
@@ -1094,10 +1094,13 @@
         "a spec minor version"
       ],
       "acceptance_case_ids": [],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w27/README.md",
+        "sgo-w00 run 42306830909 (linux/amd64, linux/arm64), sgo-spec run 42306830966 and sgo-runtime run 42306996647 on main at 377f73d36c (0.22.0 freeze)"
+      ],
       "blockers": [],
-      "commit": null,
-      "completion_note": null
+      "commit": "377f73d36c",
+      "completion_note": "Frozen at spec 0.22.0 (D199, D200): std/crypto/ed25519, std/crypto/bigmod (constant-time, Montgomery), std/crypto/ecdsa verify on P-224, P-256, P-384 and P-521, std/crypto/rsa PKCS #1 v1.5 and PSS verify, bitsliced std/crypto/aes with cipher.Block and GCM, std/encoding/asn1 (DER reading) and std/crypto/x509 (parse, chain verification, hostname, EKU, name constraints, policies; caller-supplied time and roots) as S-Go source (SGO-STD-020 v2, SGO-STD-023..029). Wycheproof vectors of Go's own crypto tests: ECDSA 6905/6905, RSA 4171/4171, AES-GCM 197/197, Ed25519 150/150; x509-limbo cases Go's TestX509Limbo runs plus Go-issued chains: 9768 cases identical to Go's crypto/x509 including error texts (sgo/scripts/test-std-crypto.py, in sgo-w00)."
     }
   ],
   "language_policy": "One specification-defined S-Go language; no Go compatibility path. Bare go rejected; explicit nursery capabilities; missing contracts rejected transitively. Host/reference tools are external build dependencies.",
