@@ -1,0 +1,148 @@
+// Copyright 2025 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+// Ported from Go's crypto/x509 (src/crypto/x509/constraints.go) for S-Go (SGO-STD-029, D199).
+
+package x509
+
+import (
+	"std/errors"
+	"std/strconv"
+	"std/strings"
+)
+
+func addrError(addr, msg string) string {
+	if addr == "" {
+		return msg
+	}
+	return "address " + addr + ": " + msg
+}
+
+// splitHostPort splits hostport as net.SplitHostPort; it returns the host or an error text.
+func splitHostPort(hostport string) (string, string) {
+	j, k := 0, 0
+	i := strings.LastIndex(hostport, ":")
+	if i < 0 {
+		return "", addrError(hostport, "missing port in address")
+	}
+	host := ""
+	if hostport[0] == '[' {
+		end := strings.IndexByte(hostport, ']')
+		if end < 0 {
+			return "", addrError(hostport, "missing ']' in address")
+		}
+		if end+1 == len(hostport) {
+			return "", addrError(hostport, "missing port in address")
+		}
+		if end+1 != i {
+			if hostport[end+1] == ':' {
+				return "", addrError(hostport, "too many colons in address")
+			}
+			return "", addrError(hostport, "missing port in address")
+		}
+		host = hostport[1:end]
+		j, k = 1, end+1
+	} else {
+		host = hostport[:i]
+		if strings.IndexByte(host, ':') >= 0 {
+			return "", addrError(hostport, "too many colons in address")
+		}
+	}
+	if strings.IndexByte(hostport[j:], '[') >= 0 {
+		return "", addrError(hostport, "unexpected '[' in address")
+	}
+	if strings.IndexByte(hostport[k:], ']') >= 0 {
+		return "", addrError(hostport, "unexpected ']' in address")
+	}
+	return host, ""
+}
+
+func parseURIs(uris []parsedURL) ([]parsedURI, error) {
+	out := []parsedURI{}
+	for i := 0; i < len(uris); i++ {
+		u := uris[i]
+		host := strings.ToLowerASCII(u.host)
+		if len(host) == 0 {
+			return []parsedURI{}, errors.New("URI with empty host (" + strconv.QuoteToASCII(u.raw) + ") cannot be matched against constraints")
+		}
+		if strings.IndexByte(host, ':') >= 0 && !strings.HasSuffix(host, "]") {
+			h, e := splitHostPort(u.host)
+			if e != "" {
+				return []parsedURI{}, errors.New("cannot parse URI host " + strconv.QuoteToASCII(u.host) + ": " + e)
+			}
+			host = h
+		}
+		_, ok := parseAddr(host)
+		if ok || strings.HasPrefix(host, "[") && strings.HasSuffix(host, "]") {
+			return []parsedURI{}, errors.New("URI with IP (" + strconv.QuoteToASCII(u.raw) + ") cannot be matched against constraints")
+		}
+		out = append(out, parsedURI{raw: u.raw, domain: host})
+	}
+	return out, nil
+}
+
+func parseMailboxes(emails []string) ([]rfc2821Mailbox, error) {
+	out := []rfc2821Mailbox{}
+	for i := 0; i < len(emails); i++ {
+		m, ok := parseRFC2821Mailbox(emails[i])
+		if !ok {
+			return []rfc2821Mailbox{}, errors.New("cannot parse rfc822Name " + strconv.QuoteToASCII(emails[i]))
+		}
+		m.domain = strings.ToLowerASCII(m.domain)
+		out = append(out, m)
+	}
+	return out, nil
+}
+
+func checkChainConstraints(chain []*Certificate) error {
+	ccs := []chainConstraints{}
+	for i := 0; i < len(chain); i++ {
+		c := chain[i]
+		if !c.hasNameConstraints() {
+			continue
+		}
+		ccs = append(ccs, chainConstraints{
+			index:     i,
+			ipPerm:    newIPNetConstraints(c.PermittedIPRanges),
+			ipExcl:    newIPNetConstraints(c.ExcludedIPRanges),
+			dnsPerm:   newDNSConstraints(c.PermittedDNSDomains, true),
+			dnsExcl:   newDNSConstraints(c.ExcludedDNSDomains, false),
+			uriPerm:   newDNSConstraints(c.PermittedURIDomains, true),
+			uriExcl:   newDNSConstraints(c.ExcludedURIDomains, false),
+			emailPerm: newEmailConstraints(c.PermittedEmailAddresses, true),
+			emailExcl: newEmailConstraints(c.ExcludedEmailAddresses, false),
+		})
+	}
+	if len(ccs) == 0 {
+		return nil
+	}
+	cur := 0
+	for i := 0; i < len(chain); i++ {
+		c := chain[i]
+		if !c.hasSANExtension() {
+			continue
+		}
+		if i >= ccs[cur].index {
+			for ccs[cur].index <= i {
+				if cur+1 == len(ccs) {
+					return nil
+				}
+				cur++
+			}
+		}
+		uris, err := parseURIs(c.uris)
+		if err != nil {
+			return err
+		}
+		emails, err2 := parseMailboxes(c.EmailAddresses)
+		if err2 != nil {
+			return err2
+		}
+		for n := cur; n < len(ccs); n++ {
+			if e := ccs[n].checkNames(c.DNSNames, uris, emails, c.IPAddresses); e != nil {
+				return e
+			}
+		}
+	}
+	return nil
+}

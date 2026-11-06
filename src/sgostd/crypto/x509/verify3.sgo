@@ -1,0 +1,311 @@
+// Copyright 2011 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+// Ported from Go's crypto/x509 (src/crypto/x509/verify.go) for S-Go (SGO-STD-029, D199).
+
+package x509
+
+import (
+	"std/crypto/sha256"
+	"std/encoding/hex"
+	"std/strings"
+)
+
+// Verify builds chains from c to a root in opts.Roots through opts.Intermediates, as Go's
+// Certificate.Verify without system roots or platform verifiers.
+func (c *Certificate) Verify(opts VerifyOptions) ([][]*Certificate, error) {
+	none := [][]*Certificate{}
+	if len(c.Raw) == 0 {
+		return none, errNotParsed()
+	}
+	if opts.Intermediates != nil {
+		for i := 0; i < len(opts.Intermediates.certs); i++ {
+			if len(opts.Intermediates.certs[i].Raw) == 0 {
+				return none, errNotParsed()
+			}
+		}
+	}
+	if opts.Roots == nil {
+		return none, SystemRootsError{}
+	}
+	if err := c.isValid(leafCertificate, []*Certificate{}, &opts); err != nil {
+		return none, err
+	}
+	if len(opts.DNSName) > 0 {
+		if err := c.VerifyHostname(opts.DNSName); err != nil {
+			return none, err
+		}
+	}
+	cands := [][]*Certificate{}
+	if opts.Roots.contains(c) {
+		cands = [][]*Certificate{[]*Certificate{c}}
+	} else {
+		st := &chainState{sigChecks: 0}
+		got, err := c.buildChains([]*Certificate{c}, st, &opts)
+		if err != nil {
+			return none, err
+		}
+		cands = got
+	}
+	anyUsage := false
+	for i := 0; i < len(opts.KeyUsages); i++ {
+		if opts.KeyUsages[i] == ExtKeyUsageAny {
+			anyUsage = true
+		}
+	}
+	if len(opts.KeyUsages) == 0 {
+		opts.KeyUsages = []ExtKeyUsage{ExtKeyUsageServerAuth}
+	}
+	badPolicies, badUsage := 0, 0
+	var hintErr error = nil
+	kept := [][]*Certificate{}
+	for i := 0; i < len(cands); i++ {
+		chain := cands[i]
+		if !policiesValid(chain, &opts) {
+			badPolicies++
+			continue
+		}
+		if !anyUsage && !checkChainForKeyUsage(chain, opts.KeyUsages) {
+			badUsage++
+			continue
+		}
+		if err := checkChainConstraints(chain); err != nil {
+			if hintErr == nil {
+				hintErr = CertificateInvalidError{Reason: CANotAuthorizedForThisName, Detail: err.Error()}
+			}
+			continue
+		}
+		if containsDistrustedSPKIHash(chain) {
+			continue
+		}
+		kept = append(kept, chain)
+	}
+	if len(kept) == 0 {
+		if hintErr != nil {
+			return none, hintErr
+		}
+		details := []string{}
+		if badUsage > 0 {
+			if badPolicies == 0 {
+				return none, CertificateInvalidError{Reason: IncompatibleUsage, Detail: ""}
+			}
+			details = append(details, itoa(badUsage)+" candidate chains with incompatible key usage")
+		}
+		if badPolicies > 0 {
+			details = append(details, itoa(badPolicies)+" candidate chains with invalid policies")
+		}
+		return none, CertificateInvalidError{Reason: NoValidChains, Detail: strings.Join(details, ", ")}
+	}
+	return kept, nil
+}
+
+func validHostname(host string, isPattern bool) bool {
+	if !isPattern {
+		host = strings.TrimSuffix(host, ".")
+	}
+	if len(host) == 0 || host == "*" {
+		return false
+	}
+	parts := strings.Split(host, ".")
+	for i := 0; i < len(parts); i++ {
+		part := parts[i]
+		if part == "" {
+			return false
+		}
+		if isPattern && i == 0 && part == "*" {
+			continue
+		}
+		for j := 0; j < len(part); j++ {
+			c := part[j]
+			if 'a' <= c && c <= 'z' || '0' <= c && c <= '9' || 'A' <= c && c <= 'Z' || c == '_' || c == '-' && j != 0 {
+				continue
+			}
+			return false
+		}
+	}
+	return true
+}
+
+func toLowerCaseASCII(in string) string {
+	return strings.ToLowerASCII(in)
+}
+
+func matchExactly(a, b string) bool {
+	if a == "" || a == "." || b == "" || b == "." {
+		return false
+	}
+	return toLowerCaseASCII(a) == toLowerCaseASCII(b)
+}
+
+func matchHostnames(pattern string, hostParts []string) bool {
+	pattern = toLowerCaseASCII(pattern)
+	if len(pattern) == 0 || len(hostParts) == 0 {
+		return false
+	}
+	pp := strings.Split(pattern, ".")
+	if len(pp) != len(hostParts) {
+		return false
+	}
+	for i := 0; i < len(pp); i++ {
+		if i == 0 && pp[i] == "*" {
+			continue
+		}
+		if pp[i] != hostParts[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func splitHostname(host string) []string {
+	return strings.Split(toLowerCaseASCII(strings.TrimSuffix(host, ".")), ".")
+}
+
+// parseAddrBytes parses s as netip.ParseAddr and returns its bytes (zone dropped).
+func parseAddrBytes(s string) ([]byte, bool) {
+	for i := 0; i < len(s); i++ {
+		if s[i] == '.' {
+			return parseIPv4(s)
+		}
+		if s[i] == ':' {
+			return parseIPv6(s, true)
+		}
+	}
+	return []byte{}, false
+}
+
+func hostnameError(c *Certificate, host string) HostnameError {
+	h := HostnameError{Host: host, Message: ""}
+	if !c.hasSANExtension() && matchHostnames(c.Subject.CommonName, splitHostname(host)) {
+		h.Message = "x509: certificate relies on legacy Common Name field, use SANs instead"
+		return h
+	}
+	valid := ""
+	if _, ok := parseIP(host); ok {
+		if len(c.IPAddresses) == 0 {
+			h.Message = "x509: cannot validate certificate for " + host + " because it doesn't contain any IP SANs"
+			return h
+		}
+		if len(c.IPAddresses) >= 100 {
+			h.Message = "x509: certificate is valid for " + itoa(len(c.IPAddresses)) + " IP SANs, but none matched " + host
+			return h
+		}
+		for i := 0; i < len(c.IPAddresses); i++ {
+			if len(valid) > 0 {
+				valid += ", "
+			}
+			valid += ipString(c.IPAddresses[i])
+		}
+	} else {
+		if len(c.DNSNames) >= 100 {
+			h.Message = "x509: certificate is valid for " + itoa(len(c.DNSNames)) + " names, but none matched " + host
+			return h
+		}
+		valid = strings.Join(c.DNSNames, ", ")
+	}
+	if len(valid) == 0 {
+		h.Message = "x509: certificate is not valid for any names, but wanted to match " + host
+		return h
+	}
+	h.Message = "x509: certificate is valid for " + valid + ", not " + host
+	return h
+}
+
+// VerifyHostname reports whether c is valid for host h, as Go's Certificate.VerifyHostname.
+func (c *Certificate) VerifyHostname(h string) error {
+	cip := h
+	if len(h) >= 3 && h[0] == '[' && h[len(h)-1] == ']' {
+		cip = h[1 : len(h)-1]
+	}
+	if ip, ok := parseAddrBytes(cip); ok {
+		for i := 0; i < len(c.IPAddresses); i++ {
+			if ipEqual(ip, c.IPAddresses[i]) {
+				return nil
+			}
+		}
+		return hostnameError(c, ipString(ip))
+	}
+	name := toLowerCaseASCII(h)
+	validName := validHostname(name, false)
+	parts := splitHostname(name)
+	for i := 0; i < len(c.DNSNames); i++ {
+		m := c.DNSNames[i]
+		if validName && validHostname(m, true) {
+			if matchHostnames(m, parts) {
+				return nil
+			}
+		} else if matchExactly(m, name) {
+			return nil
+		}
+	}
+	return hostnameError(c, h)
+}
+
+func checkChainForKeyUsage(chain []*Certificate, keyUsages []ExtKeyUsage) bool {
+	if len(chain) == 0 {
+		return false
+	}
+	usages := []int{}
+	for i := 0; i < len(keyUsages); i++ {
+		usages = append(usages, int(keyUsages[i]))
+	}
+	remaining := len(usages)
+	for i := len(chain) - 1; i >= 0; i-- {
+		cert := chain[i]
+		if len(cert.ExtKeyUsage) == 0 && len(cert.UnknownExtKeyUsage) == 0 {
+			continue
+		}
+		anyEKU := false
+		for k := 0; k < len(cert.ExtKeyUsage); k++ {
+			if cert.ExtKeyUsage[k] == ExtKeyUsageAny {
+				anyEKU = true
+			}
+		}
+		if anyEKU {
+			continue
+		}
+		for j := 0; j < len(usages); j++ {
+			if usages[j] == -1 {
+				continue
+			}
+			found := false
+			for k := 0; k < len(cert.ExtKeyUsage); k++ {
+				if usages[j] == int(cert.ExtKeyUsage[k]) {
+					found = true
+				}
+			}
+			if found {
+				continue
+			}
+			usages[j] = -1
+			remaining--
+			if remaining == 0 {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func containsDistrustedSPKIHash(chain []*Certificate) bool {
+	bad := []string{
+		"ebed6475c2c2d80fcb199f3fe8dd6e6b3ce60b77eb15d4e42c3dec0c6f5b5105",
+		"49dd353dc2b919a3770645117d0e60c16115e7d1bc259eefe734b00ea434fe5f",
+		"e0254c7fcdc265e2f0f8a428dabb75ab4ae039b4872d62f5ee57f0877d5a8a41",
+		"5c0660a2b164910d8ff589c18e14552e9e0ec237dcefe2cb736d41a4811f81a0",
+		"43bffa19d6ef651451f6841e019931e96f6f2eaeff28ab4b6f1ce4576de2717b",
+		"63ecefee431d49523bc1136c4e72d0206a477086caf606cd5cf025686c109cf8",
+		"ec4ffa1ad0ac88081314b7aaffef6a91f97cd57291bb5ba686c5415f5eb4f6b6",
+		"92c063d67e8f14db71d288e11266ffdaf69cbf115f7bab14f3bc2f68d25e0e30",
+	}
+	for i := 0; i < len(chain); i++ {
+		h := sha256.Sum256(chain[i].RawSubjectPublicKeyInfo)
+		s := hex.EncodeToString(h[:])
+		for j := 0; j < len(bad); j++ {
+			if s == bad[j] {
+				return true
+			}
+		}
+	}
+	return false
+}

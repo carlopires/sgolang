@@ -1,0 +1,445 @@
+// Copyright 2025 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+// Ported from Go's crypto/x509 (src/crypto/x509/constraints.go) for S-Go (SGO-STD-029, D199).
+
+package x509
+
+import (
+	"std/errors"
+	"std/strconv"
+	"std/strings"
+)
+
+func bytesCompare(a, b []byte) int {
+	sa, sb := string(a), string(b)
+	if sa < sb {
+		return -1
+	}
+	if sa > sb {
+		return 1
+	}
+	return 0
+}
+
+func ipNetworkSubset(a, b IPNet) bool {
+	if !ipNetContains(a, b.IP) {
+		return false
+	}
+	if len(b.IP) != len(b.Mask) {
+		return false
+	}
+	broadcast := make([]byte, len(b.IP))
+	for i := 0; i < len(b.IP); i++ {
+		broadcast[i] = b.IP[i] | (b.Mask[i] ^ 0xff)
+	}
+	return ipNetContains(a, broadcast)
+}
+
+func ipNetworkCompare(a, b IPNet) int {
+	i := bytesCompare(a.IP, b.IP)
+	if i != 0 {
+		return i
+	}
+	return bytesCompare(a.Mask, b.Mask)
+}
+
+// ipSet is a sorted, pruned list of IP network constraints of one address family.
+type ipSet struct {
+	set []IPNet
+}
+
+func newIPSet(l []IPNet) ipSet {
+	s := []IPNet{}
+	for i := 0; i < len(l); i++ {
+		s = append(s, l[i])
+	}
+	for i := 1; i < len(s); i++ {
+		for j := i; j > 0 && ipNetworkCompare(s[j-1], s[j]) > 0; j-- {
+			s[j-1], s[j] = s[j], s[j-1]
+		}
+	}
+	if len(s) >= 2 {
+		w := 1
+		for r := 1; r < len(s); r++ {
+			if !ipNetworkSubset(s[w-1], s[r]) {
+				s[w] = s[r]
+				w++
+			}
+		}
+		s = s[:w]
+	}
+	return ipSet{set: s}
+}
+
+func (c ipSet) search(ip []byte) (IPNet, bool) {
+	none := IPNet{IP: []byte{}, Mask: []byte{}}
+	if len(c.set) == 0 {
+		return none, false
+	}
+	i := 0
+	for i < len(c.set) && bytesCompare(c.set[i].IP, ip) < 0 {
+		i++
+	}
+	if i < len(c.set) && bytesCompare(c.set[i].IP, ip) == 0 {
+		return c.set[i], true
+	}
+	k := i - 1
+	if i == 0 {
+		k = 0
+	}
+	if ipNetContains(c.set[k], ip) {
+		return c.set[k], true
+	}
+	return none, false
+}
+
+// ipConstraints holds the IPv4 and IPv6 constraint sets; present is false for no constraints.
+type ipConstraints struct {
+	present bool
+	v4      ipSet
+	v6      ipSet
+}
+
+func newIPNetConstraints(l []IPNet) ipConstraints {
+	if len(l) == 0 {
+		return ipConstraints{present: false, v4: ipSet{set: []IPNet{}}, v6: ipSet{set: []IPNet{}}}
+	}
+	v4, v6 := []IPNet{}, []IPNet{}
+	for i := 0; i < len(l); i++ {
+		n := l[i]
+		if masked, ok := ipMask(n.IP, n.Mask); ok && !ipEqual(masked, n.IP) {
+			n = IPNet{IP: masked, Mask: n.Mask}
+		}
+		if len(n.IP) == 4 {
+			v4 = append(v4, n)
+		} else {
+			v6 = append(v6, n)
+		}
+	}
+	return ipConstraints{present: true, v4: newIPSet(v4), v6: newIPSet(v6)}
+}
+
+func (c ipConstraints) query(ip []byte) (IPNet, bool) {
+	if len(ip) == 4 {
+		return c.v4.search(ip)
+	}
+	return c.v6.search(ip)
+}
+
+func dnsHasSuffix(a, b string) bool {
+	lenA, lenB := len(a), len(b)
+	if lenA > lenB {
+		return false
+	}
+	offset := lenA - lenB
+	for i := lenA - 1; i >= 0; i-- {
+		ar, br := a[i], b[i-offset]
+		if ar == br {
+			continue
+		}
+		if br < ar {
+			ar, br = br, ar
+		}
+		if 'A' <= ar && ar <= 'Z' && int(br) == int(ar)+32 {
+			continue
+		}
+		return false
+	}
+	if a[0] != '.' && lenB > lenA && b[lenB-lenA-1] != '.' {
+		return false
+	}
+	return true
+}
+
+func dnsCompareByte(c byte) int {
+	if c == '.' {
+		return 0
+	}
+	if 'A' <= c && c <= 'Z' {
+		return int(c) + 32
+	}
+	return int(c)
+}
+
+func dnsCompare(a, b string) int {
+	idxA, idxB := len(a)-1, len(b)-1
+	for idxA >= 0 && idxB >= 0 {
+		x, y := dnsCompareByte(a[idxA]), dnsCompareByte(b[idxB])
+		if x == y {
+			idxA--
+			idxB--
+			continue
+		}
+		if x < y {
+			return -1
+		}
+		return 1
+	}
+	if idxA < idxB {
+		return -1
+	}
+	if idxB < idxA {
+		return 1
+	}
+	return 0
+}
+
+// dnsConstraints is a set of DNS-name constraints; present is false for no constraints.
+type dnsConstraints struct {
+	present   bool
+	all       bool
+	permitted bool
+	set       []string
+	parents   map[string]string
+}
+
+func noDNSConstraints() dnsConstraints {
+	return dnsConstraints{present: false, all: false, permitted: false, set: []string{}, parents: map[string]string{}}
+}
+
+func trimFirstLabel(dnsName string) string {
+	i := strings.IndexByte(dnsName, '.')
+	if i < 0 {
+		return ""
+	}
+	return dnsName[i:]
+}
+
+func newDNSConstraints(l []string, permitted bool) dnsConstraints {
+	nc := noDNSConstraints()
+	if len(l) == 0 {
+		return nc
+	}
+	nc.present = true
+	for i := 0; i < len(l); i++ {
+		if len(l[i]) == 0 {
+			nc.all = true
+			return nc
+		}
+	}
+	s := []string{}
+	for i := 0; i < len(l); i++ {
+		s = append(s, l[i])
+	}
+	for i := 1; i < len(s); i++ {
+		for j := i; j > 0 && dnsCompare(s[j-1], s[j]) > 0; j-- {
+			s[j-1], s[j] = s[j], s[j-1]
+		}
+	}
+	if len(s) >= 2 {
+		w := 1
+		for r := 1; r < len(s); r++ {
+			if !dnsHasSuffix(s[w-1], s[r]) {
+				s[w] = s[r]
+				w++
+			}
+		}
+		s = s[:w]
+	}
+	nc.set = s
+	nc.permitted = permitted
+	if !permitted {
+		for i := 0; i < len(s); i++ {
+			name := strings.ToLowerASCII(s[i])
+			t := trimFirstLabel(name)
+			if t != "" {
+				nc.parents[t] = name
+			}
+		}
+	}
+	return nc
+}
+
+func (c dnsConstraints) query(s string) (string, bool) {
+	if c.all {
+		return "", true
+	}
+	if len(c.set) > 0 {
+		i := 0
+		for i < len(c.set) && dnsCompare(c.set[i], s) < 0 {
+			i++
+		}
+		if i < len(c.set) && dnsCompare(c.set[i], s) == 0 {
+			return c.set[i], true
+		}
+		k := i - 1
+		if i == 0 {
+			k = 0
+		}
+		if dnsHasSuffix(c.set[k], s) {
+			return c.set[k], true
+		}
+	}
+	if !c.permitted && len(s) > 0 && s[0] == '*' {
+		t := trimFirstLabel(strings.ToLowerASCII(s))
+		if v, ok := c.parents[t]; ok {
+			return v, true
+		}
+	}
+	return "", false
+}
+
+// emailConstraints is a set of rfc822Name constraints; present is false for none.
+type emailConstraints struct {
+	present bool
+	dns     dnsConstraints
+	full    map[string]bool
+}
+
+func mailboxKey(m rfc2821Mailbox) string {
+	return m.local + "\x00" + m.domain
+}
+
+func newEmailConstraints(l []string, permitted bool) emailConstraints {
+	ec := emailConstraints{present: false, dns: noDNSConstraints(), full: map[string]bool{}}
+	if len(l) == 0 {
+		return ec
+	}
+	ec.present = true
+	domains := []string{}
+	for i := 0; i < len(l); i++ {
+		if strings.IndexByte(l[i], '@') < 0 {
+			domains = append(domains, l[i])
+			continue
+		}
+		parsed, ok := parseRFC2821Mailbox(l[i])
+		if !ok {
+			continue
+		}
+		parsed.domain = strings.ToLowerASCII(parsed.domain)
+		ec.full[mailboxKey(parsed)] = true
+	}
+	if len(domains) > 0 {
+		ec.dns = newDNSConstraints(domains, permitted)
+	}
+	return ec
+}
+
+func (ec emailConstraints) query(m rfc2821Mailbox) (string, bool) {
+	if ec.full[mailboxKey(m)] {
+		return m.local + "@" + m.domain, true
+	}
+	if !ec.dns.present {
+		return "", false
+	}
+	return ec.dns.query(m.domain)
+}
+
+func notPermitted(kind, p string) error {
+	return errors.New(kind + " " + strconv.QuoteToASCII(p) + " is not permitted by any constraint")
+}
+
+func excludedBy(kind, p, c string) error {
+	return errors.New(kind + " " + strconv.QuoteToASCII(p) + " is excluded by constraint " + strconv.QuoteToASCII(c))
+}
+
+type chainConstraints struct {
+	index      int
+	ipPerm     ipConstraints
+	ipExcl     ipConstraints
+	dnsPerm    dnsConstraints
+	dnsExcl    dnsConstraints
+	uriPerm    dnsConstraints
+	uriExcl    dnsConstraints
+	emailPerm  emailConstraints
+	emailExcl  emailConstraints
+}
+
+func checkDNSLike(kind string, perm, excl dnsConstraints, s, shown string) error {
+	if perm.present {
+		if _, ok := perm.query(s); !ok {
+			return notPermitted(kind, shown)
+		}
+	}
+	if excl.present {
+		if c, ok := excl.query(s); ok {
+			return excludedBy(kind, shown, c)
+		}
+	}
+	return nil
+}
+
+type parsedURI struct {
+	raw    string
+	domain string
+}
+
+func (cc chainConstraints) checkNames(dns []string, uris []parsedURI, emails []rfc2821Mailbox, ips [][]byte) error {
+	for i := 0; i < len(ips); i++ {
+		ip := ips[i]
+		if cc.ipPerm.present {
+			if _, ok := cc.ipPerm.query(ip); !ok {
+				return notPermitted("IP address", ipString(ip))
+			}
+		}
+		if cc.ipExcl.present {
+			if c, ok := cc.ipExcl.query(ip); ok {
+				return excludedBy("IP address", ipString(ip), c.String())
+			}
+		}
+	}
+	for i := 0; i < len(dns); i++ {
+		d := dns[i]
+		if !domainNameValid(d, false) {
+			return errors.New("x509: cannot parse dnsName " + strconv.QuoteToASCII(d))
+		}
+		if err := checkDNSLike("DNS name", cc.dnsPerm, cc.dnsExcl, d, d); err != nil {
+			return err
+		}
+	}
+	for i := 0; i < len(uris); i++ {
+		u := uris[i]
+		if !domainNameValid(u.domain, false) {
+			return errors.New("x509: internal error: URI SAN " + strconv.QuoteToASCII(u.raw) + " failed to parse")
+		}
+		if err := checkDNSLike("URI", cc.uriPerm, cc.uriExcl, u.domain, u.raw); err != nil {
+			return err
+		}
+	}
+	for i := 0; i < len(emails); i++ {
+		e := emails[i]
+		shown := e.local + "@" + e.domain
+		if !domainNameValid(e.domain, false) {
+			return errors.New("x509: cannot parse rfc822Name " + strconv.QuoteToASCII(shown))
+		}
+		if cc.emailPerm.present {
+			if _, ok := cc.emailPerm.query(e); !ok {
+				return notPermitted("email address", shown)
+			}
+		}
+		if cc.emailExcl.present {
+			if c, ok := cc.emailExcl.query(e); ok {
+				return excludedBy("email address", shown, c)
+			}
+		}
+	}
+	return nil
+}
+
+func hasExtension(c *Certificate, oid []int) bool {
+	for i := 0; i < len(c.Extensions); i++ {
+		id := c.Extensions[i].Id
+		if len(id) != len(oid) {
+			continue
+		}
+		same := true
+		for j := 0; j < len(oid); j++ {
+			if id[j] != oid[j] {
+				same = false
+			}
+		}
+		if same {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *Certificate) hasSANExtension() bool {
+	return hasExtension(c, []int{2, 5, 29, 17})
+}
+
+func (c *Certificate) hasNameConstraints() bool {
+	return hasExtension(c, []int{2, 5, 29, 30})
+}

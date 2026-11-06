@@ -1476,6 +1476,52 @@ def wyche_ed25519(WP):
     ''' % ', '.join(rows)
     return src
 
+LIMBO_GEN = '// Command gen reads x509-limbo\'s limbo.json, applies the skips of Go\'s TestX509Limbo, runs\n// Go\'s crypto/x509 on each case, and writes cases.txt (inputs for the S-Go harness) and\n// go.txt (Go\'s verdict per case).\npackage main\n\nimport (\n\t"crypto/x509"\n\t"encoding/hex"\n\t"encoding/json"\n\t"encoding/pem"\n\t"fmt"\n\t"os"\n\t"strings"\n\t"time"\n)\n\ntype peer struct {\n\tKind  string `json:"kind"`\n\tValue string `json:"value"`\n}\n\ntype testcase struct {\n\tID                     string   `json:"id"`\n\tFeatures               []string `json:"features"`\n\tSignatureAlgorithms    []string `json:"signature_algorithms"`\n\tKeyUsage               []string `json:"key_usage"`\n\tExtendedKeyUsage       []string `json:"extended_key_usage"`\n\tValidationKind         string   `json:"validation_kind"`\n\tExpectedPeerName       *peer    `json:"expected_peer_name"`\n\tExpectedPeerNames      []peer   `json:"expected_peer_names"`\n\tTrustedCerts           []string `json:"trusted_certs"`\n\tUntrustedIntermediates []string `json:"untrusted_intermediates"`\n\tPeerCertificate        string   `json:"peer_certificate"`\n\tValidationTime         *string  `json:"validation_time"`\n\tExpectedResult         string   `json:"expected_result"`\n}\n\nvar ekuMap = map[string]x509.ExtKeyUsage{\n\t"anyExtendedKeyUsage": x509.ExtKeyUsageAny,\n\t"clientAuth":          x509.ExtKeyUsageClientAuth,\n\t"codeSigning":         x509.ExtKeyUsageCodeSigning,\n\t"emailProtection":     x509.ExtKeyUsageEmailProtection,\n\t"OCSPSigning":         x509.ExtKeyUsageOCSPSigning,\n\t"serverAuth":          x509.ExtKeyUsageServerAuth,\n\t"timeStamping":        x509.ExtKeyUsageTimeStamping,\n}\n\nfunc has(l []string, s string) bool {\n\tfor _, x := range l {\n\t\tif x == s {\n\t\t\treturn true\n\t\t}\n\t}\n\treturn false\n}\n\nfunc ders(pems []string) []string {\n\tout := []string{}\n\tfor _, p := range pems {\n\t\trest := []byte(p)\n\t\tfor {\n\t\t\tvar b *pem.Block\n\t\t\tb, rest = pem.Decode(rest)\n\t\t\tif b == nil {\n\t\t\t\tbreak\n\t\t\t}\n\t\t\tif b.Type == "CERTIFICATE" && len(b.Headers) == 0 {\n\t\t\t\tout = append(out, hex.EncodeToString(b.Bytes))\n\t\t\t}\n\t\t}\n\t}\n\treturn out\n}\n\nfunc pool(hexes []string) *x509.CertPool {\n\tp := x509.NewCertPool()\n\tfor _, h := range hexes {\n\t\td, _ := hex.DecodeString(h)\n\t\tif c, err := x509.ParseCertificate(d); err == nil {\n\t\t\tp.AddCert(c)\n\t\t}\n\t}\n\treturn p\n}\n\nfunc result(err error) string {\n\tif err == nil {\n\t\treturn "ok"\n\t}\n\treturn "err " + strings.ReplaceAll(err.Error(), "\\n", " ")\n}\n\nfunc main() {\n\tdata, err := os.ReadFile(os.Args[1])\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\tvar limbo struct {\n\t\tTestcases []testcase `json:"testcases"`\n\t}\n\tif err := json.Unmarshal(data, &limbo); err != nil {\n\t\tpanic(err)\n\t}\n\tnow := time.Now().Unix()\n\tcases, _ := os.Create(os.Args[2])\n\tgores, _ := os.Create(os.Args[3])\n\tdefer cases.Close()\n\tdefer gores.Close()\n\tfor _, tc := range limbo.Testcases {\n\t\tif has(tc.Features, "has-crl") || has(tc.Features, "max-chain-depth") || has(tc.Features, "name-constraint-dn") ||\n\t\t\tlen(tc.SignatureAlgorithms) != 0 || len(tc.KeyUsage) != 0 && !has(tc.KeyUsage, "digitalSignature") {\n\t\t\tcontinue\n\t\t}\n\t\tdns := ""\n\t\tif tc.ExpectedPeerName != nil && tc.ValidationKind == "SERVER" {\n\t\t\tswitch tc.ExpectedPeerName.Kind {\n\t\t\tcase "DNS":\n\t\t\t\tdns = tc.ExpectedPeerName.Value\n\t\t\tcase "IP":\n\t\t\t\tdns = "[" + tc.ExpectedPeerName.Value + "]"\n\t\t\tdefault:\n\t\t\t\tcontinue\n\t\t\t}\n\t\t}\n\t\tekus, ekuStr, skip := []x509.ExtKeyUsage{}, []string{}, false\n\t\tfor _, e := range tc.ExtendedKeyUsage {\n\t\t\tu, ok := ekuMap[e]\n\t\t\tif !ok {\n\t\t\t\tskip = true\n\t\t\t}\n\t\t\tekus = append(ekus, u)\n\t\t\tekuStr = append(ekuStr, fmt.Sprint(int(u)))\n\t\t}\n\t\tnames := []string{}\n\t\tif tc.ValidationKind == "CLIENT" {\n\t\t\tfor _, n := range tc.ExpectedPeerNames {\n\t\t\t\tif n.Kind != "IP" && n.Kind != "DNS" {\n\t\t\t\t\tskip = true\n\t\t\t\t}\n\t\t\t\tnames = append(names, n.Value)\n\t\t\t}\n\t\t}\n\t\tif skip {\n\t\t\tcontinue\n\t\t}\n\t\tvt := now\n\t\tif tc.ValidationTime != nil {\n\t\t\tt, err := time.Parse(time.RFC3339, *tc.ValidationTime)\n\t\t\tif err != nil {\n\t\t\t\tpanic(err)\n\t\t\t}\n\t\t\tvt = t.Unix()\n\t\t}\n\t\tpeerDER := ders([]string{tc.PeerCertificate})\n\t\tif len(peerDER) != 1 {\n\t\t\tcontinue\n\t\t}\n\t\troots, ints := ders(tc.TrustedCerts), ders(tc.UntrustedIntermediates)\n\t\tfmt.Fprintf(cases, "%s\\t%s\\t%d\\t%s\\t%s\\t%s\\t%s\\t%s\\n", tc.ID, dns, vt, strings.Join(ekuStr, ","),\n\t\t\tstrings.Join(names, ","), peerDER[0], strings.Join(roots, ","), strings.Join(ints, ","))\n\t\td, _ := hex.DecodeString(peerDER[0])\n\t\tc, perr := x509.ParseCertificate(d)\n\t\tif perr != nil {\n\t\t\tfmt.Fprintf(gores, "%s\\tparse %s\\n", tc.ID, result(perr))\n\t\t\tcontinue\n\t\t}\n\t\t_, verr := c.Verify(x509.VerifyOptions{DNSName: dns, Intermediates: pool(ints), Roots: pool(roots),\n\t\t\tCurrentTime: time.Unix(vt, 0).UTC(), KeyUsages: ekus})\n\t\tline := tc.ID + "\\tverify " + result(verr)\n\t\tfor _, n := range names {\n\t\t\tline += "\\thost " + result(c.VerifyHostname(n))\n\t\t}\n\t\tfmt.Fprintln(gores, line)\n\t}\n}\n'
+
+LIMBO_SGO = 'package main\n\nimport (\n\t"sgo"\n\t"std/crypto/x509"\n\t"std/encoding/hex"\n\t"std/strconv"\n\t"std/strings"\n)\n\nfunc result(err error) string {\n\tif err == nil {\n\t\treturn "ok"\n\t}\n\treturn "err " + strings.ReplaceAll(err.Error(), "\\n", " ")\n}\n\nfunc pool(hexes string) *x509.CertPool {\n\tp := x509.NewCertPool()\n\tif hexes == "" {\n\t\treturn p\n\t}\n\tl := strings.Split(hexes, ",")\n\tfor i := 0; i < len(l); i++ {\n\t\td, _ := hex.DecodeString(l[i])\n\t\tc, err := x509.ParseCertificate(d)\n\t\tif err == nil {\n\t\t\tp.AddCert(c)\n\t\t}\n\t}\n\treturn p\n}\n\nfunc one(line string) string {\n\tf := strings.Split(line, "\\t")\n\tid := f[0]\n\tvt, _ := strconv.Atoi(f[2])\n\tekus := []x509.ExtKeyUsage{}\n\tif f[3] != "" {\n\t\te := strings.Split(f[3], ",")\n\t\tfor i := 0; i < len(e); i++ {\n\t\t\tv, _ := strconv.Atoi(e[i])\n\t\t\tekus = append(ekus, x509.ExtKeyUsage(v))\n\t\t}\n\t}\n\td, _ := hex.DecodeString(f[5])\n\tc, perr := x509.ParseCertificate(d)\n\tif perr != nil {\n\t\treturn id + "\\tparse " + result(perr)\n\t}\n\t_, verr := c.Verify(x509.VerifyOptions{DNSName: f[1], Intermediates: pool(f[7]), Roots: pool(f[6]),\n\t\tCurrentTime: vt, KeyUsages: ekus, CertificatePolicies: []x509.OID{}})\n\tout := id + "\\tverify " + result(verr)\n\tif f[4] != "" {\n\t\tnames := strings.Split(f[4], ",")\n\t\tfor i := 0; i < len(names); i++ {\n\t\t\tout += "\\thost " + result(c.VerifyHostname(names[i]))\n\t\t}\n\t}\n\treturn out\n}\n\nfunc main(root *sgo.Context) error {\n\tin := root.Stdin()\n\tout := root.Stdout()\n\tfor {\n\t\tline, err := in.ReadLine(1 << 20)\n\t\tif err != nil {\n\t\t\tif sgo.IsEOF(err) {\n\t\t\t\treturn nil\n\t\t\t}\n\t\t\treturn err\n\t\t}\n\t\tcheck out.WriteString(one(line) + "\\n")\n\t}\n}\n'
+
+
+def limbo_dir():
+    text = open(os.path.join(ROOT, "src/crypto/internal/cryptotest/x509limbo/schemaversion.go")).read()
+    version = re.search(r'X509LimboVersion = "([^"]+)"', text).group(1)
+    with tempfile.TemporaryDirectory() as d:
+        open(os.path.join(d, "go.mod"), "w").write("module limbofetch\n\ngo 1.26\n")
+        r = subprocess.run([GO, "mod", "download", "-json", "github.com/C2SP/x509-limbo@" + version],
+                           cwd=d, capture_output=True, text=True, timeout=900)
+        return json.loads(r.stdout)["Dir"]
+
+
+def x509_limbo():
+    """Run Go's x509-limbo case selection through Go's crypto/x509 and std/crypto/x509."""
+    with tempfile.TemporaryDirectory() as d:
+        gd, sd = os.path.join(d, "gen"), os.path.join(d, "harness")
+        os.makedirs(gd)
+        os.makedirs(sd)
+        open(os.path.join(gd, "main.go"), "w").write(LIMBO_GEN)
+        open(os.path.join(gd, "go.mod"), "w").write("module limbogen\n\ngo 1.26\n")
+        cases, gores = os.path.join(d, "cases.txt"), os.path.join(d, "go.txt")
+        env = dict(os.environ, GOFLAGS="-mod=mod")
+        g = subprocess.run([GO, "run", ".", os.path.join(limbo_dir(), "limbo.json"), cases, gores],
+                           cwd=gd, env=env, capture_output=True, text=True, timeout=1800)
+        if g.returncode:
+            return False, "x509-limbo: go exit %d\n%s" % (g.returncode, g.stderr[-1500:])
+        open(os.path.join(sd, "main.sgo"), "w").write(LIMBO_SGO)
+        open(os.path.join(sd, "sgo.mod"), "w").write(f"module example.com/limbo\n\nsgo {VERSION}\n")
+        b = subprocess.run([SGO, "build", "-o", os.path.join(d, "limbo"), "."], cwd=sd, capture_output=True, text=True, timeout=900)
+        if b.returncode:
+            return False, "x509-limbo: sgo build exit %d\n%s" % (b.returncode, (b.stdout + b.stderr)[-1500:])
+        with open(cases) as inp:
+            s = subprocess.run([os.path.join(d, "limbo")], stdin=inp, capture_output=True, text=True, timeout=1800)
+        gl, sl = open(gores).read().splitlines(), s.stdout.splitlines()
+        bad = [i for i in range(max(len(gl), len(sl))) if i >= len(gl) or i >= len(sl) or gl[i] != sl[i]]
+        msg = "x509-limbo: %d cases, %d differ" % (len(gl), len(bad))
+        if s.returncode:
+            msg += " (sgo exit %d: %s)" % (s.returncode, s.stderr[-800:])
+        if bad:
+            i = bad[0]
+            msg += "\n  go : %r\n  sgo: %r" % (gl[i] if i < len(gl) else None, sl[i] if i < len(sl) else None)
+        return not bad and s.returncode == 0 and len(gl) > 0, msg
+
 
 def main():
     seed = 1
@@ -1505,6 +1551,10 @@ def main():
         tail = line.split(" agree", 1)[1] if " agree" in line else ""
         if r.returncode or not m or m.group(1) != m.group(2) or "#" in tail or "base: false" in tail or "test 1: false" in tail:
             failed = True
+    ok, msg = x509_limbo()
+    print("test-std-crypto: " + msg)
+    if not ok:
+        failed = True
     if failed:
         sys.exit("test-std-crypto: FAIL")
     print("test-std-crypto: ok")

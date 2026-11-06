@@ -1,0 +1,161 @@
+// Copyright 2011 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+// Ported from Go's crypto/x509 (src/crypto/x509/verify.go) for S-Go (SGO-STD-029, D199).
+
+package x509
+
+import "std/errors"
+
+const (
+	leafCertificate         = 0
+	intermediateCertificate = 1
+	rootCertificate         = 2
+	maxChainSignatureChecks = 100
+)
+
+func errNotParsed() error {
+	return errors.New("x509: missing ASN.1 contents; use ParseCertificate")
+}
+
+func errSignatureLimit() error {
+	return errors.New("x509: signature check attempts limit reached while verifying certificate chain")
+}
+
+func (c *Certificate) isValid(certType int, chain []*Certificate, opts *VerifyOptions) error {
+	if len(c.UnhandledCriticalExtensions) > 0 {
+		return UnhandledCriticalExtension{}
+	}
+	if len(chain) > 0 {
+		child := chain[len(chain)-1]
+		if string(child.RawIssuer) != string(c.RawSubject) {
+			return CertificateInvalidError{Reason: NameMismatch, Detail: ""}
+		}
+	}
+	now := opts.CurrentTime
+	if now < c.NotBefore {
+		return CertificateInvalidError{Reason: Expired, Detail: "current time " + rfc3339(now) + " is before " + rfc3339(c.NotBefore)}
+	}
+	if now > c.NotAfter {
+		return CertificateInvalidError{Reason: Expired, Detail: "current time " + rfc3339(now) + " is after " + rfc3339(c.NotAfter)}
+	}
+	if certType == intermediateCertificate || certType == rootCertificate {
+		if len(chain) == 0 {
+			return errors.New("x509: internal error: empty chain when appending CA cert")
+		}
+	}
+	if certType == intermediateCertificate && (!c.BasicConstraintsValid || !c.IsCA) {
+		return CertificateInvalidError{Reason: NotAuthorizedToSign, Detail: ""}
+	}
+	if c.BasicConstraintsValid && c.MaxPathLen >= 0 {
+		if len(chain)-1 > c.MaxPathLen {
+			return CertificateInvalidError{Reason: TooManyIntermediates, Detail: ""}
+		}
+	}
+	return nil
+}
+
+func sanValue(c *Certificate) (string, bool) {
+	for i := 0; i < len(c.Extensions); i++ {
+		id := c.Extensions[i].Id
+		if len(id) == 4 && id[0] == 2 && id[1] == 5 && id[2] == 29 && id[3] == 17 {
+			return string(c.Extensions[i].Value), true
+		}
+	}
+	return "", false
+}
+
+func alreadyInChain(cand *Certificate, chain []*Certificate) bool {
+	candSAN, candHas := sanValue(cand)
+	for i := 0; i < len(chain); i++ {
+		c := chain[i]
+		if string(cand.RawSubject) != string(c.RawSubject) || string(cand.RawSubjectPublicKeyInfo) != string(c.RawSubjectPublicKeyInfo) {
+			continue
+		}
+		san, has := sanValue(c)
+		if !candHas && !has {
+			return true
+		}
+		if !candHas || !has {
+			return false
+		}
+		if candSAN == san {
+			return true
+		}
+	}
+	return false
+}
+
+func appendToFreshChain(chain []*Certificate, c *Certificate) []*Certificate {
+	n := []*Certificate{}
+	for i := 0; i < len(chain); i++ {
+		n = append(n, chain[i])
+	}
+	return append(n, c)
+}
+
+type chainState struct {
+	sigChecks int
+}
+
+func (c *Certificate) buildChains(chain []*Certificate, st *chainState, opts *VerifyOptions) ([][]*Certificate, error) {
+	chains := [][]*Certificate{}
+	var err error = nil
+	var hintErr error = nil
+	var hint *Certificate = c
+	limit := false
+	for pass := 0; pass < 2 && !limit; pass++ {
+		certType := rootCertificate
+		cands := opts.Roots.findPotentialParents(c)
+		if pass == 1 {
+			certType = intermediateCertificate
+			cands = opts.Intermediates.findPotentialParents(c)
+		}
+		for j := 0; j < len(cands) && !limit; j++ {
+			cand := cands[j]
+			st.sigChecks++
+			if st.sigChecks > maxChainSignatureChecks {
+				err = errSignatureLimit()
+				limit = true
+				break
+			}
+			if cand.PublicKeyAlgorithm == UnknownPublicKeyAlgorithm || alreadyInChain(cand, chain) {
+				continue
+			}
+			if e := c.CheckSignatureFrom(cand); e != nil {
+				if hintErr == nil {
+					hintErr = e
+					hint = cand
+				}
+				continue
+			}
+			err = cand.isValid(certType, chain, opts)
+			if err != nil {
+				if hintErr == nil {
+					hintErr = err
+					hint = cand
+				}
+				continue
+			}
+			if certType == rootCertificate {
+				chains = append(chains, appendToFreshChain(chain, cand))
+			} else {
+				sub, e2 := cand.buildChains(appendToFreshChain(chain, cand), st, opts)
+				err = e2
+				for k := 0; k < len(sub); k++ {
+					chains = append(chains, sub[k])
+				}
+				if e2 != nil && e2.Error() == errSignatureLimit().Error() {
+					limit = true
+				}
+			}
+		}
+	}
+	if len(chains) > 0 {
+		err = nil
+	}
+	if len(chains) == 0 && err == nil {
+		err = unknownAuthority(hintErr, hint)
+	}
+	return chains, err
+}

@@ -1,0 +1,45 @@
+package main
+
+import (
+	"sgo"
+	"std/crypto/x509"
+	"std/encoding/hex"
+)
+
+const peerHex = "308201b030820156a00302010202141f37b7704de6632dc7f14829a80553b81a41ff41300a06082a8648ce3d040302301a3118301606035504030c0f783530392d6c696d626f2d726f6f743020170d3730303130313030303030315a180f32393639303530333030303030315a30163114301206035504030c0b6578616d706c652e636f6d3059301306072a8648ce3d020106082a8648ce3d030107034200040eafcf4fd9516a82a34099503f585f3f47fb1cff2dbf2cebe856f0afe718d1e2dcc25b3e5e11862027659c93d85d7807a83370eea610740f051440ef86b1393aa37c307a301d0603551d0e0416041492db7dbe987443537d6eafaf195d0a279fb776ff301f0603551d230418301680148f8ee9497c1dc14e41c7697047fbbe4bab450480300b0603551d0f04040302078030130603551d25040c300a06082b0601050507030130160603551d11040f300d820b6578616d706c652e636f6d300a06082a8648ce3d0403020348003045022051ac1aacc3395d54105aac65d98add36d98a7679785f753f2ceb50e7856ea873022100860f0f5ac23027377446a765d316a9eac3ca134b62d7e4798bb557a0142d6d22"
+const rootHex = "308201ad30820154a003020102021429c7715c728762d8306212d41174771535805c63300a06082a8648ce3d040302301a3118301606035504030c0f783530392d6c696d626f2d726f6f743020170d3730303130313030303030315a180f32393639303530333030303030315a301a3118301606035504030c0f783530392d6c696d626f2d726f6f743059301306072a8648ce3d020106082a8648ce3d03010703420004a7eb2e5e4baabedb27ba1fcd2daa2a1ef003d6a01c1f2d50edf5a2a3a741eb477dbb6fd1f0e5e4af9be3699817cfb4949ca79029ca4d17ce936d6acfe808928ca3763074300f0603551d130101ff040530030101ff300b0603551d0f04040302010630160603551d11040f300d820b6578616d706c652e636f6d301d0603551d0e041604148f8ee9497c1dc14e41c7697047fbbe4bab450480301d0603551d1e0101ff04133011a00f300d820b6578616d706c652e636f6d300a06082a8648ce3d040302034700304402202e722c3d35560d908eac6a5813ec5ac4daa7f9f91fc1fb298079c340ad849deb02201124fc1c37a998ebf455c84d2949dafef901dca3792eeccafda54a70d314c40f"
+const intHex = ""
+
+func show(err error) string {
+	if err == nil {
+		return "ok"
+	}
+	return err.Error()
+}
+
+func cert(h string) *x509.Certificate {
+	d, _ := hex.DecodeString(h)
+	c, _ := x509.ParseCertificate(d)
+	return c
+}
+
+// main verifies an x509-limbo chain (rfc5280::nc::permitted-dns-match) as Go does (SGO-STD-029).
+func main(root *sgo.Context) error {
+	peer := cert(peerHex)
+	roots := x509.NewCertPool()
+	roots.AddCert(cert(rootHex))
+	ints := x509.NewCertPool()
+	if intHex != "" {
+		ints.AddCert(cert(intHex))
+	}
+	out := ""
+	_, err := peer.Verify(x509.VerifyOptions{DNSName: "example.com", Intermediates: ints, Roots: roots, CurrentTime: 1793996054, KeyUsages: []x509.ExtKeyUsage{}, CertificatePolicies: []x509.OID{}})
+	out += show(err) + "\n"
+	_, err = peer.Verify(x509.VerifyOptions{DNSName: "other.test", Intermediates: ints, Roots: roots, CurrentTime: 1793996054, KeyUsages: []x509.ExtKeyUsage{}, CertificatePolicies: []x509.OID{}})
+	out += show(err) + "\n"
+	_, err = peer.Verify(x509.VerifyOptions{DNSName: "example.com", Intermediates: ints, Roots: roots, CurrentTime: 32503680000, KeyUsages: []x509.ExtKeyUsage{}, CertificatePolicies: []x509.OID{}})
+	out += show(err) + "\n"
+	_, err = x509.ParseCertificate([]byte{0x30, 0x03, 0x02, 0x01, 0x01})
+	out += show(err) + "\n"
+	return root.Stdout().WriteString(out)
+}

@@ -1,0 +1,238 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package x509
+
+import "std/encoding/asn1"
+
+// An AttributeTypeAndValue is one attribute of a distinguished name. Value is the attribute's
+// text when it is a string type, and IsString reports whether it is.
+type AttributeTypeAndValue struct {
+	Type     asn1.ObjectIdentifier
+	Value    string
+	IsString bool
+}
+
+// A Name is a distinguished name, with the fields of Go's pkix.Name.
+type Name struct {
+	Country            []string
+	Organization       []string
+	OrganizationalUnit []string
+	Locality           []string
+	Province           []string
+	StreetAddress      []string
+	PostalCode         []string
+	SerialNumber       string
+	CommonName         string
+	Names              []AttributeTypeAndValue
+}
+
+// An Extension is a certificate extension.
+type Extension struct {
+	Id       asn1.ObjectIdentifier
+	Critical bool
+	Value    []byte
+}
+
+// An IPNet is an IP network of a name constraint: IP and Mask have 4 or 16 bytes.
+type IPNet struct {
+	IP   []byte
+	Mask []byte
+}
+
+// An OID is an object identifier of any size, kept in its DER encoding, as Go's x509.OID.
+type OID struct {
+	der []byte
+}
+
+// A PolicyMapping is one mapping of the policy mappings extension.
+type PolicyMapping struct {
+	IssuerDomainPolicy  OID
+	SubjectDomainPolicy OID
+}
+
+// A Certificate is a parsed X.509 certificate, with the fields of Go's x509.Certificate; serial
+// numbers are big-endian two's-complement bytes, times are Unix seconds, IP addresses are 4- or
+// 16-byte slices, and URIs are their text.
+type Certificate struct {
+	Raw                         []byte
+	RawTBSCertificate           []byte
+	RawSubjectPublicKeyInfo     []byte
+	RawSubject                  []byte
+	RawIssuer                   []byte
+	RawSignatureAlgorithm       []byte
+	Signature                   []byte
+	SignatureAlgorithm          SignatureAlgorithm
+	PublicKeyAlgorithm          PublicKeyAlgorithm
+	PublicKey                   PublicKey
+	Version                     int
+	SerialNumber                []byte
+	SerialNumberNegative        bool
+	Issuer                      Name
+	Subject                     Name
+	NotBefore                   int
+	NotAfter                    int
+	KeyUsage                    KeyUsage
+	Extensions                  []Extension
+	UnhandledCriticalExtensions []asn1.ObjectIdentifier
+	ExtKeyUsage                 []ExtKeyUsage
+	UnknownExtKeyUsage          []asn1.ObjectIdentifier
+	BasicConstraintsValid       bool
+	IsCA                        bool
+	MaxPathLen                  int
+	MaxPathLenZero              bool
+	SubjectKeyId                []byte
+	AuthorityKeyId              []byte
+	OCSPServer                  []string
+	IssuingCertificateURL       []string
+	DNSNames                    []string
+	EmailAddresses              []string
+	IPAddresses                 [][]byte
+	URIs                        []string
+	PermittedDNSDomainsCritical bool
+	PermittedDNSDomains         []string
+	ExcludedDNSDomains          []string
+	PermittedIPRanges           []IPNet
+	ExcludedIPRanges            []IPNet
+	PermittedEmailAddresses     []string
+	ExcludedEmailAddresses      []string
+	PermittedURIDomains         []string
+	ExcludedURIDomains          []string
+	CRLDistributionPoints       []string
+	Policies                    []OID
+	InhibitAnyPolicy            int
+	InhibitAnyPolicyZero        bool
+	InhibitPolicyMapping        int
+	InhibitPolicyMappingZero    bool
+	RequireExplicitPolicy       int
+	RequireExplicitPolicyZero   bool
+	PolicyMappings              []PolicyMapping
+	uris                        []parsedURL
+}
+
+func newOIDFromDER(der []byte) (OID, bool) {
+	if len(der) == 0 || der[len(der)-1]&0x80 != 0 {
+		return OID{der: []byte{}}, false
+	}
+	start := 0
+	for i := 0; i < len(der); i++ {
+		if i == start && der[i] == 0x80 {
+			return OID{der: []byte{}}, false
+		}
+		if der[i]&0x80 == 0 {
+			start = i + 1
+		}
+	}
+	return OID{der: der}, true
+}
+
+// Equal reports whether oid and other are the same identifier.
+func (oid OID) Equal(other OID) bool {
+	return string(oid.der) == string(other.der)
+}
+
+// decimal is a non-negative integer as little-endian decimal digits.
+func decMulAdd(d []int, m, a int) []int {
+	carry := a
+	for i := 0; i < len(d); i++ {
+		v := d[i]*m + carry
+		d[i] = v % 10
+		carry = v / 10
+	}
+	for carry > 0 {
+		d = append(d, carry%10)
+		carry = carry / 10
+	}
+	return d
+}
+
+func decString(d []int) string {
+	n := len(d)
+	for n > 1 && d[n-1] == 0 {
+		n--
+	}
+	if n == 0 {
+		return "0"
+	}
+	b := make([]byte, n)
+	for i := 0; i < n; i++ {
+		b[i] = byte('0' + d[n-1-i])
+	}
+	return string(b)
+}
+
+func decSub80(d []int) []int {
+	borrow := 80
+	for i := 0; i < len(d) && borrow > 0; i++ {
+		v := d[i] - borrow%10
+		borrow = borrow / 10
+		if v < 0 {
+			v = v + 10
+			borrow++
+		}
+		d[i] = v
+	}
+	return d
+}
+
+func decSmall(d []int) (int, bool) {
+	n := len(d)
+	for n > 1 && d[n-1] == 0 {
+		n--
+	}
+	if n > 9 {
+		return 0, false
+	}
+	v := 0
+	for i := n - 1; i >= 0; i-- {
+		v = v*10 + d[i]
+	}
+	return v, true
+}
+
+// String returns the dotted decimal form of oid, as Go's OID.String.
+func (oid OID) String() string {
+	out := ""
+	cur := []int{0}
+	first := true
+	for i := 0; i < len(oid.der); i++ {
+		v := oid.der[i]
+		cur = decMulAdd(cur, 128, int(v&0x7f))
+		if v&0x80 != 0 {
+			continue
+		}
+		if first {
+			small, ok := decSmall(cur)
+			if ok && small < 80 {
+				out = itoa(small/40) + "." + itoa(small%40)
+			} else {
+				out = "2." + decString(decSub80(cur))
+			}
+			first = false
+		} else {
+			out = out + "." + decString(cur)
+		}
+		cur = []int{0}
+	}
+	return out
+}
+
+func itoa(v int) string {
+	if v == 0 {
+		return "0"
+	}
+	neg := v < 0
+	if neg {
+		v = -v
+	}
+	b := []byte{}
+	for v > 0 {
+		b = append([]byte{byte('0' + v%10)}, b...)
+		v = v / 10
+	}
+	if neg {
+		return "-" + string(b)
+	}
+	return string(b)
+}

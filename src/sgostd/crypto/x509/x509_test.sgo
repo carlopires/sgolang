@@ -1,0 +1,49 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package x509
+
+import (
+	"sgo"
+	"std/errors"
+)
+
+func TestIPStrings(t *sgo.T) error {
+	cases := []IPNet{
+		IPNet{IP: []byte{192, 0, 2, 0}, Mask: []byte{255, 255, 255, 0}},
+		IPNet{IP: []byte{0x20, 1, 0xd, 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, Mask: []byte{255, 255, 255, 255, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0}},
+		IPNet{IP: []byte{10, 0, 0, 0}, Mask: []byte{255, 0, 255, 0}},
+	}
+	want := []string{"192.0.2.0/24", "2001:db8::1/64", "10.0.0.0/ff00ff00"}
+	for i := 0; i < len(cases); i++ {
+		if got := cases[i].String(); got != want[i] {
+			return errors.New("IPNet %d: got " + got + ", want " + want[i])
+		}
+	}
+	if s := ipString([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 1, 2, 3, 4}); s != "1.2.3.4" {
+		return errors.New("v4-mapped: " + s)
+	}
+	return nil
+}
+
+func TestHostnames(t *sgo.T) error {
+	if !matchHostnames("*.example.com", splitHostname("www.example.com")) {
+		return errors.New("wildcard did not match")
+	}
+	if matchHostnames("*.example.com", splitHostname("a.b.example.com")) {
+		return errors.New("wildcard matched two labels")
+	}
+	if validHostname("-a.com", false) {
+		return errors.New("leading hyphen accepted")
+	}
+	return nil
+}
+
+func TestMalformed(t *sgo.T) error {
+	_, err := ParseCertificate([]byte{0x30, 0x03, 0x02, 0x01, 0x01})
+	if err == nil || err.Error() != "x509: malformed tbs certificate" {
+		return errors.New("unexpected parse result")
+	}
+	return nil
+}

@@ -1,0 +1,383 @@
+// Copyright 2009 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package x509 parses X.509 certificates and verifies certificate chains (SGO-STD-029, D199),
+// with the results and error texts of Go's crypto/x509 for the supported algorithms: RSA
+// (PKCS #1 v1.5 and PSS), ECDSA on P-256 and P-384, and Ed25519. Times are Unix seconds.
+package x509
+
+// Ported from Go's crypto/x509 (src/crypto/x509/x509.go) with parser.go, verify.go,
+// constraints.go, oid.go, cert_pool.go and pkix for S-Go (SGO-STD-029, D199).
+
+import (
+	"std/crypto/ecdsa"
+	"std/crypto/ed25519"
+	"std/crypto/rsa"
+	"std/crypto/sha256"
+	"std/crypto/sha512"
+	"std/encoding/asn1"
+	"std/errors"
+	"std/strconv"
+)
+
+// A SignatureAlgorithm names a certificate signature algorithm, numbered as in Go.
+type SignatureAlgorithm int
+
+// The signature algorithms, numbered as Go's crypto/x509 constants.
+const (
+	UnknownSignatureAlgorithm SignatureAlgorithm = 0
+	MD2WithRSA                SignatureAlgorithm = 1
+	MD5WithRSA                SignatureAlgorithm = 2
+	SHA1WithRSA               SignatureAlgorithm = 3
+	SHA256WithRSA             SignatureAlgorithm = 4
+	SHA384WithRSA             SignatureAlgorithm = 5
+	SHA512WithRSA             SignatureAlgorithm = 6
+	DSAWithSHA1               SignatureAlgorithm = 7
+	DSAWithSHA256             SignatureAlgorithm = 8
+	ECDSAWithSHA1             SignatureAlgorithm = 9
+	ECDSAWithSHA256           SignatureAlgorithm = 10
+	ECDSAWithSHA384           SignatureAlgorithm = 11
+	ECDSAWithSHA512           SignatureAlgorithm = 12
+	SHA256WithRSAPSS          SignatureAlgorithm = 13
+	SHA384WithRSAPSS          SignatureAlgorithm = 14
+	SHA512WithRSAPSS          SignatureAlgorithm = 15
+	PureEd25519               SignatureAlgorithm = 16
+	MLDSA44                   SignatureAlgorithm = 17
+	MLDSA65                   SignatureAlgorithm = 18
+	MLDSA87                   SignatureAlgorithm = 19
+)
+
+// A PublicKeyAlgorithm names a public key algorithm, numbered as in Go.
+type PublicKeyAlgorithm int
+
+// The public key algorithms, numbered as Go's crypto/x509 constants.
+const (
+	UnknownPublicKeyAlgorithm PublicKeyAlgorithm = 0
+	RSA                       PublicKeyAlgorithm = 1
+	DSA                       PublicKeyAlgorithm = 2
+	ECDSA                     PublicKeyAlgorithm = 3
+	Ed25519                   PublicKeyAlgorithm = 4
+	MLDSA                     PublicKeyAlgorithm = 5
+)
+
+// String returns Go's name of the algorithm.
+func (algo PublicKeyAlgorithm) String() string {
+	names := []string{"", "RSA", "DSA", "ECDSA", "Ed25519", "ML-DSA"}
+	if 0 < algo && int(algo) < len(names) {
+		return names[int(algo)]
+	}
+	return strconv.Itoa(int(algo))
+}
+
+type sigDetails struct {
+	algo     SignatureAlgorithm
+	name     string
+	oid      asn1.ObjectIdentifier
+	pubAlgo  PublicKeyAlgorithm
+	hash     int
+	isRSAPSS bool
+}
+
+// Hash codes: 0 none, 1 MD5, 2 SHA-1, 3 SHA-256, 4 SHA-384, 5 SHA-512.
+func sigTable() []sigDetails {
+	return []sigDetails{
+		{MD5WithRSA, "MD5-RSA", asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 4}, RSA, 1, false},
+		{SHA1WithRSA, "SHA1-RSA", asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 5}, RSA, 2, false},
+		{SHA1WithRSA, "SHA1-RSA", asn1.ObjectIdentifier{1, 3, 14, 3, 2, 29}, RSA, 2, false},
+		{SHA256WithRSA, "SHA256-RSA", asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 11}, RSA, 3, false},
+		{SHA384WithRSA, "SHA384-RSA", asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 12}, RSA, 4, false},
+		{SHA512WithRSA, "SHA512-RSA", asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 13}, RSA, 5, false},
+		{SHA256WithRSAPSS, "SHA256-RSAPSS", asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 10}, RSA, 3, true},
+		{SHA384WithRSAPSS, "SHA384-RSAPSS", asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 10}, RSA, 4, true},
+		{SHA512WithRSAPSS, "SHA512-RSAPSS", asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 10}, RSA, 5, true},
+		{DSAWithSHA1, "DSA-SHA1", asn1.ObjectIdentifier{1, 2, 840, 10040, 4, 3}, DSA, 2, false},
+		{DSAWithSHA256, "DSA-SHA256", asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 3, 2}, DSA, 3, false},
+		{ECDSAWithSHA1, "ECDSA-SHA1", asn1.ObjectIdentifier{1, 2, 840, 10045, 4, 1}, ECDSA, 2, false},
+		{ECDSAWithSHA256, "ECDSA-SHA256", asn1.ObjectIdentifier{1, 2, 840, 10045, 4, 3, 2}, ECDSA, 3, false},
+		{ECDSAWithSHA384, "ECDSA-SHA384", asn1.ObjectIdentifier{1, 2, 840, 10045, 4, 3, 3}, ECDSA, 4, false},
+		{ECDSAWithSHA512, "ECDSA-SHA512", asn1.ObjectIdentifier{1, 2, 840, 10045, 4, 3, 4}, ECDSA, 5, false},
+		{PureEd25519, "Ed25519", asn1.ObjectIdentifier{1, 3, 101, 112}, Ed25519, 0, false},
+		{MLDSA44, "ML-DSA-44", asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 3, 17}, MLDSA, 0, false},
+		{MLDSA65, "ML-DSA-65", asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 3, 18}, MLDSA, 0, false},
+		{MLDSA87, "ML-DSA-87", asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 3, 19}, MLDSA, 0, false},
+	}
+}
+
+// String returns Go's name of the algorithm.
+func (algo SignatureAlgorithm) String() string {
+	t := sigTable()
+	for i := 0; i < len(t); i++ {
+		if t[i].algo == algo {
+			return t[i].name
+		}
+	}
+	return strconv.Itoa(int(algo))
+}
+
+func (algo SignatureAlgorithm) details() (sigDetails, bool) {
+	t := sigTable()
+	for i := 0; i < len(t); i++ {
+		if t[i].algo == algo {
+			return t[i], true
+		}
+	}
+	return sigDetails{algo: UnknownSignatureAlgorithm, name: "", oid: asn1.ObjectIdentifier{}, pubAlgo: UnknownPublicKeyAlgorithm, hash: 0, isRSAPSS: false}, false
+}
+
+func oidPublicKeyRSA() asn1.ObjectIdentifier {
+	return asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 1}
+}
+
+func oidPublicKeyDSA() asn1.ObjectIdentifier {
+	return asn1.ObjectIdentifier{1, 2, 840, 10040, 4, 1}
+}
+
+func oidPublicKeyECDSA() asn1.ObjectIdentifier {
+	return asn1.ObjectIdentifier{1, 2, 840, 10045, 2, 1}
+}
+
+func oidPublicKeyEd25519() asn1.ObjectIdentifier {
+	return asn1.ObjectIdentifier{1, 3, 101, 112}
+}
+
+func oidMLDSA(n int) asn1.ObjectIdentifier {
+	return asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 3, n}
+}
+
+func publicKeyAlgorithmFromOID(oid asn1.ObjectIdentifier) PublicKeyAlgorithm {
+	if oid.Equal(oidPublicKeyRSA()) {
+		return RSA
+	}
+	if oid.Equal(oidPublicKeyDSA()) {
+		return DSA
+	}
+	if oid.Equal(oidPublicKeyECDSA()) {
+		return ECDSA
+	}
+	if oid.Equal(oidPublicKeyEd25519()) {
+		return Ed25519
+	}
+	if oid.Equal(oidMLDSA(17)) || oid.Equal(oidMLDSA(18)) || oid.Equal(oidMLDSA(19)) {
+		return MLDSA
+	}
+	return UnknownPublicKeyAlgorithm
+}
+
+// A KeyUsage is a set of the key usage bits of a certificate.
+type KeyUsage int
+
+// The key usage bits.
+const (
+	KeyUsageDigitalSignature  KeyUsage = 1
+	KeyUsageContentCommitment KeyUsage = 2
+	KeyUsageKeyEncipherment   KeyUsage = 4
+	KeyUsageDataEncipherment  KeyUsage = 8
+	KeyUsageKeyAgreement      KeyUsage = 16
+	KeyUsageCertSign          KeyUsage = 32
+	KeyUsageCRLSign           KeyUsage = 64
+	KeyUsageEncipherOnly      KeyUsage = 128
+	KeyUsageDecipherOnly      KeyUsage = 256
+)
+
+// An ExtKeyUsage is an extended key usage, numbered as in Go.
+type ExtKeyUsage int
+
+// The extended key usages Go knows, numbered as Go's crypto/x509 constants.
+const (
+	ExtKeyUsageAny                            ExtKeyUsage = 0
+	ExtKeyUsageServerAuth                     ExtKeyUsage = 1
+	ExtKeyUsageClientAuth                     ExtKeyUsage = 2
+	ExtKeyUsageCodeSigning                    ExtKeyUsage = 3
+	ExtKeyUsageEmailProtection                ExtKeyUsage = 4
+	ExtKeyUsageIPSECEndSystem                 ExtKeyUsage = 5
+	ExtKeyUsageIPSECTunnel                    ExtKeyUsage = 6
+	ExtKeyUsageIPSECUser                      ExtKeyUsage = 7
+	ExtKeyUsageTimeStamping                   ExtKeyUsage = 8
+	ExtKeyUsageOCSPSigning                    ExtKeyUsage = 9
+	ExtKeyUsageMicrosoftServerGatedCrypto     ExtKeyUsage = 10
+	ExtKeyUsageNetscapeServerGatedCrypto      ExtKeyUsage = 11
+	ExtKeyUsageMicrosoftCommercialCodeSigning ExtKeyUsage = 12
+	ExtKeyUsageMicrosoftKernelCodeSigning     ExtKeyUsage = 13
+)
+
+func extKeyUsageOIDs() []asn1.ObjectIdentifier {
+	return []asn1.ObjectIdentifier{
+		{2, 5, 29, 37, 0},
+		{1, 3, 6, 1, 5, 5, 7, 3, 1},
+		{1, 3, 6, 1, 5, 5, 7, 3, 2},
+		{1, 3, 6, 1, 5, 5, 7, 3, 3},
+		{1, 3, 6, 1, 5, 5, 7, 3, 4},
+		{1, 3, 6, 1, 5, 5, 7, 3, 5},
+		{1, 3, 6, 1, 5, 5, 7, 3, 6},
+		{1, 3, 6, 1, 5, 5, 7, 3, 7},
+		{1, 3, 6, 1, 5, 5, 7, 3, 8},
+		{1, 3, 6, 1, 5, 5, 7, 3, 9},
+		{1, 3, 6, 1, 4, 1, 311, 10, 3, 3},
+		{2, 16, 840, 1, 113730, 4, 1},
+		{1, 3, 6, 1, 4, 1, 311, 2, 1, 22},
+		{1, 3, 6, 1, 4, 1, 311, 61, 1, 1},
+	}
+}
+
+func extKeyUsageFromOID(oid asn1.ObjectIdentifier) (ExtKeyUsage, bool) {
+	t := extKeyUsageOIDs()
+	for i := 0; i < len(t); i++ {
+		if oid.Equal(t[i]) {
+			return ExtKeyUsage(i), true
+		}
+	}
+	return ExtKeyUsageAny, false
+}
+
+// A PublicKey is a parsed subject public key. Algorithm is the certificate's
+// PublicKeyAlgorithm; RSA holds an RSA key; Curve is "P-224", "P-256", "P-384" or "P-521" for
+// ECDSA and "ML-DSA-44", "ML-DSA-65" or "ML-DSA-87" for ML-DSA; Key holds the uncompressed
+// point (ECDSA), the key (Ed25519, ML-DSA), or the big-endian Y (DSA).
+type PublicKey struct {
+	Algorithm PublicKeyAlgorithm
+	RSA       rsa.PublicKey
+	Curve     string
+	Key       []byte
+}
+
+// ErrUnsupportedAlgorithm is the error of a signature check with an algorithm that is not
+// implemented, as Go's.
+func ErrUnsupportedAlgorithm() error {
+	return errors.New("x509: cannot verify signature: algorithm unimplemented")
+}
+
+func insecureAlgorithmError(algo SignatureAlgorithm) error {
+	return errors.New("x509: cannot verify signature: insecure algorithm " + algo.String())
+}
+
+func constraintViolationError() error {
+	return errors.New("x509: invalid signature: parent certificate cannot sign this kind of certificate")
+}
+
+func keyTypeName(pub PublicKey) string {
+	if pub.Algorithm == RSA {
+		return "*rsa.PublicKey"
+	}
+	if pub.Algorithm == ECDSA {
+		return "*ecdsa.PublicKey"
+	}
+	if pub.Algorithm == Ed25519 {
+		return "ed25519.PublicKey"
+	}
+	if pub.Algorithm == DSA {
+		return "*dsa.PublicKey"
+	}
+	if pub.Algorithm == MLDSA {
+		return "*mldsa.PublicKey"
+	}
+	return "<nil>"
+}
+
+func digest(h int, data []byte) []byte {
+	if h == 3 {
+		d := sha256.Sum256(data)
+		return d[:]
+	}
+	if h == 4 {
+		d := sha512.Sum384(data)
+		return d[:]
+	}
+	d := sha512.Sum512(data)
+	return d[:]
+}
+
+func rsaHash(h int) rsa.Hash {
+	if h == 4 {
+		return rsa.SHA384
+	}
+	if h == 5 {
+		return rsa.SHA512
+	}
+	return rsa.SHA256
+}
+
+func checkSignature(algo SignatureAlgorithm, signed, signature []byte, pub PublicKey, allowSHA1 bool) error {
+	d, _ := algo.details()
+	if d.hash == 0 {
+		if d.pubAlgo != Ed25519 && d.pubAlgo != MLDSA {
+			return ErrUnsupportedAlgorithm()
+		}
+	} else if d.hash == 1 {
+		return insecureAlgorithmError(algo)
+	} else if d.hash == 2 {
+		if !allowSHA1 {
+			return insecureAlgorithmError(algo)
+		}
+		// SHA-1 is not implemented in S-Go.
+		return ErrUnsupportedAlgorithm()
+	} else {
+		signed = digest(d.hash, signed)
+	}
+	if pub.Algorithm == RSA {
+		if d.pubAlgo != RSA {
+			return errors.New("x509: signature algorithm specifies an " + d.pubAlgo.String() + " public key, but have public key of type " + keyTypeName(pub))
+		}
+		k := pub.RSA
+		if d.isRSAPSS {
+			return rsa.VerifyPSS(&k, rsaHash(d.hash), signed, signature, rsa.PSSSaltLengthEqualsHash)
+		}
+		return rsa.VerifyPKCS1v15(&k, rsaHash(d.hash), signed, signature)
+	}
+	if pub.Algorithm == ECDSA {
+		if d.pubAlgo != ECDSA {
+			return errors.New("x509: signature algorithm specifies an " + d.pubAlgo.String() + " public key, but have public key of type " + keyTypeName(pub))
+		}
+		if pub.Curve == "P-256" {
+			if !ecdsa.VerifyASN1(ecdsa.P256(), pub.Key, signed, signature) {
+				return errors.New("x509: ECDSA verification failure")
+			}
+			return nil
+		}
+		if pub.Curve == "P-384" {
+			if !ecdsa.VerifyASN1(ecdsa.P384(), pub.Key, signed, signature) {
+				return errors.New("x509: ECDSA verification failure")
+			}
+			return nil
+		}
+		// P-224 and P-521 are parsed but not implemented for verification in S-Go.
+		return ErrUnsupportedAlgorithm()
+	}
+	if pub.Algorithm == Ed25519 {
+		if d.pubAlgo != Ed25519 {
+			return errors.New("x509: signature algorithm specifies an " + d.pubAlgo.String() + " public key, but have public key of type " + keyTypeName(pub))
+		}
+		if !ed25519.Verify(pub.Key, signed, signature) {
+			return errors.New("x509: Ed25519 verification failure")
+		}
+		return nil
+	}
+	// ML-DSA is parsed but not implemented for verification in S-Go; DSA is not verified,
+	// as in Go.
+	return ErrUnsupportedAlgorithm()
+}
+
+// CheckSignatureFrom checks that c's signature is valid under parent's key and that parent may
+// sign certificates, as Go's Certificate.CheckSignatureFrom.
+func (c *Certificate) CheckSignatureFrom(parent *Certificate) error {
+	if parent.Version == 3 && !parent.BasicConstraintsValid || parent.BasicConstraintsValid && !parent.IsCA {
+		return constraintViolationError()
+	}
+	if parent.KeyUsage != 0 && parent.KeyUsage&KeyUsageCertSign == 0 {
+		return constraintViolationError()
+	}
+	if parent.PublicKeyAlgorithm == UnknownPublicKeyAlgorithm {
+		return ErrUnsupportedAlgorithm()
+	}
+	return checkSignature(c.SignatureAlgorithm, c.RawTBSCertificate, c.Signature, parent.PublicKey, false)
+}
+
+// CheckSignature checks that signature is a valid signature of signed by c's key with algo.
+func (c *Certificate) CheckSignature(algo SignatureAlgorithm, signed, signature []byte) error {
+	return checkSignature(algo, signed, signature, c.PublicKey, true)
+}
+
+// Equal reports whether c and other are the same certificate (the same DER bytes).
+func (c *Certificate) Equal(other *Certificate) bool {
+	return string(c.Raw) == string(other.Raw)
+}

@@ -1,0 +1,255 @@
+// Copyright 2011 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+// Ported from Go's crypto/x509 (src/crypto/x509/verify.go) for S-Go (SGO-STD-029, D199).
+
+package x509
+
+import (
+	"std/crypto/sha256"
+	"std/strconv"
+)
+
+// An InvalidReason says why a certificate is invalid, numbered as Go's.
+type InvalidReason int
+
+const (
+	NotAuthorizedToSign           InvalidReason = 0
+	Expired                       InvalidReason = 1
+	CANotAuthorizedForThisName    InvalidReason = 2
+	TooManyIntermediates          InvalidReason = 3
+	IncompatibleUsage             InvalidReason = 4
+	NameMismatch                  InvalidReason = 5
+	NameConstraintsWithoutSANs    InvalidReason = 6
+	UnconstrainedName             InvalidReason = 7
+	TooManyConstraints            InvalidReason = 8
+	CANotAuthorizedForExtKeyUsage InvalidReason = 9
+	NoValidChains                 InvalidReason = 10
+)
+
+// A CertificateInvalidError reports an odd error during verification.
+type CertificateInvalidError struct {
+	Reason InvalidReason
+	Detail string
+}
+
+func (e CertificateInvalidError) Error() string {
+	r := e.Reason
+	if r == NotAuthorizedToSign {
+		return "x509: certificate is not authorized to sign other certificates"
+	}
+	if r == Expired {
+		return "x509: certificate has expired or is not yet valid: " + e.Detail
+	}
+	if r == CANotAuthorizedForThisName {
+		return "x509: a root or intermediate certificate is not authorized to sign for this name: " + e.Detail
+	}
+	if r == CANotAuthorizedForExtKeyUsage {
+		return "x509: a root or intermediate certificate is not authorized for an extended key usage: " + e.Detail
+	}
+	if r == TooManyIntermediates {
+		return "x509: too many intermediates for path length constraint"
+	}
+	if r == IncompatibleUsage {
+		return "x509: certificate specifies an incompatible key usage"
+	}
+	if r == NameMismatch {
+		return "x509: issuer name does not match subject from issuing certificate"
+	}
+	if r == NameConstraintsWithoutSANs {
+		return "x509: issuer has name constraints but leaf doesn't have a SAN extension"
+	}
+	if r == UnconstrainedName {
+		return "x509: issuer has name constraints but leaf contains unknown or unconstrained name: " + e.Detail
+	}
+	if r == NoValidChains {
+		if e.Detail != "" {
+			return "x509: no valid chains built: " + e.Detail
+		}
+		return "x509: no valid chains built"
+	}
+	return "x509: unknown error"
+}
+
+// A HostnameError is a hostname mismatch; Message holds Go's text for the certificate.
+type HostnameError struct {
+	Host    string
+	Message string
+}
+
+func (h HostnameError) Error() string {
+	return h.Message
+}
+
+// An UnknownAuthorityError is a chain that ends at no root; Message holds Go's text.
+type UnknownAuthorityError struct {
+	Message string
+}
+
+func (e UnknownAuthorityError) Error() string {
+	return e.Message
+}
+
+// A SystemRootsError is a verification without roots: S-Go has no system pool.
+type SystemRootsError struct{}
+
+func (se SystemRootsError) Error() string {
+	return "x509: failed to load system roots and no roots provided"
+}
+
+// An UnhandledCriticalExtension is a critical extension this package does not handle.
+type UnhandledCriticalExtension struct{}
+
+func (h UnhandledCriticalExtension) Error() string {
+	return "x509: unhandled critical extension"
+}
+
+// VerifyOptions are the parameters of Certificate.Verify. CurrentTime is Unix seconds (UTC)
+// and is required: S-Go code has no ambient clock (SGO-STD-029).
+type VerifyOptions struct {
+	DNSName             string
+	Intermediates       *CertPool
+	Roots               *CertPool
+	CurrentTime         int
+	KeyUsages           []ExtKeyUsage
+	CertificatePolicies []OID
+}
+
+// A CertPool is a set of certificates.
+type CertPool struct {
+	certs  []*Certificate
+	byName map[string][]int
+	have   map[string]bool
+}
+
+// NewCertPool returns an empty pool.
+func NewCertPool() *CertPool {
+	return &CertPool{certs: []*Certificate{}, byName: map[string][]int{}, have: map[string]bool{}}
+}
+
+func rawSum(c *Certificate) string {
+	s := sha256.Sum224(c.Raw)
+	return string(s[:])
+}
+
+// AddCert adds c to the pool; a certificate already present is not added again.
+func (s *CertPool) AddCert(c *Certificate) {
+	k := rawSum(c)
+	if s.have[k] {
+		return
+	}
+	s.have[k] = true
+	s.certs = append(s.certs, c)
+	n := string(c.RawSubject)
+	s.byName[n] = append(s.byName[n], len(s.certs)-1)
+}
+
+// Subjects returns the DER subjects of the pool's certificates, in insertion order.
+func (s *CertPool) Subjects() [][]byte {
+	out := [][]byte{}
+	for i := 0; i < len(s.certs); i++ {
+		out = append(out, s.certs[i].RawSubject)
+	}
+	return out
+}
+
+func (s *CertPool) contains(c *Certificate) bool {
+	if s == nil {
+		return false
+	}
+	return s.have[rawSum(c)]
+}
+
+func (s *CertPool) findPotentialParents(c *Certificate) []*Certificate {
+	if s == nil {
+		return []*Certificate{}
+	}
+	match, one, mismatch := []*Certificate{}, []*Certificate{}, []*Certificate{}
+	idx := s.byName[string(c.RawIssuer)]
+	for i := 0; i < len(idx); i++ {
+		cand := s.certs[idx[i]]
+		if string(cand.SubjectKeyId) == string(c.AuthorityKeyId) {
+			match = append(match, cand)
+		} else if len(cand.SubjectKeyId) == 0 && len(c.AuthorityKeyId) > 0 || len(cand.SubjectKeyId) > 0 && len(c.AuthorityKeyId) == 0 {
+			one = append(one, cand)
+		} else {
+			mismatch = append(mismatch, cand)
+		}
+	}
+	for i := 0; i < len(one); i++ {
+		match = append(match, one[i])
+	}
+	for i := 0; i < len(mismatch); i++ {
+		match = append(match, mismatch[i])
+	}
+	return match
+}
+
+func pad2(v int) string {
+	if v < 10 {
+		return "0" + itoa(v)
+	}
+	return itoa(v)
+}
+
+// rfc3339 formats Unix seconds as Go's time.RFC3339 in UTC.
+func rfc3339(t int) string {
+	days := t / 86400
+	sec := t % 86400
+	if sec < 0 {
+		sec += 86400
+		days--
+	}
+	z := days + 719468
+	era := z / 146097
+	if z < 0 && z%146097 != 0 {
+		era--
+	}
+	doe := z - era*146097
+	yoe := (doe - doe/1460 + doe/36524 - doe/146096) / 365
+	y := yoe + era*400
+	doy := doe - (365*yoe + yoe/4 - yoe/100)
+	mp := (5*doy + 2) / 153
+	d := doy - (153*mp+2)/5 + 1
+	m := mp + 3
+	if mp >= 10 {
+		m = mp - 9
+	}
+	if m <= 2 {
+		y++
+	}
+	ys := itoa(y)
+	for len(ys) < 4 {
+		ys = "0" + ys
+	}
+	return ys + "-" + pad2(m) + "-" + pad2(d) + "T" + pad2(sec/3600) + ":" + pad2(sec/60%60) + ":" + pad2(sec%60) + "Z"
+}
+
+// serialString formats a serial as big.Int's String.
+func serialString(c *Certificate) string {
+	d := []int{0}
+	for i := 0; i < len(c.SerialNumber); i++ {
+		d = decMulAdd(d, 256, int(c.SerialNumber[i]))
+	}
+	s := decString(d)
+	if c.SerialNumberNegative && s != "0" {
+		return "-" + s
+	}
+	return s
+}
+
+func unknownAuthority(hintErr error, hint *Certificate) UnknownAuthorityError {
+	s := "x509: certificate signed by unknown authority"
+	if hintErr != nil {
+		name := hint.Subject.CommonName
+		if len(name) == 0 {
+			if len(hint.Subject.Organization) > 0 {
+				name = hint.Subject.Organization[0]
+			} else {
+				name = "serial:" + serialString(hint)
+			}
+		}
+		s += " (possibly because of " + strconv.QuoteToASCII(hintErr.Error()) + " while trying to verify candidate authority certificate " + strconv.QuoteToASCII(name) + ")"
+	}
+	return UnknownAuthorityError{Message: s}
+}

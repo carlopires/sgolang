@@ -1,0 +1,434 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package x509
+
+import (
+	"std/encoding/asn1"
+	"std/errors"
+	"std/strconv"
+)
+
+func processExtensions(out *Certificate) error {
+	for k := 0; k < len(out.Extensions); k++ {
+		e := out.Extensions[k]
+		unhandled := false
+		id := e.Id
+		if len(id) == 4 && id[0] == 2 && id[1] == 5 && id[2] == 29 {
+			val := asn1.String(e.Value)
+			switch id[3] {
+			case 15:
+				bits := asn1.BitString{Bytes: []byte{}, BitLength: 0}
+				if !val.ReadASN1BitString(&bits) {
+					return errors.New("x509: invalid key usage")
+				}
+				usage := 0
+				for i := 0; i < 9; i++ {
+					if bits.At(i) != 0 {
+						usage = usage | (1 << i)
+					}
+				}
+				out.KeyUsage = KeyUsage(usage)
+			case 19:
+				isCA := false
+				if !val.ReadASN1(&val, asn1.SEQUENCE) {
+					return errors.New("x509: invalid basic constraints")
+				}
+				if val.PeekASN1Tag(asn1.BOOLEAN) {
+					if !val.ReadASN1Boolean(&isCA) {
+						return errors.New("x509: invalid basic constraints")
+					}
+				}
+				maxPathLen := -1
+				if val.PeekASN1Tag(asn1.INTEGER) {
+					mpl := 0
+					if !val.ReadASN1Integer(&mpl) || mpl < 0 {
+						return errors.New("x509: invalid basic constraints")
+					}
+					maxPathLen = mpl
+				}
+				out.IsCA = isCA
+				out.MaxPathLen = maxPathLen
+				out.BasicConstraintsValid = true
+				out.MaxPathLenZero = out.MaxPathLen == 0
+			case 17:
+				if err := parseSAN(val, out); err != nil {
+					return err
+				}
+				if len(out.DNSNames) == 0 && len(out.EmailAddresses) == 0 && len(out.IPAddresses) == 0 && len(out.URIs) == 0 {
+					unhandled = true
+				}
+			case 30:
+				u, err := parseNameConstraints(out, e)
+				if err != nil {
+					return err
+				}
+				unhandled = u
+			case 31:
+				if !val.ReadASN1(&val, asn1.SEQUENCE) {
+					return errors.New("x509: invalid CRL distribution points")
+				}
+				for !val.Empty() {
+					var dp asn1.String = asn1.String{}
+					if !val.ReadASN1(&dp, asn1.SEQUENCE) {
+						return errors.New("x509: invalid CRL distribution point")
+					}
+					var name asn1.String = asn1.String{}
+					present := false
+					if !dp.ReadOptionalASN1(&name, &present, asn1.Tag(0).Constructed().ContextSpecific()) {
+						return errors.New("x509: invalid CRL distribution point")
+					}
+					if !present {
+						continue
+					}
+					if !name.ReadASN1(&name, asn1.Tag(0).Constructed().ContextSpecific()) {
+						return errors.New("x509: invalid CRL distribution point")
+					}
+					for !name.Empty() {
+						if !name.PeekASN1Tag(asn1.Tag(6).ContextSpecific()) {
+							break
+						}
+						var uri asn1.String = asn1.String{}
+						if !name.ReadASN1(&uri, asn1.Tag(6).ContextSpecific()) {
+							return errors.New("x509: invalid CRL distribution point")
+						}
+						out.CRLDistributionPoints = append(out.CRLDistributionPoints, string(uri))
+					}
+				}
+			case 35:
+				if e.Critical {
+					return errors.New("x509: authority key identifier incorrectly marked critical")
+				}
+				var akid asn1.String = asn1.String{}
+				if !val.ReadASN1(&akid, asn1.SEQUENCE) {
+					return errors.New("x509: invalid authority key identifier")
+				}
+				if akid.PeekASN1Tag(asn1.Tag(0).ContextSpecific()) {
+					if !akid.ReadASN1(&akid, asn1.Tag(0).ContextSpecific()) {
+						return errors.New("x509: invalid authority key identifier")
+					}
+					out.AuthorityKeyId = []byte(akid)
+				}
+			case 36:
+				if !val.ReadASN1(&val, asn1.SEQUENCE) {
+					return errors.New("x509: invalid policy constraints extension")
+				}
+				if val.PeekASN1Tag(asn1.Tag(0).ContextSpecific()) {
+					v := 0
+					if !val.ReadASN1IntegerWithTag(&v, asn1.Tag(0).ContextSpecific()) {
+						return errors.New("x509: invalid policy constraints extension")
+					}
+					out.RequireExplicitPolicy = v
+					out.RequireExplicitPolicyZero = v == 0
+				}
+				if val.PeekASN1Tag(asn1.Tag(1).ContextSpecific()) {
+					v := 0
+					if !val.ReadASN1IntegerWithTag(&v, asn1.Tag(1).ContextSpecific()) {
+						return errors.New("x509: invalid policy constraints extension")
+					}
+					out.InhibitPolicyMapping = v
+					out.InhibitPolicyMappingZero = v == 0
+				}
+			case 37:
+				if !val.ReadASN1(&val, asn1.SEQUENCE) {
+					return errors.New("x509: invalid extended key usages")
+				}
+				ekus := []ExtKeyUsage{}
+				unknown := []asn1.ObjectIdentifier{}
+				for !val.Empty() {
+					var eku asn1.ObjectIdentifier = asn1.ObjectIdentifier{}
+					if !val.ReadASN1ObjectIdentifier(&eku) {
+						return errors.New("x509: invalid extended key usages")
+					}
+					if u, ok := extKeyUsageFromOID(eku); ok {
+						ekus = append(ekus, u)
+					} else {
+						unknown = append(unknown, eku)
+					}
+				}
+				out.ExtKeyUsage = ekus
+				out.UnknownExtKeyUsage = unknown
+			case 14:
+				if e.Critical {
+					return errors.New("x509: subject key identifier incorrectly marked critical")
+				}
+				var skid asn1.String = asn1.String{}
+				if !val.ReadASN1(&skid, asn1.OCTET_STRING) {
+					return errors.New("x509: invalid subject key identifier")
+				}
+				out.SubjectKeyId = []byte(skid)
+			case 32:
+				if !val.ReadASN1(&val, asn1.SEQUENCE) {
+					return errors.New("x509: invalid certificate policies")
+				}
+				seen := map[string]bool{}
+				policies := []OID{}
+				for !val.Empty() {
+					var cp asn1.String = asn1.String{}
+					var oidBytes asn1.String = asn1.String{}
+					if !val.ReadASN1(&cp, asn1.SEQUENCE) || !cp.ReadASN1(&oidBytes, asn1.OBJECT_IDENTIFIER) {
+						return errors.New("x509: invalid certificate policies")
+					}
+					if seen[string(oidBytes)] {
+						return errors.New("x509: invalid certificate policies")
+					}
+					seen[string(oidBytes)] = true
+					oid, ok := newOIDFromDER([]byte(oidBytes))
+					if !ok {
+						return errors.New("x509: invalid certificate policies")
+					}
+					policies = append(policies, oid)
+				}
+				out.Policies = policies
+			case 33:
+				if !val.ReadASN1(&val, asn1.SEQUENCE) {
+					return errors.New("x509: invalid policy mappings extension")
+				}
+				for !val.Empty() {
+					var s asn1.String = asn1.String{}
+					var issuer asn1.String = asn1.String{}
+					var subject asn1.String = asn1.String{}
+					if !val.ReadASN1(&s, asn1.SEQUENCE) || !s.ReadASN1(&issuer, asn1.OBJECT_IDENTIFIER) || !s.ReadASN1(&subject, asn1.OBJECT_IDENTIFIER) {
+						return errors.New("x509: invalid policy mappings extension")
+					}
+					out.PolicyMappings = append(out.PolicyMappings, PolicyMapping{IssuerDomainPolicy: OID{der: []byte(issuer)}, SubjectDomainPolicy: OID{der: []byte(subject)}})
+				}
+			case 54:
+				if !val.ReadASN1Integer(&out.InhibitAnyPolicy) {
+					return errors.New("x509: invalid inhibit any policy extension")
+				}
+				out.InhibitAnyPolicyZero = out.InhibitAnyPolicy == 0
+			default:
+				unhandled = true
+			}
+		} else if id.Equal(asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 1, 1}) {
+			if e.Critical {
+				return errors.New("x509: authority info access incorrectly marked critical")
+			}
+			val := asn1.String(e.Value)
+			if !val.ReadASN1(&val, asn1.SEQUENCE) {
+				return errors.New("x509: invalid authority info access")
+			}
+			for !val.Empty() {
+				var aia asn1.String = asn1.String{}
+				if !val.ReadASN1(&aia, asn1.SEQUENCE) {
+					return errors.New("x509: invalid authority info access")
+				}
+				var method asn1.ObjectIdentifier = asn1.ObjectIdentifier{}
+				if !aia.ReadASN1ObjectIdentifier(&method) {
+					return errors.New("x509: invalid authority info access")
+				}
+				if !aia.PeekASN1Tag(asn1.Tag(6).ContextSpecific()) {
+					continue
+				}
+				if !aia.ReadASN1(&aia, asn1.Tag(6).ContextSpecific()) {
+					return errors.New("x509: invalid authority info access")
+				}
+				if method.Equal(asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 48, 1}) {
+					out.OCSPServer = append(out.OCSPServer, string(aia))
+				} else if method.Equal(asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 48, 2}) {
+					out.IssuingCertificateURL = append(out.IssuingCertificateURL, string(aia))
+				}
+			}
+		} else {
+			unhandled = true
+		}
+		if e.Critical && unhandled {
+			out.UnhandledCriticalExtensions = append(out.UnhandledCriticalExtensions, e.Id)
+		}
+	}
+	return nil
+}
+
+func malformed(what string) error {
+	return errors.New("x509: malformed " + what)
+}
+
+func parseCertificate(der []byte) (*Certificate, error) {
+	cert := &Certificate{}
+	input := asn1.String(der)
+	if !input.ReadASN1Element(&input, asn1.SEQUENCE) {
+		return nil, malformed("certificate")
+	}
+	cert.Raw = []byte(input)
+	if !input.ReadASN1(&input, asn1.SEQUENCE) {
+		return nil, malformed("certificate")
+	}
+	var tbs asn1.String = asn1.String{}
+	if !input.ReadASN1Element(&tbs, asn1.SEQUENCE) {
+		return nil, malformed("tbs certificate")
+	}
+	cert.RawTBSCertificate = []byte(tbs)
+	if !tbs.ReadASN1(&tbs, asn1.SEQUENCE) {
+		return nil, malformed("tbs certificate")
+	}
+	if !tbs.ReadOptionalASN1Integer(&cert.Version, asn1.Tag(0).Constructed().ContextSpecific(), 0) {
+		return nil, malformed("version")
+	}
+	if cert.Version < 0 {
+		return nil, malformed("version")
+	}
+	cert.Version++
+	if cert.Version > 3 {
+		return nil, errors.New("x509: invalid version")
+	}
+	var serial asn1.String = asn1.String{}
+	if !tbs.ReadASN1(&serial, asn1.INTEGER) || len(serial) == 0 || len(serial) > 1 && (serial[0] == 0 && serial[1]&0x80 == 0 || serial[0] == 0xff && serial[1]&0x80 == 0x80) {
+		return nil, malformed("serial number")
+	}
+	if serial[0]&0x80 != 0 {
+		return nil, errors.New("x509: negative serial number")
+	}
+	cert.SerialNumber = []byte(serial)
+	var sigAISeq asn1.String = asn1.String{}
+	if !tbs.ReadASN1Element(&sigAISeq, asn1.SEQUENCE) {
+		return nil, malformed("signature algorithm identifier")
+	}
+	cert.RawSignatureAlgorithm = []byte(sigAISeq)
+	if !sigAISeq.ReadASN1(&sigAISeq, asn1.SEQUENCE) {
+		return nil, malformed("signature algorithm identifier")
+	}
+	var outerSigAISeq asn1.String = asn1.String{}
+	if !input.ReadASN1(&outerSigAISeq, asn1.SEQUENCE) {
+		return nil, malformed("algorithm identifier")
+	}
+	if string(outerSigAISeq) != string(sigAISeq) {
+		return nil, errors.New("x509: inner and outer signature algorithm identifiers don't match")
+	}
+	sigAI, err := parseAI(sigAISeq)
+	if err != nil {
+		return nil, err
+	}
+	cert.SignatureAlgorithm = signatureAlgorithmFromAI(sigAI)
+	var issuerSeq asn1.String = asn1.String{}
+	if !tbs.ReadASN1Element(&issuerSeq, asn1.SEQUENCE) {
+		return nil, malformed("issuer")
+	}
+	cert.RawIssuer = []byte(issuerSeq)
+	if errI := parseName(issuerSeq, &cert.Issuer); errI != nil {
+		return nil, errI
+	}
+	var validity asn1.String = asn1.String{}
+	if !tbs.ReadASN1(&validity, asn1.SEQUENCE) {
+		return nil, malformed("validity")
+	}
+	nb, err1 := readTime(&validity)
+	if err1 != nil {
+		return nil, err1
+	}
+	na, err2 := readTime(&validity)
+	if err2 != nil {
+		return nil, err2
+	}
+	cert.NotBefore = nb
+	cert.NotAfter = na
+	var subjectSeq asn1.String = asn1.String{}
+	if !tbs.ReadASN1Element(&subjectSeq, asn1.SEQUENCE) {
+		return nil, malformed("issuer")
+	}
+	cert.RawSubject = []byte(subjectSeq)
+	if errS := parseName(subjectSeq, &cert.Subject); errS != nil {
+		return nil, errS
+	}
+	var spki asn1.String = asn1.String{}
+	if !tbs.ReadASN1Element(&spki, asn1.SEQUENCE) {
+		return nil, malformed("spki")
+	}
+	cert.RawSubjectPublicKeyInfo = []byte(spki)
+	if !spki.ReadASN1(&spki, asn1.SEQUENCE) {
+		return nil, malformed("spki")
+	}
+	var pkAISeq asn1.String = asn1.String{}
+	if !spki.ReadASN1(&pkAISeq, asn1.SEQUENCE) {
+		return nil, malformed("public key algorithm identifier")
+	}
+	pkAI, err3 := parseAI(pkAISeq)
+	if err3 != nil {
+		return nil, err3
+	}
+	cert.PublicKeyAlgorithm = publicKeyAlgorithmFromOID(pkAI.algorithm)
+	spk := asn1.BitString{Bytes: []byte{}, BitLength: 0}
+	if !spki.ReadASN1BitString(&spk) {
+		return nil, malformed("subjectPublicKey")
+	}
+	cert.PublicKey.Algorithm = cert.PublicKeyAlgorithm
+	if cert.PublicKeyAlgorithm != UnknownPublicKeyAlgorithm {
+		if errK := parsePublicKey(pkAI, spk, &cert.PublicKey); errK != nil {
+			return nil, errK
+		}
+	}
+	if cert.Version > 1 {
+		if !tbs.SkipOptionalASN1(asn1.Tag(1).ContextSpecific()) {
+			return nil, malformed("issuerUniqueID")
+		}
+		if !tbs.SkipOptionalASN1(asn1.Tag(2).ContextSpecific()) {
+			return nil, malformed("subjectUniqueID")
+		}
+		if cert.Version == 3 {
+			var extensions asn1.String = asn1.String{}
+			present := false
+			if !tbs.ReadOptionalASN1(&extensions, &present, asn1.Tag(3).Constructed().ContextSpecific()) {
+				return nil, malformed("extensions")
+			}
+			if present {
+				seen := map[string]bool{}
+				if !extensions.ReadASN1(&extensions, asn1.SEQUENCE) {
+					return nil, malformed("extensions")
+				}
+				for !extensions.Empty() {
+					var extension asn1.String = asn1.String{}
+					if !extensions.ReadASN1(&extension, asn1.SEQUENCE) {
+						return nil, malformed("extension")
+					}
+					ext, errE := parseExtension(extension)
+					if errE != nil {
+						return nil, errE
+					}
+					oidStr := ext.Id.String()
+					if seen[oidStr] {
+						return nil, errors.New("x509: certificate contains duplicate extension with OID " + strconv.QuoteToASCII(oidStr))
+					}
+					seen[oidStr] = true
+					cert.Extensions = append(cert.Extensions, ext)
+				}
+				if errP := processExtensions(cert); errP != nil {
+					return nil, errP
+				}
+			}
+		}
+	}
+	signature := asn1.BitString{Bytes: []byte{}, BitLength: 0}
+	if !input.ReadASN1BitString(&signature) {
+		return nil, malformed("signature")
+	}
+	cert.Signature = rightAlign(signature)
+	return cert, nil
+}
+
+// ParseCertificate parses a single certificate from DER, as Go's x509.ParseCertificate (which
+// refuses negative serial numbers).
+func ParseCertificate(der []byte) (*Certificate, error) {
+	cert, err := parseCertificate(der)
+	if err != nil {
+		return nil, err
+	}
+	if len(der) != len(cert.Raw) {
+		return nil, errors.New("x509: trailing data")
+	}
+	return cert, nil
+}
+
+// ParseCertificates parses one or more concatenated DER certificates.
+func ParseCertificates(der []byte) ([]*Certificate, error) {
+	certs := []*Certificate{}
+	for len(der) > 0 {
+		cert, err := parseCertificate(der)
+		if err != nil {
+			return nil, err
+		}
+		certs = append(certs, cert)
+		der = der[len(cert.Raw):]
+	}
+	return certs, nil
+}

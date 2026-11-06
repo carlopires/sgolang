@@ -1,0 +1,236 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package x509
+
+import (
+	"std/encoding/asn1"
+	"std/encoding/hex"
+	"std/errors"
+	"std/strconv"
+	"std/strings"
+)
+
+func domainNameValid(s string, constraint bool) bool {
+	if len(s) == 0 {
+		return true
+	}
+	if s[len(s)-1] == '.' {
+		return false
+	}
+	lastDot := -1
+	if constraint && s[0] == '.' {
+		s = s[1:]
+	}
+	for i := 0; i <= len(s); i++ {
+		if i < len(s) && (s[i] < 33 || s[i] > 126) {
+			return false
+		}
+		if i == len(s) || s[i] == '.' {
+			labelLen := i
+			if lastDot >= 0 {
+				labelLen = labelLen - (lastDot + 1)
+			}
+			if labelLen == 0 {
+				return false
+			}
+			lastDot = i
+		}
+	}
+	return true
+}
+
+func isIPv4MappedIPv6(ip []byte) bool {
+	for i := 0; i < 10; i++ {
+		if ip[i] != 0 {
+			return false
+		}
+	}
+	return ip[10] == 0xff && ip[11] == 0xff
+}
+
+func parseSAN(der asn1.String, out *Certificate) error {
+	if !der.ReadASN1(&der, asn1.SEQUENCE) {
+		return errors.New("x509: invalid subject alternative names")
+	}
+	for !der.Empty() {
+		var san asn1.String = asn1.String{}
+		var tag asn1.Tag = 0
+		if !der.ReadAnyASN1(&san, &tag) {
+			return errors.New("x509: invalid subject alternative name")
+		}
+		data := []byte(san)
+		t := int(tag) ^ 0x80
+		if t == 1 {
+			if !isIA5(data) {
+				return errors.New("x509: SAN rfc822Name is malformed")
+			}
+			out.EmailAddresses = append(out.EmailAddresses, string(data))
+		} else if t == 2 {
+			if !isIA5(data) {
+				return errors.New("x509: SAN dNSName is malformed")
+			}
+			out.DNSNames = append(out.DNSNames, string(data))
+		} else if t == 6 {
+			if !isIA5(data) {
+				return errors.New("x509: SAN uniformResourceIdentifier is malformed")
+			}
+			uriStr := string(data)
+			u, err := parseURL(uriStr)
+			if err != "" {
+				return errors.New("x509: cannot parse URI " + strconv.QuoteToASCII(uriStr) + ": parse " + strconv.QuoteToASCII(u.raw) + ": " + err)
+			}
+			if len(u.host) > 0 && !domainNameValid(u.host, false) {
+				return errors.New("x509: cannot parse URI " + strconv.QuoteToASCII(uriStr) + ": invalid domain")
+			}
+			out.URIs = append(out.URIs, uriStr)
+			out.uris = append(out.uris, u)
+		} else if t == 7 {
+			if len(data) == 16 {
+				if isIPv4MappedIPv6(data) {
+					return errors.New("x509: SAN iPAddress contains IPv4-mapped IPv6 address")
+				}
+				out.IPAddresses = append(out.IPAddresses, data)
+			} else if len(data) == 4 {
+				out.IPAddresses = append(out.IPAddresses, data)
+			} else {
+				return errors.New("x509: cannot parse IP address of length " + strconv.Itoa(len(data)))
+			}
+		}
+	}
+	return nil
+}
+
+func isValidIPMask(mask []byte) bool {
+	seenZero := false
+	for i := 0; i < len(mask); i++ {
+		b := mask[i]
+		if seenZero {
+			if b != 0 {
+				return false
+			}
+			continue
+		}
+		if b == 0x00 || b == 0x80 || b == 0xc0 || b == 0xe0 || b == 0xf0 || b == 0xf8 || b == 0xfc || b == 0xfe {
+			seenZero = true
+		} else if b != 0xff {
+			return false
+		}
+	}
+	return true
+}
+
+type constraintValues struct {
+	dns    []string
+	ips    []IPNet
+	emails []string
+	uris   []string
+}
+
+func constraintSubtrees(subtrees asn1.String, unhandled *bool) (constraintValues, error) {
+	v := constraintValues{dns: []string{}, ips: []IPNet{}, emails: []string{}, uris: []string{}}
+	for !subtrees.Empty() {
+		var seq asn1.String = asn1.String{}
+		var value asn1.String = asn1.String{}
+		var tag asn1.Tag = 0
+		if !subtrees.ReadASN1(&seq, asn1.SEQUENCE) || !seq.ReadAnyASN1(&value, &tag) {
+			return v, errors.New("x509: invalid NameConstraints extension")
+		}
+		data := []byte(value)
+		if tag == asn1.Tag(2).ContextSpecific() {
+			if !isIA5(data) {
+				return v, errors.New("x509: invalid constraint value: x509: " + strconv.QuoteToASCII(string(data)) + " cannot be encoded as an IA5String")
+			}
+			if !domainNameValid(string(data), true) {
+				return v, errors.New("x509: failed to parse dnsName constraint " + strconv.QuoteToASCII(string(data)))
+			}
+			v.dns = append(v.dns, string(data))
+		} else if tag == asn1.Tag(7).ContextSpecific() {
+			l := len(data)
+			ip := []byte{}
+			mask := []byte{}
+			if l == 8 {
+				ip = data[:4]
+				mask = data[4:]
+			} else if l == 32 {
+				ip = data[:16]
+				mask = data[16:]
+			} else {
+				return v, errors.New("x509: IP constraint contained value of length " + strconv.Itoa(l))
+			}
+			if !isValidIPMask(mask) {
+				return v, errors.New("x509: IP constraint contained invalid mask " + hex.EncodeToString(mask))
+			}
+			if len(ip) == 16 && isIPv4MappedIPv6(ip) {
+				return v, errors.New("x509: IP constraint contained IPv4-mapped IPv6 address")
+			}
+			v.ips = append(v.ips, IPNet{IP: ip, Mask: mask})
+		} else if tag == asn1.Tag(1).ContextSpecific() {
+			c := string(data)
+			if !isIA5(data) {
+				return v, errors.New("x509: invalid constraint value: x509: " + strconv.QuoteToASCII(c) + " cannot be encoded as an IA5String")
+			}
+			if strings.Contains(c, "@") {
+				if _, ok := parseRFC2821Mailbox(c); !ok {
+					return v, errors.New("x509: failed to parse rfc822Name constraint " + strconv.QuoteToASCII(c))
+				}
+			} else if !domainNameValid(c, true) {
+				return v, errors.New("x509: failed to parse rfc822Name constraint " + strconv.QuoteToASCII(c))
+			}
+			v.emails = append(v.emails, c)
+		} else if tag == asn1.Tag(6).ContextSpecific() {
+			d := string(data)
+			if !isIA5(data) {
+				return v, errors.New("x509: invalid constraint value: x509: " + strconv.QuoteToASCII(d) + " cannot be encoded as an IA5String")
+			}
+			if _, isIP := parseIP(d); isIP {
+				return v, errors.New("x509: failed to parse URI constraint " + strconv.QuoteToASCII(d) + ": cannot be IP address")
+			}
+			if !domainNameValid(d, true) {
+				return v, errors.New("x509: failed to parse URI constraint " + strconv.QuoteToASCII(d))
+			}
+			v.uris = append(v.uris, d)
+		} else {
+			*unhandled = true
+		}
+	}
+	return v, nil
+}
+
+func parseNameConstraints(out *Certificate, e Extension) (bool, error) {
+	outer := asn1.String(e.Value)
+	var top asn1.String = asn1.String{}
+	var permitted asn1.String = asn1.String{}
+	var excluded asn1.String = asn1.String{}
+	havePermitted := false
+	haveExcluded := false
+	if !outer.ReadASN1(&top, asn1.SEQUENCE) || !outer.Empty() ||
+		!top.ReadOptionalASN1(&permitted, &havePermitted, asn1.Tag(0).ContextSpecific().Constructed()) ||
+		!top.ReadOptionalASN1(&excluded, &haveExcluded, asn1.Tag(1).ContextSpecific().Constructed()) ||
+		!top.Empty() {
+		return false, errors.New("x509: invalid NameConstraints extension")
+	}
+	if !havePermitted && !haveExcluded || len(permitted) == 0 && len(excluded) == 0 {
+		return false, errors.New("x509: empty name constraints extension")
+	}
+	unhandled := false
+	p, err := constraintSubtrees(permitted, &unhandled)
+	if err != nil {
+		return false, err
+	}
+	x, err2 := constraintSubtrees(excluded, &unhandled)
+	if err2 != nil {
+		return false, err2
+	}
+	out.PermittedDNSDomains = p.dns
+	out.PermittedIPRanges = p.ips
+	out.PermittedEmailAddresses = p.emails
+	out.PermittedURIDomains = p.uris
+	out.ExcludedDNSDomains = x.dns
+	out.ExcludedIPRanges = x.ips
+	out.ExcludedEmailAddresses = x.emails
+	out.ExcludedURIDomains = x.uris
+	out.PermittedDNSDomainsCritical = e.Critical
+	return unhandled, nil
+}

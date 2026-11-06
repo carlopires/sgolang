@@ -1,0 +1,232 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package x509
+
+import (
+	"std/crypto/bigmod"
+	"std/encoding/asn1"
+	"std/encoding/hex"
+	"std/errors"
+)
+
+type curveInfo struct {
+	name   string
+	tag    string
+	oid    asn1.ObjectIdentifier
+	size   int
+	p      string
+	b      string
+}
+
+func curves() []curveInfo {
+	return []curveInfo{
+		{"P-224", "P224", asn1.ObjectIdentifier{1, 3, 132, 0, 33}, 28,
+			"ffffffffffffffffffffffffffffffff000000000000000000000001",
+			"b4050a850c04b3abf54132565044b0b7d7bfd8ba270b39432355ffb4"},
+		{"P-256", "P256", asn1.ObjectIdentifier{1, 2, 840, 10045, 3, 1, 7}, 32,
+			"ffffffff00000001000000000000000000000000ffffffffffffffffffffffff",
+			"5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b"},
+		{"P-384", "P384", asn1.ObjectIdentifier{1, 3, 132, 0, 34}, 48,
+			"fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff",
+			"b3312fa7e23ee7e4988e056be3f82d19181d9c6efe8141120314088f5013875ac656398d8a2ed19d2a85c8edd3ec2aef"},
+		{"P-521", "P521", asn1.ObjectIdentifier{1, 3, 132, 0, 35}, 66,
+			"01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+			"0051953eb9618e1c9a1f929a21a0b68540eea2da725b99b315f3b8b489918ef109e156193951ec7e937b1652c0bd3bb1bf073573df883d2c34f1ef451fd46b503f00"},
+	}
+}
+
+func unhexString(s string) []byte {
+	b, _ := hex.DecodeString(s)
+	return b
+}
+
+func elementError(c curveInfo) error {
+	if c.tag == "P256" {
+		return errors.New("invalid P256 element encoding")
+	}
+	return errors.New("invalid " + c.tag + "Element encoding")
+}
+
+// checkPoint checks an uncompressed point on the curve as Go's ecdsa.ParseUncompressedPublicKey.
+func checkPoint(c curveInfo, data []byte) error {
+	if len(data) < 1 || data[0] != 4 {
+		return errors.New("ecdsa: invalid uncompressed public key")
+	}
+	if len(data) != 1+2*c.size {
+		return errors.New("invalid " + c.tag + " point encoding")
+	}
+	p, _ := bigmod.NewModulus(unhexString(c.p))
+	x, err := bigmod.NewNat().SetBytes(data[1:1+c.size], p)
+	if err != nil {
+		return elementError(c)
+	}
+	y, err2 := bigmod.NewNat().SetBytes(data[1+c.size:], p)
+	if err2 != nil {
+		return elementError(c)
+	}
+	b, _ := bigmod.NewNat().SetBytes(unhexString(c.b), p)
+	threeX, _ := bigmod.NewNat().SetUint(3, p)
+	threeX.Mul(x, p)
+	rhs, _ := bigmod.NewNat().SetBytes(data[1:1+c.size], p)
+	rhs.Mul(x, p)
+	rhs.Mul(x, p)
+	rhs.Sub(threeX, p)
+	rhs.Add(b, p)
+	lhs, _ := bigmod.NewNat().SetBytes(data[1+c.size:], p)
+	lhs.Mul(y, p)
+	if lhs.Equal(rhs) != 1 {
+		return errors.New(c.tag + " point not on curve")
+	}
+	return nil
+}
+
+func isNullParams(ai algorithmIdentifier) bool {
+	return ai.hasParams && len(ai.params) == 2 && ai.params[0] == 5 && ai.params[1] == 0
+}
+
+// rightAlign returns the bits of a bit string right-aligned in bytes, as Go's BitString.RightAlign.
+func rightAlign(b asn1.BitString) []byte {
+	shift := 8 - b.BitLength%8
+	if shift == 8 || len(b.Bytes) == 0 {
+		return b.Bytes
+	}
+	a := make([]byte, len(b.Bytes))
+	a[0] = b.Bytes[0] >> shift
+	for i := 1; i < len(b.Bytes); i++ {
+		a[i] = byte((int(b.Bytes[i-1])<<(8-shift))&0xff) | (b.Bytes[i] >> shift)
+	}
+	return a
+}
+
+func positiveInteger(der *asn1.String, out *[]byte) (bool, bool) {
+	// Reads an INTEGER; reports (read ok, value > 0) and stores its magnitude.
+	var raw asn1.String = asn1.String{}
+	if !der.ReadASN1(&raw, asn1.INTEGER) || len(raw) == 0 {
+		return false, false
+	}
+	if len(raw) > 1 && (raw[0] == 0 && raw[1]&0x80 == 0 || raw[0] == 0xff && raw[1]&0x80 == 0x80) {
+		return false, false
+	}
+	if raw[0]&0x80 != 0 {
+		return true, false
+	}
+	b := []byte(raw)
+	for len(b) > 1 && b[0] == 0 {
+		b = b[1:]
+	}
+	*out = b
+	return true, !(len(b) == 1 && b[0] == 0)
+}
+
+func parsePublicKey(ai algorithmIdentifier, spk asn1.BitString, out *PublicKey) error {
+	data := rightAlign(spk)
+	oid := ai.algorithm
+	if oid.Equal(oidPublicKeyRSA()) {
+		if !isNullParams(ai) {
+			return errors.New("x509: RSA key missing NULL parameters")
+		}
+		der := asn1.String(data)
+		if !der.ReadASN1(&der, asn1.SEQUENCE) {
+			return errors.New("x509: invalid RSA public key")
+		}
+		n := []byte{}
+		ok, positive := positiveInteger(&der, &n)
+		if !ok {
+			return errors.New("x509: invalid RSA modulus")
+		}
+		e := 0
+		if !der.ReadASN1Integer(&e) {
+			return errors.New("x509: invalid RSA public exponent")
+		}
+		if !positive {
+			return errors.New("x509: RSA modulus is not a positive number")
+		}
+		if e <= 0 {
+			return errors.New("x509: RSA public exponent is not a positive number")
+		}
+		out.RSA.N = n
+		out.RSA.E = e
+		return nil
+	}
+	if oid.Equal(oidPublicKeyECDSA()) {
+		pd := asn1.String(ai.params)
+		var named asn1.ObjectIdentifier = asn1.ObjectIdentifier{}
+		if !pd.ReadASN1ObjectIdentifier(&named) {
+			return errors.New("x509: invalid ECDSA parameters")
+		}
+		cs := curves()
+		for i := 0; i < len(cs); i++ {
+			if named.Equal(cs[i].oid) {
+				if err := checkPoint(cs[i], data); err != nil {
+					return err
+				}
+				out.Curve = cs[i].name
+				out.Key = data
+				return nil
+			}
+		}
+		return errors.New("x509: unsupported elliptic curve")
+	}
+	if oid.Equal(oidPublicKeyEd25519()) {
+		if ai.hasParams && len(ai.params) != 0 {
+			return errors.New("x509: Ed25519 key encoded with illegal parameters")
+		}
+		if len(data) != 32 {
+			return errors.New("x509: wrong Ed25519 public key size")
+		}
+		out.Key = data
+		return nil
+	}
+	if oid.Equal(oidMLDSA(17)) || oid.Equal(oidMLDSA(18)) || oid.Equal(oidMLDSA(19)) {
+		if ai.hasParams && len(ai.params) != 0 {
+			return errors.New("x509: ML-DSA key encoded with illegal parameters")
+		}
+		sizes := []int{1312, 1952, 2592}
+		names := []string{"ML-DSA-44", "ML-DSA-65", "ML-DSA-87"}
+		k := oid[8] - 17
+		if len(data) != sizes[k] {
+			return errors.New("mldsa: invalid public key length")
+		}
+		out.Curve = names[k]
+		out.Key = data
+		return nil
+	}
+	if oid.Equal(oidPublicKeyDSA()) {
+		der := asn1.String(data)
+		y := []byte{}
+		ok, yPos := positiveInteger(&der, &y)
+		if !ok {
+			return errors.New("x509: invalid DSA public key")
+		}
+		pd := asn1.String(ai.params)
+		pp := []byte{}
+		qq := []byte{}
+		gg := []byte{}
+		okP := false
+		okQ := false
+		okG := false
+		pPos := false
+		qPos := false
+		gPos := false
+		if pd.ReadASN1(&pd, asn1.SEQUENCE) {
+			okP, pPos = positiveInteger(&pd, &pp)
+			if okP {
+				okQ, qPos = positiveInteger(&pd, &qq)
+				if okQ {
+					okG, gPos = positiveInteger(&pd, &gg)
+				}
+			}
+		}
+		if !okP || !okQ || !okG {
+			return errors.New("x509: invalid DSA parameters")
+		}
+		if !yPos || !pPos || !qPos || !gPos {
+			return errors.New("x509: zero or negative DSA parameter")
+		}
+		out.Key = y
+		return nil
+	}
+	return errors.New("x509: unknown public key algorithm")
+}

@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-029"
+ ],
+ "exit": 0,
+ "stdout": "ok\nx509: certificate is valid for example.com, not other.test\nx509: certificate has expired or is not yet valid: current time 3000-01-01T00:00:00Z is after 2969-05-03T00:00:01Z\nx509: malformed tbs certificate\n"
+}

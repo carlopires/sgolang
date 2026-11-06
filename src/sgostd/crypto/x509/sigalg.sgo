@@ -1,0 +1,210 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package x509
+
+import "std/encoding/asn1"
+
+// readAI reads an AlgorithmIdentifier SEQUENCE as encoding/asn1 does for pkix.AlgorithmIdentifier:
+// the OID and an optional parameters element, other elements ignored.
+func readAI(s *asn1.String) (algorithmIdentifier, bool) {
+	ai := algorithmIdentifier{algorithm: asn1.ObjectIdentifier{}, paramsTag: 0, params: []byte{}, hasParams: false}
+	var seq asn1.String = asn1.String{}
+	if !s.ReadASN1(&seq, asn1.SEQUENCE) {
+		return ai, false
+	}
+	if !seq.ReadASN1ObjectIdentifier(&ai.algorithm) {
+		return ai, false
+	}
+	if !seq.Empty() {
+		var p asn1.String = asn1.String{}
+		var tag asn1.Tag = 0
+		if !seq.ReadAnyASN1Element(&p, &tag) {
+			return ai, false
+		}
+		ai.params = []byte(p)
+		ai.paramsTag = tag
+		ai.hasParams = true
+	}
+	return ai, true
+}
+
+func emptyOrNull(ai algorithmIdentifier) bool {
+	return !ai.hasParams || len(ai.params) == 0 || len(ai.params) == 2 && ai.params[0] == 5 && ai.params[1] == 0
+}
+
+func signatureAlgorithmFromAI(ai algorithmIdentifier) SignatureAlgorithm {
+	pss := asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 10}
+	if ai.algorithm.Equal(oidPublicKeyEd25519()) || ai.algorithm.Equal(oidMLDSA(17)) || ai.algorithm.Equal(oidMLDSA(18)) || ai.algorithm.Equal(oidMLDSA(19)) {
+		if ai.hasParams && len(ai.params) != 0 {
+			return UnknownSignatureAlgorithm
+		}
+	}
+	if !ai.algorithm.Equal(pss) {
+		t := sigTable()
+		for i := 0; i < len(t); i++ {
+			if ai.algorithm.Equal(t[i].oid) {
+				return t[i].algo
+			}
+		}
+		return UnknownSignatureAlgorithm
+	}
+	params := asn1.String(ai.params)
+	var seq asn1.String = asn1.String{}
+	if !ai.hasParams || !params.ReadASN1(&seq, asn1.SEQUENCE) {
+		return UnknownSignatureAlgorithm
+	}
+	var hashEl asn1.String = asn1.String{}
+	if !seq.ReadASN1(&hashEl, asn1.Tag(0).Constructed().ContextSpecific()) {
+		return UnknownSignatureAlgorithm
+	}
+	hash, ok1 := readAI(&hashEl)
+	if !ok1 {
+		return UnknownSignatureAlgorithm
+	}
+	var mgfEl asn1.String = asn1.String{}
+	if !seq.ReadASN1(&mgfEl, asn1.Tag(1).Constructed().ContextSpecific()) {
+		return UnknownSignatureAlgorithm
+	}
+	mgf, ok2 := readAI(&mgfEl)
+	if !ok2 {
+		return UnknownSignatureAlgorithm
+	}
+	var saltEl asn1.String = asn1.String{}
+	salt := 0
+	if !seq.ReadASN1(&saltEl, asn1.Tag(2).Constructed().ContextSpecific()) || !saltEl.ReadASN1Integer(&salt) {
+		return UnknownSignatureAlgorithm
+	}
+	trailer := 1
+	if seq.PeekASN1Tag(asn1.Tag(3).Constructed().ContextSpecific()) {
+		var trEl asn1.String = asn1.String{}
+		if !seq.ReadASN1(&trEl, asn1.Tag(3).Constructed().ContextSpecific()) || !trEl.ReadASN1Integer(&trailer) {
+			return UnknownSignatureAlgorithm
+		}
+	}
+	if !mgf.hasParams {
+		return UnknownSignatureAlgorithm
+	}
+	mgfParams := asn1.String(mgf.params)
+	mgfHash, ok3 := readAI(&mgfParams)
+	if !ok3 {
+		return UnknownSignatureAlgorithm
+	}
+	if !emptyOrNull(hash) || !mgf.algorithm.Equal(asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 8}) ||
+		!mgfHash.algorithm.Equal(hash.algorithm) || !emptyOrNull(mgfHash) || trailer != 1 {
+		return UnknownSignatureAlgorithm
+	}
+	if hash.algorithm.Equal(asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 2, 1}) && salt == 32 {
+		return SHA256WithRSAPSS
+	}
+	if hash.algorithm.Equal(asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 2, 2}) && salt == 48 {
+		return SHA384WithRSAPSS
+	}
+	if hash.algorithm.Equal(asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 2, 3}) && salt == 64 {
+		return SHA512WithRSAPSS
+	}
+	return UnknownSignatureAlgorithm
+}
+
+type rfc2821Mailbox struct {
+	local  string
+	domain string
+}
+
+func localChar(c byte) bool {
+	return '0' <= c && c <= '9' || 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' ||
+		c == '!' || c == '#' || c == '$' || c == '%' || c == '&' || c == 39 || c == '*' ||
+		c == '+' || c == '-' || c == '/' || c == '=' || c == '?' || c == '^' || c == '_' ||
+		c == 96 || c == '{' || c == '|' || c == '}' || c == '~' || c == '.'
+}
+
+func quotedChar(c byte) bool {
+	return c == 11 || c == 12 || c == 32 || c == 33 || c == 127 || 1 <= c && c <= 8 ||
+		14 <= c && c <= 31 || 35 <= c && c <= 91 || 93 <= c && c <= 126
+}
+
+func parseRFC2821Mailbox(in string) (rfc2821Mailbox, bool) {
+	mb := rfc2821Mailbox{local: "", domain: ""}
+	if len(in) == 0 {
+		return mb, false
+	}
+	local := []byte{}
+	if in[0] == '"' {
+		in = in[1:]
+		for {
+			if len(in) == 0 {
+				return mb, false
+			}
+			c := in[0]
+			in = in[1:]
+			if c == '"' {
+				break
+			}
+			if c == 92 {
+				if len(in) == 0 {
+					return mb, false
+				}
+				d := in[0]
+				if d == 11 || d == 12 || 1 <= d && d <= 9 || 14 <= d && d <= 127 {
+					local = append(local, d)
+					in = in[1:]
+				} else {
+					return mb, false
+				}
+			} else if quotedChar(c) {
+				local = append(local, c)
+			} else {
+				return mb, false
+			}
+		}
+	} else {
+		for len(in) > 0 {
+			c := in[0]
+			if c == 92 {
+				in = in[1:]
+				if len(in) == 0 {
+					return mb, false
+				}
+				local = append(local, in[0])
+				in = in[1:]
+				continue
+			}
+			if !localChar(c) {
+				break
+			}
+			local = append(local, c)
+			in = in[1:]
+		}
+		if len(local) == 0 {
+			return mb, false
+		}
+		if local[0] == '.' || local[len(local)-1] == '.' || containsDotDot(string(local)) {
+			return mb, false
+		}
+	}
+	if len(in) == 0 || in[0] != '@' {
+		return mb, false
+	}
+	in = in[1:]
+	if !domainNameValid(in, false) {
+		return mb, false
+	}
+	for i := 0; i < len(in); i++ {
+		if in[i] == '@' {
+			return mb, false
+		}
+	}
+	mb.local = string(local)
+	mb.domain = in
+	return mb, true
+}
+
+func containsDotDot(s string) bool {
+	for i := 0; i+1 < len(s); i++ {
+		if s[i] == '.' && s[i+1] == '.' {
+			return true
+		}
+	}
+	return false
+}

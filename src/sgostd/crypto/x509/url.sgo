@@ -1,0 +1,451 @@
+// Copyright 2009 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package x509
+
+// Ported from Go's net/url (src/net/url/url.go) for S-Go (SGO-STD-029, D199): the parsing that
+// crypto/x509 applies to URI names. IP literals are checked as net/netip does.
+
+import (
+	"std/strconv"
+	"std/strings"
+)
+
+type parsedURL struct {
+	raw    string
+	scheme string
+	host   string
+	opaque string
+}
+
+const (
+	modePath = 1
+	modeHost = 2
+	modeZone = 3
+	modeUser = 4
+	modeFrag = 5
+)
+
+func ishex(c byte) bool {
+	return '0' <= c && c <= '9' || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F'
+}
+
+func unhex(c byte) int {
+	if '0' <= c && c <= '9' {
+		return int(c - '0')
+	}
+	if 'a' <= c && c <= 'f' {
+		return int(c-'a') + 10
+	}
+	return int(c-'A') + 10
+}
+
+// hostChar reports whether c may appear unescaped in a host (net/url shouldEscape, encodeHost).
+func hostChar(c byte) bool {
+	if 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || '0' <= c && c <= '9' {
+		return true
+	}
+	return strings.IndexByte("-_.~!$&'()*+,;=:[]<>\"", c) >= 0
+}
+
+func unescape(s string, mode int) (string, string) {
+	n := 0
+	for i := 0; i < len(s); {
+		if s[i] == '%' {
+			n++
+			if i+2 >= len(s) || !ishex(s[i+1]) || !ishex(s[i+2]) {
+				e := s[i:]
+				if len(e) > 3 {
+					e = e[:3]
+				}
+				return "", "invalid URL escape " + strconv.QuoteToASCII(e)
+			}
+			if mode == modeHost && unhex(s[i+1]) < 8 && s[i:i+3] != "%25" {
+				return "", "invalid URL escape " + strconv.QuoteToASCII(s[i:i+3])
+			}
+			if mode == modeZone {
+				v := unhex(s[i+1])*16 + unhex(s[i+2])
+				if s[i:i+3] != "%25" && v != ' ' && (v >= 0x80 || !hostChar(byte(v))) {
+					return "", "invalid URL escape " + strconv.QuoteToASCII(s[i:i+3])
+				}
+			}
+			i += 3
+		} else {
+			if (mode == modeHost || mode == modeZone) && s[i] < 0x80 && !hostChar(s[i]) {
+				return "", "invalid character " + strconv.QuoteToASCII(s[i:i+1]) + " in host name"
+			}
+			i++
+		}
+	}
+	if n == 0 {
+		return s, ""
+	}
+	t := []byte{}
+	for i := 0; i < len(s); i++ {
+		if s[i] == '%' {
+			t = append(t, byte(unhex(s[i+1])*16+unhex(s[i+2])))
+			i += 2
+		} else {
+			t = append(t, s[i])
+		}
+	}
+	return string(t), ""
+}
+
+func getScheme(raw string) (string, string, string) {
+	for i := 0; i < len(raw); i++ {
+		c := raw[i]
+		if 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' {
+			continue
+		}
+		if '0' <= c && c <= '9' || c == '+' || c == '-' || c == '.' {
+			if i == 0 {
+				return "", raw, ""
+			}
+			continue
+		}
+		if c == ':' {
+			if i == 0 {
+				return "", "", "missing protocol scheme"
+			}
+			return raw[:i], raw[i+1:], ""
+		}
+		return "", raw, ""
+	}
+	return "", raw, ""
+}
+
+func validOptionalPort(port string) bool {
+	if port == "" {
+		return true
+	}
+	if port[0] != ':' {
+		return false
+	}
+	for i := 1; i < len(port); i++ {
+		if port[i] < '0' || port[i] > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+func validUserinfo(s string) bool {
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || '0' <= c && c <= '9' {
+			continue
+		}
+		if strings.IndexByte("-._:~!$&'()*+,;=%@", c) < 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func parseHost(scheme, host string) (string, string) {
+	open := strings.LastIndex(host, "[")
+	if open > 0 {
+		return "", "invalid IP-literal"
+	}
+	if open == 0 {
+		closeIdx := strings.LastIndex(host, "]")
+		if closeIdx < 0 {
+			return "", "missing ']' in host"
+		}
+		colonPort := host[closeIdx+1:]
+		if !validOptionalPort(colonPort) {
+			return "", "invalid port " + strconv.QuoteToASCII(colonPort) + " after host"
+		}
+		up, err := unescape(colonPort, modeHost)
+		if err != "" {
+			return "", err
+		}
+		hostname := host[1:closeIdx]
+		unescaped := ""
+		zoneIdx := strings.Index(hostname, "%25")
+		if zoneIdx >= 0 {
+			hp, e1 := unescape(hostname[:zoneIdx], modeHost)
+			if e1 != "" {
+				return "", e1
+			}
+			zp, e2 := unescape(hostname[zoneIdx:], modeZone)
+			if e2 != "" {
+				return "", e2
+			}
+			unescaped = hp + zp
+		} else {
+			h, e3 := unescape(hostname, modeHost)
+			if e3 != "" {
+				return "", e3
+			}
+			unescaped = h
+		}
+		is4, ok := parseAddr(unescaped)
+		if !ok {
+			return "", "invalid host: ParseAddr(" + strconv.QuoteToASCII(unescaped) + ")"
+		}
+		if is4 {
+			return "", "invalid IP-literal"
+		}
+		return "[" + unescaped + "]" + up, ""
+	}
+	i := strings.Index(host, ":")
+	if i != -1 {
+		last := strings.LastIndex(host, ":")
+		if last != i && scheme != "http" && scheme != "https" {
+			i = last
+		}
+		colonPort := host[i:]
+		if !validOptionalPort(colonPort) {
+			return "", "invalid port " + strconv.QuoteToASCII(colonPort) + " after host"
+		}
+	}
+	return unescape(host, modeHost)
+}
+
+func parseAuthority(scheme, authority string) (string, string) {
+	i := strings.LastIndex(authority, "@")
+	host := ""
+	err := ""
+	if i < 0 {
+		host, err = parseHost(scheme, authority)
+	} else {
+		host, err = parseHost(scheme, authority[i+1:])
+	}
+	if err != "" {
+		return "", err
+	}
+	if i < 0 {
+		return host, ""
+	}
+	userinfo := authority[:i]
+	if !validUserinfo(userinfo) {
+		return "", "net/url: invalid userinfo"
+	}
+	if !strings.Contains(userinfo, ":") {
+		if _, e := unescape(userinfo, modeUser); e != "" {
+			return "", e
+		}
+	} else {
+		username, password, _ := strings.Cut(userinfo, ":")
+		if _, e := unescape(username, modeUser); e != "" {
+			return "", e
+		}
+		if _, e := unescape(password, modeUser); e != "" {
+			return "", e
+		}
+	}
+	return host, ""
+}
+
+// parseURL parses s as net/url's Parse; on failure it returns the message after
+// `parse "<url>": ` and sets raw to the quoted URL.
+func parseURL(s string) (parsedURL, string) {
+	u, frag, hasFrag := strings.Cut(s, "#")
+	out := parsedURL{raw: u, scheme: "", host: "", opaque: ""}
+	for i := 0; i < len(u); i++ {
+		if u[i] < 0x20 || u[i] == 0x7f {
+			return out, "net/url: invalid control character in URL"
+		}
+	}
+	if u != "*" {
+		scheme, rest, err := getScheme(u)
+		if err != "" {
+			return out, err
+		}
+		out.scheme = strings.ToLowerASCII(scheme)
+		if strings.HasSuffix(rest, "?") && strings.Count(rest, "?") == 1 {
+			rest = rest[:len(rest)-1]
+		} else {
+			r, _, _ := strings.Cut(rest, "?")
+			rest = r
+		}
+		opaque := false
+		if !strings.HasPrefix(rest, "/") {
+			if out.scheme != "" {
+				out.opaque = rest
+				opaque = true
+			} else {
+				seg, _, _ := strings.Cut(rest, "/")
+				if strings.Contains(seg, ":") {
+					return out, "first path segment in URL cannot contain colon"
+				}
+			}
+		}
+		if !opaque {
+			if (out.scheme != "" || !strings.HasPrefix(rest, "///")) && strings.HasPrefix(rest, "//") {
+				authority := rest[2:]
+				rest = ""
+				if i := strings.Index(authority, "/"); i >= 0 {
+					rest = authority[i:]
+					authority = authority[:i]
+				}
+				h, e := parseAuthority(out.scheme, authority)
+				if e != "" {
+					return out, e
+				}
+				out.host = h
+			}
+			if _, e := unescape(rest, modePath); e != "" {
+				return out, e
+			}
+		}
+	}
+	if hasFrag && frag != "" {
+		if _, e := unescape(frag, modeFrag); e != "" {
+			out.raw = s
+			return out, e
+		}
+	}
+	return out, ""
+}
+
+// parseIPv4 parses dotted decimal as net/netip (no leading zeros).
+func parseIPv4(s string) ([]byte, bool) {
+	ip := []byte{}
+	val := 0
+	digits := 0
+	for i := 0; i <= len(s); i++ {
+		if i == len(s) || s[i] == '.' {
+			if digits == 0 || len(ip) == 4 {
+				return []byte{}, false
+			}
+			ip = append(ip, byte(val))
+			val = 0
+			digits = 0
+			continue
+		}
+		c := s[i]
+		if c < '0' || c > '9' {
+			return []byte{}, false
+		}
+		if digits == 1 && val == 0 {
+			return []byte{}, false
+		}
+		val = val*10 + int(c-'0')
+		digits++
+		if val > 255 {
+			return []byte{}, false
+		}
+	}
+	if len(ip) != 4 {
+		return []byte{}, false
+	}
+	return ip, true
+}
+
+// parseIPv6 parses an IPv6 address (with an optional zone when zoneOK) as net/netip.
+func parseIPv6(s string, zoneOK bool) ([]byte, bool) {
+	if i := strings.IndexByte(s, '%'); i >= 0 {
+		if !zoneOK || i == len(s)-1 {
+			return []byte{}, false
+		}
+		s = s[:i]
+	}
+	ip := make([]byte, 16)
+	ellipsis := -1
+	i := 0
+	if len(s) >= 2 && s[0] == ':' && s[1] == ':' {
+		ellipsis = 0
+		s = s[2:]
+		if len(s) == 0 {
+			return ip, true
+		}
+	}
+	for i < 16 {
+		off := 0
+		acc := 0
+		for off < len(s) && off < 5 && ishex(s[off]) {
+			acc = acc*16 + unhex(s[off])
+			off++
+		}
+		if off == 0 || off > 4 {
+			return []byte{}, false
+		}
+		if off < len(s) && s[off] == '.' {
+			if ellipsis < 0 && i != 12 || i+4 > 16 {
+				return []byte{}, false
+			}
+			v4, ok := parseIPv4(s)
+			if !ok {
+				return []byte{}, false
+			}
+			copy(ip[i:], v4)
+			i += 4
+			s = ""
+			break
+		}
+		ip[i] = byte(acc >> 8)
+		ip[i+1] = byte(acc & 0xff)
+		i += 2
+		s = s[off:]
+		if len(s) == 0 {
+			break
+		}
+		if s[0] != ':' {
+			return []byte{}, false
+		}
+		if len(s) == 1 {
+			return []byte{}, false
+		}
+		s = s[1:]
+		if s[0] == ':' {
+			if ellipsis >= 0 {
+				return []byte{}, false
+			}
+			ellipsis = i
+			s = s[1:]
+			if len(s) == 0 {
+				break
+			}
+		}
+	}
+	if len(s) != 0 {
+		return []byte{}, false
+	}
+	if i < 16 {
+		if ellipsis < 0 {
+			return []byte{}, false
+		}
+		n := 16 - i
+		for j := i - 1; j >= ellipsis; j-- {
+			ip[j+n] = ip[j]
+		}
+		for j := ellipsis + n - 1; j >= ellipsis; j-- {
+			ip[j] = 0
+		}
+	} else if ellipsis >= 0 {
+		return []byte{}, false
+	}
+	return ip, true
+}
+
+// parseAddr parses s as netip.ParseAddr; it reports whether s is IPv4 and whether it parsed.
+func parseAddr(s string) (bool, bool) {
+	for i := 0; i < len(s); i++ {
+		if s[i] == '.' {
+			_, ok := parseIPv4(s)
+			return true, ok
+		}
+		if s[i] == ':' {
+			_, ok := parseIPv6(s, true)
+			return false, ok
+		}
+	}
+	return false, false
+}
+
+// parseIP parses s as net.ParseIP: IPv4 dotted decimal or IPv6 without a zone.
+func parseIP(s string) ([]byte, bool) {
+	for i := 0; i < len(s); i++ {
+		if s[i] == '.' {
+			return parseIPv4(s)
+		}
+		if s[i] == ':' {
+			return parseIPv6(s, false)
+		}
+	}
+	return []byte{}, false
+}

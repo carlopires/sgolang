@@ -1,0 +1,266 @@
+// Copyright 2021 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package x509
+
+// Ported from Go's crypto/x509 (src/crypto/x509/parser.go) for S-Go (SGO-STD-029, D199).
+
+import (
+	"std/encoding/asn1"
+	"std/errors"
+	"std/strconv"
+	"std/utf8"
+)
+
+const tagBMPString asn1.Tag = 30
+
+const tagNumericString asn1.Tag = 18
+
+func isPrintable(b byte) bool {
+	return 'a' <= b && b <= 'z' || 'A' <= b && b <= 'Z' || '0' <= b && b <= '9' ||
+		'\'' <= b && b <= ')' || '+' <= b && b <= '/' || b == ' ' || b == ':' || b == '=' ||
+		b == '?' || b == '*' || b == '&'
+}
+
+func isIA5(s []byte) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= 0x80 {
+			return false
+		}
+	}
+	return true
+}
+
+func parseASN1String(tag asn1.Tag, value []byte) (string, error) {
+	if tag == asn1.T61String {
+		buf := []byte{}
+		for i := 0; i < len(value); i++ {
+			buf = utf8.AppendRune(buf, rune(value[i]))
+		}
+		return string(buf), nil
+	}
+	if tag == asn1.PrintableString {
+		for i := 0; i < len(value); i++ {
+			if !isPrintable(value[i]) {
+				return "", errors.New("invalid PrintableString")
+			}
+		}
+		return string(value), nil
+	}
+	if tag == asn1.UTF8String {
+		if !utf8.Valid(value) {
+			return "", errors.New("invalid UTF-8 string")
+		}
+		return string(value), nil
+	}
+	if tag == tagBMPString {
+		if len(value)%2 != 0 {
+			return "", errors.New("invalid BMPString")
+		}
+		l := len(value)
+		if l >= 2 && value[l-1] == 0 && value[l-2] == 0 {
+			value = value[:l-2]
+		}
+		units := []int{}
+		for i := 0; i < len(value); i += 2 {
+			point := int(value[i])*256 + int(value[i+1])
+			if point == 0xfffe || point == 0xffff || point >= 0xfdd0 && point <= 0xfdef || point >= 0xd800 && point <= 0xdfff {
+				return "", errors.New("invalid BMPString")
+			}
+			units = append(units, point)
+		}
+		buf := []byte{}
+		for i := 0; i < len(units); i++ {
+			buf = utf8.AppendRune(buf, rune(units[i]))
+		}
+		return string(buf), nil
+	}
+	if tag == asn1.IA5String {
+		if !isIA5(value) {
+			return "", errors.New("invalid IA5String")
+		}
+		return string(value), nil
+	}
+	if tag == tagNumericString {
+		for i := 0; i < len(value); i++ {
+			if !('0' <= value[i] && value[i] <= '9' || value[i] == ' ') {
+				return "", errors.New("invalid NumericString")
+			}
+		}
+		return string(value), nil
+	}
+	return "", errors.New("unsupported string type: " + strconv.Itoa(int(tag)))
+}
+
+// readAttributeValue reads an attribute value as Go's readASN1Any, keeping string values.
+func readAttributeValue(der *asn1.String) (string, bool, error) {
+	var full asn1.String = asn1.String{}
+	var tag asn1.Tag = 0
+	if !der.ReadAnyASN1Element(&full, &tag) {
+		return "", false, errors.New("invalid ASN.1 element")
+	}
+	if tag == asn1.T61String || tag == asn1.PrintableString || tag == asn1.UTF8String || tag == tagBMPString || tag == asn1.IA5String || tag == tagNumericString {
+		var raw asn1.String = asn1.String{}
+		if !full.ReadASN1(&raw, tag) {
+			return "", false, errors.New("invalid ASN.1 element")
+		}
+		s, err := parseASN1String(tag, []byte(raw))
+		if err != nil {
+			return "", false, err
+		}
+		return s, true, nil
+	}
+	if tag == asn1.INTEGER {
+		i := 0
+		if !full.ReadASN1Integer(&i) {
+			return "", false, errors.New("invalid ASN.1 integer")
+		}
+		return "", false, nil
+	}
+	if tag == asn1.BIT_STRING {
+		bs := asn1.BitString{Bytes: []byte{}, BitLength: 0}
+		if !full.ReadASN1BitString(&bs) {
+			return "", false, errors.New("invalid ASN.1 BIT STRING")
+		}
+		return "", false, nil
+	}
+	if tag == asn1.OCTET_STRING {
+		var o asn1.String = asn1.String{}
+		if !full.ReadASN1(&o, asn1.OCTET_STRING) {
+			return "", false, errors.New("invalid ASN.1 OCTET STRING")
+		}
+		return "", false, nil
+	}
+	if tag == asn1.OBJECT_IDENTIFIER {
+		var oid asn1.ObjectIdentifier = asn1.ObjectIdentifier{}
+		if !full.ReadASN1ObjectIdentifier(&oid) {
+			return "", false, errors.New("invalid ASN.1 OBJECT IDENTIFIER")
+		}
+		return "", false, nil
+	}
+	if tag == asn1.UTCTime || tag == asn1.GeneralizedTime {
+		_, err := readTime(&full)
+		return "", false, err
+	}
+	if tag == asn1.BOOLEAN {
+		b := false
+		if !full.ReadASN1Boolean(&b) {
+			return "", false, errors.New("invalid ASN.1 BOOLEAN")
+		}
+		return "", false, nil
+	}
+	return "", false, nil
+}
+
+func parseName(raw asn1.String, out *Name) error {
+	if !raw.ReadASN1(&raw, asn1.SEQUENCE) {
+		return errors.New("x509: invalid RDNSequence")
+	}
+	for !raw.Empty() {
+		var set asn1.String = asn1.String{}
+		if !raw.ReadASN1(&set, asn1.SET) {
+			return errors.New("x509: invalid RDNSequence")
+		}
+		for !set.Empty() {
+			var atav asn1.String = asn1.String{}
+			if !set.ReadASN1(&atav, asn1.SEQUENCE) {
+				return errors.New("x509: invalid RDNSequence: invalid attribute")
+			}
+			var t asn1.ObjectIdentifier = asn1.ObjectIdentifier{}
+			if !atav.ReadASN1ObjectIdentifier(&t) {
+				return errors.New("x509: invalid RDNSequence: invalid attribute type")
+			}
+			value, isString, err := readAttributeValue(&atav)
+			if err != nil {
+				return errors.New("x509: invalid RDNSequence: invalid attribute value: " + err.Error())
+			}
+			out.Names = append(out.Names, AttributeTypeAndValue{Type: t, Value: value, IsString: isString})
+			if !isString || len(t) != 4 || t[0] != 2 || t[1] != 5 || t[2] != 4 {
+				continue
+			}
+			switch t[3] {
+			case 3:
+				out.CommonName = value
+			case 5:
+				out.SerialNumber = value
+			case 6:
+				out.Country = append(out.Country, value)
+			case 7:
+				out.Locality = append(out.Locality, value)
+			case 8:
+				out.Province = append(out.Province, value)
+			case 9:
+				out.StreetAddress = append(out.StreetAddress, value)
+			case 10:
+				out.Organization = append(out.Organization, value)
+			case 11:
+				out.OrganizationalUnit = append(out.OrganizationalUnit, value)
+			case 17:
+				out.PostalCode = append(out.PostalCode, value)
+			}
+		}
+	}
+	return nil
+}
+
+type algorithmIdentifier struct {
+	algorithm  asn1.ObjectIdentifier
+	paramsTag  asn1.Tag
+	params     []byte
+	hasParams  bool
+}
+
+func parseAI(der asn1.String) (algorithmIdentifier, error) {
+	ai := algorithmIdentifier{algorithm: asn1.ObjectIdentifier{}, paramsTag: 0, params: []byte{}, hasParams: false}
+	if !der.ReadASN1ObjectIdentifier(&ai.algorithm) {
+		return ai, errors.New("x509: malformed OID")
+	}
+	if der.Empty() {
+		return ai, nil
+	}
+	var params asn1.String = asn1.String{}
+	var tag asn1.Tag = 0
+	if !der.ReadAnyASN1Element(&params, &tag) {
+		return ai, errors.New("x509: malformed parameters")
+	}
+	ai.paramsTag = tag
+	ai.params = []byte(params)
+	ai.hasParams = true
+	return ai, nil
+}
+
+func readTime(der *asn1.String) (int, error) {
+	t := 0
+	if der.PeekASN1Tag(asn1.UTCTime) {
+		if !der.ReadASN1UTCTime(&t) {
+			return 0, errors.New("x509: malformed UTCTime")
+		}
+		return t, nil
+	}
+	if der.PeekASN1Tag(asn1.GeneralizedTime) {
+		if !der.ReadASN1GeneralizedTime(&t) {
+			return 0, errors.New("x509: malformed GeneralizedTime")
+		}
+		return t, nil
+	}
+	return 0, errors.New("x509: unsupported time format")
+}
+
+func parseExtension(der asn1.String) (Extension, error) {
+	ext := Extension{Id: asn1.ObjectIdentifier{}, Critical: false, Value: []byte{}}
+	if !der.ReadASN1ObjectIdentifier(&ext.Id) {
+		return ext, errors.New("x509: malformed extension OID field")
+	}
+	if der.PeekASN1Tag(asn1.BOOLEAN) {
+		if !der.ReadASN1Boolean(&ext.Critical) {
+			return ext, errors.New("x509: malformed extension critical field")
+		}
+	}
+	var val asn1.String = asn1.String{}
+	if !der.ReadASN1(&val, asn1.OCTET_STRING) {
+		return ext, errors.New("x509: malformed extension value field")
+	}
+	ext.Value = []byte(val)
+	return ext, nil
+}

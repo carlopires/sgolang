@@ -1,0 +1,280 @@
+// Copyright 2024 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+// Ported from Go's crypto/x509 (src/crypto/x509/verify.go) for S-Go (SGO-STD-029, D199): the
+// RFC 9618 policy graph, with nodes addressed by index.
+
+package x509
+
+func anyPolicyOID() OID {
+	return OID{der: []byte{0x55, 0x1d, 0x20, 0x00}}
+}
+
+type policyNode struct {
+	valid    OID
+	expected []OID
+	parents  map[int]bool
+	children map[int]bool
+}
+
+type policyGraph struct {
+	nodes       []policyNode
+	strata      []map[string]int
+	parentIndex map[string][]int
+	depth       int
+}
+
+func newPolicyGraph() *policyGraph {
+	root := policyNode{valid: anyPolicyOID(), expected: []OID{anyPolicyOID()}, parents: map[int]bool{}, children: map[int]bool{}}
+	s0 := map[string]int{}
+	s0[string(anyPolicyOID().der)] = 0
+	return &policyGraph{nodes: []policyNode{root}, strata: []map[string]int{s0}, parentIndex: map[string][]int{}, depth: 0}
+}
+
+func (pg *policyGraph) newNode(valid OID, parents []int) int {
+	id := len(pg.nodes)
+	pg.nodes = append(pg.nodes, policyNode{valid: valid, expected: []OID{valid}, parents: map[int]bool{}, children: map[int]bool{}})
+	for i := 0; i < len(parents); i++ {
+		pg.nodes[parents[i]].children[id] = true
+		pg.nodes[id].parents[parents[i]] = true
+	}
+	return id
+}
+
+func (pg *policyGraph) insert(id int) {
+	pg.strata[pg.depth][string(pg.nodes[id].valid.der)] = id
+}
+
+func (pg *policyGraph) parentWithAnyPolicy() (int, bool) {
+	if pg.depth == 0 {
+		return 0, false
+	}
+	id, ok := pg.strata[pg.depth-1][string(anyPolicyOID().der)]
+	return id, ok
+}
+
+func (pg *policyGraph) leafWithPolicy(p OID) (int, bool) {
+	id, ok := pg.strata[pg.depth][string(p.der)]
+	return id, ok
+}
+
+func (pg *policyGraph) deleteLeaf(p OID) {
+	id, ok := pg.strata[pg.depth][string(p.der)]
+	if !ok {
+		return
+	}
+	for q := range pg.nodes[id].parents {
+		delete(pg.nodes[q].children, id)
+	}
+	for c := range pg.nodes[id].children {
+		delete(pg.nodes[c].parents, id)
+	}
+	delete(pg.strata[pg.depth], string(p.der))
+}
+
+func (pg *policyGraph) validPolicyNodes() []int {
+	out := []int{}
+	for i := pg.depth; i >= 0; i-- {
+		for _, id := range pg.strata[i] {
+			n := pg.nodes[id]
+			if n.valid.Equal(anyPolicyOID()) {
+				continue
+			}
+			if len(n.parents) == 1 {
+				for p := range n.parents {
+					if pg.nodes[p].valid.Equal(anyPolicyOID()) {
+						out = append(out, id)
+					}
+				}
+			}
+		}
+	}
+	return out
+}
+
+func (pg *policyGraph) prune() {
+	for i := pg.depth - 1; i > 0; i-- {
+		dead := []string{}
+		for k, id := range pg.strata[i] {
+			if len(pg.nodes[id].children) == 0 {
+				for p := range pg.nodes[id].parents {
+					delete(pg.nodes[p].children, id)
+				}
+				dead = append(dead, k)
+			}
+		}
+		for j := 0; j < len(dead); j++ {
+			delete(pg.strata[i], dead[j])
+		}
+	}
+}
+
+func (pg *policyGraph) incrDepth() {
+	pg.parentIndex = map[string][]int{}
+	for _, id := range pg.strata[pg.depth] {
+		e := pg.nodes[id].expected
+		for j := 0; j < len(e); j++ {
+			k := string(e[j].der)
+			pg.parentIndex[k] = append(pg.parentIndex[k], id)
+		}
+	}
+	pg.depth++
+	pg.strata = append(pg.strata, map[string]int{})
+}
+
+func capTo(limit int, present, zero bool, cur int) int {
+	if (limit > 0 || zero) && limit < cur {
+		return limit
+	}
+	return cur
+}
+
+func policiesValid(chain []*Certificate, opts *VerifyOptions) bool {
+	if len(chain) == 1 {
+		return true
+	}
+	n := len(chain) - 1
+	pg := newPolicyGraph()
+	live := true
+	inhibitAny, explicit, mapping := n+1, n+1, n+1
+	user := map[string]bool{}
+	for i := 0; i < len(opts.CertificatePolicies); i++ {
+		user[string(opts.CertificatePolicies[i].der)] = true
+	}
+	anyKey := string(anyPolicyOID().der)
+	if len(user) == 0 {
+		user[anyKey] = true
+	}
+	for i := n - 1; i >= 0; i-- {
+		cert := chain[i]
+		selfSigned := string(cert.RawIssuer) == string(cert.RawSubject)
+		if len(cert.Policies) == 0 {
+			live = false
+		}
+		if explicit == 0 && !live {
+			return false
+		}
+		if live {
+			pg.incrDepth()
+			policies := map[string]bool{}
+			for j := 0; j < len(cert.Policies); j++ {
+				p := cert.Policies[j]
+				policies[string(p.der)] = true
+				if p.Equal(anyPolicyOID()) {
+					continue
+				}
+				parents := []int{}
+				if pg.depth > 0 {
+					parents = pg.parentIndex[string(p.der)]
+				}
+				if len(parents) == 0 {
+					if a, ok := pg.parentWithAnyPolicy(); ok {
+						parents = []int{a}
+					}
+				}
+				if len(parents) > 0 {
+					pg.insert(pg.newNode(p, parents))
+				}
+			}
+			if policies[anyKey] && (inhibitAny > 0 || n-i < n && selfSigned) {
+				missing := map[string][]int{}
+				order := []string{}
+				for _, p := range pg.strata[pg.depth-1] {
+					e := pg.nodes[p].expected
+					for j := 0; j < len(e); j++ {
+						k := string(e[j].der)
+						if _, ok := pg.strata[pg.depth][k]; !ok {
+							if _, seen := missing[k]; !seen {
+								order = append(order, k)
+							}
+							missing[k] = append(missing[k], p)
+						}
+					}
+				}
+				for j := 0; j < len(order); j++ {
+					pg.insert(pg.newNode(OID{der: []byte(order[j])}, missing[order[j]]))
+				}
+			}
+			pg.prune()
+			if i != 0 && len(cert.PolicyMappings) > 0 {
+				mappings := map[string][]OID{}
+				morder := []string{}
+				for j := 0; j < len(cert.PolicyMappings); j++ {
+					m := cert.PolicyMappings[j]
+					if mapping > 0 {
+						if m.IssuerDomainPolicy.Equal(anyPolicyOID()) || m.SubjectDomainPolicy.Equal(anyPolicyOID()) {
+							return false
+						}
+						k := string(m.IssuerDomainPolicy.der)
+						if _, seen := mappings[k]; !seen {
+							morder = append(morder, k)
+						}
+						mappings[k] = append(mappings[k], m.SubjectDomainPolicy)
+					} else {
+						pg.deleteLeaf(m.IssuerDomainPolicy)
+					}
+				}
+				pg.prune()
+				for j := 0; j < len(morder); j++ {
+					k := morder[j]
+					if id, ok := pg.leafWithPolicy(OID{der: []byte(k)}); ok {
+						pg.nodes[id].expected = mappings[k]
+					} else if a, ok2 := pg.leafWithPolicy(anyPolicyOID()); ok2 {
+						id2 := pg.newNode(OID{der: []byte(k)}, []int{a})
+						pg.nodes[id2].expected = mappings[k]
+						pg.insert(id2)
+					}
+				}
+			}
+		}
+		if i != 0 {
+			if !selfSigned {
+				if explicit > 0 {
+					explicit--
+				}
+				if mapping > 0 {
+					mapping--
+				}
+				if inhibitAny > 0 {
+					inhibitAny--
+				}
+			}
+			explicit = capTo(cert.RequireExplicitPolicy, true, cert.RequireExplicitPolicyZero, explicit)
+			mapping = capTo(cert.InhibitPolicyMapping, true, cert.InhibitPolicyMappingZero, mapping)
+			inhibitAny = capTo(cert.InhibitAnyPolicy, true, cert.InhibitAnyPolicyZero, inhibitAny)
+		}
+	}
+	if explicit > 0 {
+		explicit--
+	}
+	if chain[0].RequireExplicitPolicyZero {
+		explicit = 0
+	}
+	authority := map[string]bool{}
+	if live {
+		v := pg.validPolicyNodes()
+		if a, ok := pg.leafWithPolicy(anyPolicyOID()); ok {
+			v = append(v, a)
+		}
+		for j := 0; j < len(v); j++ {
+			authority[string(pg.nodes[v[j]].valid.der)] = true
+		}
+	}
+	userSet := map[string]bool{}
+	for k := range authority {
+		userSet[k] = true
+	}
+	if len(user) != 1 || !user[anyKey] {
+		for k := range authority {
+			if !user[k] {
+				delete(userSet, k)
+			}
+		}
+		if authority[anyKey] {
+			for k := range user {
+				userSet[k] = true
+			}
+		}
+	}
+	return !(explicit == 0 && len(userSet) == 0)
+}
