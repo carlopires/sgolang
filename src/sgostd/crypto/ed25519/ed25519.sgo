@@ -1,0 +1,427 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package ed25519 implements the Ed25519 signature scheme of RFC 8032 (SGO-STD-023, D199), with
+// the results of Go's crypto/ed25519 for keys from seeds, signatures, and verification, including
+// its refusal of a non-canonical S. Field elements are sixteen 16-bit limbs in int (as
+// std/crypto/curve25519, D198); scalar multiplication swaps with masks, and no branch or table
+// index depends on a secret.
+package ed25519
+
+import (
+	"std/crypto/sha512"
+	"std/strconv"
+)
+
+const (
+	// PublicKeySize is the size, in bytes, of public keys.
+	PublicKeySize = 32
+	// PrivateKeySize is the size, in bytes, of private keys: the seed followed by the public key.
+	PrivateKeySize = 64
+	// SignatureSize is the size, in bytes, of signatures.
+	SignatureSize = 64
+	// SeedSize is the size, in bytes, of private key seeds.
+	SeedSize = 32
+)
+
+type fe [16]int
+
+func gf1() fe {
+	return fe{1}
+}
+
+func constD() fe {
+	return fe{0x78a3, 0x1359, 0x4dca, 0x75eb, 0xd8ab, 0x4141, 0x0a4d, 0x0070, 0xe898, 0x7779, 0x4079, 0x8cc7, 0xfe73, 0x2b6f, 0x6cee, 0x5203}
+}
+
+func constD2() fe {
+	return fe{0xf159, 0x26b2, 0x9b94, 0xebd6, 0xb156, 0x8283, 0x149a, 0x00e0, 0xd130, 0xeef3, 0x80f2, 0x198e, 0xfce7, 0x56df, 0xd9dc, 0x2406}
+}
+
+func constX() fe {
+	return fe{0xd51a, 0x8f25, 0x2d60, 0xc956, 0xa7b2, 0x9525, 0xc760, 0x692c, 0xdc5c, 0xfdd6, 0xe231, 0xc0a4, 0x53fe, 0xcd6e, 0x36d3, 0x2169}
+}
+
+func constY() fe {
+	return fe{0x6658, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666}
+}
+
+func constI() fe {
+	return fe{0xa0b0, 0x4a0e, 0x1b27, 0xc4ee, 0xe478, 0xad2f, 0x1806, 0x2f43, 0xd7a7, 0x3dfb, 0x0099, 0x2b4d, 0xdf0b, 0x4fc1, 0x2480, 0x2b83}
+}
+
+func orderL() [32]int {
+	return [32]int{0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x10}
+}
+
+func carry(o *fe) {
+	for i := 0; i < 16; i++ {
+		o[i] = o[i] + 65536
+		c := o[i] >> 16
+		if i < 15 {
+			o[i+1] = o[i+1] + c - 1
+		} else {
+			o[0] = o[0] + 38*(c-1)
+		}
+		o[i] = o[i] - c*65536
+	}
+}
+
+func sel(p, q *fe, b int) {
+	c := ^(b - 1)
+	for i := 0; i < 16; i++ {
+		t := c & (p[i] ^ q[i])
+		p[i] = p[i] ^ t
+		q[i] = q[i] ^ t
+	}
+}
+
+func pack(out []byte, n *fe) {
+	t := *n
+	carry(&t)
+	carry(&t)
+	carry(&t)
+	for j := 0; j < 2; j++ {
+		m := fe{}
+		m[0] = t[0] - 0xffed
+		for i := 1; i < 15; i++ {
+			m[i] = t[i] - 0xffff - ((m[i-1] >> 16) & 1)
+			m[i-1] = m[i-1] & 0xffff
+		}
+		m[15] = t[15] - 0x7fff - ((m[14] >> 16) & 1)
+		b := (m[15] >> 16) & 1
+		m[14] = m[14] & 0xffff
+		sel(&t, &m, 1-b)
+	}
+	for i := 0; i < 16; i++ {
+		out[2*i] = byte(t[i] & 0xff)
+		out[2*i+1] = byte(t[i] >> 8)
+	}
+}
+
+func unpack(o *fe, n []byte) {
+	for i := 0; i < 16; i++ {
+		o[i] = int(n[2*i]) + int(n[2*i+1])*256
+	}
+	o[15] = o[15] & 0x7fff
+}
+
+func add(o, a, b *fe) {
+	for i := 0; i < 16; i++ {
+		o[i] = a[i] + b[i]
+	}
+}
+
+func sub(o, a, b *fe) {
+	for i := 0; i < 16; i++ {
+		o[i] = a[i] - b[i]
+	}
+}
+
+func mul(o, a, b *fe) {
+	t := [31]int{}
+	for i := 0; i < 16; i++ {
+		for j := 0; j < 16; j++ {
+			t[i+j] = t[i+j] + a[i]*b[j]
+		}
+	}
+	for i := 0; i < 15; i++ {
+		t[i] = t[i] + 38*t[i+16]
+	}
+	for i := 0; i < 16; i++ {
+		o[i] = t[i]
+	}
+	carry(o)
+	carry(o)
+}
+
+func square(o, a *fe) {
+	mul(o, a, a)
+}
+
+func invert(o, i *fe) {
+	c := *i
+	for a := 253; a >= 0; a-- {
+		square(&c, &c)
+		if a != 2 && a != 4 {
+			mul(&c, &c, i)
+		}
+	}
+	*o = c
+}
+
+func pow2523(o, i *fe) {
+	c := *i
+	for a := 250; a >= 0; a-- {
+		square(&c, &c)
+		if a != 1 {
+			mul(&c, &c, i)
+		}
+	}
+	*o = c
+}
+
+// neq reports 1 if a and b are different field elements and 0 if they are equal.
+func neq(a, b *fe) int {
+	x := make([]byte, 32)
+	y := make([]byte, 32)
+	pack(x, a)
+	pack(y, b)
+	var v byte = 0
+	for i := 0; i < 32; i++ {
+		v = v | (x[i] ^ y[i])
+	}
+	if v == 0 {
+		return 0
+	}
+	return 1
+}
+
+func parity(a *fe) int {
+	x := make([]byte, 32)
+	pack(x, a)
+	return int(x[0] & 1)
+}
+
+// A point is (X, Y, Z, T) in extended coordinates.
+type point [4]fe
+
+func padd(p, q *point) {
+	a, b, c, d, t, e, f, g, h := fe{}, fe{}, fe{}, fe{}, fe{}, fe{}, fe{}, fe{}, fe{}
+	d2 := constD2()
+	sub(&a, &p[1], &p[0])
+	sub(&t, &q[1], &q[0])
+	mul(&a, &a, &t)
+	add(&b, &p[0], &p[1])
+	add(&t, &q[0], &q[1])
+	mul(&b, &b, &t)
+	mul(&c, &p[3], &q[3])
+	mul(&c, &c, &d2)
+	mul(&d, &p[2], &q[2])
+	add(&d, &d, &d)
+	sub(&e, &b, &a)
+	sub(&f, &d, &c)
+	add(&g, &d, &c)
+	add(&h, &b, &a)
+	mul(&p[0], &e, &f)
+	mul(&p[1], &h, &g)
+	mul(&p[2], &g, &f)
+	mul(&p[3], &e, &h)
+}
+
+func cswap(p, q *point, b int) {
+	for i := 0; i < 4; i++ {
+		sel(&p[i], &q[i], b)
+	}
+}
+
+func packPoint(r []byte, p *point) {
+	zi, tx, ty := fe{}, fe{}, fe{}
+	invert(&zi, &p[2])
+	mul(&tx, &p[0], &zi)
+	mul(&ty, &p[1], &zi)
+	pack(r, &ty)
+	r[31] = r[31] ^ byte(parity(&tx)*128)
+}
+
+func scalarMult(p, q *point, s []byte) {
+	p[0], p[1], p[2], p[3] = fe{}, gf1(), gf1(), fe{}
+	for i := 255; i >= 0; i-- {
+		b := int((s[i>>3] >> (i & 7)) & 1)
+		cswap(p, q, b)
+		padd(q, p)
+		padd(p, p)
+		cswap(p, q, b)
+	}
+}
+
+func scalarBase(p *point, s []byte) {
+	q := point{constX(), constY(), gf1(), fe{}}
+	mul(&q[3], &q[0], &q[1])
+	scalarMult(p, &q, s)
+}
+
+// modL sets r to x mod L, x being 64 limbs of at most a few bits above a byte.
+func modL(r []byte, x *[64]int) {
+	l := orderL()
+	for i := 63; i >= 32; i-- {
+		c := 0
+		j := i - 32
+		for ; j < i-12; j++ {
+			x[j] = x[j] + c - 16*x[i]*l[j-(i-32)]
+			c = (x[j] + 128) >> 8
+			x[j] = x[j] - c*256
+		}
+		x[j] = x[j] + c
+		x[i] = 0
+	}
+	c := 0
+	for j := 0; j < 32; j++ {
+		x[j] = x[j] + c - (x[31]>>4)*l[j]
+		c = x[j] >> 8
+		x[j] = x[j] & 255
+	}
+	for j := 0; j < 32; j++ {
+		x[j] = x[j] - c*l[j]
+	}
+	for i := 0; i < 32; i++ {
+		x[i+1] = x[i+1] + (x[i] >> 8)
+		r[i] = byte(x[i] & 255)
+	}
+}
+
+func reduce(r []byte) []byte {
+	x := [64]int{}
+	for i := 0; i < 64; i++ {
+		x[i] = int(r[i])
+	}
+	out := make([]byte, 32)
+	modL(out, &x)
+	return out
+}
+
+func hash(parts [][]byte) []byte {
+	h := sha512.New()
+	for _, p := range parts {
+		_, _ = h.Write(p)
+	}
+	return h.Sum([]byte{})
+}
+
+// NewKeyFromSeed returns the private key for seed, which must be SeedSize bytes; another
+// length fails as Go's panic.
+func NewKeyFromSeed(seed []byte) []byte {
+	if len(seed) != SeedSize {
+		panic("ed25519: bad seed length: " + strconv.Itoa(len(seed)))
+	}
+	d := hash([][]byte{seed})
+	d[0] = d[0] & 248
+	d[31] = (d[31] & 127) | 64
+	p := point{}
+	scalarBase(&p, d[:32])
+	priv := make([]byte, PrivateKeySize)
+	copy(priv, seed)
+	packPoint(priv[32:], &p)
+	return priv
+}
+
+// Public returns the public key of the private key priv.
+func Public(priv []byte) []byte {
+	if len(priv) != PrivateKeySize {
+		panic("ed25519: bad private key length: " + strconv.Itoa(len(priv)))
+	}
+	out := make([]byte, PublicKeySize)
+	copy(out, priv[32:])
+	return out
+}
+
+// Sign signs message with priv and returns the signature; a private key of another length
+// fails as Go's panic.
+func Sign(priv []byte, message []byte) []byte {
+	if len(priv) != PrivateKeySize {
+		panic("ed25519: bad private key length: " + strconv.Itoa(len(priv)))
+	}
+	d := hash([][]byte{priv[:32]})
+	d[0] = d[0] & 248
+	d[31] = (d[31] & 127) | 64
+	r := reduce(hash([][]byte{d[32:], message}))
+	p := point{}
+	scalarBase(&p, r)
+	sig := make([]byte, SignatureSize)
+	packPoint(sig[:32], &p)
+	h := reduce(hash([][]byte{sig[:32], priv[32:], message}))
+	x := [64]int{}
+	for i := 0; i < 32; i++ {
+		x[i] = int(r[i])
+	}
+	for i := 0; i < 32; i++ {
+		for j := 0; j < 32; j++ {
+			x[i+j] = x[i+j] + int(h[i])*int(d[j])
+		}
+	}
+	modL(sig[32:], &x)
+	return sig
+}
+
+// unpackNeg decodes the negation of the point p; it reports false when p is not a point.
+func unpackNeg(r *point, p []byte) bool {
+	t, chk, num, den, den2, den4, den6 := fe{}, fe{}, fe{}, fe{}, fe{}, fe{}, fe{}
+	d := constD()
+	ii := constI()
+	r[2] = gf1()
+	unpack(&r[1], p)
+	square(&num, &r[1])
+	mul(&den, &num, &d)
+	sub(&num, &num, &r[2])
+	add(&den, &r[2], &den)
+	square(&den2, &den)
+	square(&den4, &den2)
+	mul(&den6, &den4, &den2)
+	mul(&t, &den6, &num)
+	mul(&t, &t, &den)
+	pow2523(&t, &t)
+	mul(&t, &t, &num)
+	mul(&t, &t, &den)
+	mul(&t, &t, &den)
+	mul(&r[0], &t, &den)
+	square(&chk, &r[0])
+	mul(&chk, &chk, &den)
+	if neq(&chk, &num) == 1 {
+		mul(&r[0], &r[0], &ii)
+	}
+	square(&chk, &r[0])
+	mul(&chk, &chk, &den)
+	if neq(&chk, &num) == 1 {
+		return false
+	}
+	if parity(&r[0]) == int(p[31]>>7) {
+		z := fe{}
+		sub(&r[0], &z, &r[0])
+	}
+	mul(&r[3], &r[0], &r[1])
+	return true
+}
+
+// lessThanL reports whether the 32-byte little-endian s is below the group order.
+func lessThanL(s []byte) bool {
+	l := orderL()
+	for i := 31; i >= 0; i-- {
+		if int(s[i]) < l[i] {
+			return true
+		}
+		if int(s[i]) > l[i] {
+			return false
+		}
+	}
+	return false
+}
+
+// Verify reports whether sig is a valid signature of message by pub. A public key of the wrong
+// length fails as Go's panic; a signature of the wrong length, a non-canonical S, or a public
+// key that is not a point is reported as false.
+func Verify(pub []byte, message []byte, sig []byte) bool {
+	if len(pub) != PublicKeySize {
+		panic("ed25519: bad public key length: " + strconv.Itoa(len(pub)))
+	}
+	if len(sig) != SignatureSize || sig[63]&224 != 0 || !lessThanL(sig[32:]) {
+		return false
+	}
+	q := point{}
+	if !unpackNeg(&q, pub) {
+		return false
+	}
+	h := reduce(hash([][]byte{sig[:32], pub, message}))
+	p := point{}
+	scalarMult(&p, &q, h)
+	b := point{}
+	scalarBase(&b, sig[32:])
+	padd(&p, &b)
+	t := make([]byte, 32)
+	packPoint(t, &p)
+	var v byte = 0
+	for i := 0; i < 32; i++ {
+		v = v | (t[i] ^ sig[i])
+	}
+	return v == 0
+}

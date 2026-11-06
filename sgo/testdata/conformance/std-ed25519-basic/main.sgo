@@ -1,0 +1,21 @@
+package main
+
+import (
+	"sgo"
+	"std/crypto/ed25519"
+	"std/encoding/hex"
+)
+
+func main(root *sgo.Context) error {
+	seed, _ := hex.DecodeString("9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60")
+	priv := ed25519.NewKeyFromSeed(seed)
+	pub := ed25519.Public(priv)
+	sig := ed25519.Sign(priv, []byte("hello"))
+	ok := ed25519.Verify(pub, []byte("hello"), sig)
+	forged := ed25519.Verify(pub, []byte("hellp"), sig)
+	out := hex.EncodeToString(pub) + "\n"
+	if ok && !forged {
+		out = out + "verified\n"
+	}
+	return root.Stdout().WriteString(out)
+}

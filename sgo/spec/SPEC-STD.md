@@ -486,3 +486,25 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **implementation_coverage:** `src/sgostd/crypto/curve25519/`.
 - **executed_evidence:** W26: conformance (darwin/arm64; Linux at the W26 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` seeds 1 and 2 (sgo/evidence/w26/README.md).
 - **supported_execution_configurations:** production, lab.
+
+### SGO-STD-023 — `std/crypto/ed25519`: Ed25519 signatures
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-STD-016, SGO-STD-022; D198, D199.
+- **grammar_and_types:** The package `std/crypto/ed25519` exports exactly: `const PrivateKeySize`; `const PublicKeySize`; `const SeedSize`; `const SignatureSize`; `func NewKeyFromSeed(seed []byte) []byte`; `func Public(priv []byte) []byte`; `func Sign(priv []byte, message []byte) []byte`; `func Verify(pub []byte, message []byte, sig []byte) bool`. Keys and signatures are byte slices: a private key is the 32-byte seed followed by the 32-byte public key.
+- **preconditions:** None.
+- **evaluation_and_value_semantics:** Ed25519 of RFC 8032 (pure, no context), giving the results of Go's crypto/ed25519: `NewKeyFromSeed` derives the key pair, `Sign` the deterministic signature, and `Verify` checks `[S]B = R + [k]A` by comparing the encoding of `[S]B - [k]A` with `R`. `Verify` refuses a signature whose `S` is not below the group order and a public key that does not decode to a point. Field elements are sixteen 16-bit limbs in `int` (D198); scalar multiplication swaps with masks, and no branch or table index depends on the seed, the private scalar or the nonce.
+- **ownership_and_lifecycle:** Results are new slices; the package keeps no state.
+- **effect_and_capability_requirements:** None. Key generation from entropy is not part of the package: a seed comes from the caller (for example `*sgo.Entropy`).
+- **concurrency_and_memory_order:** n/a: the package has no state.
+- **allowed_nondeterminism:** None: signatures are deterministic.
+- **failure_and_partial_progress:** `NewKeyFromSeed`, `Public`, `Sign` and `Verify` with a seed, private key or public key of the wrong length fail as SGO-ERR-003 with Go's panic text (`ed25519: bad seed length: N` and the like). A signature of the wrong length is reported by `Verify` as false.
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003.
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-ed25519-basic; `src/sgostd/crypto/ed25519` package tests (RFC 8032 tests 1 and 2, refusals); `sgo/scripts/test-std-crypto.py`: identical to Go's crypto/ed25519 on generated seeds and messages (keys, signatures, verification of valid and corrupted signatures), and Wycheproof vectors of Go's own tests (github.com/c2sp/wycheproof at the version in src/crypto/internal/cryptotest/wycheproof/schemaversion.go): 150 of 150 Ed25519 vectors agree.
+- **negative_tests:** n/a: refusals are false results; package test TestVerify and the Wycheproof invalid vectors (malleable S, bad points, truncated signatures) check them.
+- **implementation_coverage:** `src/sgostd/crypto/ed25519/`.
+- **executed_evidence:** PENDING: W27.
+- **supported_execution_configurations:** production, lab.
