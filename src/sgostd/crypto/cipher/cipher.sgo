@@ -13,3 +13,11 @@ type AEAD interface {
 	Seal(dst, nonce, plaintext, additionalData []byte) []byte
 	Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, error)
 }
+
+// A Block is a block cipher: Encrypt and Decrypt transform the first BlockSize bytes of src
+// into dst.
+type Block interface {
+	BlockSize() int
+	Encrypt(dst, src []byte)
+	Decrypt(dst, src []byte)
+}

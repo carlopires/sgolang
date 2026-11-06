@@ -1,0 +1,153 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package asn1
+
+func digits(s []byte, i, n int) (int, bool) {
+	if i+n > len(s) {
+		return 0, false
+	}
+	v := 0
+	for k := i; k < i+n; k++ {
+		if s[k] < '0' || s[k] > '9' {
+			return 0, false
+		}
+		v = v*10 + int(s[k]-'0')
+	}
+	return v, true
+}
+
+func isLeap(y int) bool {
+	return y%4 == 0 && (y%100 != 0 || y%400 == 0)
+}
+
+func daysIn(m, y int) int {
+	if m == 2 {
+		if isLeap(y) {
+			return 29
+		}
+		return 28
+	}
+	if m == 4 || m == 6 || m == 9 || m == 11 {
+		return 30
+	}
+	return 31
+}
+
+// daysFromCivil is the number of days from 1970-01-01 to y-m-d (proleptic Gregorian).
+func daysFromCivil(y, m, d int) int {
+	if m <= 2 {
+		y = y - 1
+	}
+	era := y / 400
+	if y < 0 && y%400 != 0 {
+		era = era - 1
+	}
+	yoe := y - era*400
+	mp := (m + 9) % 12
+	doy := (153*mp+2)/5 + d - 1
+	doe := yoe*365 + yoe/4 - yoe/100 + doy
+	return era*146097 + doe - 719468
+}
+
+// zone reads "Z" or a non-zero "+hhmm"/"-hhmm" offset that ends s, as Go's time layout Z0700
+// with the round trip check of cryptobyte; it returns the offset in seconds east of UTC.
+func zone(s []byte, i int) (int, bool) {
+	if len(s) == i+1 && s[i] == 'Z' {
+		return 0, true
+	}
+	if len(s) != i+5 || (s[i] != '+' && s[i] != '-') {
+		return 0, false
+	}
+	hh, ok1 := digits(s, i+1, 2)
+	mm, ok2 := digits(s, i+3, 2)
+	if !ok1 || !ok2 || hh > 24 || mm >= 60 || hh == 0 && mm == 0 {
+		return 0, false
+	}
+	off := hh*3600 + mm*60
+	if s[i] == '-' {
+		off = -off
+	}
+	return off, true
+}
+
+// civil checks a date and time and returns its Unix seconds at the given offset.
+func civil(y, mo, d, h, mi, sec, off int) (int, bool) {
+	if mo < 1 || mo > 12 || d < 1 || d > daysIn(mo, y) || h > 23 || mi > 59 || sec > 59 {
+		return 0, false
+	}
+	return daysFromCivil(y, mo, d)*86400 + h*3600 + mi*60 + sec - off, true
+}
+
+// ReadASN1GeneralizedTime reads a GeneralizedTime "YYYYMMDDHHMMSS" with "Z" or "+hhmm"/"-hhmm"
+// into out as Unix seconds and advances; other forms are refused, as in cryptobyte.
+func (s *String) ReadASN1GeneralizedTime(out *int) bool {
+	var b String = String{}
+	if !s.ReadASN1(&b, GeneralizedTime) {
+		return false
+	}
+	t := []byte(b)
+	y, ok1 := digits(t, 0, 4)
+	mo, ok2 := digits(t, 4, 2)
+	d, ok3 := digits(t, 6, 2)
+	h, ok4 := digits(t, 8, 2)
+	mi, ok5 := digits(t, 10, 2)
+	sec, ok6 := digits(t, 12, 2)
+	if !(ok1 && ok2 && ok3 && ok4 && ok5 && ok6) {
+		return false
+	}
+	off, ok := zone(t, 14)
+	if !ok {
+		return false
+	}
+	u, ok7 := civil(y, mo, d, h, mi, sec, off)
+	if !ok7 {
+		return false
+	}
+	*out = u
+	return true
+}
+
+// ReadASN1UTCTime reads a UTCTime "YYMMDDHHMMSS" or "YYMMDDHHMM" with "Z" or "+hhmm"/"-hhmm" into
+// out as Unix seconds and advances; YY below 50 is 20YY and otherwise 19YY (RFC 5280).
+func (s *String) ReadASN1UTCTime(out *int) bool {
+	var b String = String{}
+	if !s.ReadASN1(&b, UTCTime) {
+		return false
+	}
+	t := []byte(b)
+	yy, ok1 := digits(t, 0, 2)
+	mo, ok2 := digits(t, 2, 2)
+	d, ok3 := digits(t, 4, 2)
+	h, ok4 := digits(t, 6, 2)
+	mi, ok5 := digits(t, 8, 2)
+	if !(ok1 && ok2 && ok3 && ok4 && ok5) {
+		return false
+	}
+	y := 1900 + yy
+	if yy < 50 {
+		y = 2000 + yy
+	}
+	sec, okS := digits(t, 10, 2)
+	if okS {
+		off, okZ := zone(t, 12)
+		if okZ {
+			u, okC := civil(y, mo, d, h, mi, sec, off)
+			if okC {
+				*out = u
+				return true
+			}
+		}
+	}
+	off, ok := zone(t, 10)
+	if !ok {
+		return false
+	}
+	u, okC := civil(y, mo, d, h, mi, 0, off)
+	if !okC {
+		return false
+	}
+	*out = u
+	return true
+}

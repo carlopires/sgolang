@@ -1,0 +1,471 @@
+// Copyright 2017 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package asn1 reads DER-encoded ASN.1 (ITU-T X.690) for X.509 (SGO-STD-028, D199). It is the
+// reading half of golang.org/x/crypto/cryptobyte and cryptobyte/asn1, translated to S-Go, with the
+// same results; integers are int, and times are Unix seconds of the UTC instant.
+package asn1
+
+// Ported from golang.org/x/crypto/cryptobyte (src/vendor/golang.org/x/crypto/cryptobyte/asn1.go)
+// with its string.go and asn1/asn1.go, for S-Go (SGO-STD-028, D199): the reading functions, with
+// int results.
+
+import "std/strconv"
+
+// A Tag is an ASN.1 identifier octet (low-tag-number form).
+type Tag byte
+
+// Constructed returns t with the constructed bit set.
+func (t Tag) Constructed() Tag {
+	return t | 0x20
+}
+
+// ContextSpecific returns t with the context-specific class bits set.
+func (t Tag) ContextSpecific() Tag {
+	return t | 0x80
+}
+
+// The universal tags.
+const (
+	BOOLEAN           Tag = 1
+	INTEGER           Tag = 2
+	BIT_STRING        Tag = 3
+	OCTET_STRING      Tag = 4
+	NULL              Tag = 5
+	OBJECT_IDENTIFIER Tag = 6
+	ENUM              Tag = 10
+	UTF8String        Tag = 12
+	SEQUENCE          Tag = 16 | 0x20
+	SET               Tag = 17 | 0x20
+	PrintableString   Tag = 19
+	T61String         Tag = 20
+	IA5String         Tag = 22
+	UTCTime           Tag = 23
+	GeneralizedTime   Tag = 24
+	GeneralString     Tag = 27
+)
+
+// An ObjectIdentifier is the arcs of an ASN.1 OBJECT IDENTIFIER.
+type ObjectIdentifier []int
+
+// Equal reports whether oid and other are the same identifier.
+func (oid ObjectIdentifier) Equal(other ObjectIdentifier) bool {
+	if len(oid) != len(other) {
+		return false
+	}
+	for i := 0; i < len(oid); i++ {
+		if oid[i] != other[i] {
+			return false
+		}
+	}
+	return true
+}
+
+// String returns the dotted form of oid.
+func (oid ObjectIdentifier) String() string {
+	s := ""
+	for i := 0; i < len(oid); i++ {
+		if i > 0 {
+			s = s + "."
+		}
+		s = s + strconv.Itoa(oid[i])
+	}
+	return s
+}
+
+// A BitString is an ASN.1 BIT STRING: BitLength bits, padded in Bytes.
+type BitString struct {
+	Bytes     []byte
+	BitLength int
+}
+
+// At returns the bit at index i (0 or 1), or 0 when i is out of range.
+func (b BitString) At(i int) int {
+	if i < 0 || i >= b.BitLength {
+		return 0
+	}
+	x := i / 8
+	y := 7 - i%8
+	return int(b.Bytes[x]>>y) & 1
+}
+
+// A String is a byte string being read; reads advance it.
+type String []byte
+
+// Empty reports whether nothing is left to read.
+func (s String) Empty() bool {
+	return len(s) == 0
+}
+
+func (s *String) read(n int) ([]byte, bool) {
+	if len(*s) < n || n < 0 {
+		return []byte{}, false
+	}
+	v := (*s)[:n]
+	*s = (*s)[n:]
+	return v, true
+}
+
+// Skip advances s by n bytes and reports whether it was successful.
+func (s *String) Skip(n int) bool {
+	_, ok := s.read(n)
+	return ok
+}
+
+// ReadBytes reads n bytes into out and advances; it reports whether it was successful.
+func (s *String) ReadBytes(out *[]byte, n int) bool {
+	v, ok := s.read(n)
+	if !ok {
+		return false
+	}
+	*out = v
+	return true
+}
+
+func (s *String) readASN1(out *String, outTag *Tag, skipHeader bool) bool {
+	if len(*s) < 2 {
+		return false
+	}
+	tag := (*s)[0]
+	lenByte := (*s)[1]
+	if tag&0x1f == 0x1f {
+		return false
+	}
+	*outTag = Tag(tag)
+	length := 0
+	headerLen := 0
+	if lenByte&0x80 == 0 {
+		length = int(lenByte) + 2
+		headerLen = 2
+	} else {
+		lenLen := int(lenByte & 0x7f)
+		if lenLen == 0 || lenLen > 4 || len(*s) < 2+lenLen {
+			return false
+		}
+		len32 := 0
+		for i := 0; i < lenLen; i++ {
+			len32 = len32*256 + int((*s)[2+i])
+		}
+		if len32 < 128 {
+			return false
+		}
+		if (*s)[2] == 0 {
+			return false
+		}
+		headerLen = 2 + lenLen
+		if headerLen+len32 > 4294967295 {
+			return false
+		}
+		length = headerLen + len32
+	}
+	v, ok := s.read(length)
+	if !ok {
+		return false
+	}
+	if skipHeader {
+		v = v[headerLen:]
+	}
+	*out = String(v)
+	return true
+}
+
+// ReadAnyASN1 reads the contents of a DER element (without tag and length) into out, sets
+// outTag to its tag, and advances. It reports whether the read was successful; tags above 30
+// are refused.
+func (s *String) ReadAnyASN1(out *String, outTag *Tag) bool {
+	return s.readASN1(out, outTag, true)
+}
+
+// ReadAnyASN1Element is ReadAnyASN1 with the tag and length kept in out.
+func (s *String) ReadAnyASN1Element(out *String, outTag *Tag) bool {
+	return s.readASN1(out, outTag, false)
+}
+
+// ReadASN1 reads the contents of a DER element with the given tag into out and advances.
+func (s *String) ReadASN1(out *String, tag Tag) bool {
+	var t Tag = 0
+	if !s.ReadAnyASN1(out, &t) || t != tag {
+		return false
+	}
+	return true
+}
+
+// ReadASN1Element is ReadASN1 with the tag and length kept in out.
+func (s *String) ReadASN1Element(out *String, tag Tag) bool {
+	var t Tag = 0
+	if !s.ReadAnyASN1Element(out, &t) || t != tag {
+		return false
+	}
+	return true
+}
+
+// ReadASN1Bytes reads the contents of a DER element with the given tag into out and advances.
+func (s *String) ReadASN1Bytes(out *[]byte, tag Tag) bool {
+	var v String = String{}
+	if !s.ReadASN1(&v, tag) {
+		return false
+	}
+	*out = []byte(v)
+	return true
+}
+
+// PeekASN1Tag reports whether the next element starts with the given tag.
+func (s String) PeekASN1Tag(tag Tag) bool {
+	if len(s) == 0 {
+		return false
+	}
+	return Tag(s[0]) == tag
+}
+
+// SkipASN1 reads and discards an element with the given tag.
+func (s *String) SkipASN1(tag Tag) bool {
+	var unused String = String{}
+	return s.ReadASN1(&unused, tag)
+}
+
+// ReadOptionalASN1 reads the contents of an element with the given tag into out when one is
+// next, sets outPresent accordingly, and reports whether the read was successful.
+func (s *String) ReadOptionalASN1(out *String, outPresent *bool, tag Tag) bool {
+	present := s.PeekASN1Tag(tag)
+	*outPresent = present
+	if present && !s.ReadASN1(out, tag) {
+		return false
+	}
+	return true
+}
+
+// SkipOptionalASN1 advances over an element with the given tag, if one is next.
+func (s *String) SkipOptionalASN1(tag Tag) bool {
+	if !s.PeekASN1Tag(tag) {
+		return true
+	}
+	var unused String = String{}
+	return s.ReadASN1(&unused, tag)
+}
+
+// ReadASN1Boolean reads a BOOLEAN (DER: 0x00 or 0xff) into out and advances.
+func (s *String) ReadASN1Boolean(out *bool) bool {
+	var b String = String{}
+	if !s.ReadASN1(&b, BOOLEAN) || len(b) != 1 {
+		return false
+	}
+	if b[0] == 0 {
+		*out = false
+	} else if b[0] == 0xff {
+		*out = true
+	} else {
+		return false
+	}
+	return true
+}
+
+func checkInteger(b []byte) bool {
+	if len(b) == 0 {
+		return false
+	}
+	if len(b) == 1 {
+		return true
+	}
+	if b[0] == 0 && b[1]&0x80 == 0 || b[0] == 0xff && b[1]&0x80 == 0x80 {
+		return false
+	}
+	return true
+}
+
+// signed decodes a two's-complement big-endian value of at most 8 bytes.
+func signed(out *int, n []byte) bool {
+	if len(n) > 8 {
+		return false
+	}
+	var u uint64 = 0
+	for i := 0; i < len(n); i++ {
+		u = (u << 8) | uint64(n[i])
+	}
+	if n[0]&0x80 == 0 {
+		*out = int(u)
+		return true
+	}
+	var mask uint64 = 0xffffffffffffffff
+	if len(n) < 8 {
+		var one uint64 = 1
+		mask = (one << (8 * len(n))) - 1
+	}
+	comp := (^u) & mask
+	*out = -int(comp) - 1
+	return true
+}
+
+// ReadASN1Integer reads an INTEGER that fits in an int into out and advances.
+func (s *String) ReadASN1Integer(out *int) bool {
+	var b String = String{}
+	return s.ReadASN1(&b, INTEGER) && checkInteger(b) && signed(out, b)
+}
+
+// ReadASN1IntegerWithTag reads an integer with the given tag that fits in an int into out.
+func (s *String) ReadASN1IntegerWithTag(out *int, tag Tag) bool {
+	var b String = String{}
+	return s.ReadASN1(&b, tag) && checkInteger(b) && signed(out, b)
+}
+
+// ReadASN1IntegerBytes reads a non-negative INTEGER as big-endian bytes without leading zeros
+// (zero is one zero byte) into out and advances; a negative integer is refused.
+func (s *String) ReadASN1IntegerBytes(out *[]byte) bool {
+	var b String = String{}
+	if !s.ReadASN1(&b, INTEGER) || !checkInteger(b) {
+		return false
+	}
+	if b[0]&0x80 == 0x80 {
+		return false
+	}
+	for len(b) > 1 && b[0] == 0 {
+		b = b[1:]
+	}
+	*out = []byte(b)
+	return true
+}
+
+// ReadASN1Enum reads an ENUMERATED into out and advances.
+func (s *String) ReadASN1Enum(out *int) bool {
+	var b String = String{}
+	return s.ReadASN1(&b, ENUM) && checkInteger(b) && signed(out, b)
+}
+
+func (s *String) readBase128Int(out *int) bool {
+	ret := 0
+	for i := 0; len(*s) > 0; i++ {
+		if i == 5 {
+			return false
+		}
+		if ret >= 1<<(31-7) {
+			return false
+		}
+		ret = ret << 7
+		v, _ := s.read(1)
+		b := v[0]
+		if i == 0 && b == 0x80 {
+			return false
+		}
+		ret = ret | int(b&0x7f)
+		if b&0x80 == 0 {
+			*out = ret
+			return true
+		}
+	}
+	return false
+}
+
+// ReadASN1ObjectIdentifier reads an OBJECT IDENTIFIER into out and advances.
+func (s *String) ReadASN1ObjectIdentifier(out *ObjectIdentifier) bool {
+	var b String = String{}
+	if !s.ReadASN1(&b, OBJECT_IDENTIFIER) || len(b) == 0 {
+		return false
+	}
+	components := make([]int, len(b)+1)
+	v := 0
+	if !b.readBase128Int(&v) {
+		return false
+	}
+	if v < 80 {
+		components[0] = v / 40
+		components[1] = v % 40
+	} else {
+		components[0] = 2
+		components[1] = v - 80
+	}
+	i := 2
+	for ; len(b) > 0; i++ {
+		if !b.readBase128Int(&v) {
+			return false
+		}
+		components[i] = v
+	}
+	*out = ObjectIdentifier(components[:i])
+	return true
+}
+
+// ReadASN1BitString reads a BIT STRING into out and advances.
+func (s *String) ReadASN1BitString(out *BitString) bool {
+	var b String = String{}
+	if !s.ReadASN1(&b, BIT_STRING) || len(b) == 0 {
+		return false
+	}
+	padding := int(b[0])
+	b = b[1:]
+	if padding > 7 || len(b) == 0 && padding != 0 {
+		return false
+	}
+	if len(b) > 0 && int(b[len(b)-1])&((1<<padding)-1) != 0 {
+		return false
+	}
+	out.BitLength = len(b)*8 - padding
+	out.Bytes = []byte(b)
+	return true
+}
+
+// ReadASN1BitStringAsBytes reads a BIT STRING of whole bytes into out and advances.
+func (s *String) ReadASN1BitStringAsBytes(out *[]byte) bool {
+	var b String = String{}
+	if !s.ReadASN1(&b, BIT_STRING) || len(b) == 0 {
+		return false
+	}
+	if b[0] != 0 {
+		return false
+	}
+	*out = []byte(b[1:])
+	return true
+}
+
+// ReadOptionalASN1Integer reads an INTEGER explicitly tagged with tag into out when one is next,
+// and otherwise sets out to defaultValue.
+func (s *String) ReadOptionalASN1Integer(out *int, tag Tag, defaultValue int) bool {
+	present := false
+	var i String = String{}
+	if !s.ReadOptionalASN1(&i, &present, tag) {
+		return false
+	}
+	if !present {
+		*out = defaultValue
+		return true
+	}
+	if !i.ReadASN1Integer(out) || !i.Empty() {
+		return false
+	}
+	return true
+}
+
+// ReadOptionalASN1OctetString reads an OCTET STRING explicitly tagged with tag into out when one
+// is next (otherwise out becomes empty), and sets outPresent.
+func (s *String) ReadOptionalASN1OctetString(out *[]byte, outPresent *bool, tag Tag) bool {
+	present := false
+	var child String = String{}
+	if !s.ReadOptionalASN1(&child, &present, tag) {
+		return false
+	}
+	*outPresent = present
+	if present {
+		var oct String = String{}
+		if !child.ReadASN1(&oct, OCTET_STRING) || !child.Empty() {
+			return false
+		}
+		*out = []byte(oct)
+	} else {
+		*out = []byte{}
+	}
+	return true
+}
+
+// ReadOptionalASN1Boolean reads a BOOLEAN explicitly tagged with tag into out when one is next,
+// and otherwise sets out to defaultValue.
+func (s *String) ReadOptionalASN1Boolean(out *bool, tag Tag, defaultValue bool) bool {
+	present := false
+	var child String = String{}
+	if !s.ReadOptionalASN1(&child, &present, tag) {
+		return false
+	}
+	if !present {
+		*out = defaultValue
+		return true
+	}
+	return child.ReadASN1Boolean(out)
+}

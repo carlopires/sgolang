@@ -1,0 +1,32 @@
+package main
+
+import (
+	"sgo"
+	"std/crypto/aes"
+	"std/crypto/cipher"
+	"std/encoding/hex"
+)
+
+func main(root *sgo.Context) error {
+	key, _ := hex.DecodeString("000102030405060708090a0b0c0d0e0f")
+	b, err := aes.NewCipher(key)
+	if err != nil {
+		return err
+	}
+	pt, _ := hex.DecodeString("00112233445566778899aabbccddeeff")
+	ct := make([]byte, aes.BlockSize)
+	b.Encrypt(ct, pt)
+	g, err := cipher.NewGCM(b)
+	if err != nil {
+		return err
+	}
+	nonce := make([]byte, g.NonceSize())
+	sealed := g.Seal([]byte{}, nonce, []byte("hello"), []byte("ad"))
+	opened, err := g.Open([]byte{}, nonce, sealed, []byte("ad"))
+	if err != nil {
+		return err
+	}
+	_, err = g.Open([]byte{}, nonce, sealed, []byte("other"))
+	_, kerr := aes.NewCipher(key[:5])
+	return root.Stdout().WriteString(hex.EncodeToString(ct) + "\n" + string(opened) + "\n" + err.Error() + "\n" + kerr.Error() + "\n")
+}

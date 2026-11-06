@@ -1,0 +1,30 @@
+package main
+
+import (
+	"sgo"
+	"std/encoding/asn1"
+	"std/encoding/hex"
+	"std/strconv"
+)
+
+func main(root *sgo.Context) error {
+	b, _ := hex.DecodeString("301e020200ff06092a864886f70d01010b170d3236303130323033303430355a")
+	s := asn1.String(b)
+	var seq asn1.String = asn1.String{}
+	out := ""
+	if s.ReadASN1(&seq, asn1.SEQUENCE) {
+		n := 0
+		var oid asn1.ObjectIdentifier = asn1.ObjectIdentifier{}
+		u := 0
+		if seq.ReadASN1Integer(&n) && seq.ReadASN1ObjectIdentifier(&oid) && seq.ReadASN1UTCTime(&u) {
+			out = strconv.Itoa(n) + " " + oid.String() + " " + strconv.Itoa(u) + "\n"
+		}
+	}
+	bad, _ := hex.DecodeString("02020001")
+	t := asn1.String(bad)
+	n := 0
+	if !t.ReadASN1Integer(&n) {
+		out = out + "non-minimal integer refused\n"
+	}
+	return root.Stdout().WriteString(out)
+}

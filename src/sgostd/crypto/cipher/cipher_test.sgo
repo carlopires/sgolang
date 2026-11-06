@@ -35,3 +35,26 @@ func TestImplement(t *sgo.T) error {
 	}
 	return nil
 }
+
+type halfBlock struct{}
+
+func (h *halfBlock) BlockSize() int {
+	return 8
+}
+
+func (h *halfBlock) Encrypt(dst, src []byte) {
+	copy(dst[:8], src[:8])
+}
+
+func (h *halfBlock) Decrypt(dst, src []byte) {
+	copy(dst[:8], src[:8])
+}
+
+// A user type with the three methods is a Block; GCM needs a 16-byte block.
+func TestNewGCMBlockSize(t *sgo.T) error {
+	var b Block = &halfBlock{}
+	if _, err := NewGCM(b); err == nil || err.Error() != "cipher: NewGCM requires 128-bit block cipher" {
+		return sgo.NewError("8-byte block accepted")
+	}
+	return nil
+}

@@ -1,0 +1,57 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package asn1
+
+import (
+	"sgo"
+	"std/encoding/hex"
+)
+
+func der(h string) String {
+	b, _ := hex.DecodeString(h)
+	return String(b)
+}
+
+// A SEQUENCE of an INTEGER, an OID and a UTCTime, read in order.
+func TestSequence(t *sgo.T) error {
+	s := der("301e020200ff06092a864886f70d01010b170d3236303130323033303430355a")
+	var seq String = String{}
+	if !s.ReadASN1(&seq, SEQUENCE) || !s.Empty() {
+		return sgo.NewError("sequence")
+	}
+	n := 0
+	if !seq.ReadASN1Integer(&n) || n != 255 {
+		return sgo.NewError("integer")
+	}
+	var oid ObjectIdentifier = ObjectIdentifier{}
+	if !seq.ReadASN1ObjectIdentifier(&oid) || oid.String() != "1.2.840.113549.1.1.11" {
+		return sgo.NewError("oid " + oid.String())
+	}
+	u := 0
+	if !seq.ReadASN1UTCTime(&u) || u != 1767323045 || !seq.Empty() {
+		return sgo.NewError("utctime")
+	}
+	return nil
+}
+
+// Non-minimal encodings are refused.
+func TestRefusals(t *sgo.T) error {
+	s := der("02020001")
+	n := 0
+	if s.ReadASN1Integer(&n) {
+		return sgo.NewError("non-minimal integer accepted")
+	}
+	l := der("0481020000")
+	var v String = String{}
+	if l.ReadASN1(&v, OCTET_STRING) {
+		return sgo.NewError("long-form short length accepted")
+	}
+	b := der("010101")
+	x := false
+	if b.ReadASN1Boolean(&x) {
+		return sgo.NewError("non-DER boolean accepted")
+	}
+	return nil
+}

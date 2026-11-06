@@ -421,26 +421,26 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **executed_evidence:** W26: conformance (darwin/arm64; Linux at the W26 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` seeds 1 and 2 (sgo/evidence/w26/README.md).
 - **supported_execution_configurations:** production, lab.
 
-### SGO-STD-020 — `std/crypto/cipher`: the AEAD interface
-- **version:** 1
-- **status:** frozen
-- **reference_closure:** SGO-IMP-004, SGO-IFACE-001, SGO-STD-011; D197.
-- **grammar_and_types:** The package `std/crypto/cipher` exports exactly: `type AEAD`. `AEAD` is the interface with the methods `NonceSize() int`, `Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, error)`, `Overhead() int` and `Seal(dst, nonce, plaintext, additionalData []byte) []byte`; any type with those methods implements it (SGO-IFACE-001).
+### SGO-STD-020 — `std/crypto/cipher`: the AEAD and Block interfaces and GCM
+- **version:** 2
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-IFACE-001, SGO-STD-011, SGO-STD-016; D197, D199.
+- **grammar_and_types:** The package `std/crypto/cipher` exports exactly: `func (*gcm) NonceSize() int`; `func (*gcm) Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, error)`; `func (*gcm) Overhead() int`; `func (*gcm) Seal(dst, nonce, plaintext, additionalData []byte) []byte`; `func NewGCM(b Block) (AEAD, error)`; `type AEAD`; `type Block`. `AEAD` is the interface with the methods `NonceSize() int`, `Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, error)`, `Overhead() int` and `Seal(dst, nonce, plaintext, additionalData []byte) []byte`; `Block` is the interface with the methods `BlockSize() int`, `Decrypt(dst, src []byte)` and `Encrypt(dst, src []byte)`; any type with those methods implements them (SGO-IFACE-001). `gcm` is the unexported type of the values `NewGCM` returns.
 - **preconditions:** None.
-- **evaluation_and_value_semantics:** The interface declares no behaviour of its own. AEADs of std/crypto meet this contract: `Seal` appends the ciphertext and tag of `plaintext` under `nonce` and `additionalData` to `dst`; `Open` checks the tag and appends the plaintext to `dst`, or returns an error and appends nothing; `NonceSize` and `Overhead` are the nonce and tag lengths in bytes.
-- **ownership_and_lifecycle:** n/a: the package has no values.
+- **evaluation_and_value_semantics:** The interfaces declare no behaviour of their own. AEADs of std/crypto meet this contract: `Seal` appends the ciphertext and tag of `plaintext` under `nonce` and `additionalData` to `dst`; `Open` checks the tag and appends the plaintext to `dst`, or returns an error and appends nothing; `NonceSize` and `Overhead` are the nonce and tag lengths in bytes. `NewGCM` returns the Galois/Counter Mode of NIST SP 800-38D over a 16-byte block cipher with a 12-byte nonce and a 16-byte tag, giving the results and error texts of Go's crypto/cipher `NewGCM`: a block of another size is `cipher: NewGCM requires 128-bit block cipher`; an inauthentic message is `cipher: message authentication failed`; the counter is the last 4 bytes of the counter block and wraps. GHASH (after BearSSL's ghash_ctmul64) and the tag check use no branch and no table index that depends on the key or the data.
+- **ownership_and_lifecycle:** An AEAD is owned by the task that made it and keeps its Block.
 - **effect_and_capability_requirements:** None.
-- **concurrency_and_memory_order:** n/a: the package has no state.
+- **concurrency_and_memory_order:** n/a: an AEAD is not shared (SGO-COMP-001).
 - **allowed_nondeterminism:** None.
-- **failure_and_partial_progress:** n/a: the package has no functions.
+- **failure_and_partial_progress:** `Seal` or `Open` of the GCM AEAD with a nonce that is not 12 bytes fails as SGO-ERR-003 with the text of Go's panic (`crypto/cipher: incorrect nonce length given to GCM`).
 - **cancellation_and_cleanup:** n/a: no waits.
 - **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
 - **runtime_guards:** As SGO-ERR-003.
 - **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
-- **positive_tests:** fixture:std-chacha20poly1305-basic; `src/sgostd/crypto/cipher` package test (a user type implements `AEAD`).
-- **negative_tests:** n/a: the package has no functions.
+- **positive_tests:** fixture:std-chacha20poly1305-basic; fixture:std-aes-gcm-basic; `src/sgostd/crypto/cipher` package test (user types implement `AEAD` and `Block`; an 8-byte block is refused); GCM is checked with std/crypto/aes (SGO-STD-027).
+- **negative_tests:** n/a: refusals are error results; the package tests and the Wycheproof invalid vectors check them.
 - **implementation_coverage:** `src/sgostd/crypto/cipher/`.
-- **executed_evidence:** W26: conformance (darwin/arm64; Linux at the W26 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` seeds 1 and 2 (sgo/evidence/w26/README.md).
+- **executed_evidence:** W26: conformance (darwin/arm64; Linux at the W26 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` seeds 1 and 2 (sgo/evidence/w26/README.md). Version 2: PENDING: W27.
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-021 — `std/crypto/chacha20poly1305`: the ChaCha20-Poly1305 AEAD
@@ -550,5 +550,71 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **positive_tests:** fixture:std-ecdsa-basic; `src/sgostd/crypto/ecdsa` package test; Wycheproof vectors of Go's own tests (github.com/c2sp/wycheproof at the version in src/crypto/internal/cryptotest/wycheproof/schemaversion.go) via `sgo/scripts/test-std-crypto.py`: 3748 of 3748 vectors agree (P-256 with SHA-256 and SHA-512, P-384 with SHA-256, SHA-384 and SHA-512, DER and IEEE P1363 encodings).
 - **negative_tests:** n/a: refusals are false results; the package test and the Wycheproof invalid vectors (bad encodings, modified signatures, out-of-range r and s) check them.
 - **implementation_coverage:** `src/sgostd/crypto/ecdsa/`.
+- **executed_evidence:** PENDING: W27.
+- **supported_execution_configurations:** production, lab.
+
+### SGO-STD-026 — `std/crypto/rsa`: RSA signature verification
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-STD-015, SGO-STD-016, SGO-STD-024; D199.
+- **grammar_and_types:** The package `std/crypto/rsa` exports exactly: `const PSSSaltLengthAuto`; `const PSSSaltLengthEqualsHash`; `const SHA256`; `const SHA384`; `const SHA512`; `func VerifyPKCS1v15(pub *PublicKey, h Hash, hashed []byte, sig []byte) error`; `func VerifyPSS(pub *PublicKey, h Hash, digest []byte, sig []byte, saltLength int) error`; `type Hash`; `type PublicKey`. `Hash` is a named int; `SHA256`, `SHA384` and `SHA512` are the `Hash` values 1, 2 and 3. `PublicKey` is a struct with the fields `N []byte` (the big-endian modulus) and `E int`. `PSSSaltLengthAuto` is 0 and `PSSSaltLengthEqualsHash` is -1.
+- **preconditions:** None.
+- **evaluation_and_value_semantics:** RSASSA-PKCS1-v1_5 and RSASSA-PSS verification of RFC 8017 with SHA-256, SHA-384 or SHA-512 (MGF1 uses the same hash), giving the results and error texts of Go's crypto/rsa `VerifyPKCS1v15` and `VerifyPSS`. The key is checked first: a missing, even, or under-1024-bit modulus, and an exponent below 2, even, or above 2^31-1 are refused with Go's texts (for example `crypto/rsa: 512-bit keys are insecure (see https://go.dev/pkg/crypto/rsa#hdr-Minimum_key_size)`). The signature must be exactly as long as the modulus and below it. PKCS #1 v1.5 compares the whole recovered block with the expected DigestInfo encoding. For PSS, a salt length of `PSSSaltLengthAuto` detects the salt length, `PSSSaltLengthEqualsHash` requires the hash length, another negative value is `crypto/rsa: salt length cannot be negative`. Any other mismatch is `crypto/rsa: verification error`. Verification uses only public values, and its time may depend on them.
+- **ownership_and_lifecycle:** The package keeps no state.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a: the package has no state.
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** A refused key or signature is an error result; no function panics on any input.
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003.
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-rsa-basic; `src/sgostd/crypto/rsa` package test; Wycheproof vectors of Go's own tests via `sgo/scripts/test-std-crypto.py`: 4171 of 4171 vectors agree (PKCS #1 v1.5 with 2048-, 3072- and 4096-bit keys and SHA-256, SHA-384, SHA-512; PSS with MGF1 on the same hash), with the override of Go's rsa_wycheproof_test.go for salt length 0 meaning automatic detection.
+- **negative_tests:** n/a: refusals are error results; the package test and the Wycheproof invalid vectors check them.
+- **implementation_coverage:** `src/sgostd/crypto/rsa/`.
+- **executed_evidence:** PENDING: W27.
+- **supported_execution_configurations:** production, lab.
+
+### SGO-STD-027 — `std/crypto/aes`: the AES block cipher
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-STD-011, SGO-STD-020; D199.
+- **grammar_and_types:** The package `std/crypto/aes` exports exactly: `const BlockSize`; `func (*aesCipher) BlockSize() int`; `func (*aesCipher) Decrypt(dst, src []byte)`; `func (*aesCipher) Encrypt(dst, src []byte)`; `func NewCipher(key []byte) (cipher.Block, error)`. `BlockSize` is 16; `aesCipher` is the unexported type of the values `NewCipher` returns.
+- **preconditions:** None.
+- **evaluation_and_value_semantics:** AES of FIPS 197 with 128-, 192- and 256-bit keys (10, 12 and 14 rounds), giving the results and error texts of Go's crypto/aes: `NewCipher` refuses a key of another length with `crypto/aes: invalid key size N`; `Encrypt` and `Decrypt` transform the first 16 bytes of `src` into the first 16 bytes of `dst`. The cipher is bitsliced (after BearSSL's aes_ct64, the S-box as the circuit of Boyar and Peralta): no branch and no memory index depends on the key or the data.
+- **ownership_and_lifecycle:** A cipher is owned by the task that made it.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a: a cipher is not shared (SGO-COMP-001).
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** `Encrypt` or `Decrypt` with `src` or `dst` shorter than 16 bytes fails as SGO-ERR-003 with the text of Go's panic (`crypto/aes: input not full block`, `crypto/aes: output not full block`).
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003.
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-aes-gcm-basic; `src/sgostd/crypto/aes` package test (FIPS 197 appendix C, GCM test case 3 of McGrew and Viega); `sgo/scripts/test-std-crypto.py`: output identical to Go's crypto/aes and crypto/cipher NewGCM on generated keys, blocks, nonces (counter wrap included), plaintexts and additional data; Wycheproof aes_gcm_test.json: 197 of 197 vectors with 96-bit nonces and 128-bit tags agree.
+- **negative_tests:** n/a: refusals are error results; the package test and the Wycheproof invalid vectors check them.
+- **implementation_coverage:** `src/sgostd/crypto/aes/`.
+- **executed_evidence:** PENDING: W27.
+- **supported_execution_configurations:** production, lab.
+
+### SGO-STD-028 — `std/encoding/asn1`: reading DER
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-STD-004; D199.
+- **grammar_and_types:** The package `std/encoding/asn1` exports exactly: `const BIT_STRING`; `const BOOLEAN`; `const ENUM`; `const GeneralString`; `const GeneralizedTime`; `const IA5String`; `const INTEGER`; `const NULL`; `const OBJECT_IDENTIFIER`; `const OCTET_STRING`; `const PrintableString`; `const SEQUENCE`; `const SET`; `const T61String`; `const UTCTime`; `const UTF8String`; `func (*String) ReadASN1(out *String, tag Tag) bool`; `func (*String) ReadASN1BitString(out *BitString) bool`; `func (*String) ReadASN1BitStringAsBytes(out *[]byte) bool`; `func (*String) ReadASN1Boolean(out *bool) bool`; `func (*String) ReadASN1Bytes(out *[]byte, tag Tag) bool`; `func (*String) ReadASN1Element(out *String, tag Tag) bool`; `func (*String) ReadASN1Enum(out *int) bool`; `func (*String) ReadASN1GeneralizedTime(out *int) bool`; `func (*String) ReadASN1Integer(out *int) bool`; `func (*String) ReadASN1IntegerBytes(out *[]byte) bool`; `func (*String) ReadASN1IntegerWithTag(out *int, tag Tag) bool`; `func (*String) ReadASN1ObjectIdentifier(out *ObjectIdentifier) bool`; `func (*String) ReadASN1UTCTime(out *int) bool`; `func (*String) ReadAnyASN1(out *String, outTag *Tag) bool`; `func (*String) ReadAnyASN1Element(out *String, outTag *Tag) bool`; `func (*String) ReadBytes(out *[]byte, n int) bool`; `func (*String) ReadOptionalASN1(out *String, outPresent *bool, tag Tag) bool`; `func (*String) ReadOptionalASN1Boolean(out *bool, tag Tag, defaultValue bool) bool`; `func (*String) ReadOptionalASN1Integer(out *int, tag Tag, defaultValue int) bool`; `func (*String) ReadOptionalASN1OctetString(out *[]byte, outPresent *bool, tag Tag) bool`; `func (*String) Skip(n int) bool`; `func (*String) SkipASN1(tag Tag) bool`; `func (*String) SkipOptionalASN1(tag Tag) bool`; `func (BitString) At(i int) int`; `func (ObjectIdentifier) Equal(other ObjectIdentifier) bool`; `func (ObjectIdentifier) String() string`; `func (String) Empty() bool`; `func (String) PeekASN1Tag(tag Tag) bool`; `func (Tag) Constructed() Tag`; `func (Tag) ContextSpecific() Tag`; `type BitString`; `type ObjectIdentifier`; `type String`; `type Tag`. `Tag` is a named byte; the constants are the `Tag` values of the universal tags of golang.org/x/crypto/cryptobyte/asn1 (`SEQUENCE` and `SET` with the constructed bit). `ObjectIdentifier` is a named `[]int`; `BitString` is a struct with the fields `Bytes []byte` and `BitLength int`; `String` is a named `[]byte` that reads advance.
+- **preconditions:** None.
+- **evaluation_and_value_semantics:** The reading half of golang.org/x/crypto/cryptobyte (the version in src/go.mod), with the same results on every input: elements in DER (definite, minimally encoded lengths of at most 4 octets; low-tag-number form only), BOOLEAN as 0x00 or 0xff, minimally encoded INTEGERs (`ReadASN1Integer` and `ReadASN1Enum` for values that fit in an int, `ReadASN1IntegerBytes` for non-negative values of any size), OBJECT IDENTIFIERs with arcs below 2^31, BIT STRINGs with zero padding bits, and the optional explicitly tagged INTEGER, OCTET STRING and BOOLEAN. Where cryptobyte returns a time.Time, `ReadASN1UTCTime` and `ReadASN1GeneralizedTime` return the Unix seconds of the same instant: GeneralizedTime is `YYYYMMDDHHMMSS` and UTCTime is `YYMMDDHHMMSS` or `YYMMDDHHMM` (YY below 50 is 20YY, otherwise 19YY), each followed by `Z` or a non-zero `+hhmm`/`-hhmm`; any other form, or a date or time out of range, is refused. A failed read reports false and may leave the String partly advanced, as in cryptobyte.
+- **ownership_and_lifecycle:** A String and the values read from it share the input's bytes; they are owned by the task that holds them.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a: the package has no state.
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** No function fails: malformed input is the result false.
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003.
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-asn1-basic; `src/sgostd/encoding/asn1` package test; `sgo/scripts/test-std-crypto.py`: on generated well-formed and malformed elements of every kind (lengths, integers, OIDs, bit strings, times, optional fields, truncations), every read gives the output of golang.org/x/crypto/cryptobyte.
+- **negative_tests:** n/a: refusals are false results; the package test and the generated malformed inputs check them.
+- **implementation_coverage:** `src/sgostd/encoding/asn1/`.
 - **executed_evidence:** PENDING: W27.
 - **supported_execution_configurations:** production, lab.

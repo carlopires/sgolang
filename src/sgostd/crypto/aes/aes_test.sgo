@@ -1,0 +1,72 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package aes
+
+import (
+	"sgo"
+	"std/crypto/cipher"
+	"std/encoding/hex"
+)
+
+func unhex(s string) []byte {
+	b, _ := hex.DecodeString(s)
+	return b
+}
+
+func seq(n int) []byte {
+	b := make([]byte, n)
+	for i := 0; i < n; i++ {
+		b[i] = byte(i)
+	}
+	return b
+}
+
+// FIPS 197 appendix C: AES-128, AES-192 and AES-256 on one block, both directions.
+func TestFIPS197(t *sgo.T) error {
+	want := []string{"69c4e0d86a7b0430d8cdb78070b4c55a", "dda97ca4864cdfe06eaf70a0ec0d7191", "8ea2b7ca516745bfeafc49904b496089"}
+	sizes := []int{16, 24, 32}
+	pt := unhex("00112233445566778899aabbccddeeff")
+	for i := 0; i < 3; i++ {
+		b, err := NewCipher(seq(sizes[i]))
+		if err != nil {
+			return err
+		}
+		ct := make([]byte, BlockSize)
+		b.Encrypt(ct, pt)
+		if hex.EncodeToString(ct) != want[i] {
+			return sgo.NewError("encrypt " + want[i])
+		}
+		back := make([]byte, BlockSize)
+		b.Decrypt(back, ct)
+		if hex.EncodeToString(back) != hex.EncodeToString(pt) {
+			return sgo.NewError("decrypt " + want[i])
+		}
+	}
+	if _, err := NewCipher(seq(20)); err == nil || err.Error() != "crypto/aes: invalid key size 20" {
+		return sgo.NewError("key size")
+	}
+	return nil
+}
+
+// GCM test case 3 of McGrew and Viega, and a changed tag.
+func TestGCM(t *sgo.T) error {
+	b, _ := NewCipher(unhex("feffe9928665731c6d6a8f9467308308"))
+	g, err := cipher.NewGCM(b)
+	if err != nil {
+		return err
+	}
+	iv := unhex("cafebabefacedbaddecaf888")
+	pt := unhex("d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c95956809532fcf0e2449a6b525b16aedf5aa0de657ba637b391aafd255")
+	sealed := g.Seal([]byte{}, iv, pt, []byte{})
+	want := "42831ec2217774244b7221b784d0d49ce3aa212f2c02a4e035c17e2329aca12e21d514b25466931c7d8f6a5aac84aa051ba30b396a0aac973d58e091473f5985" + "4d5c2af327cd64a62cf35abd2ba6fab4"
+	if hex.EncodeToString(sealed) != want {
+		return sgo.NewError("seal")
+	}
+	sealed[len(sealed)-1] = sealed[len(sealed)-1] ^ 1
+	if _, err2 := g.Open([]byte{}, iv, sealed, []byte{}); err2 == nil || err2.Error() != "cipher: message authentication failed" {
+		return sgo.NewError("changed tag accepted")
+	}
+	return nil
+}

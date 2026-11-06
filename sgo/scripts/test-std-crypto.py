@@ -11,7 +11,8 @@ requires identical output line by line (SGO-STD-011..016).
 Wycheproof part: runs the vectors that Go's own crypto tests use - github.com/c2sp/wycheproof at
 the version pinned in src/crypto/internal/cryptotest/wycheproof/schemaversion.go, fetched with
 the pinned bootstrap toolchain (`go mod download`, verified by the checksum database) - against
-std/crypto/hmac, hkdf, chacha20poly1305 and curve25519 (SGO-STD-018, 019, 021, 022).
+std/crypto/hmac, hkdf, chacha20poly1305, curve25519, ed25519, ecdsa, rsa and aes-gcm (SGO-STD-018,
+019, 020, 021, 022, 023, 025, 026, 027).
 
     test-std-crypto.py [--seed N]
 """
@@ -41,6 +42,7 @@ def tool_paths():
 
 
 SGO, GO = tool_paths()
+XCRYPTO = [l.split()[1] for l in open(os.path.join(ROOT, "src", "go.mod")) if "golang.org/x/crypto" in l][0]
 
 
 def wycheproof_dir():
@@ -65,7 +67,7 @@ def run_sgo(src):
 def run_go(src):
     with tempfile.TemporaryDirectory() as d:
         open(os.path.join(d, "main.go"), "w").write(src)
-        open(os.path.join(d, "go.mod"), "w").write("module stdcrypto\n\ngo 1.26\n")
+        open(os.path.join(d, "go.mod"), "w").write("module stdcrypto\n\ngo 1.26\n\nrequire golang.org/x/crypto " + XCRYPTO + "\n")
         env = dict(os.environ, GOTOOLCHAIN="local", GOFLAGS="-mod=mod")
         return subprocess.run([GO, "run", "."], cwd=d, env=env, capture_output=True, text=True, timeout=900)
 
@@ -483,6 +485,401 @@ def gen_ed25519(rnd):
     return gosrc, sgosrc
 
 
+def gen_aes(rnd):
+    pass
+    cases = []
+    for ks in (16, 24, 32):
+        for n in range(12):
+            key = bytes(rnd.getrandbits(8) for _ in range(ks))
+            blk = bytes(rnd.getrandbits(8) for _ in range(16))
+            nonce = bytes(rnd.getrandbits(8) for _ in range(12))
+            if n == 0:
+                nonce = nonce[:8] + b'\xff\xff\xff\xfe'
+            pt = bytes(rnd.getrandbits(8) for _ in range(rnd.choice([0, 1, 15, 16, 17, 31, 64, 100, 257])))
+            ad = bytes(rnd.getrandbits(8) for _ in range(rnd.choice([0, 1, 13, 16, 40])))
+            cases.append((key, blk, nonce, pt, ad))
+    for bad in (0, 15, 17, 33):
+        cases.append((bytes(bad), bytes(16), bytes(12), b'', b''))
+    def lit(bs): return '[]byte{' + ', '.join(map(str, bs)) + '}'
+    rows = ', '.join('{%s, %s, %s, %s, %s}' % tuple(lit(x) for x in c) for c in cases)
+    gosrc = '''package main
+
+    import (
+    	"crypto/aes"
+    	"crypto/cipher"
+    	"encoding/hex"
+    	"fmt"
+    )
+
+    type tc struct{ key, blk, nonce, pt, ad []byte }
+
+    func main() {
+    	for _, c := range []tc{%s} {
+    		b, err := aes.NewCipher(c.key)
+    		if err != nil {
+    			fmt.Println("error", err.Error())
+    			continue
+    		}
+    		e := make([]byte, 16)
+    		d := make([]byte, 16)
+    		b.Encrypt(e, c.blk)
+    		b.Decrypt(d, c.blk)
+    		g, _ := cipher.NewGCM(b)
+    		ct := g.Seal([]byte{7}, c.nonce, c.pt, c.ad)
+    		pt, err := g.Open([]byte{}, c.nonce, ct[1:], c.ad)
+    		ok := err == nil && hex.EncodeToString(pt) == hex.EncodeToString(c.pt)
+    		ct[len(ct)-1] ^= 1
+    		_, err2 := g.Open([]byte{}, c.nonce, ct[1:], c.ad)
+    		fmt.Println(hex.EncodeToString(e), hex.EncodeToString(d), hex.EncodeToString(ct), ok, err2.Error())
+    	}
+    }
+    ''' % rows
+    sgosrc = '''package main
+
+    import (
+    	"std/crypto/aes"
+    	"std/crypto/cipher"
+    	"sgo"
+    	"std/encoding/hex"
+    )
+
+    type tc struct {
+    	key   []byte
+    	blk   []byte
+    	nonce []byte
+    	pt    []byte
+    	ad    []byte
+    }
+
+    func main(root *sgo.Context) error {
+    	out := ""
+    	for _, c := range []tc{%s} {
+    		b, err := aes.NewCipher(c.key)
+    		if err != nil {
+    			out = out + "error " + err.Error() + "\\n"
+    			continue
+    		}
+    		e := make([]byte, 16)
+    		d := make([]byte, 16)
+    		b.Encrypt(e, c.blk)
+    		b.Decrypt(d, c.blk)
+    		g, _ := cipher.NewGCM(b)
+    		ct := g.Seal([]byte{7}, c.nonce, c.pt, c.ad)
+    		pt, err1 := g.Open([]byte{}, c.nonce, ct[1:], c.ad)
+    		ok := "false"
+    		if err1 == nil && hex.EncodeToString(pt) == hex.EncodeToString(c.pt) {
+    			ok = "true"
+    		}
+    		ct[len(ct)-1] = ct[len(ct)-1] ^ 1
+    		_, err2 := g.Open([]byte{}, c.nonce, ct[1:], c.ad)
+    		out = out + hex.EncodeToString(e) + " " + hex.EncodeToString(d) + " " + hex.EncodeToString(ct) + " " + ok + " " + err2.Error() + "\\n"
+    	}
+    	return root.Stdout().WriteString(out)
+    }
+    ''' % rows
+    return gosrc, sgosrc
+
+
+def gen_asn1(rnd):
+    pass
+    def enc_len(n, long=False):
+        if n < 128 and not long:
+            return bytes([n])
+        b = n.to_bytes(max(1, (n.bit_length() + 7) // 8), 'big')
+        return bytes([0x80 | len(b)]) + b
+    def el(tag, content, long=False):
+        return bytes([tag]) + enc_len(len(content), long) + content
+    def rbytes(n): return bytes(rnd.getrandbits(8) for _ in range(n))
+    def digits(n, lo=0, hi=99): return ('%0' + str(n) + 'd') % rnd.randint(lo, hi)
+    def timestr(gen):
+        y = digits(4, 0, 9999) if gen else digits(2)
+        v = rnd.random() < 0.7
+        parts = [y, digits(2, 1, 12) if v else digits(2, 0, 13), digits(2, 1, 31) if v else digits(2, 0, 32), digits(2, 0, 23) if v else digits(2, 0, 24), digits(2, 0, 59) if v else digits(2, 0, 60)]
+        if gen or rnd.random() < 0.8:
+            parts.append(digits(2, 0, 59) if v else digits(2, 0, 61))
+        if rnd.random() < 0.1:
+            parts.append('.5')
+        z = rnd.choice(['Z', 'Z', 'Z', '+0000', '-0000', '+0130', '-1145', '+2400', '+2500', '+0160', 'z', '', 'Z0'])
+        return (''.join(parts) + z).encode()
+    cases = []
+    for _ in range(400):
+        k = rnd.randrange(14)
+        if k == 0: x = el(1, rnd.choice([b'\x00', b'\xff', b'\x01', b'', b'\x00\x00']))
+        elif k in (1, 2):
+            c = rnd.choice([rbytes(rnd.randint(1, 10)), b'\x00' + rbytes(rnd.randint(0, 3)), b'\xff' + rbytes(rnd.randint(0, 3)), b'', b'\x80' + bytes(7), b'\x7f' + b'\xff' * 7])
+            x = el(2 if k == 1 else 10, c)
+        elif k == 3:
+            arcs = [rnd.randint(0, 2), rnd.randint(0, 39)] + [rnd.choice([rnd.randint(0, 127), rnd.randint(0, 2**28), rnd.randint(0, 2**35)]) for _ in range(rnd.randint(0, 5))]
+            def b128(v):
+                out = [v & 0x7f]; v >>= 7
+                while v: out.append(0x80 | (v & 0x7f)); v >>= 7
+                return bytes(reversed(out))
+            c = b128(40 * arcs[0] + arcs[1]) + b''.join(b128(a) for a in arcs[2:])
+            if rnd.random() < 0.2: c = rnd.choice([b'\x80\x01', c[:-1] + bytes([c[-1] | 0x80]), b''])
+            x = el(6, c)
+        elif k == 4:
+            pad = rnd.choice([0, 0, 3, 7, 8]); body = rbytes(rnd.randint(0, 4))
+            if body and rnd.random() < 0.7: body = body[:-1] + bytes([body[-1] & (0xff ^ ((1 << min(pad, 7)) - 1))])
+            x = el(3, bytes([pad]) + body)
+        elif k == 5: x = el(24, timestr(True))
+        elif k == 6: x = el(23, timestr(False))
+        elif k == 7: x = el(0x30, el(2, b'\x05') + el(4, rbytes(3)), long=rnd.random() < 0.3)
+        elif k == 8: x = el(0xa0, el(2, rbytes(rnd.randint(1, 3)))) + el(0xa1, el(4, rbytes(2))) + el(0xa2, el(1, b'\xff'))
+        elif k == 9: x = el(0x30, rbytes(200))
+        elif k == 10: x = bytes([0x30, 0x81, 0x05]) + rbytes(5)
+        elif k == 11: x = bytes([0x30, 0x82, 0x00, 0x90]) + rbytes(0x90)
+        elif k == 12: x = bytes([0x1f, 0x01, 0x00])
+        else: x = rbytes(rnd.randint(0, 6))
+        if rnd.random() < 0.1 and x: x = x[:rnd.randrange(len(x))]
+        cases.append(x)
+    def lit(bs): return '[]byte{' + ', '.join(map(str, bs)) + '}'
+    rows = ', '.join(lit(c) for c in cases)
+    gosrc = '''package main
+
+    import (
+    	"encoding/asn1"
+    	"encoding/hex"
+    	"fmt"
+    	"strings"
+    	"time"
+
+    	"golang.org/x/crypto/cryptobyte"
+    	cbasn1 "golang.org/x/crypto/cryptobyte/asn1"
+    )
+
+    func sp(a ...interface{}) string {
+    	return strings.TrimSuffix(fmt.Sprintln(a...), "\\n")
+    }
+
+    func main() {
+    	for _, in := range [][]byte{%s} {
+    		var r []string
+    		{
+    			s := cryptobyte.String(in)
+    			var out cryptobyte.String
+    			var tag cbasn1.Tag
+    			ok := s.ReadAnyASN1(&out, &tag)
+    			r = append(r, sp(ok, int(tag), hex.EncodeToString(out), len(s)))
+    		}
+    		{
+    			s := cryptobyte.String(in)
+    			var out cryptobyte.String
+    			ok := s.ReadASN1Element(&out, cbasn1.SEQUENCE)
+    			r = append(r, sp(ok, hex.EncodeToString(out)))
+    		}
+    		{
+    			s := cryptobyte.String(in)
+    			var b bool
+    			ok := s.ReadASN1Boolean(&b)
+    			r = append(r, sp(ok, b))
+    		}
+    		{
+    			s := cryptobyte.String(in)
+    			var i int64
+    			ok := s.ReadASN1Integer(&i)
+    			if !ok {
+    				i = 0
+    			}
+    			r = append(r, sp(ok, i))
+    		}
+    		{
+    			s := cryptobyte.String(in)
+    			var b []byte
+    			ok := s.ReadASN1Integer(&b)
+    			r = append(r, sp(ok, hex.EncodeToString(b)))
+    		}
+    		{
+    			s := cryptobyte.String(in)
+    			var e int
+    			ok := s.ReadASN1Enum(&e)
+    			r = append(r, sp(ok, e))
+    		}
+    		{
+    			s := cryptobyte.String(in)
+    			var o asn1.ObjectIdentifier
+    			ok := s.ReadASN1ObjectIdentifier(&o)
+    			str := ""
+    			if ok {
+    				str = o.String()
+    			}
+    			r = append(r, sp(ok, str))
+    		}
+    		{
+    			s := cryptobyte.String(in)
+    			var b asn1.BitString
+    			ok := s.ReadASN1BitString(&b)
+    			bits := ""
+    			for i := 0; i < b.BitLength; i++ {
+    				bits += fmt.Sprint(b.At(i))
+    			}
+    			r = append(r, sp(ok, b.BitLength, hex.EncodeToString(b.Bytes), bits))
+    		}
+    		{
+    			s := cryptobyte.String(in)
+    			var b []byte
+    			ok := s.ReadASN1BitStringAsBytes(&b)
+    			r = append(r, sp(ok, hex.EncodeToString(b)))
+    		}
+    		{
+    			s := cryptobyte.String(in)
+    			var t time.Time
+    			ok := s.ReadASN1GeneralizedTime(&t)
+    			u := int64(0)
+    			if ok {
+    				u = t.Unix()
+    			}
+    			r = append(r, sp(ok, u))
+    		}
+    		{
+    			s := cryptobyte.String(in)
+    			var t time.Time
+    			ok := s.ReadASN1UTCTime(&t)
+    			u := int64(0)
+    			if ok {
+    				u = t.Unix()
+    			}
+    			r = append(r, sp(ok, u))
+    		}
+    		{
+    			s := cryptobyte.String(in)
+    			var i int64
+    			ok1 := s.ReadOptionalASN1Integer(&i, cbasn1.Tag(0).Constructed().ContextSpecific(), int64(-7))
+    			var o []byte
+    			var p bool
+    			ok2 := s.ReadOptionalASN1OctetString(&o, &p, cbasn1.Tag(1).Constructed().ContextSpecific())
+    			var b bool
+    			ok3 := s.ReadOptionalASN1Boolean(&b, cbasn1.Tag(2).Constructed().ContextSpecific(), true)
+    			ok4 := s.SkipOptionalASN1(cbasn1.SEQUENCE)
+    			r = append(r, sp(ok1, i, ok2, hex.EncodeToString(o), p, ok3, b, ok4, s.PeekASN1Tag(cbasn1.INTEGER), s.Empty()))
+    		}
+    		fmt.Println(strings.Join(r, " | "))
+    	}
+    }
+    ''' % rows
+    sgosrc = '''package main
+
+    import (
+    	"std/encoding/asn1"
+    	"sgo"
+    	"std/encoding/hex"
+    	"std/strconv"
+    )
+
+    func b2s(b bool) string {
+    	if b {
+    		return "true"
+    	}
+    	return "false"
+    }
+
+    func main(root *sgo.Context) error {
+    	all := ""
+    	for _, in := range [][]byte{%s} {
+    		r := ""
+    		{
+    			s := asn1.String(in)
+    			var out asn1.String = asn1.String{}
+    			var tag asn1.Tag = 0
+    			ok := s.ReadAnyASN1(&out, &tag)
+    			r = r + b2s(ok) + " " + strconv.Itoa(int(tag)) + " " + hex.EncodeToString(out) + " " + strconv.Itoa(len(s))
+    		}
+    		{
+    			s := asn1.String(in)
+    			var out asn1.String = asn1.String{}
+    			ok := s.ReadASN1Element(&out, asn1.SEQUENCE)
+    			r = r + " | " + b2s(ok) + " " + hex.EncodeToString(out)
+    		}
+    		{
+    			s := asn1.String(in)
+    			b := false
+    			ok := s.ReadASN1Boolean(&b)
+    			r = r + " | " + b2s(ok) + " " + b2s(b)
+    		}
+    		{
+    			s := asn1.String(in)
+    			i := 0
+    			ok := s.ReadASN1Integer(&i)
+    			if !ok {
+    				i = 0
+    			}
+    			r = r + " | " + b2s(ok) + " " + strconv.Itoa(i)
+    		}
+    		{
+    			s := asn1.String(in)
+    			b := []byte{}
+    			ok := s.ReadASN1IntegerBytes(&b)
+    			r = r + " | " + b2s(ok) + " " + hex.EncodeToString(b)
+    		}
+    		{
+    			s := asn1.String(in)
+    			e := 0
+    			ok := s.ReadASN1Enum(&e)
+    			r = r + " | " + b2s(ok) + " " + strconv.Itoa(e)
+    		}
+    		{
+    			s := asn1.String(in)
+    			var o asn1.ObjectIdentifier = asn1.ObjectIdentifier{}
+    			ok := s.ReadASN1ObjectIdentifier(&o)
+    			str := ""
+    			if ok {
+    				str = o.String()
+    			}
+    			r = r + " | " + b2s(ok) + " " + str
+    		}
+    		{
+    			s := asn1.String(in)
+    			b := asn1.BitString{Bytes: []byte{}, BitLength: 0}
+    			ok := s.ReadASN1BitString(&b)
+    			bits := ""
+    			for i := 0; i < b.BitLength; i++ {
+    				bits = bits + strconv.Itoa(b.At(i))
+    			}
+    			r = r + " | " + b2s(ok) + " " + strconv.Itoa(b.BitLength) + " " + hex.EncodeToString(b.Bytes) + " " + bits
+    		}
+    		{
+    			s := asn1.String(in)
+    			b := []byte{}
+    			ok := s.ReadASN1BitStringAsBytes(&b)
+    			r = r + " | " + b2s(ok) + " " + hex.EncodeToString(b)
+    		}
+    		{
+    			s := asn1.String(in)
+    			u := 0
+    			ok := s.ReadASN1GeneralizedTime(&u)
+    			if !ok {
+    				u = 0
+    			}
+    			r = r + " | " + b2s(ok) + " " + strconv.Itoa(u)
+    		}
+    		{
+    			s := asn1.String(in)
+    			u := 0
+    			ok := s.ReadASN1UTCTime(&u)
+    			if !ok {
+    				u = 0
+    			}
+    			r = r + " | " + b2s(ok) + " " + strconv.Itoa(u)
+    		}
+    		{
+    			s := asn1.String(in)
+    			i := 0
+    			ok1 := s.ReadOptionalASN1Integer(&i, asn1.Tag(0).Constructed().ContextSpecific(), -7)
+    			o := []byte{}
+    			p := false
+    			ok2 := s.ReadOptionalASN1OctetString(&o, &p, asn1.Tag(1).Constructed().ContextSpecific())
+    			b := false
+    			ok3 := s.ReadOptionalASN1Boolean(&b, asn1.Tag(2).Constructed().ContextSpecific(), true)
+    			ok4 := s.SkipOptionalASN1(asn1.SEQUENCE)
+    			r = r + " | " + b2s(ok1) + " " + strconv.Itoa(i) + " " + b2s(ok2) + " " + hex.EncodeToString(o) + " " + b2s(p) + " " + b2s(ok3) + " " + b2s(b) + " " + b2s(ok4) + " " + b2s(s.PeekASN1Tag(asn1.INTEGER)) + " " + b2s(s.Empty())
+    		}
+    		all = all + r + "\\n"
+    	}
+    	return root.Stdout().WriteString(all)
+    }
+    ''' % rows
+    return gosrc, sgosrc
+
+
 def gen_bigmod(rnd):
     pass
     P256 = 2**256 - 2**224 + 2**192 + 2**96 - 1
@@ -877,6 +1274,161 @@ def wyche_ecdsa(WP):
     return src
 
 
+def wyche_aes_gcm(WP):
+    rows = []
+    skipped = 0
+    for g in json.load(open(os.path.join(WP, 'aes_gcm_test.json')))['testGroups']:
+        for t in g['tests']:
+            # NewGCM: 96-bit nonces and 128-bit tags only, as Go's crypto/cipher NewGCM.
+            if g['ivSize'] != 96 or g['tagSize'] != 128 or g['keySize'] not in (128, 192, 256):
+                skipped += 1
+                continue
+            rows.append('{%d, "%s", "%s", "%s", "%s", "%s", "%s", %s}' % (t['tcId'], t['key'], t['iv'], t['aad'], t['msg'], t['ct'], t['tag'], 'true' if t['result'] == 'valid' else 'false'))
+    imp_a = '"std/crypto/aes"'
+    imp_c = '"std/crypto/cipher"'
+    src = '''package main
+
+    import (
+    	%s
+    	%s
+    	"sgo"
+    	"std/encoding/hex"
+    	"std/strconv"
+    )
+
+    type vector struct {
+    	id    int
+    	key   string
+    	iv    string
+    	aad   string
+    	msg   string
+    	ct    string
+    	tag   string
+    	valid bool
+    }
+
+    func unhex(s string) []byte {
+    	b, _ := hex.DecodeString(s)
+    	return b
+    }
+
+    func main(root *sgo.Context) error {
+    	vs := []vector{%s}
+    	pass := 0
+    	bad := ""
+    	for _, v := range vs {
+    		b, err := aes.NewCipher(unhex(v.key))
+    		if err != nil {
+    			bad = bad + " #" + strconv.Itoa(v.id)
+    			continue
+    		}
+    		g, _ := cipher.NewGCM(b)
+    		sealed := hex.EncodeToString(g.Seal([]byte{}, unhex(v.iv), unhex(v.msg), unhex(v.aad)))
+    		pt, err2 := g.Open([]byte{}, unhex(v.iv), unhex(v.ct+v.tag), unhex(v.aad))
+    		good := sealed == v.ct+v.tag && err2 == nil && hex.EncodeToString(pt) == v.msg
+    		if v.valid == good || (!v.valid && err2 != nil) {
+    			pass++
+    		} else {
+    			bad = bad + " #" + strconv.Itoa(v.id)
+    		}
+    	}
+    	return root.Stdout().WriteString("aes-gcm: " + strconv.Itoa(pass) + " of " + strconv.Itoa(len(vs)) + " agree" + bad + "\\n")
+    }
+    ''' % (imp_a, imp_c, ', '.join(rows))
+    return src
+
+
+def wyche_rsa(WP):
+    rows = []
+    hashes = {'SHA-256': 1, 'SHA-384': 2, 'SHA-512': 3}
+    for f in sorted(os.listdir(WP)):
+        m1 = re.match(r'rsa_signature_(\d+)_sha(256|384|512)_test\.json$', f)
+        m2 = re.match(r'rsa_pss_(\d+)_sha(256|384|512)_mgf1_(\d+)_test\.json$', f)
+        if not (m1 or m2):
+            continue
+        for g in json.load(open(os.path.join(WP, f)))['testGroups']:
+            h = hashes[g['sha']]
+            if m2 and g.get('mgfSha') != g['sha']:
+                continue
+            pss = 1 if m2 else 0
+            slen = g.get('sLen', 0) if m2 else 0
+            n, e = g['publicKey']['modulus'], int(g['publicKey']['publicExponent'], 16)
+            for t in g['tests']:
+                valid = t['result'] == 'valid'
+                # As Go's rsa_wycheproof_test.go (filesOverrideToPassZeroSLen): a salt length of 0 is
+                # PSSSaltLengthAuto, so these signatures with other salt lengths verify.
+                if f == 'rsa_pss_2048_sha256_mgf1_0_test.json' and t['tcId'] in (67, 68, 69, 70):
+                    valid = True
+                rows.append('{%d, %d, %d, "%s", %d, "%s", "%s", %d, %s, "%s"}' % (pss, h, slen, n, e, t['msg'], t['sig'], t['tcId'], 'true' if valid else 'false', f[:32]))
+    imp = '"std/crypto/rsa"'
+    src = '''package main
+
+    import (
+    	%s
+    	"sgo"
+    	"std/crypto/sha256"
+    	"std/crypto/sha512"
+    	"std/encoding/hex"
+    	"std/strconv"
+    )
+
+    type vector struct {
+    	pss   int
+    	hash  int
+    	slen  int
+    	n     string
+    	e     int
+    	msg   string
+    	sig   string
+    	id    int
+    	valid bool
+    	file  string
+    }
+
+    func unhex(s string) []byte {
+    	b, _ := hex.DecodeString(s)
+    	return b
+    }
+
+    func digest(h int, msg []byte) []byte {
+    	if h == 2 {
+    		d := sha512.Sum384(msg)
+    		return d[:]
+    	}
+    	if h == 3 {
+    		d := sha512.Sum512(msg)
+    		return d[:]
+    	}
+    	d := sha256.Sum256(msg)
+    	return d[:]
+    }
+
+    func main(root *sgo.Context) error {
+    	vs := []vector{%s}
+    	pass := 0
+    	bad := ""
+    	for _, v := range vs {
+    		pub := &rsa.PublicKey{N: unhex(v.n), E: v.e}
+    		h := rsa.Hash(v.hash)
+    		d := digest(v.hash, unhex(v.msg))
+    		var err error = nil
+    		if v.pss == 1 {
+    			err = rsa.VerifyPSS(pub, h, d, unhex(v.sig), v.slen)
+    		} else {
+    			err = rsa.VerifyPKCS1v15(pub, h, d, unhex(v.sig))
+    		}
+    		if (err == nil) == v.valid {
+    			pass++
+    		} else {
+    			bad = bad + " " + v.file + "#" + strconv.Itoa(v.id)
+    		}
+    	}
+    	return root.Stdout().WriteString("wycheproof rsa: " + strconv.Itoa(pass) + " of " + strconv.Itoa(len(vs)) + " agree" + bad + "\\n")
+    }
+    ''' % (imp, ', '.join(rows))
+    return src
+
+
 def wyche_ed25519(WP):
     rows = []
     for g in json.load(open(os.path.join(WP, 'ed25519_test.json')))['testGroups']:
@@ -930,7 +1482,7 @@ def main():
     if "--seed" in sys.argv:
         seed = int(sys.argv[sys.argv.index("--seed") + 1])
     failed = False
-    for name, gen in (("bits", gen_bits), ("encoding", gen_encoding), ("sha256", gen_sha256), ("sha512", gen_sha512), ("ed25519", gen_ed25519), ("bigmod", gen_bigmod)):
+    for name, gen in (("bits", gen_bits), ("encoding", gen_encoding), ("sha256", gen_sha256), ("sha512", gen_sha512), ("ed25519", gen_ed25519), ("bigmod", gen_bigmod), ("aes", gen_aes), ("asn1", gen_asn1)):
         gosrc, sgosrc = gen(random.Random(seed))
         g, s = run_go(gosrc), run_sgo(sgosrc)
         if g.returncode or s.returncode:
@@ -945,7 +1497,7 @@ def main():
             print(f"  go : {gl[i] if i < len(gl) else None!r}\n  sgo: {sl[i] if i < len(sl) else None!r}")
             failed = True
     WP = wycheproof_dir()
-    for name, gen in (("hmac+hkdf", wyche_hmac_hkdf), ("chacha20poly1305", wyche_chacha20poly1305), ("x25519", wyche_x25519), ("ecdsa", wyche_ecdsa), ("ed25519", wyche_ed25519)):
+    for name, gen in (("hmac+hkdf", wyche_hmac_hkdf), ("chacha20poly1305", wyche_chacha20poly1305), ("x25519", wyche_x25519), ("ecdsa", wyche_ecdsa), ("aes-gcm", wyche_aes_gcm), ("rsa", wyche_rsa), ("ed25519", wyche_ed25519)):
         r = run_sgo(gen(WP))
         line = r.stdout.strip()
         print("test-std-crypto: " + (line or f"{name}: exit {r.returncode}\n{r.stderr[-1500:]}"))

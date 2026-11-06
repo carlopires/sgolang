@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-028"
+ ],
+ "exit": 0,
+ "stdout": "255 1.2.840.113549.1.1.11 1767323045\nnon-minimal integer refused\n"
+}

@@ -1,0 +1,8 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-026"
+ ],
+ "exit": 0,
+ "stdout": "valid\ncrypto/rsa: verification error\ncrypto/rsa: 8-bit keys are insecure (see https://go.dev/pkg/crypto/rsa#hdr-Minimum_key_size)\n"
+}
