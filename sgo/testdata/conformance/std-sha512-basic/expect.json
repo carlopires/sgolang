@@ -1,0 +1,11 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-016",
+  "SGO-STD-017",
+  "SGO-STD-018",
+  "SGO-STD-019"
+ ],
+ "exit": 0,
+ "stdout": "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8\n3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf34007208d5b887185865\nddaf35a193617aba\n"
+}

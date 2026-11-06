@@ -1,0 +1,42 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package hash
+
+import "sgo"
+
+type counter struct {
+	n int
+}
+
+func (c *counter) Write(p []byte) (int, error) {
+	c.n = c.n + len(p)
+	return len(p), nil
+}
+
+func (c *counter) Sum(b []byte) []byte {
+	return append(b, byte(c.n))
+}
+
+func (c *counter) Reset() {
+	c.n = 0
+}
+
+func (c *counter) Size() int {
+	return 1
+}
+
+func (c *counter) BlockSize() int {
+	return 1
+}
+
+// A user type with the five methods is a Hash.
+func TestImplement(t *sgo.T) error {
+	var h Hash = &counter{}
+	_, _ = h.Write([]byte("abc"))
+	if s := h.Sum([]byte{}); len(s) != 1 || s[0] != 3 {
+		return sgo.NewError("hash sum")
+	}
+	return nil
+}

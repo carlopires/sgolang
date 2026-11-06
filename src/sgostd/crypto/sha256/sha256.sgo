@@ -11,6 +11,7 @@ import (
 	"sgo"
 	"std/bits"
 	"std/encoding/binary"
+	"std/hash"
 )
 
 // The size of a SHA-256 checksum, of a SHA-224 checksum, and the block size, in bytes.
@@ -37,8 +38,8 @@ var init256 = sgo.Freeze([]uint32{0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a
 
 var init224 = sgo.Freeze([]uint32{0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939, 0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4})
 
-// A Digest is a running SHA-256 or SHA-224 computation.
-type Digest struct {
+// A digest is a running SHA-256 or SHA-224 computation; New and New224 return it as a hash.Hash.
+type digest struct {
 	h     [8]uint32
 	x     [BlockSize]byte
 	nx    int
@@ -46,22 +47,24 @@ type Digest struct {
 	is224 bool
 }
 
-// New returns a SHA-256 digest.
-func New() *Digest {
-	d := &Digest{}
+func newDigest(is224 bool) *digest {
+	d := &digest{is224: is224}
 	d.Reset()
 	return d
 }
 
-// New224 returns a SHA-224 digest.
-func New224() *Digest {
-	d := &Digest{is224: true}
-	d.Reset()
-	return d
+// New returns a SHA-256 hash.
+func New() hash.Hash {
+	return newDigest(false)
+}
+
+// New224 returns a SHA-224 hash.
+func New224() hash.Hash {
+	return newDigest(true)
 }
 
 // Reset returns d to its initial state.
-func (d *Digest) Reset() {
+func (d *digest) Reset() {
 	for i := 0; i < 8; i++ {
 		if d.is224 {
 			d.h[i] = init224.Get()[i]
@@ -74,7 +77,7 @@ func (d *Digest) Reset() {
 }
 
 // Size returns the checksum length: 32, or 28 for SHA-224.
-func (d *Digest) Size() int {
+func (d *digest) Size() int {
 	if d.is224 {
 		return Size224
 	}
@@ -82,12 +85,12 @@ func (d *Digest) Size() int {
 }
 
 // BlockSize returns the block size, 64.
-func (d *Digest) BlockSize() int {
+func (d *digest) BlockSize() int {
 	return BlockSize
 }
 
 // Write adds p to the running hash. It never fails.
-func (d *Digest) Write(p []byte) (int, error) {
+func (d *digest) Write(p []byte) (int, error) {
 	n := len(p)
 	d.len = d.len + n
 	i := 0
@@ -115,14 +118,14 @@ func (d *Digest) Write(p []byte) (int, error) {
 }
 
 // Sum appends the checksum of the data written so far to b; d is unchanged.
-func (d *Digest) Sum(b []byte) []byte {
+func (d *digest) Sum(b []byte) []byte {
 	c := *d
 	sum := c.finish()
 	return append(b, sum[:c.Size()]...)
 }
 
 // finish pads and processes the final blocks and returns the state as bytes.
-func (d *Digest) finish() [Size]byte {
+func (d *digest) finish() [Size]byte {
 	n := d.len
 	pad := [BlockSize + 8]byte{}
 	pad[0] = 0x80
@@ -142,14 +145,14 @@ func (d *Digest) finish() [Size]byte {
 
 // Sum256 returns the SHA-256 checksum of data.
 func Sum256(data []byte) [Size]byte {
-	d := New()
+	d := newDigest(false)
 	_, _ = d.Write(data)
 	return d.finish()
 }
 
 // Sum224 returns the SHA-224 checksum of data.
 func Sum224(data []byte) [Size224]byte {
-	d := New224()
+	d := newDigest(true)
 	_, _ = d.Write(data)
 	full := d.finish()
 	out := [Size224]byte{}

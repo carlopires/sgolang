@@ -314,11 +314,11 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 ### SGO-STD-015 — `std/crypto/sha256`: SHA-224 and SHA-256
 - **version:** 1
 - **status:** draft
-- **reference_closure:** SGO-IMP-004, SGO-STD-011, SGO-STD-014, SGO-TYPE-009, SGO-BIND-003; D136, D197.
-- **grammar_and_types:** The package `std/crypto/sha256` exports exactly: `const BlockSize`; `const Size`; `const Size224`; `func (*Digest) BlockSize() int`; `func (*Digest) Reset()`; `func (*Digest) Size() int`; `func (*Digest) Sum(b []byte) []byte`; `func (*Digest) Write(p []byte) (int, error)`; `func New() *Digest`; `func New224() *Digest`; `func Sum224(data []byte) [Size224]byte`; `func Sum256(data []byte) [Size]byte`; `type Digest`. A `*Digest` is task-local (SGO-COMP-007); `Sum` appends to its argument and leaves the digest unchanged.
+- **reference_closure:** SGO-IMP-004, SGO-STD-011, SGO-STD-014, SGO-STD-017, SGO-TYPE-009, SGO-BIND-003; D136, D197.
+- **grammar_and_types:** The package `std/crypto/sha256` exports exactly: `const BlockSize`; `const Size`; `const Size224`; `func (*digest) BlockSize() int`; `func (*digest) Reset()`; `func (*digest) Size() int`; `func (*digest) Sum(b []byte) []byte`; `func (*digest) Write(p []byte) (int, error)`; `func New() hash.Hash`; `func New224() hash.Hash`; `func Sum224(data []byte) [Size224]byte`; `func Sum256(data []byte) [Size]byte`. The `hash.Hash` values (SGO-STD-017) are task-local (SGO-COMP-007); `Sum` appends to its argument and leaves the state unchanged.
 - **preconditions:** None.
-- **evaluation_and_value_semantics:** The hash functions of FIPS 180-4: `Sum256`, `Sum224`, and a `Digest` fed by `Write` give the checksums of Go's crypto/sha256 for every input and every split of the input into writes. The round constants and initial values are package-level tables (D136). No branch and no table index depends on the data hashed: every block takes the same operations.
-- **ownership_and_lifecycle:** A `Digest` is a value owned by the task that made it; checksums are arrays or new slices.
+- **evaluation_and_value_semantics:** The hash functions of FIPS 180-4: `Sum256`, `Sum224`, and a hash from `New` or `New224` fed by `Write` give the checksums of Go's crypto/sha256 for every input and every split of the input into writes. `Size` and `BlockSize` of the hashes are 32 (28 for `New224`) and 64. The round constants and initial values are package-level tables (D136). No branch and no table index depends on the data hashed: every block takes the same operations.
+- **ownership_and_lifecycle:** A hash is a value owned by the task that made it; checksums are arrays or new slices.
 - **effect_and_capability_requirements:** None.
 - **concurrency_and_memory_order:** n/a: the package's only state is its frozen tables.
 - **allowed_nondeterminism:** None.
@@ -330,5 +330,93 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **positive_tests:** fixture:std-sha256-basic; `src/sgostd/crypto/sha256` package tests (FIPS 180-4 examples and streaming); `.work/w26/shadiff.py` (against Go's crypto/sha256: 260 messages, lengths 0-129 and to 3000, six write splits; 1820 results identical, seeds 1-2), to move into `sgo/scripts/test-std-diff.py`.
 - **negative_tests:** n/a: no function fails.
 - **implementation_coverage:** `src/sgostd/crypto/sha256/`.
+- **executed_evidence:** PENDING: W26.
+- **supported_execution_configurations:** production, lab.
+
+### SGO-STD-016 — `std/crypto/sha512`: SHA-384, SHA-512, SHA-512/224 and SHA-512/256
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-STD-011, SGO-STD-014, SGO-STD-017, SGO-TYPE-009, SGO-BIND-003; D136, D197.
+- **grammar_and_types:** The package `std/crypto/sha512` exports exactly: `const BlockSize`; `const Size`; `const Size224`; `const Size256`; `const Size384`; `func (*digest) BlockSize() int`; `func (*digest) Reset()`; `func (*digest) Size() int`; `func (*digest) Sum(b []byte) []byte`; `func (*digest) Write(p []byte) (int, error)`; `func New() hash.Hash`; `func New384() hash.Hash`; `func New512_224() hash.Hash`; `func New512_256() hash.Hash`; `func Sum384(data []byte) [Size384]byte`; `func Sum512(data []byte) [Size]byte`; `func Sum512_224(data []byte) [Size224]byte`; `func Sum512_256(data []byte) [Size256]byte`. The `hash.Hash` values are task-local (SGO-COMP-007).
+- **preconditions:** None.
+- **evaluation_and_value_semantics:** The SHA-512 family of FIPS 180-4: each `Sum` function, and a hash from the matching `New` fed by `Write`, gives the checksums of Go's crypto/sha512 for every input and every split into writes. The hashes have `BlockSize` 128 and `Size` 64, 48, 28 or 32. The round constants and initial values are package-level tables (D136); no branch and no table index depends on the data hashed.
+- **ownership_and_lifecycle:** A hash is a value owned by the task that made it; results are arrays or new slices.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a: the package's only state is its frozen tables.
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** No function fails; `Write` always returns `len(p), nil`.
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003.
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-sha512-basic; `src/sgostd/crypto/sha512` package tests (FIPS 180-4 examples and streaming); `.work/w26/sha512diff.py` (against Go's crypto/sha512, all four functions, six write splits; 2226 results identical, seed 1), to move into `sgo/scripts/test-std-diff.py`.
+- **negative_tests:** n/a: no function fails.
+- **implementation_coverage:** `src/sgostd/crypto/sha512/`.
+- **executed_evidence:** PENDING: W26.
+- **supported_execution_configurations:** production, lab.
+
+### SGO-STD-017 — `std/hash`: the Hash interface
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-IFACE-001, SGO-STD-011; D197.
+- **grammar_and_types:** The package `std/hash` exports exactly: `type Hash`. `Hash` is the interface with the methods `BlockSize() int`, `Reset()`, `Size() int`, `Sum(b []byte) []byte` and `Write(p []byte) (int, error)`; any type with those methods implements it (SGO-IFACE-001).
+- **preconditions:** None.
+- **evaluation_and_value_semantics:** The interface declares no behaviour of its own. Hashes of std/crypto meet this contract: `Write` adds data to the running computation and returns `len(p), nil`; `Sum` appends the checksum of the data written so far to `b` and leaves the state unchanged; `Reset` returns to the empty state; `Size` is the checksum length and `BlockSize` the block length in bytes.
+- **ownership_and_lifecycle:** A hash is a value owned by the task that made it; results are arrays or new slices.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a: the package has no state.
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** n/a: the package has no functions.
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003.
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-sha512-basic (uses `hash.Hash` through hmac); `src/sgostd/hash` package test (a user type implements `Hash`).
+- **negative_tests:** n/a: the package has no functions.
+- **implementation_coverage:** `src/sgostd/hash/`.
+- **executed_evidence:** PENDING: W26.
+- **supported_execution_configurations:** production, lab.
+
+### SGO-STD-018 — `std/crypto/hmac`: keyed-hash message authentication
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-STD-015, SGO-STD-016, SGO-STD-017; D197.
+- **grammar_and_types:** The package `std/crypto/hmac` exports exactly: `func (*mac) BlockSize() int`; `func (*mac) Reset()`; `func (*mac) Size() int`; `func (*mac) Sum(in []byte) []byte`; `func (*mac) Write(p []byte) (int, error)`; `func Equal(mac1, mac2 []byte) bool`; `func New(h func() hash.Hash, key []byte) hash.Hash`. The returned hash is task-local (SGO-COMP-007).
+- **preconditions:** None.
+- **evaluation_and_value_semantics:** HMAC of FIPS 198-1 and RFC 2104: `New(h, key)` returns a hash whose `Sum` is the HMAC of the data written under `key`, with hashes made by `h`; a key longer than the block size is first hashed. The results equal those of Go's crypto/hmac. `Reset` returns to the keyed start. `Equal` reports whether the two slices are equal, in time that depends only on their lengths.
+- **ownership_and_lifecycle:** A hash is a value owned by the task that made it; results are arrays or new slices.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a: the package has no state.
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** No function fails; `Write` returns what the underlying hash returns.
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003.
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-sha512-basic; `src/sgostd/crypto/hmac` package tests (RFC examples, long keys, Reset, Equal); Wycheproof vectors of Go's own tests (github.com/c2sp/wycheproof at the version in src/crypto/internal/cryptotest/wycheproof/schemaversion.go) via `.work/w26/wyche.py`: 774 of 774 HMAC and HKDF vectors over SHA-256, SHA-384 and SHA-512 agree.
+- **negative_tests:** n/a: no function fails; Wycheproof `invalid` HMAC vectors (modified tags) are rejected by `Equal`.
+- **implementation_coverage:** `src/sgostd/crypto/hmac/`.
+- **executed_evidence:** PENDING: W26.
+- **supported_execution_configurations:** production, lab.
+
+### SGO-STD-019 — `std/crypto/hkdf`: HMAC-based key derivation
+- **version:** 1
+- **status:** draft
+- **reference_closure:** SGO-IMP-004, SGO-STD-017, SGO-STD-018, SGO-STD-001; D197.
+- **grammar_and_types:** The package `std/crypto/hkdf` exports exactly: `func Expand(h func() hash.Hash, pseudorandomKey []byte, info string, keyLength int) ([]byte, error)`; `func Extract(h func() hash.Hash, secret, salt []byte) ([]byte, error)`; `func Key(h func() hash.Hash, secret, salt []byte, info string, keyLength int) ([]byte, error)`.
+- **preconditions:** None.
+- **evaluation_and_value_semantics:** HKDF of RFC 5869 with the results of Go's crypto/hkdf: `Extract` is the HMAC of `secret` keyed by `salt`, an empty salt being zeros of the hash length; `Expand` derives `keyLength` bytes; `Key` is `Expand` of `Extract`. Go's FIPS 140-only mode checks do not apply.
+- **ownership_and_lifecycle:** A hash is a value owned by the task that made it; results are arrays or new slices.
+- **effect_and_capability_requirements:** None.
+- **concurrency_and_memory_order:** n/a: the package has no state.
+- **allowed_nondeterminism:** None.
+- **failure_and_partial_progress:** `Expand` and `Key` fail with the error text `hkdf: requested key length too large` when `keyLength` exceeds 255 times the hash length, returning an empty slice; `Extract` does not fail.
+- **cancellation_and_cleanup:** n/a: no waits.
+- **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
+- **runtime_guards:** As SGO-ERR-003.
+- **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
+- **positive_tests:** fixture:std-sha512-basic; `src/sgostd/crypto/hkdf` package tests (RFC 5869 case 1, length limit); Wycheproof vectors of Go's own tests (github.com/c2sp/wycheproof at the version in src/crypto/internal/cryptotest/wycheproof/schemaversion.go) via `.work/w26/wyche.py`: 774 of 774 HMAC and HKDF vectors over SHA-256, SHA-384 and SHA-512 agree.
+- **negative_tests:** n/a: a too-long key is an error value, not a failure; package test TestTooLong checks its text.
+- **implementation_coverage:** `src/sgostd/crypto/hkdf/`.
 - **executed_evidence:** PENDING: W26.
 - **supported_execution_configurations:** production, lab.

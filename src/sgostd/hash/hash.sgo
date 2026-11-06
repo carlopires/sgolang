@@ -1,0 +1,18 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package hash declares the interface of hash functions (SGO-STD-017, D197), the Hash of Go's
+// package hash: the hashes of std/crypto return it, and std/crypto/hmac and std/crypto/hkdf take
+// a function that makes one.
+package hash
+
+// Hash is a running hash computation. Write never fails; Sum appends the current checksum to b
+// and does not change the state.
+type Hash interface {
+	Write(p []byte) (int, error)
+	Sum(b []byte) []byte
+	Reset()
+	Size() int
+	BlockSize() int
+}

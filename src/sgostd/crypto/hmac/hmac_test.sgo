@@ -1,0 +1,49 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package hmac
+
+import (
+	"sgo"
+	"std/crypto/sha256"
+	"std/crypto/sha512"
+	"std/encoding/hex"
+)
+
+func TestVectors(t *sgo.T) error {
+	m := New(sha256.New, []byte("key"))
+	_, _ = m.Write([]byte("The quick brown fox jumps over the lazy dog"))
+	if hex.EncodeToString(m.Sum([]byte{})) != "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8" {
+		return sgo.NewError("hmac-sha256")
+	}
+	n := New(sha512.New, []byte("key"))
+	_, _ = n.Write([]byte("The quick brown fox jumps over the lazy dog"))
+	if hex.EncodeToString(n.Sum([]byte{})) != "b42af09057bac1e2d41708e48a902e09b5ff7f12ab428a4fe86653c73dd248fb82f948a549f7b791a5b41915ee4d1ec3935357e4e2317250d0372afa2ebeeb3a" {
+		return sgo.NewError("hmac-sha512")
+	}
+	return nil
+}
+
+// A key longer than the block size is hashed first; Reset returns to the keyed start.
+func TestLongKeyReset(t *sgo.T) error {
+	key := []byte{}
+	for i := 0; i < 200; i++ {
+		key = append(key, 'k')
+	}
+	m := New(sha256.New, key)
+	_, _ = m.Write([]byte("other"))
+	m.Reset()
+	_, _ = m.Write([]byte("msg"))
+	if hex.EncodeToString(m.Sum([]byte{})) != "e2adadca233bc31c6e6126c865132c3e945f9dedd44797a1e5acc3c037bc21fc" {
+		return sgo.NewError("hmac long key")
+	}
+	return nil
+}
+
+func TestEqual(t *sgo.T) error {
+	if !Equal([]byte("abc"), []byte("abc")) || Equal([]byte("abc"), []byte("abd")) || Equal([]byte("ab"), []byte("abc")) {
+		return sgo.NewError("Equal")
+	}
+	return nil
+}

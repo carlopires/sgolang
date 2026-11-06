@@ -1,0 +1,38 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package hkdf
+
+import (
+	"sgo"
+	"std/crypto/sha256"
+	"std/encoding/hex"
+)
+
+// RFC 5869 test case 1.
+func TestRFC5869(t *sgo.T) error {
+	ikm := []byte{}
+	for i := 0; i < 22; i++ {
+		ikm = append(ikm, 0x0b)
+	}
+	salt := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
+	info := "\xf0\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9"
+	prk, _ := Extract(sha256.New, ikm, salt)
+	if hex.EncodeToString(prk) != "077709362c2e32df0ddc3f0dc47bba6390b6c73bb50f9c3122ec844ad7c2b3e5" {
+		return sgo.NewError("hkdf extract")
+	}
+	okm, _ := Expand(sha256.New, prk, info, 42)
+	if hex.EncodeToString(okm) != "3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf34007208d5b887185865" {
+		return sgo.NewError("hkdf expand")
+	}
+	return nil
+}
+
+func TestTooLong(t *sgo.T) error {
+	_, err := Key(sha256.New, []byte("secret"), []byte{}, "", 32*255+1)
+	if err == nil || err.Error() != "hkdf: requested key length too large" {
+		return sgo.NewError("hkdf too long")
+	}
+	return nil
+}

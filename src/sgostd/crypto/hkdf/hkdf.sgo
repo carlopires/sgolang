@@ -1,0 +1,66 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package hkdf implements the HMAC-based key derivation function of RFC 5869 (SGO-STD-019,
+// D197), with the results and error texts of Go's crypto/hkdf. Go's FIPS 140-only mode checks
+// do not apply.
+package hkdf
+
+import (
+	"std/crypto/hmac"
+	"std/errors"
+	"std/hash"
+)
+
+// Extract returns a pseudorandom key from secret and salt; a nil or empty salt is a string of
+// zeros of the hash's length.
+func Extract(h func() hash.Hash, secret, salt []byte) ([]byte, error) {
+	if len(salt) == 0 {
+		salt = make([]byte, h().Size())
+	}
+	ex := hmac.New(h, salt)
+	_, _ = ex.Write(secret)
+	return ex.Sum([]byte{}), nil
+}
+
+// Expand returns keyLength bytes derived from pseudorandomKey and info. A keyLength above 255
+// times the hash's length is an error.
+func Expand(h func() hash.Hash, pseudorandomKey []byte, info string, keyLength int) ([]byte, error) {
+	if keyLength > h().Size()*255 {
+		return []byte{}, errors.New("hkdf: requested key length too large")
+	}
+	return expand(h, pseudorandomKey, info, keyLength), nil
+}
+
+// Key derives keyLength bytes from secret, salt, and info: Expand of Extract.
+func Key(h func() hash.Hash, secret, salt []byte, info string, keyLength int) ([]byte, error) {
+	if keyLength > h().Size()*255 {
+		return []byte{}, errors.New("hkdf: requested key length too large")
+	}
+	prk, _ := Extract(h, secret, salt)
+	return expand(h, prk, info, keyLength), nil
+}
+
+func expand(h func() hash.Hash, prk []byte, info string, keyLength int) []byte {
+	out := []byte{}
+	ex := hmac.New(h, prk)
+	buf := []byte{}
+	counter := 0
+	for len(out) < keyLength {
+		counter++
+		if counter > 1 {
+			ex.Reset()
+		}
+		_, _ = ex.Write(buf)
+		_, _ = ex.Write([]byte(info))
+		_, _ = ex.Write([]byte{byte(counter)})
+		buf = ex.Sum(buf[:0])
+		remain := keyLength - len(out)
+		if remain > len(buf) {
+			remain = len(buf)
+		}
+		out = append(out, buf[:remain]...)
+	}
+	return out
+}

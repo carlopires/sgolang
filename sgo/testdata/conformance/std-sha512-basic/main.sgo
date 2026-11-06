@@ -1,0 +1,19 @@
+package main
+
+import (
+	"sgo"
+	"std/crypto/hkdf"
+	"std/crypto/hmac"
+	"std/crypto/sha256"
+	"std/crypto/sha512"
+	"std/encoding/hex"
+)
+
+func main(root *sgo.Context) error {
+	m := hmac.New(sha256.New, []byte("key"))
+	_, _ = m.Write([]byte("The quick brown fox jumps over the lazy dog"))
+	a := hex.EncodeToString(m.Sum([]byte{}))
+	k, _ := hkdf.Key(sha256.New, []byte{0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b}, []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, "\xf0\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9", 42)
+	s := sha512.Sum512([]byte("abc"))
+	return root.Stdout().WriteString(a + "\n" + hex.EncodeToString(k) + "\n" + hex.EncodeToString(s[:8]) + "\n")
+}

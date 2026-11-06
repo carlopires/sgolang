@@ -1,0 +1,47 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package sha512
+
+import (
+	"sgo"
+	"std/encoding/hex"
+)
+
+// The "abc" examples of FIPS 180-4 for the four SHA-512 family functions.
+func TestVectors(t *sgo.T) error {
+	a := Sum512([]byte("abc"))
+	if hex.EncodeToString(a[:]) != "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f" {
+		return sgo.NewError("sha512 abc")
+	}
+	b := Sum384([]byte("abc"))
+	if hex.EncodeToString(b[:]) != "cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7" {
+		return sgo.NewError("sha384 abc")
+	}
+	c := Sum512_224([]byte("abc"))
+	if hex.EncodeToString(c[:]) != "4634270f707b6a54daae7530460842e20e37ed265ceee9a43e8924aa" {
+		return sgo.NewError("sha512/224 abc")
+	}
+	d := Sum512_256([]byte("abc"))
+	if hex.EncodeToString(d[:]) != "53048e2681941ef99b2e29b76b4c7dabe4c2d0c634fc6d46e0e2f13107e7af23" {
+		return sgo.NewError("sha512/256 abc")
+	}
+	return nil
+}
+
+// Writing in pieces gives the same sum as one write, and Sum does not change the state.
+func TestStreaming(t *sgo.T) error {
+	h := New()
+	_, _ = h.Write([]byte("a"))
+	_, _ = h.Write([]byte("bc"))
+	first := h.Sum([]byte{})
+	again := h.Sum([]byte{})
+	if hex.EncodeToString(first) != hex.EncodeToString(again) || hex.EncodeToString(first[:8]) != "ddaf35a193617aba" {
+		return sgo.NewError("sha512 streaming")
+	}
+	if h.Size() != Size || h.BlockSize() != BlockSize || New384().Size() != Size384 {
+		return sgo.NewError("sha512 sizes")
+	}
+	return nil
+}

@@ -1,0 +1,75 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Package hmac implements HMAC, the keyed-hash message authentication code of FIPS 198-1 and
+// RFC 2104 (SGO-STD-018, D197), with the results of Go's crypto/hmac. Equal compares in time
+// that depends only on the lengths.
+package hmac
+
+import "std/hash"
+
+type mac struct {
+	inner hash.Hash
+	outer hash.Hash
+	ipad  []byte
+	opad  []byte
+}
+
+// New returns an HMAC hash keyed by key over hashes made by h, such as sha256.New.
+func New(h func() hash.Hash, key []byte) hash.Hash {
+	m := &mac{inner: h(), outer: h()}
+	blocksize := m.inner.BlockSize()
+	m.ipad = make([]byte, blocksize)
+	m.opad = make([]byte, blocksize)
+	if len(key) > blocksize {
+		_, _ = m.outer.Write(key)
+		key = m.outer.Sum([]byte{})
+	}
+	copy(m.ipad, key)
+	copy(m.opad, key)
+	for i := 0; i < blocksize; i++ {
+		m.ipad[i] = m.ipad[i] ^ 0x36
+		m.opad[i] = m.opad[i] ^ 0x5c
+	}
+	_, _ = m.inner.Write(m.ipad)
+	return m
+}
+
+func (m *mac) Write(p []byte) (int, error) {
+	return m.inner.Write(p)
+}
+
+func (m *mac) Sum(in []byte) []byte {
+	orig := len(in)
+	in = m.inner.Sum(in)
+	m.outer.Reset()
+	_, _ = m.outer.Write(m.opad)
+	_, _ = m.outer.Write(in[orig:])
+	return m.outer.Sum(in[:orig])
+}
+
+func (m *mac) Reset() {
+	m.inner.Reset()
+	_, _ = m.inner.Write(m.ipad)
+}
+
+func (m *mac) Size() int {
+	return m.outer.Size()
+}
+
+func (m *mac) BlockSize() int {
+	return m.inner.BlockSize()
+}
+
+// Equal reports whether mac1 and mac2 are equal, in time that depends only on their lengths.
+func Equal(mac1, mac2 []byte) bool {
+	if len(mac1) != len(mac2) {
+		return false
+	}
+	var v byte = 0
+	for i := 0; i < len(mac1); i++ {
+		v = v | (mac1[i] ^ mac2[i])
+	}
+	return v == 0
+}
