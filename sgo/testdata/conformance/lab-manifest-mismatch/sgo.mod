@@ -1,3 +1,3 @@
 module example.com/lab-manifest-mismatch
 
-sgo 0.20.1
+sgo 0.21.0

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": "0.20.1",
+  "spec_version": "0.21.0",
   "status": "admitted_0.7.0",
   "warning": "Spec 0.7.0 admits every row marked 'admitted': its clauses are frozen, the toolchain implements and enforces them, and its acceptance cases have executed evidence (constitution §6, D83). Rows marked 'denied' stay rejected. Admission does not widen any row beyond its clauses; everything the clauses do not name is rejected.",
   "default_decision": "reject",
@@ -113,7 +113,7 @@
         "SGO-BIND-004",
         "SGO-BIND-005"
       ],
-      "normative_text_digest": "5743b7a11a1178fccf29c41cf6798fe8fe62d889ce40d51861a1699a47ee4782",
+      "normative_text_digest": "311afb58f83afadd93d3e31106b88d7b0049ca5423752c1a70f8fe6595f74580",
       "admitted_in": [
         "0.7.0"
       ],
@@ -132,7 +132,7 @@
       "clause_digests": {
         "SGO-BIND-001": "6e990dc11d03f357df717f0f7bad0290b2674b114bc919072a320f4311db1377",
         "SGO-BIND-002": "3dd42fe9abb02c8f20f67b6a4b40f2696edf26c6baa080fdabb0a2978fab6dbc",
-        "SGO-BIND-003": "6fe754599ccc149e144aa90937dd2d2659cc39b290133b3fa7315b0fdc77216b",
+        "SGO-BIND-003": "c91b5e5dc4429e7554cfb266f67a906667024c956e07f77066a65df4f77ff0c0",
         "SGO-BIND-004": "cb5bfd6f8c05ead33cbf3761cd1738907c9746b9c9063b6c2b0428b6d32ad555",
         "SGO-BIND-005": "9821bab680dce84c76599e97cbd2be814767e417d0435afdf868e0edc795034b"
       },
@@ -146,7 +146,7 @@
       "clause_versions": {
         "SGO-BIND-001": 1,
         "SGO-BIND-002": 1,
-        "SGO-BIND-003": 1,
+        "SGO-BIND-003": 2,
         "SGO-BIND-004": 1,
         "SGO-BIND-005": 1
       }
@@ -168,7 +168,7 @@
         "SGO-TYPE-008",
         "SGO-TYPE-009"
       ],
-      "normative_text_digest": "62dcf2913fcba0a872b099143ae3a818c937cc86e954c6038b69a8ccab83ea52",
+      "normative_text_digest": "1a1531f500e905c3bfa84f8863afff8dbaf4f195ec5420ea430b3d7d1659c608",
       "admitted_in": [
         "0.7.0"
       ],
@@ -184,7 +184,7 @@
       ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-TYPE-001": "a298c422ba52e560f2ef8e7ca2e460a011362fc3f8c249ab6497b4c51dc091ff",
+        "SGO-TYPE-001": "d485d595bb65f1eb9a71b21e7cc543f6acd4194033a40c8396f94aad60c43bef",
         "SGO-TYPE-002": "e481cecacd6eb940825227acbb9d9e7f9acd8e916f4ef27039785caf16f63045",
         "SGO-TYPE-003": "a1e06f6a06fccd6bc4d5a83ecf208d1a612639b582bf70abef98331e8b841343",
         "SGO-TYPE-004": "ed7f04b19e34d997c1d626f4056021977c51e644d9adc52207ca5a149f9d4819",
@@ -203,10 +203,10 @@
         "SGO-TYPE-006": "frozen",
         "SGO-TYPE-007": "frozen",
         "SGO-TYPE-008": "frozen",
-        "SGO-TYPE-009": "draft"
+        "SGO-TYPE-009": "frozen"
       },
       "clause_versions": {
-        "SGO-TYPE-001": 10,
+        "SGO-TYPE-001": 11,
         "SGO-TYPE-002": 3,
         "SGO-TYPE-003": 1,
         "SGO-TYPE-004": 1,
@@ -1823,7 +1823,7 @@
         "SGO-STD-021",
         "SGO-STD-022"
       ],
-      "normative_text_digest": "548abc93098906f5e131040054c1531920609fb5d40b12d79ebba3faa3d5ee7a",
+      "normative_text_digest": "1c9eb9b1bfe32a734153ae4e4c869a46f368c2b938a0a3da45e12e1558cef5d1",
       "admitted_in": [
         "0.13.0"
       ],
@@ -1843,18 +1843,18 @@
         "SGO-STD-008": "a006f7077ffeda553b296875b211828a1b1cf1f96f7d6d9fbda3a3f1653076e2",
         "SGO-STD-009": "231e7ea7324eca8102b002392c984f9486fd483479a0b7ddfe037b403f748f6a",
         "SGO-STD-010": "037f8730ee4cb75a01866255538d3072335acd792b7888f18cb6a6e2d26f4973",
-        "SGO-STD-011": "5ecc796c09e3f86dc312f284be644f84d75059e97471a10d3002b89a7a316665",
-        "SGO-STD-012": "091415b44e9cd59b6172662ac9463c6b7ab788f62b49e723d6e2bd4f3741f62f",
-        "SGO-STD-013": "9a6465f398bc384664af1cc819659e73b2bc61c1b3dd1da80fa7cc972b29d8b1",
-        "SGO-STD-014": "f3f7c2a5d003cac7d3a2914ee27a9f00f9f777b87d960f6081829c18346fd247",
-        "SGO-STD-015": "a2d33c3e7c74fcc2a6645400204f2710883f6207d1ceffd4e3f29e0b623b1fac",
-        "SGO-STD-016": "a9c8dc7921979b3aef31e337c37f9bdd12cf439ffcb8e877ce5a73caf9785794",
+        "SGO-STD-011": "9cfd9bdb771a6ef05926745939eb0c2ca5f05e5f7163421de944a861c922afdd",
+        "SGO-STD-012": "01a5124b830547ea92d4a0e58bfe54d4f7199a5e83e3bbd20934e0f15e95e84c",
+        "SGO-STD-013": "6df3e255500cc1f97b8d7d52990d95ed587490dfb24028ac1d7f391d0f94f828",
+        "SGO-STD-014": "0043af5fb757b0847dcbf940b3e2dd08cda3ccf6fcc940c0fce7263b42d2160c",
+        "SGO-STD-015": "a0a613158a14bfd590d29319aa18f51f17e6801dd4a6fc51fe26ea78e1ef6916",
+        "SGO-STD-016": "8ae97786837bbdc15de57e79d13bacb01e243257ccfa11da22ce6a13143072ee",
         "SGO-STD-017": "50a2da691b6fee4a00170ccd5dca7a2278a9617164ce56a2f9797e53b75a074d",
-        "SGO-STD-018": "e2dc7d1afed0ecb7f448f4ec92697a2428da7acf2b34872580f8e5dd36e2b18a",
-        "SGO-STD-019": "9f9681207f43253fefca5f2607f25a01d71bad61b739462910015dd6d444870a",
+        "SGO-STD-018": "0d6cc3de7a3f8b60e655cc1f54280e3bc17e01e720cfc05481d0769a1bc63319",
+        "SGO-STD-019": "e80ecf94de97fb56aaed5a476a5748e190f680da9ba1228d24297cf28abcaff3",
         "SGO-STD-020": "1b0d20f0ce30b5b2d9b74759062a246fa27106df3fdc7c705b589125c38312ad",
-        "SGO-STD-021": "f20ff778a53f8f7bb14df08c0b389fd6903ac14f1536708acfae7e44422c86af",
-        "SGO-STD-022": "1a37d0879356aecf46600feff3dd3a25a2dd6498fc63d9c1d31ab24c85bb6a6c"
+        "SGO-STD-021": "bf889a9b8c2db549d614ece782dffc62b34fa52b59a596ad31aaa024cf098e0e",
+        "SGO-STD-022": "38113659b1708e39fa0b5cf54508586401f064c2f5394d36746b9f80b659d788"
       },
       "clause_status": {
         "SGO-STD-001": "frozen",
@@ -1867,18 +1867,18 @@
         "SGO-STD-008": "frozen",
         "SGO-STD-009": "frozen",
         "SGO-STD-010": "frozen",
-        "SGO-STD-011": "draft",
-        "SGO-STD-012": "draft",
-        "SGO-STD-013": "draft",
-        "SGO-STD-014": "draft",
-        "SGO-STD-015": "draft",
-        "SGO-STD-016": "draft",
-        "SGO-STD-017": "draft",
-        "SGO-STD-018": "draft",
-        "SGO-STD-019": "draft",
-        "SGO-STD-020": "draft",
-        "SGO-STD-021": "draft",
-        "SGO-STD-022": "draft"
+        "SGO-STD-011": "frozen",
+        "SGO-STD-012": "frozen",
+        "SGO-STD-013": "frozen",
+        "SGO-STD-014": "frozen",
+        "SGO-STD-015": "frozen",
+        "SGO-STD-016": "frozen",
+        "SGO-STD-017": "frozen",
+        "SGO-STD-018": "frozen",
+        "SGO-STD-019": "frozen",
+        "SGO-STD-020": "frozen",
+        "SGO-STD-021": "frozen",
+        "SGO-STD-022": "frozen"
       },
       "clause_versions": {
         "SGO-STD-001": 2,
@@ -1907,5 +1907,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "e828df4adf37dcad6c33cd29c54314fed42caaa35342fdfd220a054f3b58f26c"
+  "rows_digest": "136169e1cb069236a98a48654efd0da1738e3e0885ef70968c41a1d02de7ff88"
 }

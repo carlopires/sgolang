@@ -1,3 +1,3 @@
 module example.com/proc-env-ignored-ok
 
-sgo 0.20.1
+sgo 0.21.0

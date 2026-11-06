@@ -1,4 +1,4 @@
 module example.com/mod-dependency-grant-exceeds
 
-sgo 0.20.1
+sgo 0.21.0
 require example.com/lib v1.0.0

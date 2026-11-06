@@ -1,3 +1,3 @@
 module example.com/cancel-consumed-at-boundary
 
-sgo 0.20.1
+sgo 0.21.0

@@ -2,6 +2,28 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.21.0 — 2026-11-08
+
+Unsigned integers, package-level tables, and the first cryptography (W26; D136, D196, D197). Every program valid under 0.20.1 keeps its meaning: the release only admits forms that were refused and adds packages.
+
+New clauses:
+
+- SGO-TYPE-009 — `uint32` and `uint64`: arithmetic, shifts, and conversions fail with `IntegerOverflow` (or `DivideByZero`) instead of wrapping; unary minus on them is denied (D196).
+- SGO-STD-011 — `std/bits`: `Add/Sub/Mul/Div`, rotations, counts, and byte reversal on `uint32`/`uint64`, with the results of Go's `math/bits` (D196).
+- SGO-STD-012..014 — `std/encoding/hex`, `std/encoding/base64`, `std/encoding/binary` (D197).
+- SGO-STD-015, 016 — `std/crypto/sha256`, `std/crypto/sha512` (D197).
+- SGO-STD-017 — `std/hash`: the `Hash` interface.
+- SGO-STD-018, 019 — `std/crypto/hmac`, `std/crypto/hkdf`.
+- SGO-STD-020 — `std/crypto/cipher`: the `AEAD` interface.
+- SGO-STD-021, 022 — `std/crypto/chacha20poly1305` (RFC 8439) and `std/crypto/curve25519` (RFC 7748 X25519).
+
+All are checked against Go's packages on generated inputs and against the Wycheproof vectors that Go's own crypto tests use (`sgo/scripts/test-std-crypto.py`).
+
+Amended clauses:
+
+- SGO-BIND-003 v2 — package-level tables: `var name = sgo.Freeze(lit)` with a constant composite literal, built once before `main`, frozen for every task (D136); the text now also names type declarations as SGO-UTYPE-002 admits them.
+- SGO-TYPE-001 v11 — `uint32` and `uint64` are admitted types.
+
 ## 0.20.1 — 2026-11-07
 
 Review fix (W25 review P3). Every program valid under 0.20.0 keeps its meaning: the text now names a type the compiler and runtime already treated as a built-in resource.

@@ -47,25 +47,25 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §2, decisions D07, D15, and resolu
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-BIND-003 — Declarations
-- **version:** 1
+- **version:** 2
 - **status:** frozen
-- **reference_closure:** SGO-TYPE-001, SGO-VAL-004, SGO-MEM-001; D07; R3.
-- **grammar_and_types:** Package level: `const` declarations (single or parenthesized, each with an explicit value; `iota` denied) and `func` declarations with a body. Package-level `var`, `type`, and `func init` are denied, as are functions without bodies. Function level: `const` as above; `var x T = e`, `var x = e`, `x := e`, and multi-name forms `a, b := e1, e2` or `a, b := f()` where the counts match. `var x T` without an initializer is denied. In `:=`, at least one name on the left must be new; a name that is not new must already be declared in the same block.
+- **reference_closure:** SGO-TYPE-001, SGO-VAL-004, SGO-MEM-001, SGO-COMP-009, SGO-UTYPE-002; D07, D136; R3.
+- **grammar_and_types:** Package level: `const` declarations (single or parenthesized, each with an explicit value; `iota` denied), `func` declarations with a body, type declarations as SGO-UTYPE-002 admits them, and package-level tables (D136): `var name = sgo.Freeze(lit)` or `var name sgo.Frozen[T] = sgo.Freeze(lit)`, one name per declaration, where `lit` is a composite literal whose elements and keys, at every depth, are constants or composite literals. Every other package-level `var`, and `func init`, are denied, as are functions without bodies. Function level: `const` as above; `var x T = e`, `var x = e`, `x := e`, and multi-name forms `a, b := e1, e2` or `a, b := f()` where the counts match. `var x T` without an initializer is denied. In `:=`, at least one name on the left must be new; a name that is not new must already be declared in the same block.
 - **preconditions:** Initializer expressions are admitted (SGO-VAL-*) and assignable to the declared type (SGO-TYPE-002).
-- **evaluation_and_value_semantics:** A local declaration evaluates its initializers left to right (SGO-VAL-005), then binds the names. A constant is a compile-time value.
+- **evaluation_and_value_semantics:** A local declaration evaluates its initializers left to right (SGO-VAL-005), then binds the names. A constant is a compile-time value. A package-level table is built once, before `main` or the first test, in source order; no initializer reads a variable, so the order cannot be observed. It is the same in production and the lab.
 - **ownership_and_lifecycle:** A local variable lives for the activation of the function that declares it (and longer if captured, SGO-MEM-002).
 - **effect_and_capability_requirements:** n/a — declarations have no effects beyond their initializer expressions.
-- **concurrency_and_memory_order:** Locals belong to one task (SGO-MEM-001).
+- **concurrency_and_memory_order:** Locals belong to one task (SGO-MEM-001). A package-level table is frozen (SGO-COMP-009): every task may read it, and no task can write it. Assigning to it, incrementing it, ranging into it, or taking its address is denied, in its package and in every importer.
 - **allowed_nondeterminism:** None.
 - **failure_and_partial_progress:** If an initializer fails at run time (e.g. SGO-VAL-001 overflow), the declaration does not complete and the failure unwinds (SGO-DEF-003).
 - **cancellation_and_cleanup:** n/a — declarations are not cancellation points.
-- **compile_link_checks:** `SGO_E_UNADMITTED` (denied forms); `SGO_E_UNINITIALIZED`; `SGO_E_ASSIGN_COUNT`; `SGO_E_NO_NEW_VARIABLES`.
+- **compile_link_checks:** `SGO_E_UNADMITTED` (denied forms, including a package-level var that is not a table, a table element that is not a constant or composite literal, and a write to or address of a package-level table); `SGO_E_UNINITIALIZED`; `SGO_E_ASSIGN_COUNT`; `SGO_E_NO_NEW_VARIABLES`.
 - **runtime_guards:** n/a — failures come from the initializer expressions.
 - **tcb_assumptions:** n/a — compiler only.
-- **positive_tests:** S16; fixture:bind-declarations.
-- **negative_tests:** S16, S17; fixture:bind-package-var, fixture:bind-init-func, fixture:bind-uninitialized-var, fixture:bind-iota.
-- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`.
-- **executed_evidence:** conformance fixtures bind-declarations, bind-init-func, bind-iota, bind-package-var, bind-uninitialized-var (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.
+- **positive_tests:** S16; fixture:bind-declarations., fixture:tbl-basic, fixture:tbl-structs, fixture:tbl-imported
+- **negative_tests:** S16, S17; fixture:bind-package-var, fixture:bind-init-func, fixture:bind-uninitialized-var, fixture:bind-iota., fixture:tbl-assign, fixture:tbl-addr, fixture:tbl-imported-assign, fixture:tbl-not-constant, fixture:tbl-reads-variable, fixture:tbl-two-names
+- **implementation_coverage:** W03: `src/cmd/compile/internal/types2/sgo.go`, `src/cmd/compile/internal/sgoadmit/admit.go`; W26: `types2/sgo_tables.go` (`sgoPackageTables`, `sgoTableWrites`), `sgoadmit/admit.go` (`freezeOfLiteral`).
+- **executed_evidence:** conformance fixtures bind-declarations, bind-init-func, bind-iota, bind-package-var, bind-uninitialized-var (darwin/arm64, linux/amd64, linux/arm64); `sgo/evidence/w03/README.md`.; W26: conformance fixtures tbl-* (darwin/arm64; Linux at the W26 merge), `sgo/evidence/w26/README.md`.
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-BIND-004 — Scope and shadowing

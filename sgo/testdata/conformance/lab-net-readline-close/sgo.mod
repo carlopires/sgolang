@@ -1,5 +1,5 @@
 module example.com/lab-net-readline-close
 
-sgo 0.20.1
+sgo 0.21.0
 grant listen 127.0.0.1:47913
 grant connect 127.0.0.1:47913

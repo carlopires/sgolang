@@ -177,7 +177,7 @@ The standard library (std/errors, strings, bytes, strconv, utf8, sort, math; spe
 
 - **Scope:** admission, tested
 - **Families:** SPEC-STD
-- **Clauses:** SGO-STD-001, SGO-STD-002, SGO-STD-003, SGO-STD-004, SGO-STD-005, SGO-STD-006, SGO-STD-007, SGO-STD-008, SGO-STD-009, SGO-STD-010, SGO-STD-011, SGO-STD-012, SGO-STD-013, SGO-STD-014, SGO-STD-015
+- **Clauses:** SGO-STD-001, SGO-STD-002, SGO-STD-003, SGO-STD-004, SGO-STD-005, SGO-STD-006, SGO-STD-007, SGO-STD-008, SGO-STD-009, SGO-STD-010, SGO-STD-011, SGO-STD-012, SGO-STD-013, SGO-STD-014, SGO-STD-015, SGO-STD-016, SGO-STD-017, SGO-STD-018, SGO-STD-019, SGO-STD-020, SGO-STD-021, SGO-STD-022
 - **Acceptance cases:** 
 - **Implementation:** `src/sgostd/`, `sgo/scripts/std-api-check.py`, `sgo/scripts/std-manifest.py`, `sgo/scripts/test-std-diff.py`
 - **Limitation:** Behavior equal to Go's packages is tested on seeded generated inputs (test-std-diff), not proven.

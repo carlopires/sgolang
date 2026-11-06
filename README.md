@@ -45,7 +45,7 @@ This program is the conformance case
 
 ## Status
 
-Spec **0.20.1** (the current version is in [`sgo/spec/VERSION`](sgo/spec/VERSION)). The toolchain
+Spec **0.21.0** (the current version is in [`sgo/spec/VERSION`](sgo/spec/VERSION)). The toolchain
 (`sgo build`, `run`, `check`, `test`, `fmt`, `mod`, `lab`) works on darwin/arm64, linux/amd64, and
 linux/arm64. Work packages W00–W25 are complete (W11, fixed stacks, was investigated and not
 adopted); W25 admitted `float64` with `std/math`, `strconv`, and `fmt` support. The language is still

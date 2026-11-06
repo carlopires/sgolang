@@ -1,4 +1,4 @@
 module example.com/net-appsocket-bad
 
-sgo 0.20.1
+sgo 0.21.0
 grant listen unix:@runtime/a/b.sock

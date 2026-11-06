@@ -1,3 +1,3 @@
 module example.com/val-eval-order-failure-point
 
-sgo 0.20.1
+sgo 0.21.0

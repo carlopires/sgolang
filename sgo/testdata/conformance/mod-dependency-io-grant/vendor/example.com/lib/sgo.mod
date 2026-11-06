@@ -1,4 +1,4 @@
 module example.com/lib
 
-sgo 0.20.1
+sgo 0.21.0
 grant dir data r

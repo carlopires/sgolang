@@ -225,7 +225,7 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 
 ### SGO-STD-011 — `std/bits`: Modular arithmetic and bit counts
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-TYPE-009, SGO-VAL-001; D196.
 - **grammar_and_types:** The package `std/bits` exports exactly: `func Add32(x, y, carry uint32) (sum, carryOut uint32)`; `func Add64(x, y, carry uint64) (sum, carryOut uint64)`; `func Div32(hi, lo, y uint32) (quo, rem uint32)`; `func Div64(hi, lo, y uint64) (quo, rem uint64)`; `func LeadingZeros32(x uint32) int`; `func LeadingZeros64(x uint64) int`; `func Len32(x uint32) int`; `func Len64(x uint64) int`; `func Mul32(x, y uint32) (hi, lo uint32)`; `func Mul64(x, y uint64) (hi, lo uint64)`; `func OnesCount32(x uint32) int`; `func OnesCount64(x uint64) int`; `func ReverseBytes32(x uint32) uint32`; `func ReverseBytes64(x uint64) uint64`; `func RotateLeft32(x uint32, k int) uint32`; `func RotateLeft64(x uint64, k int) uint64`; `func Sub32(x, y, borrow uint32) (diff, borrowOut uint32)`; `func Sub64(x, y, borrow uint64) (diff, borrowOut uint64)`; `func TrailingZeros32(x uint32) int`; `func TrailingZeros64(x uint64) int`.
 - **preconditions:** For `Add32`, `Add64`, `Sub32`, `Sub64`: the carry or borrow is 0 or 1 (other values give Go's results). For `Div32`, `Div64`: `y != 0` and `y > hi`.
@@ -239,15 +239,15 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
 - **runtime_guards:** As SGO-ERR-003.
 - **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
-- **positive_tests:** fixture:std-bits-basic; `src/sgostd/bits` package tests; `.work/w26/bitsdiff.py` (against Go's math/bits; 28426 results identical, seeds 1-3), to move into `sgo/scripts/test-std-diff.py`.
+- **positive_tests:** fixture:std-bits-basic; `src/sgostd/bits` package tests; `sgo/scripts/test-std-crypto.py` (against Go's math/bits; 28426 results identical, seeds 1-3).
 - **negative_tests:** fixture:std-bits-div-zero, fixture:std-bits-div-overflow.
 - **implementation_coverage:** `src/sgostd/bits/`.
-- **executed_evidence:** PENDING: W26.
+- **executed_evidence:** W26: conformance (darwin/arm64; Linux at the W26 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` seeds 1 and 2 (sgo/evidence/w26/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-012 — `std/encoding/hex`: Hexadecimal
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-001, SGO-TYPE-007, SGO-TYPE-009; D136, D197.
 - **grammar_and_types:** The package `std/encoding/hex` exports exactly: `func (InvalidByteError) Error() string`; `func (lengthError) Error() string`; `func Decode(dst, src []byte) (int, error)`; `func DecodeString(s string) ([]byte, error)`; `func DecodedLen(x int) int`; `func Encode(dst, src []byte) int`; `func EncodeToString(src []byte) string`; `func EncodedLen(n int) int`; `func IsLength(err error) bool`; `type InvalidByteError`. There is no `ErrLength` variable (D109): `IsLength` reports the odd-length error.
 - **preconditions:** For `Encode`: `len(dst) >= EncodedLen(len(src))`. For `Decode`: `len(dst) >= DecodedLen(len(src))`.
@@ -261,15 +261,15 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
 - **runtime_guards:** As SGO-ERR-003; a destination slice shorter than the result is a bounds failure (SGO-COMP-003).
 - **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
-- **positive_tests:** fixture:std-encoding-basic; `src/sgostd/encoding/hex` package tests; `.work/w26/encdiff.py` (against Go's encoding/hex, seeds 1-3 identical), to move into `sgo/scripts/test-std-diff.py`.
+- **positive_tests:** fixture:std-encoding-basic; `src/sgostd/encoding/hex` package tests; `sgo/scripts/test-std-crypto.py` (against Go's encoding/hex, seeds 1-3 identical).
 - **negative_tests:** fixture:std-encoding-basic (malformed input).
 - **implementation_coverage:** `src/sgostd/encoding/hex/`.
-- **executed_evidence:** PENDING: W26.
+- **executed_evidence:** W26: conformance (darwin/arm64; Linux at the W26 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` seeds 1 and 2 (sgo/evidence/w26/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-013 — `std/encoding/base64`: Base64
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-001, SGO-TYPE-007, SGO-TYPE-009; D136, D197.
 - **grammar_and_types:** The package `std/encoding/base64` exports exactly: `const RawStdEncoding`; `const RawURLEncoding`; `const StdEncoding`; `const URLEncoding`; `func (CorruptInputError) Error() string`; `func (Encoding) Decode(dst, src []byte) (int, error)`; `func (Encoding) DecodeString(s string) ([]byte, error)`; `func (Encoding) DecodedLen(n int) int`; `func (Encoding) Encode(dst, src []byte)`; `func (Encoding) EncodeToString(src []byte) string`; `func (Encoding) EncodedLen(n int) int`; `type CorruptInputError`; `type Encoding`. `StdEncoding`, `URLEncoding`, `RawStdEncoding`, and `RawURLEncoding` are constants of type `Encoding`: a call is written `base64.StdEncoding.EncodeToString(b)`; custom alphabets (`NewEncoding`), `WithPadding`, `Strict`, and the streaming encoder and decoder are not provided.
 - **preconditions:** For `Encode`: `len(dst) >= EncodedLen(len(src))`. For `Decode`: `len(dst) >= DecodedLen(len(src))`.
@@ -283,15 +283,15 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
 - **runtime_guards:** As SGO-ERR-003; a destination slice shorter than the result is a bounds failure (SGO-COMP-003).
 - **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
-- **positive_tests:** fixture:std-encoding-basic; `src/sgostd/encoding/base64` package tests; `.work/w26/encdiff.py` (against Go's encoding/base64, seeds 1-3 identical), to move into `sgo/scripts/test-std-diff.py`.
+- **positive_tests:** fixture:std-encoding-basic; `src/sgostd/encoding/base64` package tests; `sgo/scripts/test-std-crypto.py` (against Go's encoding/base64, seeds 1-3 identical).
 - **negative_tests:** fixture:std-encoding-basic (malformed input).
 - **implementation_coverage:** `src/sgostd/encoding/base64/`.
-- **executed_evidence:** PENDING: W26.
+- **executed_evidence:** W26: conformance (darwin/arm64; Linux at the W26 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` seeds 1 and 2 (sgo/evidence/w26/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-014 — `std/encoding/binary`: Byte orders
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-001, SGO-TYPE-007, SGO-TYPE-009; D136, D197.
 - **grammar_and_types:** The package `std/encoding/binary` exports exactly: `const BigEndian`; `const LittleEndian`; `func (bigEndian) AppendUint32(b []byte, v uint32) []byte`; `func (bigEndian) AppendUint64(b []byte, v uint64) []byte`; `func (bigEndian) PutUint32(b []byte, v uint32)`; `func (bigEndian) PutUint64(b []byte, v uint64)`; `func (bigEndian) Uint32(b []byte) uint32`; `func (bigEndian) Uint64(b []byte) uint64`; `func (littleEndian) AppendUint32(b []byte, v uint32) []byte`; `func (littleEndian) AppendUint64(b []byte, v uint64) []byte`; `func (littleEndian) PutUint32(b []byte, v uint32)`; `func (littleEndian) PutUint64(b []byte, v uint64)`; `func (littleEndian) Uint32(b []byte) uint32`; `func (littleEndian) Uint64(b []byte) uint64`. `BigEndian` and `LittleEndian` are constants of unexported types: a call is written `binary.BigEndian.Uint32(b)`. `Read`, `Write`, `Size`, and the varint functions are not provided.
 - **preconditions:** For `Uint32` and `PutUint32`: `len(b) >= 4`; for `Uint64` and `PutUint64`: `len(b) >= 8`.
@@ -305,15 +305,15 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
 - **runtime_guards:** As SGO-ERR-003; a destination slice shorter than the result is a bounds failure (SGO-COMP-003).
 - **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
-- **positive_tests:** fixture:std-encoding-basic; `src/sgostd/encoding/binary` package tests; `.work/w26/encdiff.py` (against Go's encoding/binary, seeds 1-3 identical), to move into `sgo/scripts/test-std-diff.py`.
+- **positive_tests:** fixture:std-encoding-basic; `src/sgostd/encoding/binary` package tests; `sgo/scripts/test-std-crypto.py` (against Go's encoding/binary, seeds 1-3 identical).
 - **negative_tests:** fixture:std-encoding-basic (malformed input).
 - **implementation_coverage:** `src/sgostd/encoding/binary/`.
-- **executed_evidence:** PENDING: W26.
+- **executed_evidence:** W26: conformance (darwin/arm64; Linux at the W26 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` seeds 1 and 2 (sgo/evidence/w26/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-015 — `std/crypto/sha256`: SHA-224 and SHA-256
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-011, SGO-STD-014, SGO-STD-017, SGO-TYPE-009, SGO-BIND-003; D136, D197.
 - **grammar_and_types:** The package `std/crypto/sha256` exports exactly: `const BlockSize`; `const Size`; `const Size224`; `func (*digest) BlockSize() int`; `func (*digest) Reset()`; `func (*digest) Size() int`; `func (*digest) Sum(b []byte) []byte`; `func (*digest) Write(p []byte) (int, error)`; `func New() hash.Hash`; `func New224() hash.Hash`; `func Sum224(data []byte) [Size224]byte`; `func Sum256(data []byte) [Size]byte`. The `hash.Hash` values (SGO-STD-017) are task-local (SGO-COMP-007); `Sum` appends to its argument and leaves the state unchanged.
 - **preconditions:** None.
@@ -327,15 +327,15 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
 - **runtime_guards:** As SGO-ERR-003.
 - **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
-- **positive_tests:** fixture:std-sha256-basic; `src/sgostd/crypto/sha256` package tests (FIPS 180-4 examples and streaming); `.work/w26/shadiff.py` (against Go's crypto/sha256: 260 messages, lengths 0-129 and to 3000, six write splits; 1820 results identical, seeds 1-2), to move into `sgo/scripts/test-std-diff.py`.
+- **positive_tests:** fixture:std-sha256-basic; `src/sgostd/crypto/sha256` package tests (FIPS 180-4 examples and streaming); `sgo/scripts/test-std-crypto.py` (against Go's crypto/sha256: 260 messages, lengths 0-129 and to 3000, six write splits; 1820 results identical, seeds 1-2).
 - **negative_tests:** n/a: no function fails.
 - **implementation_coverage:** `src/sgostd/crypto/sha256/`.
-- **executed_evidence:** PENDING: W26.
+- **executed_evidence:** W26: conformance (darwin/arm64; Linux at the W26 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` seeds 1 and 2 (sgo/evidence/w26/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-016 — `std/crypto/sha512`: SHA-384, SHA-512, SHA-512/224 and SHA-512/256
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-011, SGO-STD-014, SGO-STD-017, SGO-TYPE-009, SGO-BIND-003; D136, D197.
 - **grammar_and_types:** The package `std/crypto/sha512` exports exactly: `const BlockSize`; `const Size`; `const Size224`; `const Size256`; `const Size384`; `func (*digest) BlockSize() int`; `func (*digest) Reset()`; `func (*digest) Size() int`; `func (*digest) Sum(b []byte) []byte`; `func (*digest) Write(p []byte) (int, error)`; `func New() hash.Hash`; `func New384() hash.Hash`; `func New512_224() hash.Hash`; `func New512_256() hash.Hash`; `func Sum384(data []byte) [Size384]byte`; `func Sum512(data []byte) [Size]byte`; `func Sum512_224(data []byte) [Size224]byte`; `func Sum512_256(data []byte) [Size256]byte`. The `hash.Hash` values are task-local (SGO-COMP-007).
 - **preconditions:** None.
@@ -349,15 +349,15 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
 - **runtime_guards:** As SGO-ERR-003.
 - **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
-- **positive_tests:** fixture:std-sha512-basic; `src/sgostd/crypto/sha512` package tests (FIPS 180-4 examples and streaming); `.work/w26/sha512diff.py` (against Go's crypto/sha512, all four functions, six write splits; 2226 results identical, seed 1), to move into `sgo/scripts/test-std-diff.py`.
+- **positive_tests:** fixture:std-sha512-basic; `src/sgostd/crypto/sha512` package tests (FIPS 180-4 examples and streaming); `sgo/scripts/test-std-crypto.py` (against Go's crypto/sha512, all four functions, six write splits; 2226 results identical, seed 1).
 - **negative_tests:** n/a: no function fails.
 - **implementation_coverage:** `src/sgostd/crypto/sha512/`.
-- **executed_evidence:** PENDING: W26.
+- **executed_evidence:** W26: conformance (darwin/arm64; Linux at the W26 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` seeds 1 and 2 (sgo/evidence/w26/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-017 — `std/hash`: the Hash interface
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-IFACE-001, SGO-STD-011; D197.
 - **grammar_and_types:** The package `std/hash` exports exactly: `type Hash`. `Hash` is the interface with the methods `BlockSize() int`, `Reset()`, `Size() int`, `Sum(b []byte) []byte` and `Write(p []byte) (int, error)`; any type with those methods implements it (SGO-IFACE-001).
 - **preconditions:** None.
@@ -374,12 +374,12 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **positive_tests:** fixture:std-sha512-basic (uses `hash.Hash` through hmac); `src/sgostd/hash` package test (a user type implements `Hash`).
 - **negative_tests:** n/a: the package has no functions.
 - **implementation_coverage:** `src/sgostd/hash/`.
-- **executed_evidence:** PENDING: W26.
+- **executed_evidence:** W26: conformance (darwin/arm64; Linux at the W26 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` seeds 1 and 2 (sgo/evidence/w26/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-018 — `std/crypto/hmac`: keyed-hash message authentication
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-015, SGO-STD-016, SGO-STD-017; D197.
 - **grammar_and_types:** The package `std/crypto/hmac` exports exactly: `func (*mac) BlockSize() int`; `func (*mac) Reset()`; `func (*mac) Size() int`; `func (*mac) Sum(in []byte) []byte`; `func (*mac) Write(p []byte) (int, error)`; `func Equal(mac1, mac2 []byte) bool`; `func New(h func() hash.Hash, key []byte) hash.Hash`. The returned hash is task-local (SGO-COMP-007).
 - **preconditions:** None.
@@ -393,15 +393,15 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
 - **runtime_guards:** As SGO-ERR-003.
 - **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
-- **positive_tests:** fixture:std-sha512-basic; `src/sgostd/crypto/hmac` package tests (RFC examples, long keys, Reset, Equal); Wycheproof vectors of Go's own tests (github.com/c2sp/wycheproof at the version in src/crypto/internal/cryptotest/wycheproof/schemaversion.go) via `.work/w26/wyche.py`: 774 of 774 HMAC and HKDF vectors over SHA-256, SHA-384 and SHA-512 agree.
+- **positive_tests:** fixture:std-sha512-basic; `src/sgostd/crypto/hmac` package tests (RFC examples, long keys, Reset, Equal); Wycheproof vectors of Go's own tests (github.com/c2sp/wycheproof at the version in src/crypto/internal/cryptotest/wycheproof/schemaversion.go) via `sgo/scripts/test-std-crypto.py`: 774 of 774 HMAC and HKDF vectors over SHA-256, SHA-384 and SHA-512 agree.
 - **negative_tests:** n/a: no function fails; Wycheproof `invalid` HMAC vectors (modified tags) are rejected by `Equal`.
 - **implementation_coverage:** `src/sgostd/crypto/hmac/`.
-- **executed_evidence:** PENDING: W26.
+- **executed_evidence:** W26: conformance (darwin/arm64; Linux at the W26 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` seeds 1 and 2 (sgo/evidence/w26/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-019 — `std/crypto/hkdf`: HMAC-based key derivation
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-017, SGO-STD-018, SGO-STD-001; D197.
 - **grammar_and_types:** The package `std/crypto/hkdf` exports exactly: `func Expand(h func() hash.Hash, pseudorandomKey []byte, info string, keyLength int) ([]byte, error)`; `func Extract(h func() hash.Hash, secret, salt []byte) ([]byte, error)`; `func Key(h func() hash.Hash, secret, salt []byte, info string, keyLength int) ([]byte, error)`.
 - **preconditions:** None.
@@ -415,15 +415,15 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
 - **runtime_guards:** As SGO-ERR-003.
 - **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
-- **positive_tests:** fixture:std-sha512-basic; `src/sgostd/crypto/hkdf` package tests (RFC 5869 case 1, length limit); Wycheproof vectors of Go's own tests (github.com/c2sp/wycheproof at the version in src/crypto/internal/cryptotest/wycheproof/schemaversion.go) via `.work/w26/wyche.py`: 774 of 774 HMAC and HKDF vectors over SHA-256, SHA-384 and SHA-512 agree.
+- **positive_tests:** fixture:std-sha512-basic; `src/sgostd/crypto/hkdf` package tests (RFC 5869 case 1, length limit); Wycheproof vectors of Go's own tests (github.com/c2sp/wycheproof at the version in src/crypto/internal/cryptotest/wycheproof/schemaversion.go) via `sgo/scripts/test-std-crypto.py`: 774 of 774 HMAC and HKDF vectors over SHA-256, SHA-384 and SHA-512 agree.
 - **negative_tests:** n/a: a too-long key is an error value, not a failure; package test TestTooLong checks its text.
 - **implementation_coverage:** `src/sgostd/crypto/hkdf/`.
-- **executed_evidence:** PENDING: W26.
+- **executed_evidence:** W26: conformance (darwin/arm64; Linux at the W26 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` seeds 1 and 2 (sgo/evidence/w26/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-020 — `std/crypto/cipher`: the AEAD interface
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-IFACE-001, SGO-STD-011; D197.
 - **grammar_and_types:** The package `std/crypto/cipher` exports exactly: `type AEAD`. `AEAD` is the interface with the methods `NonceSize() int`, `Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, error)`, `Overhead() int` and `Seal(dst, nonce, plaintext, additionalData []byte) []byte`; any type with those methods implements it (SGO-IFACE-001).
 - **preconditions:** None.
@@ -440,12 +440,12 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **positive_tests:** fixture:std-chacha20poly1305-basic; `src/sgostd/crypto/cipher` package test (a user type implements `AEAD`).
 - **negative_tests:** n/a: the package has no functions.
 - **implementation_coverage:** `src/sgostd/crypto/cipher/`.
-- **executed_evidence:** PENDING: W26.
+- **executed_evidence:** W26: conformance (darwin/arm64; Linux at the W26 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` seeds 1 and 2 (sgo/evidence/w26/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-021 — `std/crypto/chacha20poly1305`: the ChaCha20-Poly1305 AEAD
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-001, SGO-STD-011, SGO-STD-014, SGO-STD-020, SGO-TYPE-009; D197.
 - **grammar_and_types:** The package `std/crypto/chacha20poly1305` exports exactly: `const KeySize`; `const NonceSize`; `const Overhead`; `func (*aead) NonceSize() int`; `func (*aead) Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, error)`; `func (*aead) Overhead() int`; `func (*aead) Seal(dst, nonce, plaintext, additionalData []byte) []byte`; `func New(key []byte) (cipher.AEAD, error)`. The returned AEAD is task-local (SGO-COMP-007).
 - **preconditions:** None.
@@ -459,15 +459,15 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
 - **runtime_guards:** As SGO-ERR-003.
 - **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
-- **positive_tests:** fixture:std-chacha20poly1305-basic; `src/sgostd/crypto/chacha20poly1305` package tests (RFC 8439 section 2.8.2, round trip, refusals); Wycheproof vectors of Go's own tests (github.com/c2sp/wycheproof at the version in src/crypto/internal/cryptotest/wycheproof/schemaversion.go) via `.work/w26/wyche_aead.py`: 316 of 316 vectors with 32-byte keys and 12-byte nonces agree, invalid tags refused.
+- **positive_tests:** fixture:std-chacha20poly1305-basic; `src/sgostd/crypto/chacha20poly1305` package tests (RFC 8439 section 2.8.2, round trip, refusals); Wycheproof vectors of Go's own tests (github.com/c2sp/wycheproof at the version in src/crypto/internal/cryptotest/wycheproof/schemaversion.go) via `sgo/scripts/test-std-crypto.py`: 316 of 316 vectors with 32-byte keys and 12-byte nonces agree, invalid tags refused.
 - **negative_tests:** n/a: refusals are error values; package test TestOpen and the Wycheproof invalid vectors check them.
 - **implementation_coverage:** `src/sgostd/crypto/chacha20poly1305/`.
-- **executed_evidence:** PENDING: W26.
+- **executed_evidence:** W26: conformance (darwin/arm64; Linux at the W26 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` seeds 1 and 2 (sgo/evidence/w26/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-022 — `std/crypto/curve25519`: the X25519 function
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-001, SGO-STD-011; D197.
 - **grammar_and_types:** The package `std/crypto/curve25519` exports exactly: `const PointSize`; `const ScalarSize`; `func Basepoint() []byte`; `func X25519(scalar, point []byte) ([]byte, error)`.
 - **preconditions:** None.
@@ -481,8 +481,8 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
 - **runtime_guards:** As SGO-ERR-003.
 - **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
-- **positive_tests:** fixture:std-chacha20poly1305-basic; `src/sgostd/crypto/curve25519` package tests (RFC 7748 section 6.1, refusals); Wycheproof vectors of Go's own tests (github.com/c2sp/wycheproof at the version in src/crypto/internal/cryptotest/wycheproof/schemaversion.go) via `.work/w26/wyche_x25519.py`: 518 of 518 vectors agree, every all-zero result refused.
+- **positive_tests:** fixture:std-chacha20poly1305-basic; `src/sgostd/crypto/curve25519` package tests (RFC 7748 section 6.1, refusals); Wycheproof vectors of Go's own tests (github.com/c2sp/wycheproof at the version in src/crypto/internal/cryptotest/wycheproof/schemaversion.go) via `sgo/scripts/test-std-crypto.py`: 518 of 518 vectors agree, every all-zero result refused.
 - **negative_tests:** n/a: refusals are error values; package test TestErrors and the Wycheproof low order vectors check them.
 - **implementation_coverage:** `src/sgostd/crypto/curve25519/`.
-- **executed_evidence:** PENDING: W26.
+- **executed_evidence:** W26: conformance (darwin/arm64; Linux at the W26 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` seeds 1 and 2 (sgo/evidence/w26/README.md).
 - **supported_execution_configurations:** production, lab.
