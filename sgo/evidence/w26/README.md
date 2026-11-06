@@ -1,6 +1,6 @@
 # W26 evidence — unsigned integers, package-level tables, std/encoding and std/crypto
 
-Spec 0.21.0 (D136, D196, D197). Branch `w26`; state: darwin/arm64 complete, Linux at the merge.
+Spec 0.21.0 (D136, D196, D197). Branch `w26`; state: complete on darwin/arm64, linux/amd64 and linux/arm64.
 
 ## What landed
 
@@ -29,4 +29,4 @@ Spec 0.21.0 (D136, D196, D197). Branch `w26`; state: darwin/arm64 complete, Linu
 
 ## Linux
 
-PENDING: sgo-w00 and sgo-spec on main after the merge.
+Main at 98a06bb489 (0.21.0 freeze): sgo-w00 run 42251897211 green on linux/amd64 and linux/arm64 (conformance, all check scripts, test-std-crypto seeds 1 and 2, reference and stage-0 builds); sgo-spec run 42251897268 green; sgo-runtime run 42251975631 green (runtime lane, race lane).
