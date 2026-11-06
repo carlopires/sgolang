@@ -1,3 +1,3 @@
 module example.com/mem-capture-named-result-return-literal
 
-sgo 0.21.0
+sgo 0.22.0

@@ -1,3 +1,3 @@
 module example.com/type-uint64-mul-overflow
 
-sgo 0.21.0
+sgo 0.22.0

@@ -1,4 +1,4 @@
 module example.com/res-return-error-path
 
-sgo 0.21.0
+sgo 0.22.0
 grant dir data data rw

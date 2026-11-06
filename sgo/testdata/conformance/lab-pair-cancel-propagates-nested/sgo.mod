@@ -1,3 +1,3 @@
 module example.com/lab-pair-cancel-propagates-nested
 
-sgo 0.21.0
+sgo 0.22.0

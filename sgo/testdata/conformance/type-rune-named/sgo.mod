@@ -1,3 +1,3 @@
 module example.com/type-rune-named
 
-sgo 0.21.0
+sgo 0.22.0

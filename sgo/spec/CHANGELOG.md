@@ -2,6 +2,26 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.22.0 — 2026-11-08
+
+Signatures, ASN.1, X.509 and AES-GCM (W27; D199, D200). Every program valid under 0.21.0 keeps its meaning: the release adds packages and extends `std/crypto/cipher`.
+
+New clauses:
+
+- SGO-STD-023 — `std/crypto/ed25519`: RFC 8032 Ed25519 key generation from a seed, signing and verification.
+- SGO-STD-024 — `std/crypto/bigmod`: constant-time arithmetic modulo an odd number (Montgomery form).
+- SGO-STD-025 — `std/crypto/ecdsa`: ECDSA verification on P-224, P-256, P-384 and P-521, raw and DER signatures.
+- SGO-STD-026 — `std/crypto/rsa`: RSA PKCS #1 v1.5 and PSS signature verification.
+- SGO-STD-027 — `std/crypto/aes`: the AES block cipher, bitsliced (no table lookups indexed by secrets).
+- SGO-STD-028 — `std/encoding/asn1`: reading DER, the subset X.509 needs.
+- SGO-STD-029 — `std/crypto/x509`: certificate parsing and chain verification, with caller-supplied time and roots (D200).
+
+All are checked against Go's packages on generated inputs, the Wycheproof vectors Go's crypto tests use, and, for X.509, the x509-limbo cases Go's own test runs (`sgo/scripts/test-std-crypto.py`).
+
+Amended clauses:
+
+- SGO-STD-020 v2 — `std/crypto/cipher` adds the `Block` interface and `NewGCM`.
+
 ## 0.21.0 — 2026-11-08
 
 Unsigned integers, package-level tables, and the first cryptography (W26; D136, D196, D197). Every program valid under 0.20.1 keeps its meaning: the release only admits forms that were refused and adds packages.

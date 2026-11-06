@@ -8,7 +8,7 @@ package main
 // The driver refuses to build when the GOROOT's sgo/spec/VERSION or sgo/SGO_SPEC_ADMISSION.json
 // differs from these values: the toolchain was built for another specification (S18).
 const (
-	SpecVersion     = "0.21.0"
-	AdmissionDigest = "1425298595f6f2bb"
+	SpecVersion     = "0.22.0"
+	AdmissionDigest = "625a0a493ee7978c"
 	ABI             = "sgo-abi-1" // S-Go ABI identity: lowering of nurseries, failures, checked arithmetic
 )

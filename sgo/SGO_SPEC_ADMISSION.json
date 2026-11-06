@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "plan_version": "2.0",
-  "spec_version": "0.21.0",
+  "spec_version": "0.22.0",
   "status": "admitted_0.7.0",
   "warning": "Spec 0.7.0 admits every row marked 'admitted': its clauses are frozen, the toolchain implements and enforces them, and its acceptance cases have executed evidence (constitution §6, D83). Rows marked 'denied' stay rejected. Admission does not widen any row beyond its clauses; everything the clauses do not name is rejected.",
   "default_decision": "reject",
@@ -1890,16 +1890,16 @@
         "SGO-STD-017": "frozen",
         "SGO-STD-018": "frozen",
         "SGO-STD-019": "frozen",
-        "SGO-STD-020": "draft",
+        "SGO-STD-020": "frozen",
         "SGO-STD-021": "frozen",
         "SGO-STD-022": "frozen",
-        "SGO-STD-023": "draft",
-        "SGO-STD-024": "draft",
-        "SGO-STD-025": "draft",
-        "SGO-STD-026": "draft",
-        "SGO-STD-027": "draft",
-        "SGO-STD-028": "draft",
-        "SGO-STD-029": "draft"
+        "SGO-STD-023": "frozen",
+        "SGO-STD-024": "frozen",
+        "SGO-STD-025": "frozen",
+        "SGO-STD-026": "frozen",
+        "SGO-STD-027": "frozen",
+        "SGO-STD-028": "frozen",
+        "SGO-STD-029": "frozen"
       },
       "clause_versions": {
         "SGO-STD-001": 2,

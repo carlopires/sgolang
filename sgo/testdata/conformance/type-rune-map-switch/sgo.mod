@@ -1,3 +1,3 @@
 module example.com/type-rune-map-switch
 
-sgo 0.21.0
+sgo 0.22.0

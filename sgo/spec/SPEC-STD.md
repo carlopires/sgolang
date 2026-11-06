@@ -423,7 +423,7 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 
 ### SGO-STD-020 — `std/crypto/cipher`: the AEAD and Block interfaces and GCM
 - **version:** 2
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-IFACE-001, SGO-STD-011, SGO-STD-016; D197, D199.
 - **grammar_and_types:** The package `std/crypto/cipher` exports exactly: `func (*gcm) NonceSize() int`; `func (*gcm) Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, error)`; `func (*gcm) Overhead() int`; `func (*gcm) Seal(dst, nonce, plaintext, additionalData []byte) []byte`; `func NewGCM(b Block) (AEAD, error)`; `type AEAD`; `type Block`. `AEAD` is the interface with the methods `NonceSize() int`, `Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, error)`, `Overhead() int` and `Seal(dst, nonce, plaintext, additionalData []byte) []byte`; `Block` is the interface with the methods `BlockSize() int`, `Decrypt(dst, src []byte)` and `Encrypt(dst, src []byte)`; any type with those methods implements them (SGO-IFACE-001). `gcm` is the unexported type of the values `NewGCM` returns.
 - **preconditions:** None.
@@ -440,7 +440,7 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **positive_tests:** fixture:std-chacha20poly1305-basic; fixture:std-aes-gcm-basic; `src/sgostd/crypto/cipher` package test (user types implement `AEAD` and `Block`; an 8-byte block is refused); GCM is checked with std/crypto/aes (SGO-STD-027).
 - **negative_tests:** n/a: refusals are error results; the package tests and the Wycheproof invalid vectors check them.
 - **implementation_coverage:** `src/sgostd/crypto/cipher/`.
-- **executed_evidence:** W26: conformance (darwin/arm64; Linux at the W26 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` seeds 1 and 2 (sgo/evidence/w26/README.md). Version 2: PENDING: W27.
+- **executed_evidence:** W27: conformance (darwin/arm64; Linux at the W27 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` (Wycheproof, x509-limbo and generated inputs; sgo/evidence/w27/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-021 — `std/crypto/chacha20poly1305`: the ChaCha20-Poly1305 AEAD
@@ -489,7 +489,7 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 
 ### SGO-STD-023 — `std/crypto/ed25519`: Ed25519 signatures
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-016, SGO-STD-022; D198, D199.
 - **grammar_and_types:** The package `std/crypto/ed25519` exports exactly: `const PrivateKeySize`; `const PublicKeySize`; `const SeedSize`; `const SignatureSize`; `func NewKeyFromSeed(seed []byte) []byte`; `func Public(priv []byte) []byte`; `func Sign(priv []byte, message []byte) []byte`; `func Verify(pub []byte, message []byte, sig []byte) bool`. Keys and signatures are byte slices: a private key is the 32-byte seed followed by the 32-byte public key.
 - **preconditions:** None.
@@ -506,12 +506,12 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **positive_tests:** fixture:std-ed25519-basic; `src/sgostd/crypto/ed25519` package tests (RFC 8032 tests 1 and 2, refusals); `sgo/scripts/test-std-crypto.py`: identical to Go's crypto/ed25519 on generated seeds and messages (keys, signatures, verification of valid and corrupted signatures), and Wycheproof vectors of Go's own tests (github.com/c2sp/wycheproof at the version in src/crypto/internal/cryptotest/wycheproof/schemaversion.go): 150 of 150 Ed25519 vectors agree.
 - **negative_tests:** n/a: refusals are false results; package test TestVerify and the Wycheproof invalid vectors (malleable S, bad points, truncated signatures) check them.
 - **implementation_coverage:** `src/sgostd/crypto/ed25519/`.
-- **executed_evidence:** PENDING: W27.
+- **executed_evidence:** W27: conformance (darwin/arm64; Linux at the W27 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` (Wycheproof, x509-limbo and generated inputs; sgo/evidence/w27/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-024 — `std/crypto/bigmod`: arithmetic modulo an odd number
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-001, SGO-STD-011, SGO-TYPE-009; D199.
 - **grammar_and_types:** The package `std/crypto/bigmod` exports exactly: `func (*Modulus) BitLen() int`; `func (*Modulus) Nat() *Nat`; `func (*Modulus) Size() int`; `func (*Nat) Add(y *Nat, m *Modulus) *Nat`; `func (*Nat) Bytes(m *Modulus) []byte`; `func (*Nat) Equal(y *Nat) int`; `func (*Nat) Exp(x *Nat, e []byte, m *Modulus) *Nat`; `func (*Nat) ExpShortVarTime(x *Nat, e uint64, m *Modulus) *Nat`; `func (*Nat) IsZero() int`; `func (*Nat) Mul(y *Nat, m *Modulus) *Nat`; `func (*Nat) SetBytes(b []byte, m *Modulus) (*Nat, error)`; `func (*Nat) SetOverflowingBytes(b []byte, m *Modulus) (*Nat, error)`; `func (*Nat) SetUint(y uint64, m *Modulus) (*Nat, error)`; `func (*Nat) Sub(y *Nat, m *Modulus) *Nat`; `func NewModulus(b []byte) (*Modulus, error)`; `func NewNat() *Nat`; `type Modulus`; `type Nat`. A `*Nat` and a `*Modulus` are task-local (SGO-COMP-007).
 - **preconditions:** None.
@@ -528,12 +528,12 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **positive_tests:** fixture:std-ecdsa-basic; `src/sgostd/crypto/bigmod` package tests; `sgo/scripts/test-std-crypto.py`: 93 cases per seed (random odd moduli of 1 to 2048 bits, the P-256 and P-384 primes and orders) times Add, Sub, Mul, Exp, ExpShortVarTime and SetOverflowingBytes, identical to math/big on seeds 1 to 3.
 - **negative_tests:** n/a: refusals are error values; package test TestRefusals checks them.
 - **implementation_coverage:** `src/sgostd/crypto/bigmod/`.
-- **executed_evidence:** PENDING: W27.
+- **executed_evidence:** W27: conformance (darwin/arm64; Linux at the W27 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` (Wycheproof, x509-limbo and generated inputs; sgo/evidence/w27/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-025 — `std/crypto/ecdsa`: ECDSA verification on the NIST curves
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-015, SGO-STD-016, SGO-STD-024; D199.
 - **grammar_and_types:** The package `std/crypto/ecdsa` exports exactly: `func P224() *Curve`; `func P256() *Curve`; `func P384() *Curve`; `func P521() *Curve`; `func Verify(c *Curve, pub []byte, hash []byte, r []byte, s []byte) bool`; `func VerifyASN1(c *Curve, pub []byte, hash []byte, sig []byte) bool`; `type Curve`. A public key is the uncompressed point encoding `0x04 || X || Y`; `r` and `s` are big-endian.
 - **preconditions:** None.
@@ -550,12 +550,12 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **positive_tests:** fixture:std-ecdsa-basic; `src/sgostd/crypto/ecdsa` package test; Wycheproof vectors of Go's own tests (github.com/c2sp/wycheproof at the version in src/crypto/internal/cryptotest/wycheproof/schemaversion.go) via `sgo/scripts/test-std-crypto.py`: 6905 of 6905 vectors agree (P-224 with SHA-224, SHA-256 and SHA-512, P-256 with SHA-256 and SHA-512, P-384 with SHA-256, SHA-384 and SHA-512, P-521 with SHA-512, DER and IEEE P1363 encodings).
 - **negative_tests:** n/a: refusals are false results; the package test and the Wycheproof invalid vectors (bad encodings, modified signatures, out-of-range r and s) check them.
 - **implementation_coverage:** `src/sgostd/crypto/ecdsa/`.
-- **executed_evidence:** PENDING: W27.
+- **executed_evidence:** W27: conformance (darwin/arm64; Linux at the W27 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` (Wycheproof, x509-limbo and generated inputs; sgo/evidence/w27/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-026 — `std/crypto/rsa`: RSA signature verification
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-015, SGO-STD-016, SGO-STD-024; D199.
 - **grammar_and_types:** The package `std/crypto/rsa` exports exactly: `const PSSSaltLengthAuto`; `const PSSSaltLengthEqualsHash`; `const SHA256`; `const SHA384`; `const SHA512`; `func VerifyPKCS1v15(pub *PublicKey, h Hash, hashed []byte, sig []byte) error`; `func VerifyPSS(pub *PublicKey, h Hash, digest []byte, sig []byte, saltLength int) error`; `type Hash`; `type PublicKey`. `Hash` is a named int; `SHA256`, `SHA384` and `SHA512` are the `Hash` values 1, 2 and 3. `PublicKey` is a struct with the fields `N []byte` (the big-endian modulus) and `E int`. `PSSSaltLengthAuto` is 0 and `PSSSaltLengthEqualsHash` is -1.
 - **preconditions:** None.
@@ -572,12 +572,12 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **positive_tests:** fixture:std-rsa-basic; `src/sgostd/crypto/rsa` package test; Wycheproof vectors of Go's own tests via `sgo/scripts/test-std-crypto.py`: 4171 of 4171 vectors agree (PKCS #1 v1.5 with 2048-, 3072- and 4096-bit keys and SHA-256, SHA-384, SHA-512; PSS with MGF1 on the same hash), with the override of Go's rsa_wycheproof_test.go for salt length 0 meaning automatic detection.
 - **negative_tests:** n/a: refusals are error results; the package test and the Wycheproof invalid vectors check them.
 - **implementation_coverage:** `src/sgostd/crypto/rsa/`.
-- **executed_evidence:** PENDING: W27.
+- **executed_evidence:** W27: conformance (darwin/arm64; Linux at the W27 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` (Wycheproof, x509-limbo and generated inputs; sgo/evidence/w27/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-027 — `std/crypto/aes`: the AES block cipher
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-011, SGO-STD-020; D199.
 - **grammar_and_types:** The package `std/crypto/aes` exports exactly: `const BlockSize`; `func (*aesCipher) BlockSize() int`; `func (*aesCipher) Decrypt(dst, src []byte)`; `func (*aesCipher) Encrypt(dst, src []byte)`; `func NewCipher(key []byte) (cipher.Block, error)`. `BlockSize` is 16; `aesCipher` is the unexported type of the values `NewCipher` returns.
 - **preconditions:** None.
@@ -594,12 +594,12 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **positive_tests:** fixture:std-aes-gcm-basic; `src/sgostd/crypto/aes` package test (FIPS 197 appendix C, GCM test case 3 of McGrew and Viega); `sgo/scripts/test-std-crypto.py`: output identical to Go's crypto/aes and crypto/cipher NewGCM on generated keys, blocks, nonces (counter wrap included), plaintexts and additional data; Wycheproof aes_gcm_test.json: 197 of 197 vectors with 96-bit nonces and 128-bit tags agree.
 - **negative_tests:** n/a: refusals are error results; the package test and the Wycheproof invalid vectors check them.
 - **implementation_coverage:** `src/sgostd/crypto/aes/`.
-- **executed_evidence:** PENDING: W27.
+- **executed_evidence:** W27: conformance (darwin/arm64; Linux at the W27 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` (Wycheproof, x509-limbo and generated inputs; sgo/evidence/w27/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-028 — `std/encoding/asn1`: reading DER
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-004; D199.
 - **grammar_and_types:** The package `std/encoding/asn1` exports exactly: `const BIT_STRING`; `const BOOLEAN`; `const ENUM`; `const GeneralString`; `const GeneralizedTime`; `const IA5String`; `const INTEGER`; `const NULL`; `const OBJECT_IDENTIFIER`; `const OCTET_STRING`; `const PrintableString`; `const SEQUENCE`; `const SET`; `const T61String`; `const UTCTime`; `const UTF8String`; `func (*String) ReadASN1(out *String, tag Tag) bool`; `func (*String) ReadASN1BitString(out *BitString) bool`; `func (*String) ReadASN1BitStringAsBytes(out *[]byte) bool`; `func (*String) ReadASN1Boolean(out *bool) bool`; `func (*String) ReadASN1Bytes(out *[]byte, tag Tag) bool`; `func (*String) ReadASN1Element(out *String, tag Tag) bool`; `func (*String) ReadASN1Enum(out *int) bool`; `func (*String) ReadASN1GeneralizedTime(out *int) bool`; `func (*String) ReadASN1Integer(out *int) bool`; `func (*String) ReadASN1IntegerBytes(out *[]byte) bool`; `func (*String) ReadASN1IntegerWithTag(out *int, tag Tag) bool`; `func (*String) ReadASN1ObjectIdentifier(out *ObjectIdentifier) bool`; `func (*String) ReadASN1UTCTime(out *int) bool`; `func (*String) ReadAnyASN1(out *String, outTag *Tag) bool`; `func (*String) ReadAnyASN1Element(out *String, outTag *Tag) bool`; `func (*String) ReadBytes(out *[]byte, n int) bool`; `func (*String) ReadOptionalASN1(out *String, outPresent *bool, tag Tag) bool`; `func (*String) ReadOptionalASN1Boolean(out *bool, tag Tag, defaultValue bool) bool`; `func (*String) ReadOptionalASN1Integer(out *int, tag Tag, defaultValue int) bool`; `func (*String) ReadOptionalASN1OctetString(out *[]byte, outPresent *bool, tag Tag) bool`; `func (*String) Skip(n int) bool`; `func (*String) SkipASN1(tag Tag) bool`; `func (*String) SkipOptionalASN1(tag Tag) bool`; `func (BitString) At(i int) int`; `func (ObjectIdentifier) Equal(other ObjectIdentifier) bool`; `func (ObjectIdentifier) String() string`; `func (String) Empty() bool`; `func (String) PeekASN1Tag(tag Tag) bool`; `func (Tag) Constructed() Tag`; `func (Tag) ContextSpecific() Tag`; `type BitString`; `type ObjectIdentifier`; `type String`; `type Tag`. `Tag` is a named byte; the constants are the `Tag` values of the universal tags of golang.org/x/crypto/cryptobyte/asn1 (`SEQUENCE` and `SET` with the constructed bit). `ObjectIdentifier` is a named `[]int`; `BitString` is a struct with the fields `Bytes []byte` and `BitLength int`; `String` is a named `[]byte` that reads advance.
 - **preconditions:** None.
@@ -616,12 +616,12 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **positive_tests:** fixture:std-asn1-basic; `src/sgostd/encoding/asn1` package test; `sgo/scripts/test-std-crypto.py`: on generated well-formed and malformed elements of every kind (lengths, integers, OIDs, bit strings, times, optional fields, truncations), every read gives the output of golang.org/x/crypto/cryptobyte.
 - **negative_tests:** n/a: refusals are false results; the package test and the generated malformed inputs check them.
 - **implementation_coverage:** `src/sgostd/encoding/asn1/`.
-- **executed_evidence:** PENDING: W27.
+- **executed_evidence:** W27: conformance (darwin/arm64; Linux at the W27 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` (Wycheproof, x509-limbo and generated inputs; sgo/evidence/w27/README.md).
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-029 — `std/crypto/x509`: certificate parsing and chain verification
 - **version:** 1
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-IMP-004, SGO-STD-015, SGO-STD-016, SGO-STD-023, SGO-STD-025, SGO-STD-026, SGO-STD-028; D199.
 - **grammar_and_types:** The package `std/crypto/x509` exports exactly: `const CANotAuthorizedForExtKeyUsage`; `const CANotAuthorizedForThisName`; `const DSA`; `const DSAWithSHA1`; `const DSAWithSHA256`; `const ECDSA`; `const ECDSAWithSHA1`; `const ECDSAWithSHA256`; `const ECDSAWithSHA384`; `const ECDSAWithSHA512`; `const Ed25519`; `const Expired`; `const ExtKeyUsageAny`; `const ExtKeyUsageClientAuth`; `const ExtKeyUsageCodeSigning`; `const ExtKeyUsageEmailProtection`; `const ExtKeyUsageIPSECEndSystem`; `const ExtKeyUsageIPSECTunnel`; `const ExtKeyUsageIPSECUser`; `const ExtKeyUsageMicrosoftCommercialCodeSigning`; `const ExtKeyUsageMicrosoftKernelCodeSigning`; `const ExtKeyUsageMicrosoftServerGatedCrypto`; `const ExtKeyUsageNetscapeServerGatedCrypto`; `const ExtKeyUsageOCSPSigning`; `const ExtKeyUsageServerAuth`; `const ExtKeyUsageTimeStamping`; `const IncompatibleUsage`; `const KeyUsageCRLSign`; `const KeyUsageCertSign`; `const KeyUsageContentCommitment`; `const KeyUsageDataEncipherment`; `const KeyUsageDecipherOnly`; `const KeyUsageDigitalSignature`; `const KeyUsageEncipherOnly`; `const KeyUsageKeyAgreement`; `const KeyUsageKeyEncipherment`; `const MD2WithRSA`; `const MD5WithRSA`; `const MLDSA`; `const MLDSA44`; `const MLDSA65`; `const MLDSA87`; `const NameConstraintsWithoutSANs`; `const NameMismatch`; `const NoValidChains`; `const NotAuthorizedToSign`; `const PureEd25519`; `const RSA`; `const SHA1WithRSA`; `const SHA256WithRSA`; `const SHA256WithRSAPSS`; `const SHA384WithRSA`; `const SHA384WithRSAPSS`; `const SHA512WithRSA`; `const SHA512WithRSAPSS`; `const TooManyConstraints`; `const TooManyIntermediates`; `const UnconstrainedName`; `const UnknownPublicKeyAlgorithm`; `const UnknownSignatureAlgorithm`; `func (*CertPool) AddCert(c *Certificate)`; `func (*CertPool) Subjects() [][]byte`; `func (*Certificate) CheckSignature(algo SignatureAlgorithm, signed, signature []byte) error`; `func (*Certificate) CheckSignatureFrom(parent *Certificate) error`; `func (*Certificate) Equal(other *Certificate) bool`; `func (*Certificate) Verify(opts VerifyOptions) ([][]*Certificate, error)`; `func (*Certificate) VerifyHostname(h string) error`; `func (CertificateInvalidError) Error() string`; `func (HostnameError) Error() string`; `func (IPNet) String() string`; `func (OID) Equal(other OID) bool`; `func (OID) String() string`; `func (PublicKeyAlgorithm) String() string`; `func (SignatureAlgorithm) String() string`; `func (SystemRootsError) Error() string`; `func (UnhandledCriticalExtension) Error() string`; `func (UnknownAuthorityError) Error() string`; `func ErrUnsupportedAlgorithm() error`; `func NewCertPool() *CertPool`; `func ParseCertificate(der []byte) (*Certificate, error)`; `func ParseCertificates(der []byte) ([]*Certificate, error)`; `type AttributeTypeAndValue`; `type CertPool`; `type Certificate`; `type CertificateInvalidError`; `type ExtKeyUsage`; `type Extension`; `type HostnameError`; `type IPNet`; `type InvalidReason`; `type KeyUsage`; `type Name`; `type OID`; `type PolicyMapping`; `type PublicKey`; `type PublicKeyAlgorithm`; `type SignatureAlgorithm`; `type SystemRootsError`; `type UnhandledCriticalExtension`; `type UnknownAuthorityError`; `type VerifyOptions`. The named int types `SignatureAlgorithm`, `PublicKeyAlgorithm`, `KeyUsage`, `ExtKeyUsage` and `InvalidReason` and their constants have Go's crypto/x509 numbering. `Certificate` carries Go's `Certificate` fields with these representations: `SerialNumber []byte` (big-endian magnitude) with `SerialNumberNegative bool`; `NotBefore` and `NotAfter` as `int` Unix seconds; `IPAddresses [][]byte` (4 or 16 bytes); `URIs []string`; `PublicKey PublicKey`, a struct of `Algorithm PublicKeyAlgorithm`, `RSA rsa.PublicKey`, `Curve string` and `Key []byte`; `IPNet` is a struct of `IP []byte` and `Mask []byte`. `VerifyOptions` has the fields `DNSName string`, `Intermediates *CertPool`, `Roots *CertPool`, `CurrentTime int` (Unix seconds, UTC), `KeyUsages []ExtKeyUsage` and `CertificatePolicies []OID`. `CertificateInvalidError` has the fields `Reason InvalidReason` and `Detail string`; `HostnameError` has `Host string` and `Message string`; `UnknownAuthorityError` has `Message string`.
 - **preconditions:** None.
@@ -638,5 +638,5 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **positive_tests:** fixture:std-x509-basic; `src/sgostd/crypto/x509` package test; x509-limbo via `sgo/scripts/test-std-crypto.py`: on the 9746 cases that Go's own x509-limbo test runs, and on root, intermediate and leaf chains that Go issues for each key type and signature algorithm it signs with (RSA PKCS #1 v1.5 and PSS, ECDSA on the four curves, Ed25519) and their tampered variants, the parse and verification results and error texts are identical to Go's crypto/x509.
 - **negative_tests:** n/a: refusals are error results; the x509-limbo cases expected to fail check them.
 - **implementation_coverage:** `src/sgostd/crypto/x509/`.
-- **executed_evidence:** PENDING: W27.
+- **executed_evidence:** W27: conformance (darwin/arm64; Linux at the W27 merge), `src/sgostd` package tests, `sgo/scripts/test-std-crypto.py` (Wycheproof, x509-limbo and generated inputs; sgo/evidence/w27/README.md).
 - **supported_execution_configurations:** production, lab.
