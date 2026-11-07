@@ -1,0 +1,125 @@
+// Copyright 2024 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+// Ported from Go's crypto/internal/fips140/tls13 (src/crypto/internal/fips140/tls13/tls13.go) for S-Go (SGO-STD-031, D199): the TLS 1.3 key schedule of RFC 8446 section 7.1, with the hash named by an id.
+
+package tls
+
+import (
+	"std/crypto/hkdf"
+	"std/crypto/hmac"
+	"std/crypto/sha256"
+	"std/crypto/sha512"
+	"std/hash"
+)
+
+const (
+	hashSHA256 = 1
+	hashSHA384 = 2
+)
+
+func hashFunc(id int) func() hash.Hash {
+	if id == hashSHA384 {
+		return sha512.New384
+	}
+	return sha256.New
+}
+
+func newHash(id int) hash.Hash {
+	if id == hashSHA384 {
+		return sha512.New384()
+	}
+	return sha256.New()
+}
+
+func hashSize(id int) int {
+	if id == hashSHA384 {
+		return 48
+	}
+	return 32
+}
+
+// expandLabel is HKDF-Expand-Label of RFC 8446 section 7.1.
+func expandLabel(id int, secret []byte, label string, context []byte, length int) []byte {
+	l := []byte{byte(length >> 8), byte(length & 0xff), byte(len("tls13 ") + len(label))}
+	l = append(l, []byte("tls13 ")...)
+	l = append(l, []byte(label)...)
+	l = append(l, byte(len(context)))
+	l = append(l, context...)
+	out, _ := hkdf.Expand(hashFunc(id), secret, string(l), length)
+	return out
+}
+
+func extract(id int, newSecret, currentSecret []byte) []byte {
+	if len(newSecret) == 0 {
+		newSecret = make([]byte, hashSize(id))
+	}
+	out, _ := hkdf.Extract(hashFunc(id), newSecret, currentSecret)
+	return out
+}
+
+// deriveSecret is Derive-Secret over the transcript hash so far (the empty transcript when
+// transcript is nil).
+func deriveSecret(id int, secret []byte, label string, transcript hash.Hash) []byte {
+	if transcript == nil {
+		transcript = newHash(id)
+	}
+	return expandLabel(id, secret, label, transcript.Sum([]byte{}), hashSize(id))
+}
+
+const (
+	clientHandshakeTrafficLabel   = "c hs traffic"
+	serverHandshakeTrafficLabel   = "s hs traffic"
+	clientApplicationTrafficLabel = "c ap traffic"
+	serverApplicationTrafficLabel = "s ap traffic"
+	exporterLabel                 = "exp master"
+	resumptionLabel               = "res master"
+	trafficUpdateLabel            = "traffic upd"
+)
+
+// A schedule stage holds one secret of the key schedule and its hash.
+type secretStage struct {
+	secret []byte
+	hash   int
+}
+
+// earlySecret is the early secret with no PSK (or with psk, for the tests).
+func earlySecret(id int, psk []byte) secretStage {
+	return secretStage{secret: extract(id, psk, []byte{}), hash: id}
+}
+
+func (s secretStage) handshakeSecret(shared []byte) secretStage {
+	derived := deriveSecret(s.hash, s.secret, "derived", nil)
+	return secretStage{secret: extract(s.hash, shared, derived), hash: s.hash}
+}
+
+func (s secretStage) masterSecret() secretStage {
+	derived := deriveSecret(s.hash, s.secret, "derived", nil)
+	return secretStage{secret: extract(s.hash, []byte{}, derived), hash: s.hash}
+}
+
+func (s secretStage) derive(label string, transcript hash.Hash) []byte {
+	return deriveSecret(s.hash, s.secret, label, transcript)
+}
+
+// nextTrafficSecret is the KeyUpdate step of RFC 8446 section 7.2.
+func nextTrafficSecret(id int, secret []byte) []byte {
+	return expandLabel(id, secret, trafficUpdateLabel, []byte{}, hashSize(id))
+}
+
+// trafficKey derives the record key and IV of a traffic secret (RFC 8446 section 7.3).
+func trafficKey(id int, keyLen int, secret []byte) ([]byte, []byte) {
+	return expandLabel(id, secret, "key", []byte{}, keyLen), expandLabel(id, secret, "iv", []byte{}, 12)
+}
+
+// finishedMAC is the Finished verify_data over the transcript (RFC 8446 section 4.4.4).
+func finishedMAC(id int, baseKey []byte, transcript hash.Hash) []byte {
+	key := expandLabel(id, baseKey, "finished", []byte{}, hashSize(id))
+	m := hmacNew(id, key)
+	_, _ = m.Write(transcript.Sum([]byte{}))
+	return m.Sum([]byte{})
+}
+
+func hmacNew(id int, key []byte) hash.Hash {
+	return hmac.New(hashFunc(id), key)
+}

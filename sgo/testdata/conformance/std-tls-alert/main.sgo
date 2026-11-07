@@ -1,0 +1,48 @@
+package main
+
+import (
+	"sgo"
+	"std/crypto/tls"
+	"std/crypto/x509"
+)
+
+// A loopback server reads the ClientHello and answers with a plaintext handshake_failure
+// alert; the client's handshake fails with Go's error for a remote alert.
+func main(root *sgo.Context) error {
+	l, err := root.Listen("127.0.0.1:47993")
+	if err != nil {
+		return err
+	}
+	nursery (n) {
+		ll := l
+		n.Spawn(func(task *sgo.Context) error {
+			c, aerr := ll.Accept(task)
+			if aerr != nil {
+				return aerr
+			}
+			hello, rerr := c.Read(5)
+			if rerr != nil {
+				return rerr
+			}
+			if hello[0] != 22 {
+				return sgo.NewError("expected a handshake record")
+			}
+			if _, werr := c.Write("\x15\x03\x03\x00\x02\x02\x28"); werr != nil {
+				return werr
+			}
+			return c.Close()
+		})
+		c, derr := root.Dial("127.0.0.1:47993")
+		if derr != nil {
+			return derr
+		}
+		cfg := tls.Config{ServerName: "tls.test", RootCAs: x509.NewCertPool(), Time: 0, NextProtos: []string{}, CipherSuites: []int{}}
+		t, herr := tls.Client(c, root.Entropy(), cfg)
+		if herr == nil {
+			return sgo.NewError("handshake succeeded")
+		}
+		check root.Stdout().WriteString(herr.Error() + "\n")
+		_ = t.Close()
+	}
+	return l.Close()
+}

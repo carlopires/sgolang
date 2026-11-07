@@ -1,0 +1,9 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-031"
+ ],
+ "exit": 0,
+ "stdout": "remote error: tls: handshake failure\n",
+ "note": "A TLS 1.3 client handshake over a granted loopback connection; the peer's fatal alert ends it with Go's remote-error text."
+}

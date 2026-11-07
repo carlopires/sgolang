@@ -1,0 +1,59 @@
+// Copyright 2018 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+// Ported from Go's crypto/tls (src/crypto/tls/key_schedule_test.go) for S-Go (SGO-STD-031): the ACVP key-schedule vector and the RFC 8448 traffic key vector.
+
+package tls
+
+import (
+	"sgo"
+	"std/crypto/sha256"
+	"std/encoding/hex"
+	"std/errors"
+	"std/strings"
+)
+
+func fromHex(s string) []byte {
+	b, _ := hex.DecodeString(strings.ToLowerASCII(s))
+	return b
+}
+
+func expect(name string, got, want []byte) error {
+	if string(got) != string(want) {
+		return errors.New(name + " = " + hex.EncodeToString(got) + ", want " + hex.EncodeToString(want))
+	}
+	return nil
+}
+
+func TestACVPVectors(t *sgo.T) error {
+	psk := fromHex("56288B726C73829F7A3E47B103837C8139ACF552E7530C7A710B35ED41191698")
+	dhe := fromHex("EFFE9EC26AA29FD750DFA6A10B944D74071595B27EE88887D5E11C84590B5CC3")
+	helloClientRandom := fromHex("E9137679E582BA7C1DB41CF725F86C6D09C8C05F297BAD9A65B552EAF524FDE4")
+	helloServerRandom := fromHex("23ECCFD030790748C8F8D8A656FD98D717F1B62AF3712F97211D2070B499F98A")
+	finishedClientRandom := fromHex("62A62FA75563ED4FDCAA0BC16567B314871C304ACF06B0FFC3F08C1797594D43")
+	finishedServerRandom := fromHex("C750EDA6696CD101B142BD79E00E6AC8C5F2C0ABC78DD64F4D991326659E9299")
+	transcript := sha256.New()
+	es := earlySecret(hashSHA256, psk)
+	_, _ = transcript.Write(helloClientRandom)
+	check expect("clientEarlyTrafficSecret", es.derive("c e traffic", transcript), fromHex("3272189698C3594D18F58EFA3F12B638A249515099BE7A2FA9836BABE74F0111"))
+	check expect("earlyExporterMasterSecret", es.derive("e exp master", transcript), fromHex("88E078F562CDC930219F6A5E98A1CE8C6E5F3DAC5AC516459A96F2EF8F114C66"))
+	hs := es.handshakeSecret(dhe)
+	_, _ = transcript.Write(helloServerRandom)
+	check expect("clientHandshakeTrafficSecret", hs.derive(clientHandshakeTrafficLabel, transcript), fromHex("B32306C3CE9932C460A1FE6C0F060593974842036B96FA45049B7352E71C2AD2"))
+	check expect("serverHandshakeTrafficSecret", hs.derive(serverHandshakeTrafficLabel, transcript), fromHex("22787F8CA269D34BC549AC8BA19F2040938A3AA370D7CC9D60F720882B88D01B"))
+	ms := hs.masterSecret()
+	_, _ = transcript.Write(finishedServerRandom)
+	check expect("clientApplicationTrafficSecret", ms.derive(clientApplicationTrafficLabel, transcript), fromHex("47D7EA08397B5871154B0FE85584BCC30A87C69E84D69B56007C5B21F76493BA"))
+	check expect("serverApplicationTrafficSecret", ms.derive(serverApplicationTrafficLabel, transcript), fromHex("EFBDB0C873C0480DA57307083839A8984BE25B9A8545E4FCA029940FE2800565"))
+	check expect("exporterMasterSecret", ms.derive(exporterLabel, transcript), fromHex("8A43D787EE3804EAD4A2A5B32972F9896B696295645D7222E1FD081DDD939834"))
+	_, _ = transcript.Write(finishedClientRandom)
+	return expect("resumptionMasterSecret", ms.derive(resumptionLabel, transcript), fromHex("5F4C961329C91044011ACBECB0B289282E0E3FED045CB3EA924DFFE5FE654B3D"))
+}
+
+// TestTrafficKey is RFC 8448 section 3's server handshake key and IV.
+func TestTrafficKey(t *sgo.T) error {
+	secret := fromHex("b67b7d690cc16c4e75e54213cb2d37b4e9c912bcded9105d42befd59d391ad38")
+	key, iv := trafficKey(hashSHA256, 16, secret)
+	check expect("key", key, fromHex("3fce516009c21727d0f2e4e86ee403bc"))
+	return expect("iv", iv, fromHex("5d313eb2671276ee13000b30"))
+}

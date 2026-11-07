@@ -124,6 +124,8 @@ jobs:
 
       - name: std/bits, std/encoding and std/crypto against Go and Wycheproof (D197, SGO-STD-011..022)
         run: sgo/scripts/test-std-crypto.py --seed 1 && sgo/scripts/test-std-crypto.py --seed 2
+      - name: TLS 1.3 client against Go crypto/tls (SGO-STD-031)
+        run: sgo/scripts/test-tls.py
 
       - name: No flag, mode, or environment reopens stock Go (S01, S15)
         run: sgo/scripts/test-flags.py

@@ -1,0 +1,443 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package tls
+
+import (
+	"sgo"
+	"std/crypto/curve25519"
+	"std/crypto/ecdsa"
+	"std/crypto/ed25519"
+	"std/crypto/hmac"
+	"std/crypto/rsa"
+	"std/crypto/sha256"
+	"std/crypto/sha512"
+	"std/crypto/x509"
+	"std/errors"
+)
+
+// Client runs a TLS 1.3 handshake as a client over c and returns the connection, which owns
+// c. ent supplies the client random, the legacy session ID, and the X25519 key.
+func Client(c *sgo.Conn, ent *sgo.Entropy, cfg Config) (*Conn, error) {
+	t := &Conn{c: c, in: plainHalf(), out: plainHalf(), hsBuf: []byte{}, appBuf: []byte{}, protocol: "", suite: suite{id: 0, keyLen: 0, hash: 0, name: ""}, peers: []*x509.Certificate{}, closed: false, sentClose: false, rerr: ""}
+	if cfg.RootCAs == nil {
+		return t, errors.New("tls: Config.RootCAs is nil")
+	}
+	if cfg.ServerName == "" {
+		return t, errors.New("tls: either ServerName or InsecureSkipVerify must be specified in the tls.Config")
+	}
+	offer := []int{}
+	for i := 0; i < len(cfg.CipherSuites); i++ {
+		if _, ok := suiteByID(cfg.CipherSuites[i]); !ok {
+			return t, errors.New("tls: unsupported TLS 1.3 cipher suite " + hexInt(cfg.CipherSuites[i]))
+		}
+		offer = append(offer, cfg.CipherSuites[i])
+	}
+	if len(offer) == 0 {
+		all := suites()
+		for i := 0; i < len(all); i++ {
+			offer = append(offer, all[i].id)
+		}
+	}
+	priv := []byte(ent.Bytes(32))
+	pub, kerr := curve25519.X25519(priv, curve25519.Basepoint())
+	if kerr != nil {
+		return t, kerr
+	}
+	hello := clientHello{random: []byte(ent.Bytes(32)), sessionID: []byte(ent.Bytes(32)), serverName: cfg.ServerName, keyShare: pub, alpn: cfg.NextProtos, cookie: []byte{}, suites: offer}
+	if err := t.handshake(cfg, priv, hello); err != nil {
+		return t, err
+	}
+	return t, nil
+}
+
+func transcriptHash(id int, tr []byte) *hashState {
+	return &hashState{tr: append([]byte{}, tr...), id: id}
+}
+
+// hashState is a transcript hash: it rehashes the transcript bytes on demand, so a
+// HelloRetryRequest can replace the first ClientHello by its hash.
+type hashState struct {
+	tr []byte
+	id int
+}
+
+func (s *hashState) Write(p []byte) (int, error) {
+	s.tr = append(s.tr, p...)
+	return len(p), nil
+}
+
+func (s *hashState) Sum(b []byte) []byte {
+	h := newHash(s.id)
+	_, _ = h.Write(s.tr)
+	return h.Sum(b)
+}
+
+func (s *hashState) Reset()         {
+	s.tr = []byte{}
+}
+func (s *hashState) Size() int      {
+	return hashSize(s.id)
+}
+func (s *hashState) BlockSize() int {
+	return newHash(s.id).BlockSize()
+}
+
+func (t *Conn) handshake(cfg Config, priv []byte, hello clientHello) error {
+	ch := hello.marshal()
+	if err := t.writeRecord(recordTypeHandshake, ch); err != nil {
+		return err
+	}
+	tr := append([]byte{}, ch...)
+	msg, err := t.readHandshake()
+	if err != nil {
+		return err
+	}
+	if int(msg[0]) != typeServerHello {
+		return t.fail(alertUnexpectedMessage, unexpected(int(msg[0]), "*tls.serverHelloMsg"))
+	}
+	sh, ok := parseServerHello(msg[4:])
+	if !ok {
+		return t.sendAlert(alertDecodeError)
+	}
+	if cerr := t.checkServerHello(sh, hello, 0); cerr != nil {
+		return cerr
+	}
+	s, _ := suiteByID(sh.suite)
+	sentCCS := false
+	if string(sh.random) == helloRetryRandom {
+		if !sh.hasSelGrp && len(sh.cookie) == 0 {
+			return t.fail(alertIllegalParameter, errors.New("tls: server sent an unnecessary HelloRetryRequest message"))
+		}
+		if sh.hasSelGrp {
+			if sh.selectedGrp != groupX25519 {
+				return t.fail(alertIllegalParameter, errors.New("tls: server selected unsupported group"))
+			}
+			return t.fail(alertIllegalParameter, errors.New("tls: server sent an unnecessary HelloRetryRequest key_share"))
+		}
+		first := newHash(s.hash)
+		_, _ = first.Write(tr)
+		tr = u24([]byte{254}, hashSize(s.hash))
+		tr = append(tr, first.Sum([]byte{})...)
+		tr = append(tr, msg...)
+		hello.cookie = sh.cookie
+		if _, werr := t.c.Write(string(t.out.seal(recordTypeChangeCipherSpec, []byte{1}))); werr != nil {
+			return werr
+		}
+		sentCCS = true
+		ch2 := hello.marshal()
+		if werr := t.writeRecord(recordTypeHandshake, ch2); werr != nil {
+			return werr
+		}
+		tr = append(tr, ch2...)
+		msg, err = t.readHandshake()
+		if err != nil {
+			return err
+		}
+		if int(msg[0]) != typeServerHello {
+			return t.fail(alertUnexpectedMessage, unexpected(int(msg[0]), "*tls.serverHelloMsg"))
+		}
+		sh, ok = parseServerHello(msg[4:])
+		if !ok {
+			return t.sendAlert(alertDecodeError)
+		}
+		if string(sh.random) == helloRetryRandom {
+			return t.fail(alertUnexpectedMessage, errors.New("tls: server sent two HelloRetryRequest messages"))
+		}
+		if cerr := t.checkServerHello(sh, hello, s.id); cerr != nil {
+			return cerr
+		}
+	}
+	if len(sh.cookie) != 0 {
+		return t.fail(alertUnsupportedExtension, errors.New("tls: server sent a cookie in a normal ServerHello"))
+	}
+	if sh.hasSelGrp {
+		return t.fail(alertDecodeError, errors.New("tls: malformed key_share extension"))
+	}
+	if !sh.hasKeyShare {
+		return t.fail(alertIllegalParameter, errors.New("tls: server did not send a key share"))
+	}
+	if sh.keyShareGrp != groupX25519 {
+		return t.fail(alertIllegalParameter, errors.New("tls: server selected unsupported group"))
+	}
+	tr = append(tr, msg...)
+	shared, xerr := curve25519.X25519(priv, sh.keyShare)
+	if xerr != nil || len(sh.keyShare) != 32 {
+		return t.fail(alertIllegalParameter, errors.New("tls: invalid server key share"))
+	}
+	t.suite = s
+	hs := earlySecret(s.hash, []byte{}).handshakeSecret(shared)
+	cHS := hs.derive(clientHandshakeTrafficLabel, transcriptHash(s.hash, tr))
+	sHS := hs.derive(serverHandshakeTrafficLabel, transcriptHash(s.hash, tr))
+	if e1 := t.in.setTrafficSecret(s, sHS); e1 != nil {
+		return e1
+	}
+	if e2 := t.out.setTrafficSecret(s, cHS); e2 != nil {
+		return e2
+	}
+
+	// EncryptedExtensions.
+	msg, err = t.readHandshake()
+	if err != nil {
+		return err
+	}
+	if int(msg[0]) != typeEncryptedExtensions {
+		return t.fail(alertUnexpectedMessage, unexpected(int(msg[0]), "*tls.encryptedExtensionsMsg"))
+	}
+	proto, eok := parseEncryptedExtensions(msg[4:])
+	if !eok {
+		return t.sendAlert(alertDecodeError)
+	}
+	if proto != "" {
+		if len(cfg.NextProtos) == 0 {
+			return t.fail(alertNoApplicationProto, errors.New("tls: server advertised unrequested ALPN extension"))
+		}
+		found := false
+		for i := 0; i < len(cfg.NextProtos); i++ {
+			if cfg.NextProtos[i] == proto {
+				found = true
+			}
+		}
+		if !found {
+			return t.fail(alertNoApplicationProto, errors.New("tls: server selected unadvertised ALPN protocol"))
+		}
+	}
+	t.protocol = proto
+	tr = append(tr, msg...)
+
+	// CertificateRequest (answered with an empty Certificate) and Certificate.
+	msg, err = t.readHandshake()
+	if err != nil {
+		return err
+	}
+	certReq := false
+	if int(msg[0]) == typeCertificateRequest {
+		certReq = true
+		tr = append(tr, msg...)
+		msg, err = t.readHandshake()
+		if err != nil {
+			return err
+		}
+	}
+	if int(msg[0]) != typeCertificate {
+		return t.fail(alertUnexpectedMessage, unexpected(int(msg[0]), "*tls.certificateMsgTLS13"))
+	}
+	ders, cok := parseCertificate(msg[4:])
+	if !cok {
+		return t.sendAlert(alertDecodeError)
+	}
+	if len(ders) == 0 {
+		return t.fail(alertDecodeError, errors.New("tls: received empty certificates message"))
+	}
+	if verr := t.verifyServerCertificate(cfg, ders); verr != nil {
+		return verr
+	}
+	tr = append(tr, msg...)
+
+	// CertificateVerify.
+	msg, err = t.readHandshake()
+	if err != nil {
+		return err
+	}
+	if int(msg[0]) != typeCertificateVerify {
+		return t.fail(alertUnexpectedMessage, unexpected(int(msg[0]), "*tls.certificateVerifyMsg"))
+	}
+	scheme, sig, vok := parseCertificateVerify(msg[4:])
+	if !vok {
+		return t.sendAlert(alertDecodeError)
+	}
+	signed := []byte{}
+	for i := 0; i < 64; i++ {
+		signed = append(signed, 0x20)
+	}
+	signed = append(signed, []byte("TLS 1.3, server CertificateVerify")...)
+	signed = append(signed, 0)
+	signed = append(signed, transcriptHash(s.hash, tr).Sum([]byte{})...)
+	if serr := t.verifySignature(scheme, signed, sig); serr != nil {
+		return serr
+	}
+	tr = append(tr, msg...)
+
+	// Server Finished.
+	msg, err = t.readHandshake()
+	if err != nil {
+		return err
+	}
+	if int(msg[0]) != typeFinished {
+		return t.fail(alertUnexpectedMessage, unexpected(int(msg[0]), "*tls.finishedMsg"))
+	}
+	want := finishedMAC(s.hash, sHS, transcriptHash(s.hash, tr))
+	if !hmac.Equal(want, msg[4:]) {
+		return t.fail(alertDecryptError, errors.New("tls: invalid server finished hash"))
+	}
+	tr = append(tr, msg...)
+	master := hs.masterSecret()
+	cAP := master.derive(clientApplicationTrafficLabel, transcriptHash(s.hash, tr))
+	sAP := master.derive(serverApplicationTrafficLabel, transcriptHash(s.hash, tr))
+	if e3 := t.in.setTrafficSecret(s, sAP); e3 != nil {
+		return e3
+	}
+
+	// The client's second flight.
+	if !sentCCS {
+		ph := plainHalf()
+		if _, werr := t.c.Write(string(ph.seal(recordTypeChangeCipherSpec, []byte{1}))); werr != nil {
+			return werr
+		}
+	}
+	if certReq {
+		empty := handshakeMessage(typeCertificate, []byte{0, 0, 0, 0})
+		if werr := t.writeRecord(recordTypeHandshake, empty); werr != nil {
+			return werr
+		}
+		tr = append(tr, empty...)
+	}
+	fin := handshakeMessage(typeFinished, finishedMAC(s.hash, cHS, transcriptHash(s.hash, tr)))
+	if werr := t.writeRecord(recordTypeHandshake, fin); werr != nil {
+		return werr
+	}
+	return t.out.setTrafficSecret(s, cAP)
+}
+
+// checkServerHello checks a ServerHello or HelloRetryRequest in Go's order; prevSuite is the
+// suite of a preceding HelloRetryRequest, or 0.
+func (t *Conn) checkServerHello(sh serverHello, hello clientHello, prevSuite int) error {
+	if !sh.hasVersion {
+		return t.fail(alertProtocolVersion, errors.New("tls: server selected unsupported protocol version 303"))
+	}
+	if sh.version != versionTLS13 {
+		if prevSuite != 0 {
+			return t.fail(alertIllegalParameter, errors.New("tls: server selected an invalid version after a HelloRetryRequest"))
+		}
+		return t.fail(alertProtocolVersion, errors.New("tls: server selected unsupported protocol version "+hexInt(sh.version)))
+	}
+	if sh.legacy != 0x0303 {
+		return t.fail(alertIllegalParameter, errors.New("tls: server sent an incorrect legacy version"))
+	}
+	if string(sh.sessionID) != string(hello.sessionID) {
+		return t.fail(alertIllegalParameter, errors.New("tls: server did not echo the legacy session ID"))
+	}
+	if sh.compression != 0 {
+		return t.fail(alertDecodeError, errors.New("tls: server sent non-zero legacy TLS compression method"))
+	}
+	offered := false
+	for i := 0; i < len(hello.suites); i++ {
+		if hello.suites[i] == sh.suite {
+			offered = true
+		}
+	}
+	if prevSuite != 0 && sh.suite != prevSuite {
+		return t.fail(alertIllegalParameter, errors.New("tls: server changed cipher suite after a HelloRetryRequest"))
+	}
+	if !offered {
+		return t.fail(alertIllegalParameter, errors.New("tls: server chose an unconfigured cipher suite"))
+	}
+	return nil
+}
+
+func (t *Conn) verifyServerCertificate(cfg Config, ders [][]byte) error {
+	certs := []*x509.Certificate{}
+	for i := 0; i < len(ders); i++ {
+		c, err := x509.ParseCertificate(ders[i])
+		if err != nil {
+			return t.fail(alertDecodeError, errors.New("tls: failed to parse certificate from server: "+err.Error()))
+		}
+		certs = append(certs, c)
+	}
+	inter := x509.NewCertPool()
+	for i := 1; i < len(certs); i++ {
+		inter.AddCert(certs[i])
+	}
+	opts := x509.VerifyOptions{DNSName: cfg.ServerName, Intermediates: inter, Roots: cfg.RootCAs, CurrentTime: cfg.Time, KeyUsages: []x509.ExtKeyUsage{}, CertificatePolicies: []x509.OID{}}
+	if _, err := certs[0].Verify(opts); err != nil {
+		return t.fail(alertBadCertificate, errors.New("tls: failed to verify certificate: "+err.Error()))
+	}
+	k := certs[0].PublicKey.Algorithm
+	if k != x509.RSA && k != x509.ECDSA && k != x509.Ed25519 {
+		return t.fail(alertUnsupportedCert, errors.New("tls: server's certificate contains an unsupported type of public key: "+k.String()))
+	}
+	t.peers = certs
+	return nil
+}
+
+func digestFor(h int, data []byte) []byte {
+	if h == 384 {
+		d := sha512.Sum384(data)
+		return d[:]
+	}
+	if h == 512 {
+		d := sha512.Sum512(data)
+		return d[:]
+	}
+	d := sha256.Sum256(data)
+	return d[:]
+}
+
+// verifySignature checks the server's CertificateVerify signature (RFC 8446 section 4.4.3)
+// with Go's checks and errors.
+func (t *Conn) verifySignature(scheme int, signed, sig []byte) error {
+	pub := t.peers[0].PublicKey
+	ok := false
+	if pub.Algorithm == x509.ECDSA {
+		ok = pub.Curve == "P-256" && scheme == 0x0403 || pub.Curve == "P-384" && scheme == 0x0503 || pub.Curve == "P-521" && scheme == 0x0603
+	} else if pub.Algorithm == x509.Ed25519 {
+		ok = scheme == 0x0807
+	} else if pub.Algorithm == x509.RSA {
+		ok = scheme == 0x0804 || scheme == 0x0805 || scheme == 0x0806 || scheme == 0x0401 || scheme == 0x0501 || scheme == 0x0601
+	}
+	if !ok {
+		return t.fail(alertIllegalParameter, errors.New("tls: certificate used with invalid signature algorithm"))
+	}
+	if scheme == 0x0401 || scheme == 0x0501 || scheme == 0x0601 {
+		return t.sendAlert(alertInternalError)
+	}
+	var verr error = nil
+	if scheme == 0x0807 {
+		if !ed25519.Verify(pub.Key, signed, sig) {
+			verr = errors.New("Ed25519 verification failure")
+		}
+	} else if pub.Algorithm == x509.ECDSA {
+		c := ecdsa.P256()
+		h := 256
+		if scheme == 0x0503 {
+			c = ecdsa.P384()
+			h = 384
+		} else if scheme == 0x0603 {
+			c = ecdsa.P521()
+			h = 512
+		}
+		if !ecdsa.VerifyASN1(c, pub.Key, digestFor(h, signed), sig) {
+			verr = errors.New("ECDSA verification failure")
+		}
+	} else {
+		h := 256
+		rh := rsa.SHA256
+		if scheme == 0x0805 {
+			h = 384
+			rh = rsa.SHA384
+		} else if scheme == 0x0806 {
+			h = 512
+			rh = rsa.SHA512
+		}
+		k := pub.RSA
+		verr = rsa.VerifyPSS(&k, rh, digestFor(h, signed), sig, rsa.PSSSaltLengthEqualsHash)
+	}
+	if verr != nil {
+		return t.fail(alertDecryptError, errors.New("tls: invalid signature by the server certificate: "+verr.Error()))
+	}
+	return nil
+}
+
+func hexInt(v int) string {
+	if v == 0 {
+		return "0"
+	}
+	digits := "0123456789abcdef"
+	out := ""
+	for v > 0 {
+		out = digits[v%16:v%16+1] + out
+		v = v / 16
+	}
+	return out
+}

@@ -1,0 +1,160 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package tls
+
+import (
+	"sgo"
+	"std/crypto/aes"
+	"std/crypto/chacha20poly1305"
+	"std/crypto/cipher"
+	"std/errors"
+)
+
+const (
+	recordTypeChangeCipherSpec = 20
+	recordTypeAlert            = 21
+	recordTypeHandshake        = 22
+	recordTypeApplicationData  = 23
+
+	maxPlaintext       = 16384
+	maxCiphertextTLS13 = 16384 + 256
+	recordHeaderLen    = 5
+)
+
+// A cipher suite of TLS 1.3 (RFC 8446 appendix B.4).
+type suite struct {
+	id     int
+	keyLen int
+	hash   int
+	name   string
+}
+
+func suites() []suite {
+	return []suite{
+		suite{id: 0x1301, keyLen: 16, hash: hashSHA256, name: "TLS_AES_128_GCM_SHA256"},
+		suite{id: 0x1303, keyLen: 32, hash: hashSHA256, name: "TLS_CHACHA20_POLY1305_SHA256"},
+		suite{id: 0x1302, keyLen: 32, hash: hashSHA384, name: "TLS_AES_256_GCM_SHA384"},
+	}
+}
+
+func suiteByID(id int) (suite, bool) {
+	s := suites()
+	for i := 0; i < len(s); i++ {
+		if s[i].id == id {
+			return s[i], true
+		}
+	}
+	return suite{id: 0, keyLen: 0, hash: 0, name: ""}, false
+}
+
+func newAEAD(id int, key []byte) (cipher.AEAD, error) {
+	if id == 0x1303 {
+		return chacha20poly1305.New(key)
+	}
+	b, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	return cipher.NewGCM(b)
+}
+
+// A halfConn is one direction's record protection: its AEAD, IV, sequence number, and the
+// traffic secret that KeyUpdate advances.
+type halfConn struct {
+	on     bool
+	aead   cipher.AEAD
+	iv     []byte
+	seq    int
+	secret []byte
+	suite  suite
+}
+
+func plainHalf() halfConn {
+	return halfConn{on: false, aead: nil, iv: []byte{}, seq: 0, secret: []byte{}, suite: suite{id: 0, keyLen: 0, hash: 0, name: ""}}
+}
+
+func (h *halfConn) setTrafficSecret(s suite, secret []byte) error {
+	key, iv := trafficKey(s.hash, s.keyLen, secret)
+	a, err := newAEAD(s.id, key)
+	if err != nil {
+		return err
+	}
+	h.on = true
+	h.aead = a
+	h.iv = iv
+	h.seq = 0
+	h.secret = secret
+	h.suite = s
+	return nil
+}
+
+func (h *halfConn) nonce() []byte {
+	n := make([]byte, 12)
+	copy(n, h.iv)
+	seq := h.seq
+	for i := 11; i >= 4; i-- {
+		n[i] = n[i] ^ byte(seq&0xff)
+		seq = seq >> 8
+	}
+	return n
+}
+
+// seal protects one record of content type typ (RFC 8446 section 5.2) and returns it with its
+// header.
+func (h *halfConn) seal(typ int, payload []byte) []byte {
+	if !h.on {
+		rec := []byte{byte(typ), 3, 3, byte(len(payload) >> 8), byte(len(payload) & 0xff)}
+		return append(rec, payload...)
+	}
+	inner := append(append([]byte{}, payload...), byte(typ))
+	n := len(inner) + h.aead.Overhead()
+	hdr := []byte{recordTypeApplicationData, 3, 3, byte(n >> 8), byte(n & 0xff)}
+	out := h.aead.Seal(append([]byte{}, hdr...), h.nonce(), inner, hdr)
+	h.seq++
+	return out
+}
+
+// open removes the protection of a record with header hdr; it returns the inner content type
+// and plaintext.
+func (h *halfConn) open(hdr, body []byte) (int, []byte, error) {
+	if !h.on {
+		return int(hdr[0]), body, nil
+	}
+	if int(hdr[0]) == recordTypeChangeCipherSpec {
+		return recordTypeChangeCipherSpec, body, nil
+	}
+	if int(hdr[0]) != recordTypeApplicationData {
+		return 0, []byte{}, errors.New("tls: unexpected message")
+	}
+	plain, err := h.aead.Open([]byte{}, h.nonce(), body, hdr)
+	if err != nil {
+		return 0, []byte{}, errors.New("local error: tls: bad record MAC")
+	}
+	h.seq++
+	i := len(plain) - 1
+	for i >= 0 && plain[i] == 0 {
+		i--
+	}
+	if i < 0 {
+		return 0, []byte{}, errors.New("tls: unexpected message")
+	}
+	if i > maxPlaintext {
+		return 0, []byte{}, errors.New("local error: tls: record overflow")
+	}
+	return int(plain[i]), plain[:i], nil
+}
+
+// readFull reads exactly n bytes from c.
+func readFull(c *sgo.Conn, n int) ([]byte, error) {
+	out := []byte{}
+	for len(out) < n {
+		s, err := c.Read(n - len(out))
+		if err != nil {
+			return out, err
+		}
+		out = append(out, []byte(s)...)
+	}
+	return out, nil
+}

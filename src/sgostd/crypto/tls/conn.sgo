@@ -1,0 +1,328 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package tls
+
+import (
+	"sgo"
+	"std/crypto/x509"
+	"std/errors"
+	"std/strconv"
+)
+
+// A Config is the client side of a TLS 1.3 connection. Roots, time and server name are
+// explicit: S-Go has no ambient system roots or clock (SGO-STD-031).
+type Config struct {
+	// ServerName is checked against the server certificate and sent as SNI.
+	ServerName string
+	// RootCAs are the trusted roots; roots.Mozilla() is the pinned Mozilla set.
+	RootCAs *x509.CertPool
+	// Time is the verification time in seconds since the Unix epoch.
+	Time int
+	// NextProtos are the ALPN protocols offered, in order of preference.
+	NextProtos []string
+	// CipherSuites are the TLS 1.3 suite IDs offered, in order of preference; empty offers
+	// TLS_AES_128_GCM_SHA256, TLS_CHACHA20_POLY1305_SHA256, TLS_AES_256_GCM_SHA384. Unlike Go,
+	// the order is honored for TLS 1.3.
+	CipherSuites []int
+}
+
+// A Conn is a TLS 1.3 client connection over a *sgo.Conn it owns.
+type Conn struct {
+	c         *sgo.Conn
+	in        halfConn
+	out       halfConn
+	hsBuf     []byte
+	appBuf    []byte
+	protocol  string
+	suite     suite
+	peers     []*x509.Certificate
+	closed    bool
+	sentClose bool
+	rerr      string
+}
+
+// The fatal alerts (RFC 8446 section 6), with Go's texts.
+const (
+	alertCloseNotify          = 0
+	alertUnexpectedMessage    = 10
+	alertBadRecordMAC         = 20
+	alertRecordOverflow       = 22
+	alertHandshakeFailure     = 40
+	alertBadCertificate       = 42
+	alertUnsupportedCert      = 43
+	alertCertificateExpired   = 45
+	alertCertificateUnknown   = 46
+	alertIllegalParameter     = 47
+	alertUnknownCA            = 48
+	alertDecodeError          = 50
+	alertDecryptError         = 51
+	alertProtocolVersion      = 70
+	alertInternalError        = 80
+	alertMissingExtension     = 109
+	alertUnsupportedExtension = 110
+	alertNoApplicationProto   = 120
+)
+
+func alertText(a int) string {
+	m := map[int]string{
+		0: "close notify", 10: "unexpected message", 20: "bad record MAC", 21: "decryption failed",
+		22: "record overflow", 30: "decompression failure", 40: "handshake failure",
+		42: "bad certificate", 43: "unsupported certificate", 44: "revoked certificate",
+		45: "expired certificate", 46: "unknown certificate", 47: "illegal parameter",
+		48: "unknown certificate authority", 49: "access denied", 50: "error decoding message",
+		51: "error decrypting message", 60: "export restriction",
+		70: "protocol version not supported", 71: "insufficient security level",
+		80: "internal error", 86: "inappropriate fallback", 90: "user canceled",
+		100: "no renegotiation", 109: "missing extension", 110: "unsupported extension",
+		111: "certificate unobtainable", 112: "unrecognized name",
+		113: "bad certificate status response", 114: "bad certificate hash value",
+		115: "unknown PSK identity", 116: "certificate required",
+		120: "no application protocol", 121: "encrypted client hello required",
+	}
+	if s, ok := m[a]; ok {
+		return s
+	}
+	return "alert(" + strconv.Itoa(a) + ")"
+}
+
+const closeNotifyText = "tls: peer sent close_notify"
+
+// IsCloseNotify reports whether err is the end of a connection the peer closed cleanly.
+func IsCloseNotify(err error) bool {
+	return err != nil && err.Error() == closeNotifyText
+}
+
+// sendAlert sends a fatal alert and returns Go's local error for it.
+func (t *Conn) sendAlert(a int) error {
+	if !t.sentClose {
+		t.sentClose = true
+		_, _ = t.c.Write(string(t.out.seal(recordTypeAlert, []byte{2, byte(a)})))
+	}
+	msg := "local error: tls: " + alertText(a)
+	if t.rerr == "" {
+		t.rerr = msg
+	}
+	return errors.New(msg)
+}
+
+// fail sends a fatal alert and returns err.
+func (t *Conn) fail(a int, err error) error {
+	_ = t.sendAlert(a)
+	return err
+}
+
+func (t *Conn) writeRecord(typ int, data []byte) error {
+	for {
+		n := len(data)
+		if n > maxPlaintext {
+			n = maxPlaintext
+		}
+		if _, err := t.c.Write(string(t.out.seal(typ, data[:n]))); err != nil {
+			return err
+		}
+		data = data[n:]
+		if len(data) == 0 {
+			return nil
+		}
+	}
+}
+
+// readRecord reads one record and returns its inner type and plaintext. Alerts end the
+// connection; ChangeCipherSpec records are skipped.
+func (t *Conn) readRecord() (int, []byte, error) {
+	for {
+		if t.rerr != "" {
+			return 0, []byte{}, errors.New(t.rerr)
+		}
+		hdr, err := readFull(t.c, recordHeaderLen)
+		if err != nil {
+			return 0, []byte{}, err
+		}
+		n := int(hdr[3])<<8 | int(hdr[4])
+		if n > maxCiphertextTLS13 {
+			return 0, []byte{}, t.sendAlert(alertRecordOverflow)
+		}
+		body, berr := readFull(t.c, n)
+		if berr != nil {
+			return 0, []byte{}, berr
+		}
+		typ, plain, oerr := t.in.open(hdr, body)
+		if oerr != nil {
+			if oerr.Error() == "local error: tls: bad record MAC" {
+				return 0, []byte{}, t.sendAlert(alertBadRecordMAC)
+			}
+			if oerr.Error() == "local error: tls: record overflow" {
+				return 0, []byte{}, t.sendAlert(alertRecordOverflow)
+			}
+			return 0, []byte{}, t.sendAlert(alertUnexpectedMessage)
+		}
+		if typ == recordTypeChangeCipherSpec {
+			if len(plain) != 1 || plain[0] != 1 {
+				return 0, []byte{}, t.sendAlert(alertUnexpectedMessage)
+			}
+			continue
+		}
+		if typ == recordTypeAlert {
+			if len(plain) != 2 {
+				return 0, []byte{}, t.sendAlert(alertUnexpectedMessage)
+			}
+			if int(plain[1]) == alertCloseNotify {
+				t.rerr = closeNotifyText
+			} else {
+				t.rerr = "remote error: tls: " + alertText(int(plain[1]))
+			}
+			return 0, []byte{}, errors.New(t.rerr)
+		}
+		if typ != recordTypeHandshake && typ != recordTypeApplicationData {
+			return 0, []byte{}, t.sendAlert(alertUnexpectedMessage)
+		}
+		if len(plain) == 0 && typ == recordTypeHandshake {
+			return 0, []byte{}, t.sendAlert(alertUnexpectedMessage)
+		}
+		return typ, plain, nil
+	}
+}
+
+// readHandshake returns the next handshake message, whole with its header.
+func (t *Conn) readHandshake() ([]byte, error) {
+	for len(t.hsBuf) < 4 || len(t.hsBuf) < 4+(int(t.hsBuf[1])<<16|int(t.hsBuf[2])<<8|int(t.hsBuf[3])) {
+		if len(t.hsBuf) >= 4 && (int(t.hsBuf[1])<<16|int(t.hsBuf[2])<<8|int(t.hsBuf[3])) > 65536+4 {
+			return []byte{}, t.fail(alertIllegalParameter, errors.New("tls: handshake message of length "+strconv.Itoa(int(t.hsBuf[1])<<16|int(t.hsBuf[2])<<8|int(t.hsBuf[3]))+" bytes exceeds maximum of 65536 bytes"))
+		}
+		typ, data, err := t.readRecord()
+		if err != nil {
+			return []byte{}, err
+		}
+		if typ != recordTypeHandshake {
+			return []byte{}, t.sendAlert(alertUnexpectedMessage)
+		}
+		t.hsBuf = append(t.hsBuf, data...)
+	}
+	n := 4 + (int(t.hsBuf[1])<<16 | int(t.hsBuf[2])<<8 | int(t.hsBuf[3]))
+	msg := append([]byte{}, t.hsBuf[:n]...)
+	t.hsBuf = t.hsBuf[n:]
+	return msg, nil
+}
+
+// Read reads at most limit bytes of application data: at least one, or an error
+// (IsCloseNotify when the peer closed the connection cleanly).
+func (t *Conn) Read(limit int) (string, error) {
+	for len(t.appBuf) == 0 {
+		typ, data, err := t.readRecord()
+		if err != nil {
+			return "", err
+		}
+		if typ == recordTypeHandshake {
+			t.hsBuf = append(t.hsBuf, data...)
+			if perr := t.postHandshake(); perr != nil {
+				return "", perr
+			}
+			continue
+		}
+		if len(t.hsBuf) != 0 {
+			return "", t.sendAlert(alertUnexpectedMessage)
+		}
+		t.appBuf = data
+	}
+	n := len(t.appBuf)
+	if n > limit {
+		n = limit
+	}
+	s := string(t.appBuf[:n])
+	t.appBuf = t.appBuf[n:]
+	return s, nil
+}
+
+// postHandshake handles whole NewSessionTicket and KeyUpdate messages in hsBuf.
+func (t *Conn) postHandshake() error {
+	for len(t.hsBuf) >= 4 {
+		n := 4 + (int(t.hsBuf[1])<<16 | int(t.hsBuf[2])<<8 | int(t.hsBuf[3]))
+		if len(t.hsBuf) < n {
+			return nil
+		}
+		msg := t.hsBuf[:n]
+		t.hsBuf = t.hsBuf[n:]
+		if int(msg[0]) == typeNewSessionTicket {
+			continue
+		}
+		if int(msg[0]) != typeKeyUpdate {
+			return t.fail(alertUnexpectedMessage, errors.New("tls: received unexpected handshake message of type "+goTypeName(int(msg[0]))+" when waiting for *tls.newSessionTicketMsgTLS13"))
+		}
+		if n != 5 || msg[4] > 1 {
+			return t.fail(alertDecodeError, errors.New("tls: failed to parse key update"))
+		}
+		if len(t.hsBuf) != 0 {
+			return t.fail(alertUnexpectedMessage, errors.New("tls: received key update with other handshake data"))
+		}
+		if err := t.in.setTrafficSecret(t.suite, nextTrafficSecret(t.suite.hash, t.in.secret)); err != nil {
+			return err
+		}
+		if msg[4] == 1 {
+			if err := t.writeRecord(recordTypeHandshake, handshakeMessage(typeKeyUpdate, []byte{0})); err != nil {
+				return err
+			}
+			if err := t.out.setTrafficSecret(t.suite, nextTrafficSecret(t.suite.hash, t.out.secret)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// Write sends s as application data.
+func (t *Conn) Write(s string) (int, error) {
+	if t.sentClose {
+		return 0, errors.New("tls: use of closed connection")
+	}
+	if err := t.writeRecord(recordTypeApplicationData, []byte(s)); err != nil {
+		return 0, err
+	}
+	return len(s), nil
+}
+
+// Close sends close_notify and closes the underlying connection.
+func (t *Conn) Close() error {
+	if t.closed {
+		return nil
+	}
+	t.closed = true
+	if !t.sentClose {
+		t.sentClose = true
+		_, _ = t.c.Write(string(t.out.seal(recordTypeAlert, []byte{1, alertCloseNotify})))
+	}
+	return t.c.Close()
+}
+
+// NegotiatedProtocol is the ALPN protocol the server selected, or "".
+func (t *Conn) NegotiatedProtocol() string {
+	return t.protocol
+}
+
+// CipherSuite is the IANA name of the negotiated cipher suite.
+func (t *Conn) CipherSuite() string {
+	return t.suite.name
+}
+
+// PeerCertificates are the certificates the server sent, leaf first.
+func (t *Conn) PeerCertificates() []*x509.Certificate {
+	return t.peers
+}
+
+func goTypeName(typ int) string {
+	m := map[int]string{
+		typeServerHello: "*tls.serverHelloMsg", typeNewSessionTicket: "*tls.newSessionTicketMsgTLS13",
+		typeEncryptedExtensions: "*tls.encryptedExtensionsMsg", typeCertificate: "*tls.certificateMsgTLS13",
+		typeCertificateRequest: "*tls.certificateRequestMsgTLS13", typeCertificateVerify: "*tls.certificateVerifyMsg",
+		typeFinished: "*tls.finishedMsg", typeKeyUpdate: "*tls.keyUpdateMsg", typeClientHello: "*tls.clientHelloMsg",
+	}
+	if s, ok := m[typ]; ok {
+		return s
+	}
+	return "<nil>"
+}
+
+func unexpected(got int, want string) error {
+	return errors.New("tls: received unexpected handshake message of type " + goTypeName(got) + " when waiting for " + want)
+}

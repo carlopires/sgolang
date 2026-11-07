@@ -1829,9 +1829,10 @@
         "SGO-STD-027",
         "SGO-STD-028",
         "SGO-STD-029",
-        "SGO-STD-030"
+        "SGO-STD-030",
+        "SGO-STD-031"
       ],
-      "normative_text_digest": "b50fb0042b5185bd190632e4b6c17551ec93e2d9b1eb96fab2c0048cbc9f6cc4",
+      "normative_text_digest": "3a2d16f768efc0446afba42788c5c3aa8aeaef392600f5f9eaa92b2cae94c200",
       "admitted_in": [
         "0.13.0"
       ],
@@ -1870,7 +1871,8 @@
         "SGO-STD-027": "1dba3bce4440708b1c5612bf91350e4262572f6a4b34388f0ce38edda7f61d46",
         "SGO-STD-028": "913a98a19c3cdeda06e669e0b65f383ac2403a641d5dc9f3a7ceb8b3df03bf32",
         "SGO-STD-029": "708b5c186613844512e30eca57cf5f2b8623e34fa9f971863f82182b24744398",
-        "SGO-STD-030": "3784167873154340ada6f03f706c800695edc3e3b90f46eddaed77d3a96542d5"
+        "SGO-STD-030": "3784167873154340ada6f03f706c800695edc3e3b90f46eddaed77d3a96542d5",
+        "SGO-STD-031": "57cd999a41573bda10848e9ccae2ed358bd69acdd9396302f96e99ad24ac0715"
       },
       "clause_status": {
         "SGO-STD-001": "frozen",
@@ -1902,7 +1904,8 @@
         "SGO-STD-027": "frozen",
         "SGO-STD-028": "frozen",
         "SGO-STD-029": "draft",
-        "SGO-STD-030": "draft"
+        "SGO-STD-030": "draft",
+        "SGO-STD-031": "draft"
       },
       "clause_versions": {
         "SGO-STD-001": 2,
@@ -1934,10 +1937,11 @@
         "SGO-STD-027": 1,
         "SGO-STD-028": 1,
         "SGO-STD-029": 2,
-        "SGO-STD-030": 1
+        "SGO-STD-030": 1,
+        "SGO-STD-031": 1
       }
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "ffcead4f1776ce3b66736a0693cf16f47f7b230f7243e5a048c3e0b6ad8af415"
+  "rows_digest": "266d95d38cef83bbee7de5cafb50fcf0a563e7b5428b03432251190f02e7ef70"
 }
