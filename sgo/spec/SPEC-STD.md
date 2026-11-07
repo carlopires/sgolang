@@ -673,7 +673,7 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **ownership_and_lifecycle:** The `*Conn` and the transcript are task-local (SGO-COMP-007); the underlying connection is released with its scope as SGO-RES-001 if `Close` is not called.
 - **effect_and_capability_requirements:** `Client` takes `*sgo.Entropy`, so the program needs `grant entropy` (SGO-AUTH-003), and a `*sgo.Conn`, so it needs the connect grant of the endpoint (SGO-NET-002). No clock is read: verification uses `Time`.
 - **concurrency_and_memory_order:** A `*Conn` is used by one task at a time.
-- **allowed_nondeterminism:** The bytes on the wire depend on the entropy; in the lab the entropy is deterministic (SGO-LAB-002), and so is the handshake.
+- **allowed_nondeterminism:** The bytes on the wire depend on the entropy. The lab refuses `Entropy` (`UnsupportedLabEffect`, SGO-LAB-006), so a program that calls `Client` does not run in the lab.
 - **failure_and_partial_progress:** A failed handshake returns its error and the `*Conn`, whose `Close` closes `c`; after a fatal alert, sent or received, every later `Read` fails with the same error.
 - **cancellation_and_cleanup:** Reads and writes wait on `c` and are cancelled as `c`'s operations (SGO-NET-002).
 - **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.
@@ -683,4 +683,4 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **negative_tests:** fixture:std-tls-alert; `sgo/scripts/test-tls.py`: a wrong server name and an expired certificate fail with Go's errors, and the Go server sees Go's `bad certificate` alert.
 - **implementation_coverage:** `src/sgostd/crypto/tls/`.
 - **executed_evidence:** PENDING: W28.
-- **supported_execution_configurations:** production, lab.
+- **supported_execution_configurations:** production.
