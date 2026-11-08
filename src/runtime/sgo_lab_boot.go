@@ -114,8 +114,6 @@ func sgoLabExit(status int32) {
 		sgoWriteRecord(sgoFailureInfo{l.kind, "every live task is waiting and no timer is pending", ""}, l.waitGraph(), sgoOrigin{})
 	case "LabQuotaExhausted":
 		sgoWriteRecord(sgoFailureInfo{l.kind, "the step quota of the run is used up", ""}, nil, sgoOrigin{})
-	case "UnsupportedLabEffect":
-		sgoWriteRecord(sgoFailureInfo{l.kind, "Entropy is not available in the lab: it is unpredictable by definition", ""}, nil, sgoOrigin{})
 	case "LabReplayDivergence":
 		sgoWriteRecord(sgoFailureInfo{l.kind, "the program made a choice the trace does not allow", ""}, nil, sgoOrigin{})
 	}

@@ -1,11 +1,18 @@
 package main
 
-import "sgo"
+import (
+	"sgo"
+	"std/encoding/hex"
+)
 
+// D202: in a lab run, Entropy.Bytes draws from the seed's data stream, so the bytes are the same
+// in every run and replay of the same manifest; two draws continue one stream.
 func main(root *sgo.Context) error {
 	e := root.Entropy()
-	if len(e.Bytes(8)) != 8 {
+	a := e.Bytes(12)
+	b := e.Bytes(5)
+	if len(a) != 12 || len(b) != 5 {
 		return sgo.NewError("short")
 	}
-	return root.Stdout().WriteString("read\n")
+	return root.Stdout().WriteString(hex.EncodeToString([]byte(a)) + " " + hex.EncodeToString([]byte(b)) + "\n")
 }

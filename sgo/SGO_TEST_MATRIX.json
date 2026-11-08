@@ -1787,11 +1787,12 @@
         "subprocess"
       ],
       "scenario": "Attempt real I/O, wall-clock/entropy access, uncontrolled map iteration, or foreign callbacks.",
-      "expected": "UnsupportedLabEffect is raised or compilation rejects the path; no warning-only continuation claims replay.",
+      "expected": "Every effect is simulated from the seed or the manifest (I/O fakes, clocks, and since D202 entropy) or compilation rejects the path; nothing continues with uncontrolled nondeterminism, and no warning-only continuation claims replay.",
       "implementation_status": "implemented",
       "execution_status": "passed",
       "evidence": [
-        "W08: passed - fixture lab-entropy (UnsupportedLabEffect, status 2) (sgo/evidence/w08/README.md)"
+        "W08: passed - fixture lab-entropy (UnsupportedLabEffect, status 2) (sgo/evidence/w08/README.md)",
+        "W29 (D202): fixture lab-entropy now a seeded, repeatable and replayable run; test-lab.py seeded-entropy check"
       ]
     },
     {

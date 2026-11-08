@@ -281,12 +281,3 @@ func sgoLabDropTimer(r *sgoSleep) {
 	l.dropTimer(r)
 	unlock(&l.lock)
 }
-
-// sgoLabUnsupported ends the run with UnsupportedLabEffect (D45, D47); it does not return.
-func sgoLabUnsupported() {
-	l := sgoLab
-	lock(&l.lock)
-	l.finish(2, "UnsupportedLabEffect")
-	unlock(&l.lock)
-	l.stop()
-}

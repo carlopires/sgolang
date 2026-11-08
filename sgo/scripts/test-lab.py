@@ -13,8 +13,8 @@ Checks, with real lab binaries:
   - LabDeadlock and LabQuotaExhausted end a run with one diagnostic record and status 2 (D47);
   - D13: a sweep finds the schedule of an ordering bug, saves its trace, and replay reproduces it;
   - a production binary given a lab manifest on fd 3 behaves exactly as without it (D41);
-  - D45: WallClock is the manifest's epoch plus virtual time; Entropy ends the run with
-    UnsupportedLabEffect; Event and CapacityLimiter operations are scheduled by the lab (a sweep
+  - D45: WallClock is the manifest's epoch plus virtual time; D202: Entropy is seeded
+    (same seed, same bytes; replay reproduces them); Event and CapacityLimiter operations are scheduled by the lab (a sweep
     of a program using them passes every seed); D47: the LabDeadlock record carries the wait graph.
 """
 
@@ -98,14 +98,14 @@ func main(root *sgo.Context) error {
 ''',
     "entropy": '''package main
 
-import "sgo"
+import (
+	"sgo"
+	"std/encoding/hex"
+)
 
 func main(root *sgo.Context) error {
-	e := root.Entropy()
-	if len(e.Bytes(8)) != 8 {
-		return sgo.NewError("short")
-	}
-	return root.Stdout().WriteString("read\\n")
+	b := root.Entropy().Bytes(16)
+	return root.Stdout().WriteString(hex.EncodeToString([]byte(b)) + "\\n")
 }
 ''',
     "wallclock": '''package main
@@ -249,9 +249,19 @@ def main():
                     fail(f"LabDeadlock wait graph {graph}")
 
         # D45: lab effects.
-        r = sgo(["lab", "run", "-trace", "t.jsonl", "."], dirs["entropy"], env)
-        if r.returncode != 2 or [x["kind"] for x in records(r.stderr)] != ["UnsupportedLabEffect"] or r.stdout:
-            fail(f"entropy in the lab: exit {r.returncode}, stdout {r.stdout!r}, stderr {r.stderr!r}")
+        # D202: Entropy draws from the seed's data stream: the same seed gives the same bytes, another
+        # seed other bytes, and a replay reproduces them.
+        ent = []
+        for seed in ("1", "1", "2"):
+            r = sgo(["lab", "run", "-seed", seed, "-trace", "t%d.jsonl" % len(ent), "."], dirs["entropy"], env)
+            if r.returncode != 0 or len(r.stdout) != 33:
+                fail(f"entropy in the lab (seed {seed}): exit {r.returncode}, stdout {r.stdout!r}, stderr {r.stderr!r}")
+            ent.append(r.stdout)
+        if ent[0] != ent[1] or ent[0] == ent[2]:
+            fail(f"seeded entropy: seed 1 gave {ent[0]!r} and {ent[1]!r}, seed 2 gave {ent[2]!r}")
+        r = sgo(["lab", "replay", "t0.jsonl", "."], dirs["entropy"], env)
+        if r.returncode != 0 or r.stdout != ent[0] or "replay reproduced" not in r.stderr:
+            fail(f"entropy replay: exit {r.returncode}, stdout {r.stdout!r}, stderr {r.stderr!r}")
         r = sgo(["lab", "run", "-epoch", "1700000000000", "-trace", "t.jsonl", "."], dirs["wallclock"], env)
         if r.returncode != 0 or r.stdout != "epoch\n":
             fail(f"wallclock with -epoch: exit {r.returncode}, stdout {r.stdout!r}, stderr {r.stderr!r}")
@@ -264,9 +274,6 @@ def main():
         r = sgo(["lab", "sweep", "-seeds", "0..15", "."], dirs["event"], env)
         if r.returncode != 0 or 'runs=16' not in r.stdout or 'stdout="3 woke\\n"' not in r.stdout:
             fail(f"Event and CapacityLimiter sweep: exit {r.returncode}, stdout {r.stdout!r}")
-        t = open(os.path.join(dirs["entropy"], "t.jsonl")).read()
-        if '"kind":"UnsupportedLabEffect"' not in t:
-            fail("entropy trace has no UnsupportedLabEffect outcome")
 
         # D13: a sweep finds the ordering bug; replay reproduces it.
         d = dirs["order"]
@@ -299,7 +306,7 @@ def main():
         if p.returncode != 0 or p.stdout not in ("ab\n", "ba\n") or p.stderr or os.path.getsize(trace) != 0:
             fail(f"production binary with a manifest: exit {p.returncode}, stdout {p.stdout!r}, stderr {p.stderr!r}")
         print("test-lab: ok: run, determinism, sidecar, replay, divergence, refusals, LabDeadlock, LabQuotaExhausted, "
-              "D13 sweep and replay, production binary ignores a manifest, WallClock epoch, Entropy unsupported, "
+              "D13 sweep and replay, production binary ignores a manifest, WallClock epoch, seeded Entropy, "
               "Event and limiter sweep, wait graph")
 
 

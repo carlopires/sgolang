@@ -664,8 +664,8 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **supported_execution_configurations:** production, lab.
 
 ### SGO-STD-031 — `std/crypto/tls`: the TLS 1.3 client
-- **version:** 1
-- **status:** frozen
+- **version:** 2
+- **status:** draft
 - **reference_closure:** SGO-IMP-004, SGO-STD-016, SGO-STD-019, SGO-STD-020, SGO-STD-025, SGO-STD-026, SGO-STD-027, SGO-STD-029, SGO-STD-030, SGO-NET-002, SGO-AUTH-003, SGO-RES-001; D199, D201.
 - **grammar_and_types:** The package `std/crypto/tls` exports exactly: `func (*Conn) CipherSuite() string`; `func (*Conn) Close() error`; `func (*Conn) NegotiatedProtocol() string`; `func (*Conn) PeerCertificates() []*x509.Certificate`; `func (*Conn) Read(limit int) (string, error)`; `func (*Conn) Write(s string) (int, error)`; `func (*hashState) BlockSize() int`; `func (*hashState) Reset()`; `func (*hashState) Size() int`; `func (*hashState) Sum(b []byte) []byte`; `func (*hashState) Write(p []byte) (int, error)`; `func Client(c *sgo.Conn, ent *sgo.Entropy, cfg Config) (*Conn, error)`; `func IsCloseNotify(err error) bool`; `type Config`; `type Conn`. `Config` is the struct with the fields `ServerName string`, `RootCAs *x509.CertPool`, `Time int` (seconds since the Unix epoch), `NextProtos []string` and `CipherSuites []int`; `hashState` is the unexported transcript hash. A `*Conn` holds the `*sgo.Conn` it was made from and is a resource tied to that connection's scope (SGO-RES-001).
 - **preconditions:** `cfg.RootCAs` is not nil and `cfg.ServerName` is not empty; otherwise `Client` returns an error and sends nothing. Every `CipherSuites` entry is one of 0x1301, 0x1302, 0x1303.
@@ -673,7 +673,7 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **ownership_and_lifecycle:** The `*Conn` and the transcript are task-local (SGO-COMP-007); the underlying connection is released with its scope as SGO-RES-001 if `Close` is not called.
 - **effect_and_capability_requirements:** `Client` takes `*sgo.Entropy`, so the program needs `grant entropy` (SGO-AUTH-003), and a `*sgo.Conn`, so it needs the connect grant of the endpoint (SGO-NET-002). No clock is read: verification uses `Time`.
 - **concurrency_and_memory_order:** A `*Conn` is used by one task at a time.
-- **allowed_nondeterminism:** The bytes on the wire depend on the entropy. The lab refuses `Entropy` (`UnsupportedLabEffect`, SGO-LAB-006), so a program that calls `Client` does not run in the lab.
+- **allowed_nondeterminism:** The bytes on the wire depend on the entropy. In a lab run `Entropy` is seeded (SGO-LAB-004 v2), so the client's bytes, and with a scripted peer the whole handshake, repeat for the same seed.
 - **failure_and_partial_progress:** A failed handshake returns its error and the `*Conn`, whose `Close` closes `c`; after a fatal alert, sent or received, every later `Read` fails with the same error.
 - **cancellation_and_cleanup:** Reads and writes wait on `c` and are cancelled as `c`'s operations (SGO-NET-002).
 - **compile_link_checks:** `SGO_E_UNDEFINED` for a name the package does not export.

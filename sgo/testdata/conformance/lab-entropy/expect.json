@@ -4,11 +4,15 @@
   "SGO-LAB-004",
   "SGO-LAB-006"
  ],
- "exit": 2,
- "stdout": "",
- "stderr_kind": "UnsupportedLabEffect",
- "trace_events": [
-  "{\"e\":\"outcome\",\"status\":2,\"kind\":\"UnsupportedLabEffect\"}"
+ "lab_args": [
+  "-seed",
+  "1"
  ],
- "note": "D09: Entropy has no seeded substitute: UnsupportedLabEffect."
+ "exit": 0,
+ "stdout": "74c3ab64a057ee51edc59a78 9f5dd0675b\n",
+ "lab_checks": [
+  "repeat",
+  "replay"
+ ],
+ "note": "D202: in a lab run Entropy.Bytes draws from the seed's data stream (PCG-DXSM seeded with SplitMix64 outputs 5 and 6 of the seed; ceil(k/8) little-endian outputs per draw). The expected bytes are the same computation with Go's math/rand/v2 PCG for seed 1; a second run and a replay give the same bytes."
 }
