@@ -1127,6 +1127,27 @@
       "blockers": [],
       "commit": "5cc98a5a9b",
       "completion_note": "Frozen at spec 0.23.0 (D199, D201): std/crypto/tls, a TLS 1.3 client over a granted *sgo.Conn (X25519; AES-128-GCM, AES-256-GCM, ChaCha20-Poly1305; ECDSA, Ed25519 and RSA-PSS signatures; HRR, ALPN, SNI, KeyUpdate, close_notify) with caller-supplied roots, time and entropy (SGO-STD-031); the pinned Mozilla root set std/crypto/x509/roots (SGO-STD-030); std/encoding/pem (SGO-STD-032); x509 distrust-after dates, AppendCertsFromPEM and distrusted keys per pool, so roots and distrusted keys can come from a granted file (SGO-STD-029 v3, D201 step 2 and amendment (b)); binaries record their certificate trust and sgo version -m reports it (SGO-BUILD-001 v2, SGO-TOOL-001 v3, D201 (c)). test-tls.py 50/50: Go crypto/tls server cases, and 39 hostile-server scenarios (26 plaintext, 13 encrypted through a key-log proxy) with the same errors and alerts as Go's client; test-std-pem.py identical to Go's encoding/pem on generated inputs. Not delivered: the lab replay of a handshake (the lab refuses Entropy, SGO-LAB-006; needs a decision on deterministic lab entropy) and an HTTPS example (needs a reachable HTTPS server); see sgo/evidence/w28/README.md."
+    },
+    {
+      "id": "W29",
+      "title": "Seeded entropy in the lab, and the lab replay of a TLS handshake",
+      "depends_on": [
+        "W28"
+      ],
+      "risk": "low",
+      "status": "in_progress",
+      "plan_section": "sgo/SGO_DECISIONS.md D202",
+      "deliverables": [
+        "Entropy.Bytes in a lab run from the seed's data stream; UnsupportedLabEffect removed (SGO-LAB-004 v2, SGO-LAB-006 v2)",
+        "lab-entropy as a seeded, repeatable, replayable case; test-lab.py checks",
+        "lab-tls-replay: a TLS 1.3 handshake in the lab against a recorded Go crypto/tls server, re-recorded identically in CI (gen-lab-tls.py --check)",
+        "SGO-STD-031 v2 (the lab note) and a spec minor version (0.24.0)"
+      ],
+      "acceptance_case_ids": [],
+      "evidence": [],
+      "blockers": [],
+      "commit": "",
+      "completion_note": ""
     }
   ],
   "language_policy": "One specification-defined S-Go language; no Go compatibility path. Bare go rejected; explicit nursery capabilities; missing contracts rejected transitively. Host/reference tools are external build dependencies.",

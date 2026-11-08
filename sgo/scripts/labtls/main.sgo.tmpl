@@ -1,0 +1,147 @@
+package main
+
+import (
+	"sgo"
+	"std/crypto/tls"
+	"std/crypto/x509"
+	"std/encoding/hex"
+)
+
+// D202: a TLS 1.3 handshake that repeats in the lab. Entropy is seeded, so the client's bytes are
+// the same in every run of a seed; the server task replays a recorded exchange with Go's
+// crypto/tls server (sgo/scripts/test-lab-tls.py records it) and checks each client flight
+// against the recording, byte for byte. With a part of the recording still empty, the server
+// prints the client flight it would compare (the recording steps).
+
+const caPEM = `@CA@`
+
+const recClientHello = "@CH@"
+
+const recServerFlight = "@SF@"
+
+const recClientFinished = "@FIN@"
+
+const recServerData = "@APP@"
+
+func readN(c *sgo.Conn, n int) (string, error) {
+	s := ""
+	for len(s) < n {
+		b, rerr := c.Read(n - len(s))
+		if rerr != nil {
+			return s, rerr
+		}
+		s = s + b
+	}
+	return s, nil
+}
+
+// readRecord reads one TLS record and returns its content type and its bytes, header included.
+func readRecord(c *sgo.Conn) (int, string, error) {
+	h, herr := readN(c, 5)
+	if herr != nil {
+		return 0, "", herr
+	}
+	body, berr := readN(c, int(h[3])*256+int(h[4]))
+	if berr != nil {
+		return 0, "", berr
+	}
+	return int(h[0]), h + body, nil
+}
+
+func unhex(s string) string {
+	b, derr := hex.DecodeString(s)
+	if derr != nil {
+		return ""
+	}
+	return string(b)
+}
+
+// serve plays the server; during recording it returns the client flight to record ("ch HEX" or
+// "fin HEX"), else "".
+func serve(c *sgo.Conn) (string, error) {
+	typ, hello, rerr := readRecord(c)
+	if rerr != nil {
+		return "", rerr
+	}
+	if typ != 22 {
+		return "", sgo.NewError("the client's first record is not a handshake record")
+	}
+	if recClientHello == "" {
+		return "ch " + hex.EncodeToString([]byte(hello)), c.Close()
+	}
+	if hello != unhex(recClientHello) {
+		return "", sgo.NewError("the ClientHello differs from the recording")
+	}
+	if _, werr := c.Write(unhex(recServerFlight)); werr != nil {
+		return "", werr
+	}
+	fin := ""
+	for {
+		t, rec, ferr := readRecord(c)
+		if ferr != nil {
+			return "", ferr
+		}
+		fin = fin + rec
+		if t == 23 {
+			break
+		}
+	}
+	if recClientFinished == "" {
+		return "fin " + hex.EncodeToString([]byte(fin)), c.Close()
+	}
+	if fin != unhex(recClientFinished) {
+		return "", sgo.NewError("the client's Finished flight differs from the recording")
+	}
+	if _, werr := c.Write(unhex(recServerData)); werr != nil {
+		return "", werr
+	}
+	return "", c.Close()
+}
+
+func main(root *sgo.Context) error {
+	l, lerr := root.Listen("127.0.0.1:47995")
+	if lerr != nil {
+		return lerr
+	}
+	got := make(chan string, 1)
+	nursery (n) {
+		ll := l
+		n.Spawn(func(task *sgo.Context) error {
+			c, aerr := ll.Accept(task)
+			if aerr != nil {
+				return aerr
+			}
+			r, serr := serve(c)
+			if serr != nil {
+				return serr
+			}
+			got <- r
+			return nil
+		})
+		c, derr := root.Dial("127.0.0.1:47995")
+		if derr != nil {
+			return derr
+		}
+		pool := x509.NewCertPool()
+		if !pool.AppendCertsFromPEM([]byte(caPEM)) {
+			return sgo.NewError("bad CA")
+		}
+		cfg := tls.Config{ServerName: "tls.test", RootCAs: pool, Time: 1800000000, NextProtos: []string{}, CipherSuites: []int{}}
+		t, herr := tls.Client(c, root.Entropy(), cfg)
+		if recServerData != "" {
+			if herr != nil {
+				return herr
+			}
+			data, rerr := t.Read(100)
+			if rerr != nil {
+				return rerr
+			}
+			check root.Stdout().WriteString("handshake " + t.CipherSuite() + ", read " + data)
+		}
+		_ = t.Close()
+	}
+	if r := <-got; r != "" {
+		check root.Stdout().WriteString("record " + r + "\n")
+	}
+	return l.Close()
+}

@@ -113,6 +113,9 @@ jobs:
       - name: Lab execution configuration end to end (W08, D41-D49)
         run: sgo/scripts/test-lab.py
 
+      - name: The lab TLS replay re-records identically from Go's server (D202)
+        run: sgo/scripts/gen-lab-tls.py --check
+
       - name: Required modules, sgo.sum, and the std MANIFEST (SGO-IMP-003, SGO-IMP-004, W14)
         run: sgo/scripts/test-modules.py
 
