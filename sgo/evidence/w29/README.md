@@ -1,6 +1,6 @@
 # W29 evidence: seeded entropy in the lab, and the lab replay of a TLS handshake
 
-Spec 0.24.0 (D202). Branch `w29`; state: complete on darwin/arm64; Linux at the W29 merge.
+Spec 0.24.0 (D202). Branch `w29`; state: complete on darwin/arm64, linux/amd64 and linux/arm64.
 
 ## What changed
 
@@ -33,7 +33,7 @@ byte for byte; another seed's ClientHello differs from the recording and the run
 
 ## Linux
 
-Pending: the sgo-w00, sgo-spec and sgo-runtime runs at the W29 merge.
+Main at 9cb9fafaf7 (0.24.0 freeze): sgo-w00 run 42492251746 green on linux/amd64 and linux/arm64 (conformance, all check scripts, test-lab, gen-lab-tls --check, reference and stage-0 builds); sgo-spec run 42492251893 green; sgo-runtime run 42492316580 green (runtime lane, race lane).
 
 ## Not done
 

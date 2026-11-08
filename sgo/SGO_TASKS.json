@@ -1135,7 +1135,7 @@
         "W28"
       ],
       "risk": "low",
-      "status": "in_progress",
+      "status": "passed",
       "plan_section": "sgo/SGO_DECISIONS.md D202",
       "deliverables": [
         "Entropy.Bytes in a lab run from the seed's data stream; UnsupportedLabEffect removed (SGO-LAB-004 v2, SGO-LAB-006 v2)",
@@ -1144,10 +1144,13 @@
         "SGO-STD-031 v2 (the lab note) and a spec minor version (0.24.0)"
       ],
       "acceptance_case_ids": [],
-      "evidence": [],
+      "evidence": [
+        "sgo/evidence/w29/README.md",
+        "sgo-w00 run 42492251746 (linux/amd64, linux/arm64), sgo-spec run 42492251893 and sgo-runtime run 42492316580 on main at 9cb9fafaf7 (0.24.0 freeze)"
+      ],
       "blockers": [],
-      "commit": "",
-      "completion_note": ""
+      "commit": "9cb9fafaf7",
+      "completion_note": "Frozen at spec 0.24.0 (D202): in a lab run Entropy.Bytes draws from the seed's data stream (ceil(k/8) little-endian PCG-DXSM outputs, in call order), so programs that use entropy run and replay in the lab; UnsupportedLabEffect is removed (SGO-LAB-004 v2, SGO-LAB-006 v2); production Entropy is unchanged. lab-entropy pins seed 1's bytes, computed independently with Go's math/rand/v2 PCG. lab-tls-replay runs a full TLS 1.3 handshake in the lab against an exchange recorded from Go's crypto/tls server and checks the client's bytes against it; a second run and sgo lab replay reproduce it (SGO-STD-031 v2), and sgo/scripts/gen-lab-tls.py --check re-records it identically in CI. This closes the W28 lab-replay deliverable."
     }
   ],
   "language_policy": "One specification-defined S-Go language; no Go compatibility path. Bare go rejected; explicit nursery capabilities; missing contracts rejected transitively. Host/reference tools are external build dependencies.",
