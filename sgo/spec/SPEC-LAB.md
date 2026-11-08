@@ -84,7 +84,7 @@ Denied in subsets 0 to 2 (spec 0.1.0 to 0.3.0, SGO-LAB-001). Spec 0.4.0 admits t
 - **compile_link_checks:** n/a — no source construct; the configuration checks are SGO-LAB-002.
 - **runtime_guards:** n/a — the scheduler is the guard (SGO-LAB-003).
 - **tcb_assumptions:** `runtime/sgo_lab.go` generator; checked against `math/rand/v2` vectors (`sgo/model`).
-- **positive_tests:** D01, D06, D07; fixture:lab-random, fixture:lab-entropy, fixture:lab-timer-ties, fixture:lab-wallclock, fixture:lab-runnable-time.
+- **positive_tests:** D01, D06, D07; fixture:lab-random, fixture:lab-entropy, fixture:lab-tls-replay, fixture:lab-timer-ties, fixture:lab-wallclock, fixture:lab-runnable-time.
 - **negative_tests:** n/a — no effect is refused in a lab run (D202).
 - **implementation_coverage:** runtime `sgo_lab.go`, `sgo_lab_run.go`, `sgo_effects.go`.
 - **executed_evidence:** `sgo/evidence/w08/README.md`.

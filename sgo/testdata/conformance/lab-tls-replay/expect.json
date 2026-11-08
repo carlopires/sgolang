@@ -1,0 +1,18 @@
+{
+ "kind": "lab",
+ "clauses": [
+  "SGO-LAB-004",
+  "SGO-STD-031"
+ ],
+ "lab_args": [
+  "-seed",
+  "1"
+ ],
+ "exit": 0,
+ "stdout": "handshake TLS_AES_128_GCM_SHA256, read hello from go\n",
+ "lab_checks": [
+  "repeat",
+  "replay"
+ ],
+ "note": "D202: a TLS 1.3 handshake on the lab's loopback network repeats for its seed. The server task replays an exchange with Go's crypto/tls server, recorded by sgo/scripts/gen-lab-tls.py, and checks the client's flights byte for byte; the client's bytes are fixed by seed 1 through the seeded Entropy, so a second run and a replay give the same handshake (another seed's ClientHello differs from the recording)."
+}
