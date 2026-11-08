@@ -49,6 +49,7 @@ type sgoLabTimer struct {
 type sgoLabState struct {
 	lock      mutex
 	sched     sgoPCG
+	data      sgoPCG // the seed's data stream: Entropy.Bytes in a lab run (D202)
 	fifo      bool
 	k, quota  int64
 	used      int64
@@ -156,7 +157,7 @@ func sgoLabStreams(seed uint64) (sched, fault, data sgoPCG) {
 // sgoLabEnable starts a lab run in the calling (root) task, before any child exists.
 func sgoLabEnable(seed uint64, fifo bool, k, quota int64, exit func(int32)) {
 	l := &sgoLabState{fifo: fifo, k: max(k, 1), quota: quota, exit: exit}
-	l.sched, _, _ = sgoLabStreams(seed)
+	l.sched, _, l.data = sgoLabStreams(seed)
 	l.events = make([]sgoLabEvent, 0, 4096)
 	l.sets = make([]int32, 0, 16384)
 	root := sgoCurrent()

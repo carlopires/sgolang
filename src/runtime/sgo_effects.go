@@ -86,15 +86,24 @@ func sgo_wallMS() int {
 }
 
 // sgo_entropy is Entropy.Bytes(k): k bytes from the OS cryptographic source, never from a seeded
-// generator (A08). A short read ends the program as ResourceExhausted (SGO-ERR-003).
+// generator (A08). A short read ends the program as ResourceExhausted (SGO-ERR-003). In a lab run
+// the bytes come from the seed's data stream instead (D202): a lab binary runs only under sgo lab,
+// so seeded entropy never reaches a production run.
 //
 //go:linkname sgo_entropy sgo.runtime_entropy
 func sgo_entropy(k int) string {
-	if sgoLab != nil {
-		sgoLabPoint()
-		sgoLabUnsupported() // unpredictable by definition: no seeded substitute (D45)
-	}
 	b := make([]byte, k)
+	if l := sgoLab; l != nil {
+		sgoLabPoint()
+		for i := 0; i < k; i += 8 {
+			v := l.data.next()
+			for j := i; j < k && j < i+8; j++ {
+				b[j] = byte(v)
+				v >>= 8
+			}
+		}
+		return string(b)
+	}
 	if readRandom(b) != k {
 		sgoExhausted("entropy: the OS cryptographic source failed")
 	}
