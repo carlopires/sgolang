@@ -1,0 +1,63 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package pem
+
+import (
+	"sgo"
+	"std/errors"
+)
+
+func TestDecode(t *sgo.T) error {
+	in := "junk\n-----BEGIN TEST-----\nA: 1\nB:  two \n\nAAEC\nAw==\n-----END TEST-----\nrest"
+	b, rest := Decode([]byte(in))
+	if b == nil {
+		return errors.New("no block")
+	}
+	if b.Type != "TEST" || b.Headers["A"] != "1" || b.Headers["B"] != "two" || len(b.Headers) != 2 {
+		return errors.New("bad type or headers: " + b.Type)
+	}
+	if string(b.Bytes) != "\x00\x01\x02\x03" || string(rest) != "rest" {
+		return errors.New("bad bytes or rest")
+	}
+	return nil
+}
+
+func TestDecodeFailures(t *sgo.T) error {
+	bad := []string{
+		"",
+		"-----BEGIN A-----\nAA==\n",
+		"-----BEGIN A-----\nAA==\n-----END B-----\n",
+		"-----BEGIN A-----\n*==\n-----END A-----\n",
+		"-----BEGIN A-----\nAA==\n-----END A----- x\n",
+	}
+	for i := 0; i < len(bad); i++ {
+		b, rest := Decode([]byte(bad[i]))
+		if b != nil || string(rest) != bad[i] {
+			return errors.New("decoded a bad input: " + bad[i])
+		}
+	}
+	return nil
+}
+
+func TestEncodeRoundTrip(t *sgo.T) error {
+	data := []byte{}
+	for i := 0; i < 100; i++ {
+		data = append(data, byte(i*7%256))
+	}
+	b := &Block{Type: "CERTIFICATE", Headers: map[string]string{"Z": "1", "Proc-Type": "4,ENCRYPTED", "A": "2"}, Bytes: data}
+	enc := EncodeToMemory(b)
+	want := "-----BEGIN CERTIFICATE-----\nProc-Type: 4,ENCRYPTED\nA: 2\nZ: 1\n\n"
+	if len(enc) < len(want) || string(enc[:len(want)]) != want {
+		return errors.New("bad header encoding: " + string(enc))
+	}
+	d, rest := Decode(enc)
+	if d == nil || len(rest) != 0 || string(d.Bytes) != string(data) || d.Headers["Proc-Type"] != "4,ENCRYPTED" {
+		return errors.New("round trip failed")
+	}
+	if EncodeToMemory(&Block{Type: "X", Headers: map[string]string{"a:b": "c"}, Bytes: []byte{}}) != nil {
+		return errors.New("encoded a header key with a colon")
+	}
+	return nil
+}

@@ -1,0 +1,93 @@
+// Copyright 2026 The S-Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package x509
+
+import (
+	"std/crypto/sha256"
+	"sgo"
+	"std/errors"
+)
+
+// A root, an intermediate and a leaf for leaf.test (ECDSA P-256, valid 2026 to 2046), and the
+// root's key as a PUBLIC KEY block, made with Go's crypto/x509.
+const (
+	distrustRootPEM  = "-----BEGIN CERTIFICATE-----\nMIIBajCCARGgAwIBAgIBATAKBggqhkjOPQQDAjAdMRswGQYDVQQDExJEaXN0cnVz\ndCBUZXN0IFJvb3QwHhcNMjYwMTAxMDAwMDAwWhcNNDYwMTAxMDAwMDAwWjAdMRsw\nGQYDVQQDExJEaXN0cnVzdCBUZXN0IFJvb3QwWTATBgcqhkjOPQIBBggqhkjOPQMB\nBwNCAAQKVFetj6bA3Fb8MhA/2MOGiHLyL/Tnd1d5pBwKeqMk7YU1yl8G38Xjfzhp\n91VNX4QiMMAWRD+qXzJxA/XECaRso0IwQDAOBgNVHQ8BAf8EBAMCAgQwDwYDVR0T\nAQH/BAUwAwEB/zAdBgNVHQ4EFgQU70WrQjhDGFcXjWJG/vAwKB73rCswCgYIKoZI\nzj0EAwIDRwAwRAIgG0yGk+iBXI2wabOm0JlS12VGj5nlFlrrt4/5aQw/xCoCIDUP\n0e/YFZc+I1Fm1gOeSfYNn9T1LvFnjTIwX9RgzH7q\n-----END CERTIFICATE-----\n"
+	distrustInterPEM = "-----BEGIN CERTIFICATE-----\nMIIBlDCCATqgAwIBAgIBAjAKBggqhkjOPQQDAjAdMRswGQYDVQQDExJEaXN0cnVz\ndCBUZXN0IFJvb3QwHhcNMjYwMTAxMDAwMDAwWhcNNDYwMTAxMDAwMDAwWjAlMSMw\nIQYDVQQDExpEaXN0cnVzdCBUZXN0IEludGVybWVkaWF0ZTBZMBMGByqGSM49AgEG\nCCqGSM49AwEHA0IABI34BB7T5TQepQ1bGJCnOfTtuvbropzOmj+1KHfeqxK0DBl2\nrZxyR3qN46RB5aGBnhBUV7Q9NMtauKU8eJWk5xSjYzBhMA4GA1UdDwEB/wQEAwIC\nBDAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBRjmOLjLGE0yzmtX2+9I2Cf5uXy\nozAfBgNVHSMEGDAWgBTvRatCOEMYVxeNYkb+8DAoHvesKzAKBggqhkjOPQQDAgNI\nADBFAiACGV5kkXUgXoZrukmH49ebpECqcmp06AOV8Sjzf0j4ZwIhAONXwJMlnU/Q\n/MVlHFLFQjQoYEIoLue3OS8PazD2MeQE\n-----END CERTIFICATE-----\n"
+	distrustLeafPEM  = "-----BEGIN CERTIFICATE-----\nMIIBhTCCASygAwIBAgIBAzAKBggqhkjOPQQDAjAlMSMwIQYDVQQDExpEaXN0cnVz\ndCBUZXN0IEludGVybWVkaWF0ZTAeFw0yNjAxMDEwMDAwMDBaFw00NjAxMDEwMDAw\nMDBaMBQxEjAQBgNVBAMTCWxlYWYudGVzdDBZMBMGByqGSM49AgEGCCqGSM49AwEH\nA0IABNkCwWCLA/bf/xIKHRLLMms0IjNnmt8Hos5nynafHfv6QSip8PO7ZmlmCG29\nFspaJ1XXM+DjbQuaM/6hvMjOZzOjXjBcMA4GA1UdDwEB/wQEAwIHgDATBgNVHSUE\nDDAKBggrBgEFBQcDATAfBgNVHSMEGDAWgBRjmOLjLGE0yzmtX2+9I2Cf5uXyozAU\nBgNVHREEDTALgglsZWFmLnRlc3QwCgYIKoZIzj0EAwIDRwAwRAIgJbgH3yytQYd2\nwzObaDtHCgZEg/3PDu0SwEpN5sR2kiECIGCov5HZfeAwTKjC+SuPbR+tAVreFfcn\n96hBCWUCanbI\n-----END CERTIFICATE-----\n"
+	distrustRootKey  = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEClRXrY+mwNxW/DIQP9jDhohy8i/0\n53dXeaQcCnqjJO2FNcpfBt/F4384afdVTV+EIjDAFkQ/ql8ycQP1xAmkbA==\n-----END PUBLIC KEY-----\n"
+)
+
+const distrustTime = 1893456000 // 2030-01-01
+
+func distrustVerify(roots *CertPool) error {
+	inter := NewCertPool()
+	if !inter.AppendCertsFromPEM([]byte(distrustInterPEM)) {
+		return errors.New("no intermediate")
+	}
+	leaf := NewCertPool()
+	if !leaf.AppendCertsFromPEM([]byte(distrustLeafPEM)) {
+		return errors.New("no leaf")
+	}
+	_, err := leaf.certs[0].Verify(VerifyOptions{DNSName: "leaf.test", Intermediates: inter, Roots: roots, CurrentTime: distrustTime, KeyUsages: []ExtKeyUsage{}, CertificatePolicies: []OID{}})
+	return err
+}
+
+func TestAppendCertsFromPEM(t *sgo.T) error {
+	roots := NewCertPool()
+	if roots.AppendCertsFromPEM([]byte("no blocks here")) {
+		return errors.New("appended from text without blocks")
+	}
+	if roots.AppendCertsFromPEM([]byte(distrustRootKey)) {
+		return errors.New("appended a PUBLIC KEY block")
+	}
+	if !roots.AppendCertsFromPEM([]byte("junk\n" + distrustRootPEM + distrustRootKey + distrustRootPEM)) || len(roots.certs) != 1 {
+		return errors.New("did not append the root once")
+	}
+	if err := distrustVerify(roots); err != nil {
+		return errors.New("chain does not verify: " + err.Error())
+	}
+	return nil
+}
+
+func TestDistrustedKeys(t *sgo.T) error {
+	roots := NewCertPool()
+	_ = roots.AppendCertsFromPEM([]byte(distrustRootPEM))
+	if err := roots.AddDistrustedKey([]byte{1, 2, 3}); err == nil {
+		return errors.New("accepted a short hash")
+	}
+	n, err := roots.AppendDistrustedKeysFromPEM([]byte(distrustRootKey))
+	if err != nil || n != 1 {
+		return errors.New("PUBLIC KEY block not added")
+	}
+	if distrustVerify(roots) == nil {
+		return errors.New("verified through a distrusted root key")
+	}
+
+	byCert := NewCertPool()
+	_ = byCert.AppendCertsFromPEM([]byte(distrustRootPEM))
+	n2, err2 := byCert.AppendDistrustedKeysFromPEM([]byte(distrustInterPEM + "-----BEGIN OTHER-----\nAA==\n-----END OTHER-----\n"))
+	if err2 != nil || n2 != 1 {
+		return errors.New("CERTIFICATE block not added")
+	}
+	if distrustVerify(byCert) == nil {
+		return errors.New("verified through a distrusted intermediate key")
+	}
+
+	byHash := NewCertPool()
+	_ = byHash.AppendCertsFromPEM([]byte(distrustRootPEM))
+	c := NewCertPool()
+	_ = c.AppendCertsFromPEM([]byte(distrustLeafPEM))
+	h := sha256.Sum256(c.certs[0].RawSubjectPublicKeyInfo)
+	if err3 := byHash.AddDistrustedKey(h[:]); err3 != nil {
+		return err3
+	}
+	if distrustVerify(byHash) == nil {
+		return errors.New("verified a leaf with a distrusted key")
+	}
+	if _, err4 := byHash.AppendDistrustedKeysFromPEM([]byte("-----BEGIN PUBLIC KEY-----\nAAEC\n-----END PUBLIC KEY-----\n")); err4 == nil {
+		return errors.New("accepted a malformed PUBLIC KEY block")
+	}
+	return nil
+}

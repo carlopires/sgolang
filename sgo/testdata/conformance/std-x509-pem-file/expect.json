@@ -1,0 +1,10 @@
+{
+ "kind": "run",
+ "clauses": [
+  "SGO-STD-029",
+  "SGO-STD-032"
+ ],
+ "exit": 0,
+ "stdout": "verified leaf.test: chain of 3\ndistrusted keys: 1\nx509: no valid chains built\n",
+ "note": "D201 step 2: roots and distrusted keys read from granted PEM files. The chain verifies through the roots file; after the distrust file adds the root's key as a PUBLIC KEY block, the same chain is refused."
+}

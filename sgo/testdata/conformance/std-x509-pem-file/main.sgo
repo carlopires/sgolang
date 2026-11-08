@@ -1,0 +1,49 @@
+package main
+
+import (
+	"sgo"
+	"std/crypto/x509"
+	"std/encoding/pem"
+	"std/strconv"
+)
+
+// D201 step 2: roots and distrusted keys come from PEM files the program is granted. The chain
+// file holds the leaf and its intermediate; the distrust file holds the root's key.
+func main(root *sgo.Context) error {
+	out := root.Stdout()
+	d := root.Dir("data")
+	nursery (n) {
+		rf := check d.Open(n, "roots.pem")
+		rootsPEM := check rf.ReadAll(1 << 20)
+		cf := check d.Open(n, "chain.pem")
+		chainPEM := check cf.ReadAll(1 << 20)
+		df := check d.Open(n, "distrust.pem")
+		distrustPEM := check df.ReadAll(1 << 20)
+
+		roots := x509.NewCertPool()
+		if !roots.AppendCertsFromPEM([]byte(rootsPEM)) {
+			return sgo.NewError("no roots")
+		}
+		leafBlock, rest := pem.Decode([]byte(chainPEM))
+		if leafBlock == nil {
+			return sgo.NewError("no leaf block")
+		}
+		leaf := check x509.ParseCertificate(leafBlock.Bytes)
+		inter := x509.NewCertPool()
+		if !inter.AppendCertsFromPEM(rest) {
+			return sgo.NewError("no intermediate")
+		}
+		opts := x509.VerifyOptions{DNSName: "leaf.test", Intermediates: inter, Roots: roots, CurrentTime: 1893456000, KeyUsages: []x509.ExtKeyUsage{}, CertificatePolicies: []x509.OID{}}
+		chains := check leaf.Verify(opts)
+		check out.WriteString("verified " + leaf.Subject.CommonName + ": chain of " + strconv.Itoa(len(chains[0])) + "\n")
+
+		k := check roots.AppendDistrustedKeysFromPEM([]byte(distrustPEM))
+		check out.WriteString("distrusted keys: " + strconv.Itoa(k) + "\n")
+		if _, err := leaf.Verify(opts); err != nil {
+			check out.WriteString(err.Error() + "\n")
+		} else {
+			return sgo.NewError("verified through a distrusted root")
+		}
+	}
+	return nil
+}

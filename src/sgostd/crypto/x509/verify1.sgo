@@ -6,7 +6,12 @@
 package x509
 
 import (
+	"std/crypto/rsa"
 	"std/crypto/sha256"
+	"std/encoding/asn1"
+	"std/encoding/hex"
+	"std/encoding/pem"
+	"std/errors"
 	"std/strconv"
 )
 
@@ -121,11 +126,14 @@ type CertPool struct {
 	byName map[string][]int
 	have   map[string]bool
 	after  map[string]int
+	// distrusted holds the hex SHA-256 hashes of SubjectPublicKeyInfos that no chain verified
+	// with this pool as Roots or Intermediates may contain (D201).
+	distrusted map[string]bool
 }
 
 // NewCertPool returns an empty pool.
 func NewCertPool() *CertPool {
-	return &CertPool{certs: []*Certificate{}, byName: map[string][]int{}, have: map[string]bool{}, after: map[string]int{}}
+	return &CertPool{certs: []*Certificate{}, byName: map[string][]int{}, have: map[string]bool{}, after: map[string]int{}, distrusted: map[string]bool{}}
 }
 
 func rawSum(c *Certificate) string {
@@ -156,6 +164,100 @@ func (s *CertPool) AddCertWithDistrustAfter(c *Certificate, t int) {
 	}
 	s.AddCert(c)
 	s.after[k] = t
+}
+
+// AppendCertsFromPEM adds the certificates of pemCerts, as Go's CertPool.AppendCertsFromPEM:
+// only blocks of type CERTIFICATE without headers are used, and a block that does not parse is
+// skipped. It reports whether any certificate was added.
+func (s *CertPool) AppendCertsFromPEM(pemCerts []byte) bool {
+	ok := false
+	for len(pemCerts) > 0 {
+		b, rest := pem.Decode(pemCerts)
+		if b == nil {
+			break
+		}
+		pemCerts = rest
+		if b.Type != "CERTIFICATE" || len(b.Headers) != 0 {
+			continue
+		}
+		c, err := ParseCertificate(b.Bytes)
+		if err != nil {
+			continue
+		}
+		s.AddCert(c)
+		ok = true
+	}
+	return ok
+}
+
+// AddDistrustedKey distrusts the public key whose DER SubjectPublicKeyInfo has the SHA-256 hash
+// h: Verify rejects every chain that contains a certificate with that key, when s is its Roots or
+// Intermediates pool (D201). h must be 32 bytes.
+func (s *CertPool) AddDistrustedKey(h []byte) error {
+	if len(h) != 32 {
+		return errors.New("x509: a distrusted key hash must be 32 bytes, not " + itoa(len(h)))
+	}
+	s.distrusted[hex.EncodeToString(h)] = true
+	return nil
+}
+
+// AppendDistrustedKeysFromPEM distrusts, as AddDistrustedKey, the key of each PUBLIC KEY block
+// (a DER SubjectPublicKeyInfo) and each CERTIFICATE block of data; other blocks are ignored. It
+// returns the number of keys added, or an error for a block of those types that does not parse.
+func (s *CertPool) AppendDistrustedKeysFromPEM(data []byte) (int, error) {
+	n := 0
+	for len(data) > 0 {
+		b, rest := pem.Decode(data)
+		if b == nil {
+			break
+		}
+		data = rest
+		spki := []byte{}
+		if b.Type == "PUBLIC KEY" {
+			if err := checkSPKI(b.Bytes); err != nil {
+				return n, err
+			}
+			spki = b.Bytes
+		} else if b.Type == "CERTIFICATE" {
+			c, err := ParseCertificate(b.Bytes)
+			if err != nil {
+				return n, err
+			}
+			spki = c.RawSubjectPublicKeyInfo
+		} else {
+			continue
+		}
+		h := sha256.Sum256(spki)
+		s.distrusted[hex.EncodeToString(h[:])] = true
+		n++
+	}
+	return n, nil
+}
+
+// checkSPKI checks that der is one DER SubjectPublicKeyInfo whose key, if of a known algorithm,
+// parses.
+func checkSPKI(der []byte) error {
+	in := asn1.String(der)
+	var spki asn1.String = asn1.String{}
+	var ai asn1.String = asn1.String{}
+	spk := asn1.BitString{Bytes: []byte{}, BitLength: 0}
+	if !in.ReadASN1(&spki, asn1.SEQUENCE) || !in.Empty() || !spki.ReadASN1(&ai, asn1.SEQUENCE) || !spki.ReadASN1BitString(&spk) || !spki.Empty() {
+		return errors.New("x509: malformed public key in a PUBLIC KEY block")
+	}
+	pkAI, err := parseAI(ai)
+	if err != nil {
+		return err
+	}
+	pub := PublicKey{Algorithm: publicKeyAlgorithmFromOID(pkAI.algorithm), RSA: rsa.PublicKey{N: []byte{}, E: 0}, Curve: "", Key: []byte{}}
+	if pub.Algorithm == UnknownPublicKeyAlgorithm {
+		return nil
+	}
+	return parsePublicKey(pkAI, spk, &pub)
+}
+
+// distrusts reports whether s distrusts the key with SPKI hash hexHash.
+func (s *CertPool) distrusts(hexHash string) bool {
+	return s != nil && s.distrusted[hexHash]
 }
 
 // distrustAfterOf reports c's distrust-after time in s, if it was added with one.

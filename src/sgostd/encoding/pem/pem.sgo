@@ -1,0 +1,188 @@
+// Copyright 2009 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+// Ported from Go's encoding/pem (src/encoding/pem/pem.go) for S-Go (SGO-STD-032, D201): Decode with
+// Go's rules, and EncodeToMemory; Encode to an io.Writer is not provided.
+
+// Package pem implements the PEM data encoding of RFC 1421, as used for TLS keys and
+// certificates.
+package pem
+
+import (
+	"std/bytes"
+	"std/encoding/base64"
+	"std/sort"
+	"std/strings"
+)
+
+// A Block is a PEM encoded structure:
+//
+//	-----BEGIN Type-----
+//	Headers
+//	base64-encoded Bytes
+//	-----END Type-----
+type Block struct {
+	Type    string
+	Headers map[string]string
+	Bytes   []byte
+}
+
+const (
+	pemStart      = "\n-----BEGIN "
+	pemEnd        = "\n-----END "
+	pemEndOfLine  = "-----"
+	pemLineLength = 64
+)
+
+func trimRightSpaceTab(b []byte) []byte {
+	i := len(b)
+	for i > 0 && (b[i-1] == ' ' || b[i-1] == '\t') {
+		i--
+	}
+	return b[:i]
+}
+
+// getLine returns the first \r\n or \n delimited line from data, with trailing spaces and tabs
+// removed, the rest of data, and the number of bytes consumed.
+func getLine(data []byte) ([]byte, []byte, int) {
+	i := bytes.IndexByte(data, '\n')
+	j := 0
+	if i < 0 {
+		i = len(data)
+		j = i
+	} else {
+		j = i + 1
+		if i > 0 && data[i-1] == '\r' {
+			i--
+		}
+	}
+	return trimRightSpaceTab(data[0:i]), data[j:], j
+}
+
+func removeSpacesAndTabs(data []byte) []byte {
+	result := []byte{}
+	for i := 0; i < len(data); i++ {
+		if data[i] != ' ' && data[i] != '\t' {
+			result = append(result, data[i])
+		}
+	}
+	return result
+}
+
+// Decode finds the next PEM block in data and returns it and the rest of the input. If no
+// block is found, it returns nil and the whole of data.
+func Decode(data []byte) (*Block, []byte) {
+	rest := data
+	endTrailerIndex := 0
+	for {
+		if endTrailerIndex < 0 || endTrailerIndex > len(rest) {
+			return nil, data
+		}
+		rest = rest[endTrailerIndex:]
+		endIndex := bytes.Index(rest, []byte(pemEnd))
+		if endIndex < 0 {
+			return nil, data
+		}
+		endTrailerIndex = endIndex + len(pemEnd)
+		beginIndex := bytes.LastIndex(rest[:endIndex], []byte(pemStart[1:]))
+		if beginIndex < 0 || beginIndex > 0 && rest[beginIndex-1] != '\n' {
+			continue
+		}
+		rest = rest[beginIndex+len(pemStart)-1:]
+		endIndex -= beginIndex + len(pemStart) - 1
+		endTrailerIndex -= beginIndex + len(pemStart) - 1
+
+		typeLine, after, consumed := getLine(rest)
+		rest = after
+		endIndex -= consumed
+		endTrailerIndex -= consumed
+		if !bytes.HasSuffix(typeLine, []byte(pemEndOfLine)) {
+			continue
+		}
+		typeLine = typeLine[0 : len(typeLine)-len(pemEndOfLine)]
+		p := &Block{Type: string(typeLine), Headers: map[string]string{}, Bytes: []byte{}}
+
+		for {
+			if len(rest) == 0 {
+				return nil, data
+			}
+			line, next, used := getLine(rest)
+			k := bytes.IndexByte(line, ':')
+			if k < 0 {
+				break
+			}
+			p.Headers[string(bytes.TrimSpace(line[:k]))] = string(bytes.TrimSpace(line[k+1:]))
+			rest = next
+			endIndex -= used
+			endTrailerIndex -= used
+		}
+		if len(p.Headers) > 0 && endIndex < 0 {
+			continue
+		}
+
+		endTrailer := rest[endTrailerIndex:]
+		endTrailerLen := len(typeLine) + len(pemEndOfLine)
+		if len(endTrailer) < endTrailerLen {
+			continue
+		}
+		restOfEndLine := endTrailer[endTrailerLen:]
+		endTrailer = endTrailer[:endTrailerLen]
+		if !bytes.HasPrefix(endTrailer, typeLine) || !bytes.HasSuffix(endTrailer, []byte(pemEndOfLine)) {
+			continue
+		}
+		if s, _, _ := getLine(restOfEndLine); len(s) != 0 {
+			continue
+		}
+
+		if endIndex > 0 {
+			b64 := removeSpacesAndTabs(rest[:endIndex])
+			out := make([]byte, base64.StdEncoding.DecodedLen(len(b64)))
+			n, err := base64.StdEncoding.Decode(out, b64)
+			if err != nil {
+				continue
+			}
+			p.Bytes = out[:n]
+		}
+		_, tail, _ := getLine(rest[endIndex+len(pemEnd)-1:])
+		return p, tail
+	}
+}
+
+// EncodeToMemory returns the PEM encoding of b: the Proc-Type header first, if present, then
+// the other headers in sorted order, then the base64 of the bytes in 64-character lines. It
+// returns nil if a header key contains a colon.
+func EncodeToMemory(b *Block) []byte {
+	keys := []string{}
+	hasProcType := false
+	for k := range b.Headers {
+		if strings.Contains(k, ":") {
+			return nil
+		}
+		if k == "Proc-Type" {
+			hasProcType = true
+		} else {
+			keys = append(keys, k)
+		}
+	}
+	out := []byte(pemStart[1:] + b.Type + "-----\n")
+	if len(b.Headers) > 0 {
+		if hasProcType {
+			out = append(out, []byte("Proc-Type: "+b.Headers["Proc-Type"]+"\n")...)
+		}
+		sort.Strings(keys)
+		for i := 0; i < len(keys); i++ {
+			out = append(out, []byte(keys[i]+": "+b.Headers[keys[i]]+"\n")...)
+		}
+		out = append(out, '\n')
+	}
+	enc := base64.StdEncoding.EncodeToString(b.Bytes)
+	for len(enc) > 0 {
+		n := pemLineLength
+		if n > len(enc) {
+			n = len(enc)
+		}
+		out = append(out, []byte(enc[:n]+"\n")...)
+		enc = enc[n:]
+	}
+	return append(out, []byte(pemEnd[1:]+b.Type+"-----\n")...)
+}

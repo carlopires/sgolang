@@ -1830,9 +1830,10 @@
         "SGO-STD-028",
         "SGO-STD-029",
         "SGO-STD-030",
-        "SGO-STD-031"
+        "SGO-STD-031",
+        "SGO-STD-032"
       ],
-      "normative_text_digest": "a474eae3c099de9bbef268b3e77d4a55c28e772bb10c7eef842fb607c34ffb5e",
+      "normative_text_digest": "797ee6f51e20798903ccf9fd50a5eee1e1fac9e5da36373cf14c5ef9a6197c1a",
       "admitted_in": [
         "0.13.0"
       ],
@@ -1870,9 +1871,10 @@
         "SGO-STD-026": "a629dd76058fd76f8c15a136c1cf5a7e0b58652c67ce754b60e396dd541c4939",
         "SGO-STD-027": "1dba3bce4440708b1c5612bf91350e4262572f6a4b34388f0ce38edda7f61d46",
         "SGO-STD-028": "913a98a19c3cdeda06e669e0b65f383ac2403a641d5dc9f3a7ceb8b3df03bf32",
-        "SGO-STD-029": "708b5c186613844512e30eca57cf5f2b8623e34fa9f971863f82182b24744398",
+        "SGO-STD-029": "a06c1bbd5547692348357f7b61f5d265545557b51187229ab1b8db9b1030a174",
         "SGO-STD-030": "3784167873154340ada6f03f706c800695edc3e3b90f46eddaed77d3a96542d5",
-        "SGO-STD-031": "c718f00bf0045ca8c5febda8cb28508a28a729aaba056dc3276743ce67e3afe9"
+        "SGO-STD-031": "c718f00bf0045ca8c5febda8cb28508a28a729aaba056dc3276743ce67e3afe9",
+        "SGO-STD-032": "dba28b68e6078dbd77bb4f83a849e34dfac48b7fefad9e6a5913f90a229ff8a0"
       },
       "clause_status": {
         "SGO-STD-001": "frozen",
@@ -1905,7 +1907,8 @@
         "SGO-STD-028": "frozen",
         "SGO-STD-029": "draft",
         "SGO-STD-030": "draft",
-        "SGO-STD-031": "draft"
+        "SGO-STD-031": "draft",
+        "SGO-STD-032": "draft"
       },
       "clause_versions": {
         "SGO-STD-001": 2,
@@ -1936,12 +1939,13 @@
         "SGO-STD-026": 1,
         "SGO-STD-027": 1,
         "SGO-STD-028": 1,
-        "SGO-STD-029": 2,
+        "SGO-STD-029": 3,
         "SGO-STD-030": 1,
-        "SGO-STD-031": 1
+        "SGO-STD-031": 1,
+        "SGO-STD-032": 1
       }
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "ab142eebb823ea462d80409dad0eeac304ee72dc6998e3f63b165093667341f0"
+  "rows_digest": "3b5b1a4a15007a35d339af4a7f592610a9137f142e29f287998aadbf69010e09"
 }

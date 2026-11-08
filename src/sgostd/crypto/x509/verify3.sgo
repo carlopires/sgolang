@@ -75,7 +75,7 @@ func (c *Certificate) Verify(opts VerifyOptions) ([][]*Certificate, error) {
 			}
 			continue
 		}
-		if containsDistrustedSPKIHash(chain) {
+		if containsDistrustedSPKIHash(chain, &opts) {
 			continue
 		}
 		kept = append(kept, chain)
@@ -287,7 +287,7 @@ func checkChainForKeyUsage(chain []*Certificate, keyUsages []ExtKeyUsage) bool {
 	return true
 }
 
-func containsDistrustedSPKIHash(chain []*Certificate) bool {
+func containsDistrustedSPKIHash(chain []*Certificate, opts *VerifyOptions) bool {
 	bad := []string{
 		"ebed6475c2c2d80fcb199f3fe8dd6e6b3ce60b77eb15d4e42c3dec0c6f5b5105",
 		"49dd353dc2b919a3770645117d0e60c16115e7d1bc259eefe734b00ea434fe5f",
@@ -301,6 +301,9 @@ func containsDistrustedSPKIHash(chain []*Certificate) bool {
 	for i := 0; i < len(chain); i++ {
 		h := sha256.Sum256(chain[i].RawSubjectPublicKeyInfo)
 		s := hex.EncodeToString(h[:])
+		if opts.Roots.distrusts(s) || opts.Intermediates.distrusts(s) {
+			return true
+		}
 		for j := 0; j < len(bad); j++ {
 			if s == bad[j] {
 				return true
