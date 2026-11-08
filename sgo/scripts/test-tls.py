@@ -491,6 +491,439 @@ def hostile(d, only):
     return bad
 
 
+# --- Hostile encrypted flights --------------------------------------------------------------
+# A proxy in front of Go's server decrypts the server's encrypted handshake flight with the
+# server's key log, applies a mutation, and re-encrypts it; Go's client and the S-Go client
+# must give the same output, and the Go server must see the same result from both.
+
+MITM = r"""// Command mitm runs a Go crypto/tls TLS 1.3 server behind a proxy that decrypts the server's
+// handshake flight with the server's key log, applies a mutation, and re-encrypts it, for the
+// S-Go tls hostile tests (test-tls.py). Usage:
+//
+//	mitm -mode M -addr 127.0.0.1:N -cadir DIR
+package main
+
+import (
+	"bufio"
+	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/hkdf"
+	"crypto/rand"
+	"crypto/sha256"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/hex"
+	"flag"
+	"fmt"
+	"io"
+	"math/big"
+	"net"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
+	"time"
+)
+
+type keyLog struct {
+	mu   sync.Mutex
+	vals map[string][]byte
+}
+
+func (k *keyLog) Write(p []byte) (int, error) {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	for _, line := range strings.Split(strings.TrimSpace(string(p)), "\n") {
+		f := strings.Fields(line)
+		if len(f) == 3 {
+			v, _ := hex.DecodeString(f[2])
+			k.vals[f[0]] = v
+		}
+	}
+	return len(p), nil
+}
+
+func (k *keyLog) get(label string) []byte {
+	for i := 0; i < 500; i++ {
+		k.mu.Lock()
+		v := k.vals[label]
+		k.mu.Unlock()
+		if v != nil {
+			return v
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	panic("no key log entry " + label)
+}
+
+func expandLabel(secret []byte, label string, n int) []byte {
+	full := "tls13 " + label
+	info := []byte{byte(n >> 8), byte(n), byte(len(full))}
+	info = append(info, full...)
+	info = append(info, 0)
+	out, err := hkdf.Expand(sha256.New, secret, string(info), n)
+	if err != nil {
+		panic(err)
+	}
+	return out
+}
+
+// half is one direction of AES-128-GCM record protection.
+type half struct {
+	aead   cipher.AEAD
+	iv     []byte
+	seq    uint64
+	secret []byte
+}
+
+func newHalf(secret []byte) *half {
+	b, _ := aes.NewCipher(expandLabel(secret, "key", 16))
+	a, _ := cipher.NewGCM(b)
+	return &half{aead: a, iv: expandLabel(secret, "iv", 12), secret: secret}
+}
+
+func (h *half) nonce() []byte {
+	n := append([]byte{}, h.iv...)
+	for i := 0; i < 8; i++ {
+		n[11-i] ^= byte(h.seq >> (8 * i))
+	}
+	h.seq++
+	return n
+}
+
+func (h *half) open(rec []byte) (byte, []byte) {
+	p, err := h.aead.Open(nil, h.nonce(), rec[5:], rec[:5])
+	if err != nil {
+		panic(err)
+	}
+	i := len(p) - 1
+	for p[i] == 0 {
+		i--
+	}
+	return p[i], p[:i]
+}
+
+func (h *half) seal(typ byte, p []byte) []byte {
+	inner := append(append([]byte{}, p...), typ)
+	n := len(inner) + 16
+	hdr := []byte{23, 3, 3, byte(n >> 8), byte(n)}
+	return h.aead.Seal(hdr, h.nonce(), inner, hdr)
+}
+
+func readRecord(r io.Reader) ([]byte, error) {
+	hdr := make([]byte, 5)
+	if _, err := io.ReadFull(r, hdr); err != nil {
+		return nil, err
+	}
+	body := make([]byte, int(hdr[3])<<8|int(hdr[4]))
+	if _, err := io.ReadFull(r, body); err != nil {
+		return nil, err
+	}
+	return append(hdr, body...), nil
+}
+
+func hsMsg(typ byte, body []byte) []byte {
+	return append([]byte{typ, byte(len(body) >> 16), byte(len(body) >> 8), byte(len(body))}, body...)
+}
+
+func find(msgs [][]byte, typ byte) int {
+	for i, m := range msgs {
+		if m[0] == typ {
+			return i
+		}
+	}
+	panic(fmt.Sprintf("no message of type %d", typ))
+}
+
+// mutate rewrites the server's encrypted handshake messages; it returns the messages and the
+// size of the records to send them in (0: one record).
+func mutate(mode string, msgs [][]byte) ([][]byte, int) {
+	flip := func(m []byte, i int) { m[i] ^= 0x40 }
+	switch mode {
+	case "cv-sig":
+		m := msgs[find(msgs, 15)]
+		flip(m, len(m)-1)
+	case "cv-scheme":
+		m := msgs[find(msgs, 15)]
+		m[4], m[5] = 0x08, 0x07
+	case "finished":
+		m := msgs[find(msgs, 20)]
+		flip(m, len(m)-1)
+	case "cert-sig":
+		m := msgs[find(msgs, 11)]
+		n := int(m[8])<<16 | int(m[9])<<8 | int(m[10])
+		flip(m, 11+n-1)
+	case "cert-garbage":
+		m := msgs[find(msgs, 11)]
+		m[11] = 0x31
+	case "empty-certs":
+		msgs[find(msgs, 11)] = hsMsg(11, []byte{0, 0, 0, 0})
+	case "dup-ee":
+		i := find(msgs, 8)
+		msgs = append(msgs[:i+1], append([][]byte{msgs[i]}, msgs[i+1:]...)...)
+	case "no-cv":
+		i := find(msgs, 15)
+		msgs = append(msgs[:i], msgs[i+1:]...)
+	case "ee-alpn":
+		alpn := []byte{0, 16, 0, 5, 0, 3, 2, 'h', '2'}
+		msgs[find(msgs, 8)] = hsMsg(8, append([]byte{0, byte(len(alpn))}, alpn...))
+	case "fragmented":
+		return msgs, 7
+	}
+	return msgs, 0
+}
+
+func proxy(mode string, client net.Conn, serverAddr string, kl *keyLog, wg *sync.WaitGroup) {
+	defer wg.Done()
+	server, err := net.Dial("tcp", serverAddr)
+	if err != nil {
+		panic(err)
+	}
+	go func() { io.Copy(server, client); server.(*net.TCPConn).CloseWrite() }()
+	defer client.Close()
+	var hs *half
+	var msgs [][]byte
+	var buf []byte
+	sentFlight := false
+	var app, appOut *half
+	for {
+		rec, err := readRecord(server)
+		if err != nil {
+			return
+		}
+		if rec[0] != 23 {
+			client.Write(rec)
+			continue
+		}
+		if !sentFlight {
+			if hs == nil {
+				hs = newHalf(kl.get("SERVER_HANDSHAKE_TRAFFIC_SECRET"))
+			}
+			_, p := hs.open(rec)
+			buf = append(buf, p...)
+			for len(buf) >= 4 && len(buf) >= 4+(int(buf[1])<<16|int(buf[2])<<8|int(buf[3])) {
+				n := 4 + (int(buf[1])<<16 | int(buf[2])<<8 | int(buf[3]))
+				msgs = append(msgs, append([]byte{}, buf[:n]...))
+				buf = buf[n:]
+			}
+			if len(msgs) == 0 || msgs[len(msgs)-1][0] != 20 {
+				continue
+			}
+			out, size := mutate(mode, msgs)
+			stream := bytes.Join(out, nil)
+			enc := newHalf(hs.secret)
+			var wire []byte
+			if size == 0 {
+				size = len(stream)
+			}
+			for len(stream) > 0 {
+				k := size
+				if k > len(stream) {
+					k = len(stream)
+				}
+				wire = append(wire, enc.seal(22, stream[:k])...)
+				stream = stream[k:]
+			}
+			if mode == "record-mac" {
+				wire[len(wire)-1] ^= 1
+			}
+			client.Write(wire)
+			sentFlight = true
+			continue
+		}
+		if mode != "keyupdate" {
+			client.Write(rec)
+			continue
+		}
+		if app == nil {
+			app = newHalf(kl.get("SERVER_TRAFFIC_SECRET_0"))
+			appOut = newHalf(app.secret)
+			client.Write(appOut.seal(22, hsMsg(24, []byte{1})))
+			appOut = newHalf(expandLabel(app.secret, "traffic upd", 32))
+		}
+		typ, p := app.open(rec)
+		client.Write(appOut.seal(typ, p))
+	}
+}
+
+func main() {
+	mode := flag.String("mode", "", "mutation")
+	addr := flag.String("addr", "127.0.0.1:0", "proxy address")
+	cadir := flag.String("cadir", ".", "where to write ca.der and now")
+	flag.Parse()
+	now := time.Now()
+	caKey, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	caT := &x509.Certificate{SerialNumber: big.NewInt(1), Subject: pkix.Name{CommonName: "S-Go test CA"},
+		NotBefore: now.Add(-time.Hour), NotAfter: now.Add(24 * time.Hour), IsCA: true, BasicConstraintsValid: true,
+		KeyUsage: x509.KeyUsageCertSign}
+	caDER, _ := x509.CreateCertificate(rand.Reader, caT, caT, caKey.Public(), caKey)
+	ca, _ := x509.ParseCertificate(caDER)
+	lk, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	lT := &x509.Certificate{SerialNumber: big.NewInt(2), Subject: pkix.Name{CommonName: "tls.test"},
+		NotBefore: now.Add(-time.Hour), NotAfter: now.Add(24 * time.Hour), DNSNames: []string{"tls.test"},
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}, KeyUsage: x509.KeyUsageDigitalSignature}
+	lDER, _ := x509.CreateCertificate(rand.Reader, lT, ca, lk.Public(), caKey)
+	os.WriteFile(filepath.Join(*cadir, "ca.der"), caDER, 0o644)
+	os.WriteFile(filepath.Join(*cadir, "now"), []byte(fmt.Sprint(now.Unix())), 0o644)
+	kl := &keyLog{vals: map[string][]byte{}}
+	cfg := &tls.Config{MinVersion: tls.VersionTLS13, KeyLogWriter: kl, CipherSuites: nil,
+		Certificates: []tls.Certificate{{Certificate: [][]byte{lDER}, PrivateKey: lk}}}
+	sl, err := tls.Listen("tcp", "127.0.0.1:0", cfg)
+	if err != nil {
+		panic(err)
+	}
+	pl, err := net.Listen("tcp", *addr)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("ready")
+	var wg sync.WaitGroup
+	go func() {
+		c, err := pl.Accept()
+		if err != nil {
+			return
+		}
+		pl.Close()
+		wg.Add(1)
+		proxy(*mode, c, sl.Addr().String(), kl, &wg)
+	}()
+	c, err := sl.Accept()
+	if err != nil {
+		panic(err)
+	}
+	sl.Close()
+	tc := c.(*tls.Conn)
+	c.SetDeadline(time.Now().Add(20 * time.Second))
+	line, err := bufio.NewReader(c).ReadString('\n')
+	if err != nil {
+		fmt.Println("server error:", err)
+		c.Close()
+		wg.Wait()
+		return
+	}
+	st := tc.ConnectionState()
+	c.Write([]byte(strings.ToUpper(line)))
+	fmt.Printf("server: %s alpn=%q got=%q\n", tls.CipherSuiteName(st.CipherSuite), st.NegotiatedProtocol, line)
+	c.Close()
+	wg.Wait()
+}
+"""
+
+GOCLI = r"""// Command gocli is Go's crypto/tls client for the S-Go tls tests; its output has the format of
+// test-tls.py's S-Go client. Usage: gocli ADDR CA.der
+package main
+
+import (
+	"bufio"
+	"crypto/tls"
+	"crypto/x509"
+	"fmt"
+	"os"
+	"strings"
+)
+
+func main() {
+	der, _ := os.ReadFile(os.Args[2])
+	ca, err := x509.ParseCertificate(der)
+	if err != nil {
+		panic(err)
+	}
+	pool := x509.NewCertPool()
+	pool.AddCert(ca)
+	cfg := &tls.Config{ServerName: "tls.test", RootCAs: pool, MinVersion: tls.VersionTLS13,
+		CurvePreferences: []tls.CurveID{tls.X25519}}
+	c, err := tls.Dial("tcp", os.Args[1], cfg)
+	if err != nil {
+		fmt.Println("client error: " + err.Error())
+		return
+	}
+	defer c.Close()
+	if _, err := c.Write([]byte("hello tls\n")); err != nil {
+		fmt.Println("write error: " + err.Error())
+		return
+	}
+	got, err := bufio.NewReader(c).ReadString('\n')
+	if err != nil {
+		fmt.Println("read error: " + err.Error())
+		return
+	}
+	st := c.ConnectionState()
+	fmt.Println("client: " + tls.CipherSuiteName(st.CipherSuite) + " alpn=" + st.NegotiatedProtocol + " got=" + strings.TrimSuffix(got, "\n"))
+}
+"""
+
+MITM_MODES = ["none", "fragmented", "keyupdate", "cv-sig", "cv-scheme", "finished", "cert-sig",
+              "cert-garbage", "empty-certs", "dup-ee", "no-cv", "ee-alpn", "record-mac"]
+
+
+def go_build(d, name, src):
+    sd = os.path.join(d, name + "-src")
+    os.makedirs(sd)
+    open(os.path.join(sd, "main.go"), "w").write(src)
+    open(os.path.join(sd, "go.mod"), "w").write("module " + name + "\n\ngo 1.26\n")
+    exe = os.path.join(d, name)
+    r = subprocess.run([GO, "build", "-o", exe, "."], cwd=sd, env=dict(os.environ, GOTOOLCHAIN="local"),
+                       capture_output=True, text=True, timeout=600)
+    if r.returncode:
+        sys.exit("test-tls: building %s failed:\n%s%s" % (name, r.stdout, r.stderr))
+    return exe
+
+
+def run_mitm(mitm, mode, d, client):
+    cd = tempfile.mkdtemp(dir=d)
+    srv = subprocess.Popen([mitm, "-mode", mode, "-addr", "127.0.0.1:%d" % PORT, "-cadir", cd],
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    if srv.stdout.readline().strip() != "ready":
+        srv.kill()
+        return "server did not start", ""
+    cmd = client(cd)
+    try:
+        r = subprocess.run(cmd[0], cwd=cmd[1], capture_output=True, text=True, timeout=600)
+        cout = (r.stdout + r.stderr).strip()
+    except subprocess.TimeoutExpired:
+        cout = "client timed out"
+    try:
+        sout, _ = srv.communicate(timeout=30)
+    except subprocess.TimeoutExpired:
+        srv.kill()
+        sout, _ = srv.communicate()
+    return cout, sout.strip()
+
+
+def sgo_client(cd):
+    ca = open(os.path.join(cd, "ca.der"), "rb").read().hex()
+    now = int(open(os.path.join(cd, "now")).read())
+    m = os.path.join(cd, "client")
+    os.makedirs(m)
+    open(os.path.join(m, "main.sgo"), "w").write(CLIENT % dict(ca=ca, port=PORT, name="tls.test", now=now, alpn="", suites=""))
+    open(os.path.join(m, "sgo.mod"), "w").write(
+        "module example.com/tlsclient\n\nsgo %s\ngrant connect 127.0.0.1:%d\ngrant entropy\n" % (VERSION, PORT))
+    return [SGO, "run", "."], m
+
+
+def mitm_cases(d, only):
+    mitm = go_build(d, "mitm", MITM)
+    gocli = go_build(d, "gocli", GOCLI)
+    bad = 0
+    for mode in MITM_MODES:
+        name = "mitm-" + mode
+        if only and name not in only:
+            continue
+        gc, gs = run_mitm(mitm, mode, d, lambda cd: ([gocli, "127.0.0.1:%d" % PORT, os.path.join(cd, "ca.der")], cd))
+        sc, ss = run_mitm(mitm, mode, d, sgo_client)
+        want_ok = mode in ("none", "fragmented", "keyupdate")
+        ok = gc == sc and gs == ss and gc.startswith("client: " if want_ok else "client error: ")
+        print("%-22s %s" % (name, "ok" if ok else "FAIL"))
+        if not ok:
+            bad += 1
+            print("  go:   %s | %s\n  s-go: %s | %s" % (gc, gs, sc, ss))
+    return bad
+
+
 def main():
     only = set(sys.argv[1:])
     bad = 0
@@ -506,6 +939,7 @@ def main():
                 bad += 1
                 print("  client: %s\n  want:   %s\n  server: %s\n  want:   %s" % (cout, case[8], sout, case[9]))
         bad += hostile(d, only)
+        bad += mitm_cases(d, only)
     print("test-tls: %d problem(s)" % bad)
     sys.exit(1 if bad else 0)
 
