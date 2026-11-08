@@ -21,7 +21,7 @@ Subset 0. Derived from `SGO_SPEC_SUBSET0.md` §16, the user's naming decision (d
 - **positive_tests:** S01, S15; fixture:proc-hello; `sgo/scripts/test-identity.py` (`version -m` on programs with and without a trust record, and on a file with no build ID).
 - **negative_tests:** S01, S15, S19; fixture:tool-compat-flag, fixture:tool-go-file-input.
 - **implementation_coverage:** gate level only — `sgo/scripts/sgo-target` denies every request (W00); the driver is W03.
-- **executed_evidence:** W00 gate checks passed on all three targets.
+- **executed_evidence:** W00 gate checks passed on all three targets; W28: `sgo/scripts/test-identity.py` (version -m and the trust record; sgo/evidence/w28/README.md).
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).
 
 ### SGO-TOOL-002 — sgo check

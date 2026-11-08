@@ -1,3 +1,3 @@
 module example.com/type-int32-denied
 
-sgo 0.22.0
+sgo 0.23.0

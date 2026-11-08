@@ -1,3 +1,3 @@
 module example.com/res-iface-assert-to-error-denied
 
-sgo 0.22.0
+sgo 0.23.0

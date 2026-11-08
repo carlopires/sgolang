@@ -2,6 +2,24 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.23.0 — 2026-11-08
+
+A TLS 1.3 client, pinned roots, and trust an operator can change without a rebuild (W28; D199, D201). Every program valid under 0.22.0 keeps its meaning: the release adds packages and extends `std/crypto/x509`.
+
+New clauses:
+
+- SGO-STD-030 — `std/crypto/x509/roots`: the Mozilla root set as Go's x509roots/fallback publishes it, pinned by version and digest.
+- SGO-STD-031 — `std/crypto/tls`: a TLS 1.3 client over a granted connection, with caller-supplied roots, time and entropy; checks, alerts and errors follow Go's client.
+- SGO-STD-032 — `std/encoding/pem`: PEM decoding with Go's rules, and encoding.
+
+The TLS client is checked against Go's crypto/tls server, and against Go's client on 39 hostile-server scenarios, plaintext and encrypted (`sgo/scripts/test-tls.py`); PEM against Go's encoding/pem on generated inputs (`sgo/scripts/test-std-pem.py`).
+
+Amended clauses:
+
+- SGO-STD-029 v3 — `std/crypto/x509` adds distrust-after dates for roots, `AppendCertsFromPEM`, and distrusted keys per pool (`AddDistrustedKey`, `AppendDistrustedKeysFromPEM`), so roots and distrusted keys can come from a granted file (D201).
+- SGO-BUILD-001 v2 — a binary that links `std/crypto/x509` records the root set and distrust list it was built with (D201 (c)).
+- SGO-TOOL-001 v3 — `sgo version -m` prints the build metadata a binary records.
+
 ## 0.22.0 — 2026-11-08
 
 Signatures, ASN.1, X.509 and AES-GCM (W27; D199, D200). Every program valid under 0.21.0 keeps its meaning: the release adds packages and extends `std/crypto/cipher`.

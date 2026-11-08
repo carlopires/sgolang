@@ -1,3 +1,3 @@
 module example.com/type-uint32-from-float-overflow
 
-sgo 0.22.0
+sgo 0.23.0

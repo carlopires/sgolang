@@ -1,3 +1,3 @@
 module example.com/test-leaked-work
 
-sgo 0.22.0
+sgo 0.23.0

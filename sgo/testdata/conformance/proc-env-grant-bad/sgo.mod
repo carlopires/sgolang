@@ -1,5 +1,5 @@
 module example.com/proc-env-grant-bad
 
-sgo 0.22.0
+sgo 0.23.0
 
 grant env lower

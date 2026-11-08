@@ -1,3 +1,3 @@
 module example.com/frozen-escape-send
 
-sgo 0.22.0
+sgo 0.23.0

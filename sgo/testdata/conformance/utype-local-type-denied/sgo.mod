@@ -1,3 +1,3 @@
 module example.com/utype-local-type-denied
 
-sgo 0.22.0
+sgo 0.23.0

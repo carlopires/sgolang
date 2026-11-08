@@ -1,3 +1,3 @@
 module example.com/ctl-return-operands-nursery
 
-sgo 0.22.0
+sgo 0.23.0

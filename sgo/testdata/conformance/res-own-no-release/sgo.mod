@@ -1,3 +1,3 @@
 module example.com/res-own-no-release
 
-sgo 0.22.0
+sgo 0.23.0

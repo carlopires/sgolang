@@ -1,3 +1,3 @@
 module example.com/type-slice
 
-sgo 0.22.0
+sgo 0.23.0

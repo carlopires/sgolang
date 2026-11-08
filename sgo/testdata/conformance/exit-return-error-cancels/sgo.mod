@@ -1,3 +1,3 @@
 module example.com/exit-return-error-cancels
 
-sgo 0.22.0
+sgo 0.23.0

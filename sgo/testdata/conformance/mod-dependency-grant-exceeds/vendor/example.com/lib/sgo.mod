@@ -1,4 +1,4 @@
 module example.com/lib
 
-sgo 0.22.0
+sgo 0.23.0
 grant clock

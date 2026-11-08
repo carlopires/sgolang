@@ -1,6 +1,6 @@
 module example.com/proc-env-granted
 
-sgo 0.22.0
+sgo 0.23.0
 
 grant env NO_COLOR
 grant env APP_*

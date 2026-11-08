@@ -1,4 +1,4 @@
 module example.com/res-share-child-uses
 
-sgo 0.22.0
+sgo 0.23.0
 grant dir data data rw

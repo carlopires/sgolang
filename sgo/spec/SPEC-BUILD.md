@@ -21,5 +21,5 @@ Subset 0. Derived from plan §10.2, stage map, decision D22, invariant SPEC-5.
 - **positive_tests:** B01, B02, B04, S15; W00 evidence; `sgo/scripts/test-identity.py`: a program that links `std/crypto/x509/roots` records the bundle version and digest and the distrusted-key count and digest, and a program that does not link x509 records no trust.
 - **negative_tests:** B05, S15; fixture:tool-unadmitted-target.
 - **implementation_coverage:** W00 — bootstrap pin, reference and stage-0 builds, separate caches, PATH guard (scripts under `sgo/scripts/`).
-- **executed_evidence:** W00 B01–B05 passed on darwin/arm64, linux/amd64, linux/arm64 (`sgo/evidence/w00/`).
+- **executed_evidence:** W00 B01–B05 passed on darwin/arm64, linux/amd64, linux/arm64 (`sgo/evidence/w00/`); W28: `sgo/scripts/test-identity.py` (version -m and the trust record; sgo/evidence/w28/README.md).
 - **supported_execution_configurations:** production; lab denied until W08 (SPEC-LAB).

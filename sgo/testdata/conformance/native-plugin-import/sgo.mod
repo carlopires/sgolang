@@ -1,3 +1,3 @@
 module example.com/native-plugin-import
 
-sgo 0.22.0
+sgo 0.23.0
