@@ -41,6 +41,9 @@ type Conn struct {
 	closed    bool
 	sentClose bool
 	rerr      string
+	haveVers  bool
+	done      bool
+	retry     int
 }
 
 // The fatal alerts (RFC 8446 section 6), with Go's texts.
@@ -129,60 +132,123 @@ func (t *Conn) writeRecord(typ int, data []byte) error {
 	}
 }
 
-// readRecord reads one record and returns its inner type and plaintext. Alerts end the
-// connection; ChangeCipherSpec records are skipped.
+func (t *Conn) setErr(msg string) error {
+	if t.rerr == "" {
+		t.rerr = msg
+	}
+	return errors.New(msg)
+}
+
+// retryRecord skips a record that does not advance the connection, at most 16 in a row.
+func (t *Conn) retryRecord() (int, []byte, error) {
+	t.retry++
+	if t.retry > 16 {
+		_ = t.sendAlert(alertUnexpectedMessage)
+		t.rerr = "tls: too many ignored records"
+		return 0, []byte{}, errors.New(t.rerr)
+	}
+	return t.readRecord()
+}
+
+// readRecord reads one handshake or application data record, with the checks, alerts and
+// errors of Go's Conn.readRecordOrCCS for TLS 1.3. Alerts end the connection (user_canceled
+// and, before the version is known, warnings are skipped); ChangeCipherSpec records are
+// skipped once the version is known.
 func (t *Conn) readRecord() (int, []byte, error) {
-	for {
-		if t.rerr != "" {
-			return 0, []byte{}, errors.New(t.rerr)
-		}
-		hdr, err := readFull(t.c, recordHeaderLen)
-		if err != nil {
-			return 0, []byte{}, err
-		}
-		n := int(hdr[3])<<8 | int(hdr[4])
-		if n > maxCiphertextTLS13 {
-			return 0, []byte{}, t.sendAlert(alertRecordOverflow)
-		}
-		body, berr := readFull(t.c, n)
-		if berr != nil {
-			return 0, []byte{}, berr
-		}
-		typ, plain, oerr := t.in.open(hdr, body)
-		if oerr != nil {
-			if oerr.Error() == "local error: tls: bad record MAC" {
-				return 0, []byte{}, t.sendAlert(alertBadRecordMAC)
-			}
-			if oerr.Error() == "local error: tls: record overflow" {
-				return 0, []byte{}, t.sendAlert(alertRecordOverflow)
-			}
+	if t.rerr != "" {
+		return 0, []byte{}, errors.New(t.rerr)
+	}
+	hdr, err := readFull(t.c, recordHeaderLen)
+	if err != nil {
+		return 0, []byte{}, err
+	}
+	typ := int(hdr[0])
+	if !t.done && typ == 0x80 {
+		_ = t.sendAlert(alertProtocolVersion)
+		return 0, []byte{}, t.setErr("tls: unsupported SSLv2 handshake received")
+	}
+	vers := int(hdr[1])<<8 | int(hdr[2])
+	n := int(hdr[3])<<8 | int(hdr[4])
+	if t.haveVers && vers != 0x0303 {
+		_ = t.sendAlert(alertProtocolVersion)
+		return 0, []byte{}, t.setErr("tls: received record with version " + hexInt(vers) + " when expecting version 303")
+	}
+	if !t.haveVers && (typ != recordTypeAlert && typ != recordTypeHandshake || vers >= 0x1000) {
+		return 0, []byte{}, t.setErr("tls: first record does not look like a TLS handshake")
+	}
+	if t.haveVers && n > maxCiphertextTLS13 || n > maxPlaintext+2048 {
+		_ = t.sendAlert(alertRecordOverflow)
+		return 0, []byte{}, t.setErr("tls: oversized record received with length " + strconv.Itoa(n))
+	}
+	body, berr := readFull(t.c, n)
+	if berr != nil {
+		return 0, []byte{}, berr
+	}
+	typ, plain, a := t.in.open(hdr, body)
+	if a >= 0 {
+		return 0, []byte{}, t.sendAlert(a)
+	}
+	if len(plain) > maxPlaintext {
+		return 0, []byte{}, t.sendAlert(alertRecordOverflow)
+	}
+	if !t.in.on && typ == recordTypeApplicationData {
+		return 0, []byte{}, t.sendAlert(alertUnexpectedMessage)
+	}
+	if (typ == recordTypeApplicationData || typ == recordTypeHandshake && !t.done) && len(plain) > 0 {
+		t.retry = 0
+	}
+	if t.haveVers && typ != recordTypeHandshake && len(t.hsBuf) > 0 {
+		return 0, []byte{}, t.sendAlert(alertUnexpectedMessage)
+	}
+	if typ == recordTypeAlert {
+		if len(plain) != 2 {
 			return 0, []byte{}, t.sendAlert(alertUnexpectedMessage)
 		}
-		if typ == recordTypeChangeCipherSpec {
-			if len(plain) != 1 || plain[0] != 1 {
-				return 0, []byte{}, t.sendAlert(alertUnexpectedMessage)
-			}
-			continue
+		if int(plain[1]) == alertCloseNotify {
+			return 0, []byte{}, t.setErr(closeNotifyText)
 		}
-		if typ == recordTypeAlert {
-			if len(plain) != 2 {
-				return 0, []byte{}, t.sendAlert(alertUnexpectedMessage)
+		if t.haveVers {
+			if int(plain[1]) == 90 {
+				return t.retryRecord()
 			}
-			if int(plain[1]) == alertCloseNotify {
-				t.rerr = closeNotifyText
-			} else {
-				t.rerr = "remote error: tls: " + alertText(int(plain[1]))
-			}
-			return 0, []byte{}, errors.New(t.rerr)
+			return 0, []byte{}, t.setErr("remote error: tls: " + alertText(int(plain[1])))
 		}
-		if typ != recordTypeHandshake && typ != recordTypeApplicationData {
+		if plain[0] == 1 {
+			return t.retryRecord()
+		}
+		if plain[0] == 2 {
+			return 0, []byte{}, t.setErr("remote error: tls: " + alertText(int(plain[1])))
+		}
+		return 0, []byte{}, t.sendAlert(alertUnexpectedMessage)
+	}
+	if typ == recordTypeChangeCipherSpec {
+		if len(plain) != 1 || plain[0] != 1 {
+			return 0, []byte{}, t.sendAlert(alertDecodeError)
+		}
+		if len(t.hsBuf) > 0 {
 			return 0, []byte{}, t.sendAlert(alertUnexpectedMessage)
 		}
-		if len(plain) == 0 && typ == recordTypeHandshake {
+		if t.haveVers {
+			return t.retryRecord()
+		}
+		return 0, []byte{}, t.sendAlert(alertUnexpectedMessage)
+	}
+	if typ == recordTypeApplicationData {
+		if !t.done {
+			return 0, []byte{}, t.sendAlert(alertUnexpectedMessage)
+		}
+		if len(plain) == 0 {
+			return t.retryRecord()
+		}
+		return typ, plain, nil
+	}
+	if typ == recordTypeHandshake {
+		if len(plain) == 0 {
 			return 0, []byte{}, t.sendAlert(alertUnexpectedMessage)
 		}
 		return typ, plain, nil
 	}
+	return 0, []byte{}, t.sendAlert(alertUnexpectedMessage)
 }
 
 // readHandshake returns the next handshake message, whole with its header.
@@ -282,13 +348,13 @@ func (t *Conn) Write(s string) (int, error) {
 	return len(s), nil
 }
 
-// Close sends close_notify and closes the underlying connection.
+// Close sends close_notify, if the handshake completed, and closes the underlying connection.
 func (t *Conn) Close() error {
 	if t.closed {
 		return nil
 	}
 	t.closed = true
-	if !t.sentClose {
+	if t.done && !t.sentClose {
 		t.sentClose = true
 		_, _ = t.c.Write(string(t.out.seal(recordTypeAlert, []byte{1, alertCloseNotify})))
 	}

@@ -680,7 +680,7 @@ The packages of `std` (SGO-IMP-004): their exported API and behavior. Derived fr
 - **runtime_guards:** As SGO-ERR-003.
 - **tcb_assumptions:** None beyond the compiler and runtime used by all S-Go code (SGO-IMP-004).
 - **positive_tests:** fixture:std-tls-alert; `src/sgostd/crypto/tls` package test (the ACVP key-schedule vector and RFC 8448's traffic key); `sgo/scripts/test-tls.py`: handshakes and echoes against Go's crypto/tls server with ECDSA P-256 and P-384, Ed25519 and RSA leaf keys, each cipher suite, ALPN, a requested client certificate, and a 100 KiB reply.
-- **negative_tests:** fixture:std-tls-alert; `sgo/scripts/test-tls.py`: a wrong server name and an expired certificate fail with Go's errors, and the Go server sees Go's `bad certificate` alert.
+- **negative_tests:** fixture:std-tls-alert; `sgo/scripts/test-tls.py`: a wrong server name and an expired certificate fail with Go's errors, and the Go server sees Go's `bad certificate` alert; 26 hostile-server scenarios (malformed, downgraded or inconsistent ServerHello and HelloRetryRequest messages, unexpected messages, alerts, ChangeCipherSpec and record faults) give the S-Go client the same error, and make it send the same alert, as Go's crypto/tls client.
 - **implementation_coverage:** `src/sgostd/crypto/tls/`.
 - **executed_evidence:** PENDING: W28.
 - **supported_execution_configurations:** production.

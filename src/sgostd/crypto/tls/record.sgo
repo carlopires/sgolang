@@ -9,7 +9,6 @@ import (
 	"std/crypto/aes"
 	"std/crypto/chacha20poly1305"
 	"std/crypto/cipher"
-	"std/errors"
 )
 
 const (
@@ -116,21 +115,22 @@ func (h *halfConn) seal(typ int, payload []byte) []byte {
 	return out
 }
 
-// open removes the protection of a record with header hdr; it returns the inner content type
-// and plaintext.
-func (h *halfConn) open(hdr, body []byte) (int, []byte, error) {
-	if !h.on {
-		return int(hdr[0]), body, nil
+// open removes the protection of a record with header hdr, as Go's halfConn.decrypt; it
+// returns the inner content type and plaintext, or a fatal alert (alert >= 0).
+func (h *halfConn) open(hdr, body []byte) (int, []byte, int) {
+	typ := int(hdr[0])
+	if !h.on || typ == recordTypeChangeCipherSpec {
+		return typ, body, -1
 	}
-	if int(hdr[0]) == recordTypeChangeCipherSpec {
-		return recordTypeChangeCipherSpec, body, nil
-	}
-	if int(hdr[0]) != recordTypeApplicationData {
-		return 0, []byte{}, errors.New("tls: unexpected message")
+	if typ != recordTypeApplicationData {
+		return 0, []byte{}, 10
 	}
 	plain, err := h.aead.Open([]byte{}, h.nonce(), body, hdr)
 	if err != nil {
-		return 0, []byte{}, errors.New("local error: tls: bad record MAC")
+		return 0, []byte{}, 20
+	}
+	if len(plain) > maxPlaintext+1 {
+		return 0, []byte{}, 22
 	}
 	h.seq++
 	i := len(plain) - 1
@@ -138,12 +138,9 @@ func (h *halfConn) open(hdr, body []byte) (int, []byte, error) {
 		i--
 	}
 	if i < 0 {
-		return 0, []byte{}, errors.New("tls: unexpected message")
+		return 0, []byte{}, 10
 	}
-	if i > maxPlaintext {
-		return 0, []byte{}, errors.New("local error: tls: record overflow")
-	}
-	return int(plain[i]), plain[:i], nil
+	return int(plain[i]), plain[:i], -1
 }
 
 // readFull reads exactly n bytes from c.

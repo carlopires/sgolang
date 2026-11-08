@@ -1832,7 +1832,7 @@
         "SGO-STD-030",
         "SGO-STD-031"
       ],
-      "normative_text_digest": "900a81b08fd1cc666bc322c0a8b0d1866f7847c9cf7001731e0afc3f1e7ebcb8",
+      "normative_text_digest": "53da17bab78e4a824f679c3c37bf4852d2e14931166200e676002d049b2b3a29",
       "admitted_in": [
         "0.13.0"
       ],
@@ -1872,7 +1872,7 @@
         "SGO-STD-028": "913a98a19c3cdeda06e669e0b65f383ac2403a641d5dc9f3a7ceb8b3df03bf32",
         "SGO-STD-029": "708b5c186613844512e30eca57cf5f2b8623e34fa9f971863f82182b24744398",
         "SGO-STD-030": "3784167873154340ada6f03f706c800695edc3e3b90f46eddaed77d3a96542d5",
-        "SGO-STD-031": "c00d32870b2b334cf55269d4b2f69650ea1a3c2454b0b7c8a3866b2fc79a4614"
+        "SGO-STD-031": "6bc5d577dda85c438aa3b3a2c241a8dd77811d86678a1766ff41b27008c34e08"
       },
       "clause_status": {
         "SGO-STD-001": "frozen",
@@ -1943,5 +1943,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "6e3f5a1c5a538861c832907f1ed3f2bb43729df493a69ef2fc2f21a47f0569fe"
+  "rows_digest": "e706e8f56fef25afcebf8022509432b8940e8e1fe8fd19089c2bf374d78eb342"
 }

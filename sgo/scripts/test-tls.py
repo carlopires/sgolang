@@ -262,6 +262,235 @@ def run_case(exe, d, case):
     return cout, sout.strip()
 
 
+# --- Hostile servers -------------------------------------------------------------------------
+# A Python server answers the ClientHello with crafted bytes; Go's crypto/tls client and the
+# S-Go client run against each scenario, and their errors and the alert each sends must match.
+
+HOSTILE_GO = """package main
+
+import (
+	"crypto/tls"
+	"crypto/x509"
+	"fmt"
+	"os"
+	"time"
+)
+
+func main() {
+	cfg := &tls.Config{ServerName: "tls.test", RootCAs: x509.NewCertPool(), MinVersion: tls.VersionTLS13,
+		CurvePreferences: []tls.CurveID{tls.X25519}}
+	d := &tls.Dialer{Config: cfg}
+	_ = time.Second
+	c, err := d.Dial("tcp", os.Args[1])
+	if err != nil {
+		fmt.Println("client error: " + err.Error())
+		return
+	}
+	c.Close()
+	fmt.Println("handshake ok")
+}
+"""
+
+HOSTILE_SGO = """package main
+
+import (
+	"sgo"
+	"std/crypto/tls"
+	"std/crypto/x509"
+)
+
+func main(root *sgo.Context) error {
+	c, err := root.Dial("127.0.0.1:%(port)d")
+	if err != nil {
+		return err
+	}
+	cfg := tls.Config{ServerName: "tls.test", RootCAs: x509.NewCertPool(), Time: 0, NextProtos: []string{}, CipherSuites: []int{}}
+	t, herr := tls.Client(c, root.Entropy(), cfg)
+	_ = t.Close()
+	if herr != nil {
+		return root.Stdout().WriteString("client error: " + herr.Error() + "\\n")
+	}
+	return root.Stdout().WriteString("handshake ok\\n")
+}
+"""
+
+HRR_RANDOM = bytes.fromhex("cf21ad74e59a6111be1d8c021e65b891c2a211167abb8c5e079e09e2c8a8339c")
+
+
+def u8(v):
+    return bytes([v])
+
+
+def u16(v):
+    return bytes([(v >> 8) & 0xff, v & 0xff])
+
+
+def u24(v):
+    return bytes([(v >> 16) & 0xff, (v >> 8) & 0xff, v & 0xff])
+
+
+def record(typ, payload):
+    return bytes([typ, 3, 3]) + u16(len(payload)) + payload
+
+
+def hs(typ, body):
+    return u8(typ) + u24(len(body)) + body
+
+
+def ext(typ, data):
+    return u16(typ) + u16(len(data)) + data
+
+
+def sv(v=0x0304):
+    return ext(43, u16(v))
+
+
+def ks(group=0x001d, key=None):
+    key = os.urandom(32) if key is None else key
+    return ext(51, u16(group) + u16(len(key)) + key)
+
+
+def sh(sid, suite=0x1301, legacy=0x0303, comp=0, random=None, exts=None):
+    random = os.urandom(32) if random is None else random
+    exts = sv() + ks() if exts is None else exts
+    body = u16(legacy) + random + u8(len(sid)) + sid + u16(suite) + u8(comp) + u16(len(exts)) + exts
+    return record(22, hs(2, body))
+
+
+def hrr(sid, suite=0x1301, exts=None):
+    exts = sv() + ext(44, u16(4) + b"ckie") if exts is None else exts
+    return sh(sid, suite=suite, random=HRR_RANDOM, exts=exts)
+
+
+# name -> (first reply, second reply or None); each is a function of the ClientHello session ID.
+SCENARIOS = [
+    ("sh-tls12", lambda s: sh(s, exts=ks()), None),
+    ("sh-version-302", lambda s: sh(s, exts=sv(0x0302) + ks()), None),
+    ("sh-legacy-version", lambda s: sh(s, legacy=0x0301), None),
+    ("sh-session-id", lambda s: sh(b"\x00" * 32), None),
+    ("sh-compression", lambda s: sh(s, comp=1), None),
+    ("sh-unoffered-suite", lambda s: sh(s, suite=0x1304), None),
+    ("sh-tls12-suite", lambda s: sh(s, suite=0xc02f), None),
+    ("sh-no-key-share", lambda s: sh(s, exts=sv()), None),
+    ("sh-wrong-group", lambda s: sh(s, exts=sv() + ks(0x0017, b"\x04" + os.urandom(64))), None),
+    ("sh-cookie", lambda s: sh(s, exts=sv() + ks() + ext(44, u16(4) + b"ckie")), None),
+    ("sh-low-order-key", lambda s: sh(s, exts=sv() + ks(key=b"\x00" * 32)), None),
+    ("sh-short-key", lambda s: sh(s, exts=sv() + ks(key=os.urandom(31))), None),
+    ("sh-duplicate-ext", lambda s: sh(s, exts=sv() + sv() + ks()), None),
+    ("sh-truncated", lambda s: record(22, hs(2, b"\x03\x03")), None),
+    ("hrr-unnecessary", lambda s: hrr(s, exts=sv()), None),
+    ("hrr-x25519", lambda s: hrr(s, exts=sv() + ext(51, u16(0x001d))), None),
+    ("hrr-unsupported-group", lambda s: hrr(s, exts=sv() + ext(51, u16(0x0017))), None),
+    ("hrr-twice", lambda s: hrr(s), lambda s: hrr(s)),
+    ("hrr-changed-suite", lambda s: hrr(s, suite=0x1301), lambda s: sh(s, suite=0x1302)),
+    ("hrr-changed-version", lambda s: hrr(s), lambda s: sh(s, exts=sv(0x0303) + ks())),
+    ("ee-first", lambda s: record(22, hs(8, u16(0))), None),
+    ("alert", lambda s: record(21, b"\x02\x28"), None),
+    ("appdata-first", lambda s: record(23, b"x"), None),
+    ("bad-record-type", lambda s: record(99, b"\x00"), None),
+    ("record-overflow", lambda s: bytes([22, 3, 3, 0x50, 0x00]), None),
+    ("bad-ccs", lambda s: record(20, b"\x02") + sh(s), None),
+]
+
+
+def read_record(conn):
+    def full(n):
+        b = b""
+        while len(b) < n:
+            chunk = conn.recv(n - len(b))
+            if not chunk:
+                raise EOFError
+            b += chunk
+        return b
+    h = full(5)
+    return h[0], full((h[3] << 8) | h[4])
+
+
+def hostile_server(sock, first, second, result):
+    import socket
+    conn, _ = sock.accept()
+    conn.settimeout(15)
+    alerts = []
+    try:
+        typ, ch = read_record(conn)
+        sid = ch[4 + 2 + 32 + 1:4 + 2 + 32 + 1 + ch[4 + 2 + 32]]
+        conn.sendall(first(sid))
+        if second is not None:
+            while True:
+                typ, data = read_record(conn)
+                if typ == 21:
+                    alerts.append(data[1])
+                if typ == 22:
+                    break
+            conn.sendall(second(sid))
+        while True:
+            typ, data = read_record(conn)
+            if typ == 21 and len(data) == 2:
+                alerts.append(data[1])
+    except (EOFError, ConnectionError, socket.timeout, OSError):
+        pass
+    conn.close()
+    result.append(alerts)
+
+
+def run_hostile(client, first, second):
+    import socket
+    import threading
+    sock = socket.socket()
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.bind(("127.0.0.1", PORT))
+    sock.listen(1)
+    result = []
+    th = threading.Thread(target=hostile_server, args=(sock, first, second, result))
+    th.start()
+    try:
+        r = subprocess.run(client, capture_output=True, text=True, timeout=120)
+        out = (r.stdout + r.stderr).strip()
+    except subprocess.TimeoutExpired:
+        out = "client timed out"
+    th.join(30)
+    sock.close()
+    return out, (result[0] if result else None)
+
+
+def build_hostile_clients(d):
+    gdir = os.path.join(d, "hgo")
+    os.makedirs(gdir)
+    open(os.path.join(gdir, "main.go"), "w").write(HOSTILE_GO)
+    open(os.path.join(gdir, "go.mod"), "w").write("module hostile\n\ngo 1.26\n")
+    gexe = os.path.join(d, "hostile-go")
+    r = subprocess.run([GO, "build", "-o", gexe, "."], cwd=gdir, env=dict(os.environ, GOTOOLCHAIN="local"),
+                       capture_output=True, text=True, timeout=600)
+    if r.returncode:
+        sys.exit("test-tls: building the Go client failed:\n" + r.stdout + r.stderr)
+    sdir = os.path.join(d, "hsgo")
+    os.makedirs(sdir)
+    open(os.path.join(sdir, "main.sgo"), "w").write(HOSTILE_SGO % dict(port=PORT))
+    open(os.path.join(sdir, "sgo.mod"), "w").write(
+        "module example.com/hostile\n\nsgo %s\ngrant connect 127.0.0.1:%d\ngrant entropy\n" % (VERSION, PORT))
+    sexe = os.path.join(d, "hostile-sgo")
+    r = subprocess.run([SGO, "build", "-o", sexe, "."], cwd=sdir, capture_output=True, text=True, timeout=600)
+    if r.returncode:
+        sys.exit("test-tls: building the S-Go client failed:\n" + r.stdout + r.stderr)
+    return gexe, sexe
+
+
+def hostile(d, only):
+    gexe, sexe = build_hostile_clients(d)
+    bad = 0
+    for name, first, second in SCENARIOS:
+        if only and name not in only:
+            continue
+        gout, galerts = run_hostile([gexe, "127.0.0.1:%d" % PORT], first, second)
+        sout, salerts = run_hostile([sexe], first, second)
+        ok = gout == sout and galerts == salerts and gout.startswith("client error")
+        print("%-22s %s" % (name, "ok" if ok else "FAIL"))
+        if not ok:
+            bad += 1
+            print("  go:   %s alerts=%s\n  s-go: %s alerts=%s" % (gout, galerts, sout, salerts))
+    return bad
+
+
 def main():
     only = set(sys.argv[1:])
     bad = 0
@@ -272,10 +501,11 @@ def main():
                 continue
             cout, sout = run_case(exe, d, case)
             ok = cout.startswith(case[8]) and sout.startswith(case[9])
-            print("%-12s %s" % (case[0], "ok" if ok else "FAIL"))
+            print("%-22s %s" % (case[0], "ok" if ok else "FAIL"))
             if not ok:
                 bad += 1
                 print("  client: %s\n  want:   %s\n  server: %s\n  want:   %s" % (cout, case[8], sout, case[9]))
+        bad += hostile(d, only)
     print("test-tls: %d problem(s)" % bad)
     sys.exit(1 if bad else 0)
 

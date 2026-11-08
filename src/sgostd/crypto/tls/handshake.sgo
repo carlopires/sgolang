@@ -105,6 +105,7 @@ func (t *Conn) handshake(cfg Config, priv []byte, hello clientHello) error {
 		return cerr
 	}
 	s, _ := suiteByID(sh.suite)
+	t.haveVers = true
 	sentCCS := false
 	if string(sh.random) == helloRetryRandom {
 		if !sh.hasSelGrp && len(sh.cookie) == 0 {
@@ -297,7 +298,11 @@ func (t *Conn) handshake(cfg Config, priv []byte, hello clientHello) error {
 	if werr := t.writeRecord(recordTypeHandshake, fin); werr != nil {
 		return werr
 	}
-	return t.out.setTrafficSecret(s, cAP)
+	if e4 := t.out.setTrafficSecret(s, cAP); e4 != nil {
+		return e4
+	}
+	t.done = true
+	return nil
 }
 
 // checkServerHello checks a ServerHello or HelloRetryRequest in Go's order; prevSuite is the
