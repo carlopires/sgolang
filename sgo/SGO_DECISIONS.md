@@ -1433,3 +1433,34 @@ same eight hashes (SGO-STD-029). Added to D201:
   TLS client (reject certificates without proof of public logging), the measure that protected
   Chrome before this incident was known. Revocation over the network (CRL, OCSP) is not planned as
   the emergency path.
+
+**(d) decided 2026-11-08 (user): not now; possibly opt-in later.** The TLS client does not enforce
+Certificate Transparency, as Go's `crypto/tls`, curl, OpenSSL and rustls do not. Enforcement needs a
+pinned list of CT logs that goes stale as logs retire (about yearly); a binary built with an old list
+would reject valid certificates, the outage risk browsers avoid only by constant updates and by
+switching enforcement off when the list is about ten weeks old. Checking embedded SCTs also needs
+DER writing (`std/encoding/asn1` reads only), a policy on SCT count and source, and test vectors
+other than Go's. If wanted later: opt-in, for the pinned Mozilla roots only (off for operator roots),
+with the log list's age recorded in the binary (as (c)) and enforcement ending past a maximum age.
+
+## D202 — Seeded entropy in the lab · APPROVED 2026-11-08 (user)
+
+Context: the lab refuses `Entropy.Bytes` (SGO-LAB-006: "entropy is unpredictable by definition and
+has no seeded substitute"). The W28 TLS client takes its random, session ID and key share from
+`Entropy`, so a program that calls `tls.Client` cannot run in the lab, and the W28 deliverable "a
+lab replay of a handshake" was not delivered (sgo/evidence/w28/README.md).
+
+**Decision.** In a lab run, `Entropy.Bytes` returns bytes derived from the run's seed, as `Random`
+and the clocks already are, and the draws are part of the run's recorded effects, so a run and its
+replay draw the same bytes. Production `Entropy` is unchanged. This is safe for deployed programs
+because a lab binary runs only under `sgo lab` (it refuses to start without the lab manifest on fd
+3), so seeded entropy cannot reach production.
+
+- SGO-LAB-006 is amended: `Entropy` is a seeded lab effect, no longer an unsupported one; the
+  `lab-entropy` fixture changes from a refusal to a seeded, reproducible run. The clause states that
+  key material made in a lab run is only as secret as the seed and must not be used outside the run.
+- The deferred W28 replay is then built without a TLS server in S-Go: with the client's entropy
+  fixed by the seed, its handshake bytes are the same in every run, so one exchange recorded against
+  a Go server (same seed, fixed time) is replayed as a scripted peer on the lab's fake network, and
+  the full handshake reproduces from the seed, including the scheduling of the tasks around it.
+
