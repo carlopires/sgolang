@@ -1240,7 +1240,7 @@
         "SGO-TOOL-001",
         "SGO-TOOL-002"
       ],
-      "normative_text_digest": "4fd1ca7c211d0dd1de494d2c3f65523c5da5de3f2ee14b913d653665512dd5c1",
+      "normative_text_digest": "b1f2027a48273c8d661a4d2bfcc18d2e23e8c88f1b9f68ce7f02f706b5c210ca",
       "admitted_in": [
         "0.7.0"
       ],
@@ -1258,7 +1258,7 @@
       ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-TOOL-001": "78b45888d746fe4fa49bfebc42843c0c26aa4a81e7ca35f00b40ab9e24e93b12",
+        "SGO-TOOL-001": "df67d2378e0f4c765c1aad22cddb40513bf858b109b4d6c4f34ed34b13258ec7",
         "SGO-TOOL-002": "f897511a1292e60b070dc690bbf6d5048a55fb92fd6923b571f86e77483b9458"
       },
       "clause_status": {
@@ -1266,7 +1266,7 @@
         "SGO-TOOL-002": "frozen"
       },
       "clause_versions": {
-        "SGO-TOOL-001": 2,
+        "SGO-TOOL-001": 3,
         "SGO-TOOL-002": 1
       }
     },
@@ -1279,7 +1279,7 @@
       "clause_ids": [
         "SGO-BUILD-001"
       ],
-      "normative_text_digest": "636c31555a7ece45e91a2f6978608c88ddf215f7ec22be82d306bd3af2899b76",
+      "normative_text_digest": "014a969fcc1f378a2f89fcb3d2bce00fb392cb591fd63a2a033e5c57a32dfb7c",
       "admitted_in": [
         "0.7.0"
       ],
@@ -1296,13 +1296,13 @@
       ],
       "subset0": "partial_see_SGO_SPEC_SUBSET0",
       "clause_digests": {
-        "SGO-BUILD-001": "c2dfdc139ecfd24652ea428d84c2ddcf63434110ec2f30be4f7b37ac12473ef5"
+        "SGO-BUILD-001": "5c0338bb0a1447c56646d3d6078fcf357ea1fdc8152676c44aad15e89814c199"
       },
       "clause_status": {
         "SGO-BUILD-001": "frozen"
       },
       "clause_versions": {
-        "SGO-BUILD-001": 1
+        "SGO-BUILD-001": 2
       }
     },
     {
@@ -1947,5 +1947,5 @@
     }
   ],
   "subset0_definition": "SGO_DECISIONS.md (D01-D21 approved 2026-10-30) and SGO_SPEC_SUBSET0.md. 'partial' means only the constructs listed in SGO_SPEC_SUBSET0.md are candidates for admission; everything else in the family is denied. The subset0 field records the 0.1.0 scope; admission is the row status (0.7.0).",
-  "rows_digest": "3b5b1a4a15007a35d339af4a7f592610a9137f142e29f287998aadbf69010e09"
+  "rows_digest": "5e71a3562d83dc671413df802cf78e88f29407880b186b6dd5c5c44006e78bfc"
 }

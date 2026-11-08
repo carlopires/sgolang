@@ -163,7 +163,11 @@ func buildProgram(arg, target string, drain int64, lab bool, output func(*module
 		archives[p.path] = a
 	}
 	exe := filepath.Join(work, "prog")
-	lastBuildID = t.buildInfo(goos, goarch, drain, m.grants, ioDigest(m.ioGrants), lab, false)
+	trust, err := t.trustInfo(archives)
+	if err != nil {
+		return "", err
+	}
+	lastBuildID = t.buildInfo(goos, goarch, drain, m.grants, ioDigest(m.ioGrants), trust, lab, false)
 	if err := t.link(archives, archives[main.path], exe, lastBuildID, drain, m.grants, m.ioGrants, lab, false, env); err != nil {
 		return "", err
 	}
@@ -213,9 +217,10 @@ func (t *toolchain) compileUser(m *module, p *pkg, isMain, lab bool, archives ma
 
 // buildInfo is the build metadata recorded in every binary (SGO-BUILD-001, SGO-TOOL-001): spec
 // version, admission digest, drain budget, root grants (SGO-AUTH-002), target, toolchain
-// identity, and upstream base commit. It is the binary's build ID, which the linker writes
+// identity, upstream base commit, and, for a program that links std/crypto/x509, the trust it was
+// built with (D201 (c)). It is the binary's build ID, which the linker writes
 // verbatim in every executable format. A lab binary's ID also names its configuration (D41).
-func (t *toolchain) buildInfo(goos, goarch string, drain int64, grants []string, io string, lab, test bool) string {
+func (t *toolchain) buildInfo(goos, goarch string, drain int64, grants []string, io, trust string, lab, test bool) string {
 	budget := "none"
 	if drain > 0 {
 		budget = fmt.Sprint(drain)
@@ -236,8 +241,8 @@ func (t *toolchain) buildInfo(goos, goarch string, drain int64, grants []string,
 	if io != "" {
 		g += "/io=" + io // digest of the file and network grants (D52)
 	}
-	return fmt.Sprintf("sgo1/spec=%s/admission=%s%s/drain=%s/grants=%s/target=%s-%s/toolchain=%s/upstream=%s",
-		t.specVersion, t.admission, config, budget, g, goos, goarch, t.version, t.upstream)
+	return fmt.Sprintf("sgo1/spec=%s/admission=%s%s/drain=%s/grants=%s/target=%s-%s/toolchain=%s/upstream=%s%s",
+		t.specVersion, t.admission, config, budget, g, goos, goarch, t.version, t.upstream, trust)
 }
 
 // link links the program; a drain budget is passed with the linker's dedicated -sgodrainbudget

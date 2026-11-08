@@ -218,7 +218,11 @@ func (t *toolchain) testPackage(m *module, rel, goos, goarch string, verbose boo
 		return false, err
 	}
 	exe := filepath.Join(work, "test")
-	id := t.buildInfo(goos, goarch, 0, m.grants, ioDigest(m.ioGrants), false, true)
+	trust, terr := t.trustInfo(archives)
+	if terr != nil {
+		return false, terr
+	}
+	id := t.buildInfo(goos, goarch, 0, m.grants, ioDigest(m.ioGrants), trust, false, true)
 	if err := t.link(archives, mainArchive, exe, id, 0, m.grants, m.ioGrants, false, true, env); err != nil {
 		return false, err
 	}

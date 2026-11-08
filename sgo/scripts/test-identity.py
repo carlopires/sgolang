@@ -23,7 +23,9 @@ Mutations keep every byte length, so stored fingerprints stay valid.
     test-identity.py
 """
 import glob
+import hashlib
 import os
+import re
 import struct
 import subprocess
 import sys
@@ -79,6 +81,33 @@ def main():
             found = b'Go build ID: "' + want + b'"' in prog
         if not found:
             sys.exit(f"test-identity: binary does not record its build metadata {want!r}")
+        # 0b. sgo version -m reads the metadata back (SGO-TOOL-001); a program that links
+        # std/crypto/x509 also records its certificate trust (SGO-BUILD-001, D201 (c)).
+        out = run([os.path.join(TOOLS, "sgo"), "version", "-m", os.path.join(tmp, "prog")], mod, env).stdout
+        if "\tspec\t" + version[3] not in out or "\ttrust\t" in out:
+            sys.exit(f"test-identity: version -m of a program without x509:\n{out}")
+        tm = os.path.join(tmp, "trustmod")
+        os.makedirs(tm)
+        open(os.path.join(tm, "sgo.mod"), "w").write("module example.com/trust\n\nsgo " + SPEC_VERSION + "\n")
+        open(os.path.join(tm, "main.sgo"), "w").write(
+            'package main\n\nimport (\n\t"sgo"\n\t"std/crypto/x509/roots"\n)\n\n'
+            'func main(root *sgo.Context) error {\n\t_ = roots.Mozilla()\n\treturn nil\n}\n')
+        run([os.path.join(TOOLS, "sgo"), "build", "-o", os.path.join(tmp, "trustprog")], tm, env)
+        out = run([os.path.join(TOOLS, "sgo"), "version", "-m", os.path.join(tmp, "trustprog")], tm, env).stdout
+        x509 = os.path.join(ROOT, "src", "sgostd", "crypto", "x509")
+        bundle = open(os.path.join(x509, "roots", "bundle.sgo")).read()
+        bv = re.search(r'const BundleVersion = "([^"]+)"', bundle).group(1)
+        bh = re.search(r'const BundleSHA256 = "([0-9a-f]{64})"', bundle).group(1)
+        keys = sorted(re.findall(r'"([0-9a-f]{64})"', open(os.path.join(x509, "distrust.sgo")).read()))
+        dh = hashlib.sha256("\n".join(keys).encode()).hexdigest()[:16]
+        for want_line in ("\ttrust\troots %s:%s\n" % (bv, bh[:16]), "\ttrust\tdistrust %d:%s\n" % (len(keys), dh)):
+            if want_line not in out:
+                sys.exit(f"test-identity: version -m does not report {want_line.strip()!r}:\n{out}")
+        notbin = os.path.join(tmp, "notbin")
+        open(notbin, "w").write("not a binary\n")
+        r = run([os.path.join(TOOLS, "sgo"), "version", "-m", notbin], tm, env, expect_ok=False)
+        if r.returncode == 0 or "SGO_E_USAGE" not in r.stdout + r.stderr:
+            sys.exit(f"test-identity: version -m accepted a file without a build ID:\n{r.stdout}{r.stderr}")
         tcb = glob.glob(os.path.join(tmp, "cache", "sgo-driver", "tcb", "*", "manifest.sha256"))
         if len(tcb) != 1:
             sys.exit("test-identity: TCB cache not found")
@@ -167,7 +196,7 @@ def main():
         r = link(other, main_a)
         if r.returncode == 0 or "SGO_E_SPEC_MISMATCH" not in r.stdout + r.stderr:
             sys.exit(f"test-identity: linker accepted another spec version:\n{r.stdout}{r.stderr}")
-    print("test-identity: ok: build metadata, stale contract (exported/unexported change, recorded contract), "
+    print("test-identity: ok: build metadata, version -m and trust record, stale contract (exported/unexported change, recorded contract), "
           "foreign export data and object, spec mismatch in export data and object")
     return 0
 

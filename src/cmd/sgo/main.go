@@ -67,8 +67,11 @@ func run(args []string) error {
 	case "run":
 		return cmdRun(rest)
 	case "version":
+		if len(rest) > 0 && rest[0] == "-m" {
+			return cmdVersionM(rest[1:])
+		}
 		if len(rest) != 0 {
-			return usage("sgo version takes no arguments")
+			return usage("sgo version takes no arguments, or -m and binaries")
 		}
 		return cmdVersion()
 	case "fmt":
