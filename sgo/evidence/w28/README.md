@@ -1,6 +1,6 @@
 # W28 evidence — a TLS 1.3 client, pinned roots, and trust from granted files
 
-Spec 0.23.0 (D199, D201). Branch `w28`; state: complete on darwin/arm64; Linux at the W28 merge.
+Spec 0.23.0 (D199, D201). Branch `w28`; state: complete on darwin/arm64, linux/amd64 and linux/arm64.
 
 ## What landed
 
@@ -47,7 +47,7 @@ Spec 0.23.0 (D199, D201). Branch `w28`; state: complete on darwin/arm64; Linux a
 
 ## Linux
 
-Pending: the sgo-w00, sgo-spec and sgo-runtime runs at the W28 merge.
+Main at 5cc98a5a9b (0.23.0 freeze): sgo-w00 run 42478594681 green on linux/amd64 and linux/arm64 (conformance, all check scripts, test-tls, test-std-pem, test-std-crypto including x509-limbo, reference and stage-0 builds); sgo-spec run 42478594707 green; sgo-runtime run 42478636985 green (runtime lane, race lane).
 
 ## Not done
 
