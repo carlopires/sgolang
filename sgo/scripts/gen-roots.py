@@ -30,7 +30,8 @@ def go():
     pinned = json.load(open(os.path.join(ROOT, "sgo", "UPSTREAM.lock.json")))["bootstrap"]["pinned_version"]
     plat = "%s-%s" % ({"darwin": "darwin", "linux": "linux"}[sys.platform if sys.platform != "linux2" else "linux"],
                       {"arm64": "arm64", "aarch64": "arm64", "x86_64": "amd64"}[os.uname().machine])
-    return os.path.expanduser(f"~/.cache/sgolang/bootstrap/{pinned}-{plat}/go/bin/go")
+    cache = os.environ.get("SGO_CACHE", os.path.expanduser("~/.cache/sgolang"))
+    return os.path.join(cache, "bootstrap", f"{pinned}-{plat}", "go", "bin", "go")
 
 
 def bundle_dir():
