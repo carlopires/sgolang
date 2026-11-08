@@ -285,7 +285,7 @@
       "families": [
         "SPEC-LAB"
       ],
-      "statement": "A lab build (sgo lab) runs on a deterministic scheduler with virtual time and simulated effects: the same seed and manifest give the same canonical trace, a trace replays exactly, and a divergent or altered trace or a trace of another build is refused. Replay covers managed events (scheduling choices, timers, effect results), not instruction-level replay of arbitrary code. Lab and production artifacts cannot be mixed.",
+      "statement": "A lab build (sgo lab) runs on a deterministic scheduler with virtual time and simulated effects (since 0.24.0 entropy too, drawn from the seed): the same seed and manifest give the same canonical trace, a trace replays exactly, and a divergent or altered trace or a trace of another build is refused. Replay covers managed events (scheduling choices, timers, effect results), not instruction-level replay of arbitrary code. Lab and production artifacts cannot be mixed.",
       "scope": [
         "admission",
         "runtime_enforced",
@@ -297,6 +297,7 @@
         "src/runtime/sgo_lab_run.go",
         "src/runtime/sgo_lab_sched.go",
         "src/runtime/sgo_lab_boot.go",
+        "src/runtime/sgo_effects.go",
         "src/runtime/sgo_iofake.go",
         "src/runtime/sgo_netfake.go",
         "src/cmd/compile/internal/walk/sgo_lab.go",

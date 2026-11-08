@@ -1,3 +1,3 @@
 module example.com/select-ready-arms
 
-sgo 0.23.0
+sgo 0.24.0

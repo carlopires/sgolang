@@ -1,3 +1,3 @@
 module example.com/native-cancel-unwind
 
-sgo 0.23.0
+sgo 0.24.0

@@ -2,6 +2,16 @@
 
 Amendments of frozen clauses and version changes of the specification (status rules in `README.md`). Each entry names the clauses whose version changed and why.
 
+## 0.24.0 — 2026-11-08
+
+Seeded entropy in the lab (W29; D202). Production programs keep their meaning. A lab run changes: `Entropy.Bytes` used to end it with `UnsupportedLabEffect`; it now returns bytes drawn from the run's seed, so programs that use entropy, the TLS client among them, run and replay in the lab.
+
+Amended clauses:
+
+- SGO-LAB-004 v2 — `Entropy.Bytes(k)` in a lab run draws ceil(k/8) little-endian outputs of the seed's `data` stream, in call order; key material made from them is only as secret as the seed. No effect is refused in a lab run.
+- SGO-LAB-006 v2 — the `UnsupportedLabEffect` outcome is removed.
+- SGO-STD-031 v2 — the TLS client runs in the lab; with a scripted peer the handshake repeats for its seed (fixture lab-tls-replay, an exchange recorded from Go's crypto/tls server by `sgo/scripts/gen-lab-tls.py`).
+
 ## 0.23.0 — 2026-11-08
 
 A TLS 1.3 client, pinned roots, and trust an operator can change without a rebuild (W28; D199, D201). Every program valid under 0.22.0 keeps its meaning: the release adds packages and extends `std/crypto/x509`.

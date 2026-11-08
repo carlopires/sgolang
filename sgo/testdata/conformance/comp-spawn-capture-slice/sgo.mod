@@ -1,3 +1,3 @@
 module example.com/comp-spawn-capture-slice
 
-sgo 0.23.0
+sgo 0.24.0

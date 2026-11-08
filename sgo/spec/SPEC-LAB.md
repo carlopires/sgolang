@@ -70,7 +70,7 @@ Denied in subsets 0 to 2 (spec 0.1.0 to 0.3.0, SGO-LAB-001). Spec 0.4.0 admits t
 
 ### SGO-LAB-004 — Lab streams, virtual time, and effects
 - **version:** 2
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-LAB-003, SGO-AUTH-002, SGO-RANDOM-001, SGO-WAIT-001; D26, D44, D45, D202.
 - **grammar_and_types:** n/a — configuration clause.
 - **preconditions:** n/a — configuration clause; it adds no operation with preconditions.
@@ -87,7 +87,7 @@ Denied in subsets 0 to 2 (spec 0.1.0 to 0.3.0, SGO-LAB-001). Spec 0.4.0 admits t
 - **positive_tests:** D01, D06, D07; fixture:lab-random, fixture:lab-entropy, fixture:lab-tls-replay, fixture:lab-timer-ties, fixture:lab-wallclock, fixture:lab-runnable-time.
 - **negative_tests:** n/a — no effect is refused in a lab run (D202).
 - **implementation_coverage:** runtime `sgo_lab.go`, `sgo_lab_run.go`, `sgo_effects.go`.
-- **executed_evidence:** `sgo/evidence/w08/README.md`.
+- **executed_evidence:** `sgo/evidence/w08/README.md`; W29: conformance lab-entropy, lab-tls-replay (darwin/arm64; Linux at the W29 merge), `sgo/scripts/test-lab.py` (seeded entropy), `sgo/scripts/gen-lab-tls.py --check` (sgo/evidence/w29/README.md).
 - **supported_execution_configurations:** lab.
 
 ### SGO-LAB-005 — Trace, replay, and sweeps
@@ -114,7 +114,7 @@ Denied in subsets 0 to 2 (spec 0.1.0 to 0.3.0, SGO-LAB-001). Spec 0.4.0 admits t
 
 ### SGO-LAB-006 — Lab outcomes
 - **version:** 2
-- **status:** draft
+- **status:** frozen
 - **reference_closure:** SGO-PROC-002, SGO-ERR-002, SGO-CHAN-003, SGO-LAB-003, SGO-LAB-004; D47.
 - **grammar_and_types:** n/a — configuration clause.
 - **preconditions:** n/a — configuration clause; it adds no operation with preconditions.
@@ -131,7 +131,7 @@ Denied in subsets 0 to 2 (spec 0.1.0 to 0.3.0, SGO-LAB-001). Spec 0.4.0 admits t
 - **positive_tests:** D08; fixture:lab-deadlock.
 - **negative_tests:** D08, D09, D11; fixture:lab-deadlock, fixture:lab-quota, fixture:lab-host-hang.
 - **implementation_coverage:** runtime `sgo_lab_sched.go`, `sgo_lab_boot.go`.
-- **executed_evidence:** `sgo/evidence/w08/README.md`.
+- **executed_evidence:** `sgo/evidence/w08/README.md`; W29: conformance lab-entropy, lab-tls-replay (darwin/arm64; Linux at the W29 merge), `sgo/scripts/test-lab.py` (seeded entropy), `sgo/scripts/gen-lab-tls.py --check` (sgo/evidence/w29/README.md).
 - **supported_execution_configurations:** lab.
 
 ### SGO-LAB-007 — Lab standard input, environment, and interrupts
